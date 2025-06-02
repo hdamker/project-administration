@@ -527,17 +527,16 @@ jobs:
           This pull request migrates swagger editor links to use the CAMARA project's dedicated swagger-ui instance for better reliability (original links to swagger.io were broken).
           
           **Changes:**
-          - Replaced `https://editor.swagger.io/?url=` with `https://camaraproject.github.io/swagger-ui/?url=`
-          - Replaced `https://editor-next.swagger.io/?url=` with `https://camaraproject.github.io/swagger-ui/?url=`
+          - Replaced \`https://editor.swagger.io/\` with \`https://camaraproject.github.io/swagger-ui/\`
+          - Replaced \`https://editor-next.swagger.io/\` with \`https://camaraproject.github.io/swagger-ui/\`
           - All API specification URLs remain unchanged - only the swagger editor host is updated
           
           **Benefits:**
-          - Consistent CAMARA branding and experience
+          - Consistent CAMARA experience
           - Centralized swagger-ui configuration
           - Maintained compatibility with existing specification URLs
           
           **Files modified:** $UPDATED_FILES
-          
           **Links updated:** $TOTAL_REPLACEMENTS
           PRBODY
             echo "EOF" >> $GITHUB_ENV
