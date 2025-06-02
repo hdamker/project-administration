@@ -57,25 +57,45 @@ The system consists of three core workflows that work together:
 - ⚠️ Issues warning if CODEOWNERS file is missing (requires investigation)
 
 **update-swagger-links:**
-- ✅ **Comprehensive link migration**: Replaces both `editor.swagger.io` and `editor-next.swagger.io` links
+- ✅ **Comprehensive link migration**: Replaces both `editor.swagger.io` and `editor-next.swagger.io` host URLs
 - ✅ **Targeted file scanning**: Only processes README.md, README.MD, CHANGELOG.md, CHANGELOG.MD files
-- ✅ **Preserves API URLs**: Only changes the swagger editor host, maintains all specification URLs
+- ✅ **Simple URL replacement**: Replaces host portion only, preserves all query parameters and paths
 - ✅ **Detailed reporting**: Shows exact count of links updated in each file
-- ✅ **Safe operation**: Only modifies links that match the specific swagger editor patterns
-- ✅ **CAMARA branding**: Migrates to `https://camaraproject.github.io/swagger-ui/?url=` for consistent experience
+- ✅ **Safe operation**: Only modifies URLs that match the specific swagger editor hosts
+- ✅ **CAMARA branding**: Migrates to `https://camaraproject.github.io/swagger-ui/` for consistent experience
 
 **update-swagger-links-releases:**
 - ✅ **API-based operation**: Updates release descriptions through GitHub API (no git operations)
-- ✅ **Comprehensive link migration**: Replaces both `editor.swagger.io` and `editor-next.swagger.io` links in all releases
+- ✅ **Comprehensive link migration**: Replaces both `editor.swagger.io` and `editor-next.swagger.io` host URLs in all releases
 - ✅ **Handles all releases**: Processes both published and draft releases
 - ✅ **Pagination support**: Handles repositories with many releases (100+ releases)
 - ✅ **Preserves release metadata**: Only updates description, preserves all other release data (assets, tags, etc.)
+- ✅ **Simple URL replacement**: Replaces host portion only, preserves all query parameters and paths
 - ✅ **Detailed reporting**: Shows exact count of links updated per release and lists affected releases
-- ✅ **Safe operation**: Only modifies links that match the specific swagger editor patterns
+- ✅ **Safe operation**: Only modifies URLs that match the specific swagger editor hosts
 - ✅ **Permission validation**: Requires `Contents: Write` permission for release modifications
-- ✅ **CAMARA branding**: Migrates to `https://camaraproject.github.io/swagger-ui/?url=` for consistent experience
+- ✅ **CAMARA branding**: Migrates to `https://camaraproject.github.io/swagger-ui/` for consistent experience
+
+**Host Replacement Approach:**
+```
+FROM: https://editor.swagger.io/ → TO: https://camaraproject.github.io/swagger-ui/
+FROM: https://editor-next.swagger.io/ → TO: https://camaraproject.github.io/swagger-ui/
+```
+
+This simple host replacement approach:
+- ✅ **Preserves all query parameters** - `?url=...` and any other parameters remain intact
+- ✅ **Avoids regex complexity** - No need to escape special characters or match query patterns
+- ✅ **More robust** - Works regardless of what follows the host (paths, parameters, fragments)
+- ✅ **Same end result** - Complete URLs are transformed correctly
 
 **Link Transformation Example:**
+```
+FROM: https://editor.swagger.io/?url=https://raw.githubusercontent.com/camaraproject/QualityOnDemand/r2.2/code/API_definitions/quality-on-demand.yaml
+TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/QualityOnDemand/r2.2/code/API_definitions/quality-on-demand.yaml
+
+FROM: https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/camaraproject/DeviceLocation/r2.2/code/API_definitions/location-verification.yaml  
+TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/DeviceLocation/r2.2/code/API_definitions/location-verification.yaml
+```
 ```
 FROM: https://editor.swagger.io/?url=https://raw.githubusercontent.com/camaraproject/QualityOnDemand/r2.2/code/API_definitions/quality-on-demand.yaml
 TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/QualityOnDemand/r2.2/code/API_definitions/quality-on-demand.yaml

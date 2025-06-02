@@ -282,8 +282,8 @@ jobs:
               for (const release of allReleases) {
                 if (!release.body) continue;
                 
-                const editorCount = (release.body.match(/https:\/\/editor\.swagger\.io\/\?url=/g) || []).length;
-                const editorNextCount = (release.body.match(/https:\/\/editor-next\.swagger\.io\/\?url=/g) || []).length;
+                const editorCount = (release.body.match(/https:\/\/editor\.swagger\.io\//g) || []).length;
+                const editorNextCount = (release.body.match(/https:\/\/editor-next\.swagger\.io\//g) || []).length;
                 const totalCount = editorCount + editorNextCount;
                 
                 if (totalCount > 0) {
@@ -328,19 +328,19 @@ jobs:
                 try {
                   let updatedBody = item.release.body;
                   
-                  // Replace editor.swagger.io links
+                  // Replace editor.swagger.io links (simple host replacement)
                   if (item.editorCount > 0) {
                     updatedBody = updatedBody.replace(
-                      /https:\/\/editor\.swagger\.io\/\?url=/g,
-                      'https://camaraproject.github.io/swagger-ui/?url='
+                      /https:\/\/editor\.swagger\.io\//g,
+                      'https://camaraproject.github.io/swagger-ui/'
                     );
                   }
                   
-                  // Replace editor-next.swagger.io links
+                  // Replace editor-next.swagger.io links (simple host replacement)
                   if (item.editorNextCount > 0) {
                     updatedBody = updatedBody.replace(
-                      /https:\/\/editor-next\.swagger\.io\/\?url=/g,
-                      'https://camaraproject.github.io/swagger-ui/?url='
+                      /https:\/\/editor-next\.swagger\.io\//g,
+                      'https://camaraproject.github.io/swagger-ui/'
                     );
                   }
                   
@@ -463,9 +463,9 @@ jobs:
             if [ -f "$file" ]; then
               echo "🔍 Checking $file..."
               
-              # Count existing swagger editor links (escape ? in regex)
-              EDITOR_COUNT=$(grep -c "https://editor\.swagger\.io/\?url=" "$file" 2>/dev/null || echo "0")
-              EDITOR_NEXT_COUNT=$(grep -c "https://editor-next\.swagger\.io/\?url=" "$file" 2>/dev/null || echo "0")
+              # Count existing swagger editor links (simple host matching)
+              EDITOR_COUNT=$(grep -c "https://editor\.swagger\.io/" "$file" 2>/dev/null || echo "0")
+              EDITOR_NEXT_COUNT=$(grep -c "https://editor-next\.swagger\.io/" "$file" 2>/dev/null || echo "0")
               
               # Ensure we have valid numbers for arithmetic
               if ! [[ "$EDITOR_COUNT" =~ ^[0-9]+$ ]]; then
@@ -480,15 +480,15 @@ jobs:
               if [ $TOTAL_COUNT -gt 0 ]; then
                 echo "📝 Found $TOTAL_COUNT swagger editor link(s) in $file"
                 
-                # Replace editor.swagger.io links
+                # Replace editor.swagger.io links (simple host replacement)
                 if [ $EDITOR_COUNT -gt 0 ]; then
-                  sed -i 's|https://editor\.swagger\.io/\?url=|https://camaraproject.github.io/swagger-ui/?url=|g' "$file"
+                  sed -i 's|https://editor\.swagger\.io/|https://camaraproject.github.io/swagger-ui/|g' "$file"
                   echo "   ✅ Replaced $EDITOR_COUNT editor.swagger.io link(s)"
                 fi
                 
-                # Replace editor-next.swagger.io links  
+                # Replace editor-next.swagger.io links (simple host replacement)
                 if [ $EDITOR_NEXT_COUNT -gt 0 ]; then
-                  sed -i 's|https://editor-next\.swagger\.io/\?url=|https://camaraproject.github.io/swagger-ui/?url=|g' "$file"
+                  sed -i 's|https://editor-next\.swagger\.io/|https://camaraproject.github.io/swagger-ui/|g' "$file"
                   echo "   ✅ Replaced $EDITOR_NEXT_COUNT editor-next.swagger.io link(s)"
                 fi
                 
