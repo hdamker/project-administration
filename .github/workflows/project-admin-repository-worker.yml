@@ -463,9 +463,18 @@ jobs:
             if [ -f "$file" ]; then
               echo "🔍 Checking $file..."
               
-              # Count existing swagger editor links
-              EDITOR_COUNT=$(grep -c "https://editor\.swagger\.io/?url=" "$file" 2>/dev/null || echo 0)
-              EDITOR_NEXT_COUNT=$(grep -c "https://editor-next\.swagger\.io/?url=" "$file" 2>/dev/null || echo 0)
+              # Count existing swagger editor links (escape ? in regex)
+              EDITOR_COUNT=$(grep -c "https://editor\.swagger\.io/\?url=" "$file" 2>/dev/null || echo "0")
+              EDITOR_NEXT_COUNT=$(grep -c "https://editor-next\.swagger\.io/\?url=" "$file" 2>/dev/null || echo "0")
+              
+              # Ensure we have valid numbers for arithmetic
+              if ! [[ "$EDITOR_COUNT" =~ ^[0-9]+$ ]]; then
+                EDITOR_COUNT=0
+              fi
+              if ! [[ "$EDITOR_NEXT_COUNT" =~ ^[0-9]+$ ]]; then
+                EDITOR_NEXT_COUNT=0
+              fi
+              
               TOTAL_COUNT=$((EDITOR_COUNT + EDITOR_NEXT_COUNT))
               
               if [ $TOTAL_COUNT -gt 0 ]; then
@@ -473,13 +482,13 @@ jobs:
                 
                 # Replace editor.swagger.io links
                 if [ $EDITOR_COUNT -gt 0 ]; then
-                  sed -i 's|https://editor\.swagger\.io/?url=|https://camaraproject.github.io/swagger-ui/?url=|g' "$file"
+                  sed -i 's|https://editor\.swagger\.io/\?url=|https://camaraproject.github.io/swagger-ui/?url=|g' "$file"
                   echo "   ✅ Replaced $EDITOR_COUNT editor.swagger.io link(s)"
                 fi
                 
                 # Replace editor-next.swagger.io links  
                 if [ $EDITOR_NEXT_COUNT -gt 0 ]; then
-                  sed -i 's|https://editor-next\.swagger\.io/?url=|https://camaraproject.github.io/swagger-ui/?url=|g' "$file"
+                  sed -i 's|https://editor-next\.swagger\.io/\?url=|https://camaraproject.github.io/swagger-ui/?url=|g' "$file"
                   echo "   ✅ Replaced $EDITOR_NEXT_COUNT editor-next.swagger.io link(s)"
                 fi
                 
