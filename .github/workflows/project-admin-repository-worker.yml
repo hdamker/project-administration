@@ -389,6 +389,7 @@ jobs:
                 core.exportVariable('action_taken', 'failed');
               }
               throw error;
+            }
 
       - name: Execute Operation - Add Changelog CODEOWNERS
         if: inputs.operation == 'add-changelog-codeowners'
