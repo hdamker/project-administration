@@ -521,10 +521,10 @@ jobs:
             echo "commit_message=chore: migrate swagger editor links to CAMARA swagger-ui" >> $GITHUB_ENV
             echo "pr_title=chore: migrate swagger editor links to CAMARA swagger-ui" >> $GITHUB_ENV
             echo "pr_body<<EOF" >> $GITHUB_ENV
-            cat << 'PRBODY' >> $GITHUB_ENV
+            cat << PRBODY >> $GITHUB_ENV
           ## CAMARA Project Admin Update
           
-          This pull request migrates swagger editor links to use the CAMARA project's dedicated swagger-ui instance for better consistency and branding.
+          This pull request migrates swagger editor links to use the CAMARA project's dedicated swagger-ui instance for better reliability (original links to swagger.io were broken).
           
           **Changes:**
           - Replaced `https://editor.swagger.io/?url=` with `https://camaraproject.github.io/swagger-ui/?url=`
@@ -536,7 +536,7 @@ jobs:
           - Centralized swagger-ui configuration
           - Maintained compatibility with existing specification URLs
           
-          **Files modified:**$UPDATED_FILES
+          **Files modified:** $UPDATED_FILES
           
           **Links updated:** $TOTAL_REPLACEMENTS
           PRBODY
