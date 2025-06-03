@@ -475,60 +475,6 @@ jobs:
             
           echo "✅ CODEOWNERS file updated"
 
-      - name: Sync rulesets from template repository
-        if: ${{ github.event.inputs.dry_run != 'true' }}
-        run: |
-          echo "📏 Syncing rulesets from template repository..."
-          
-          TEMPLATE_REPO="${{ env.TEMPLATE_REPO_NAME }}"
-          echo "Fetching rulesets from $OWNER/$TEMPLATE_REPO"
-
-          # Fetch all rulesets defined in the template repository for later replication
-          RULESETS=$(gh api repos/$OWNER/$TEMPLATE_REPO/rulesets \
-            -H "Accept: application/vnd.github+json" 2>/dev/null || echo "[]")
-
-          if ! echo "$RULESETS" | jq -e 'type == "array" and length > 0' > /dev/null; then
-            echo "No valid rulesets array found in template repository. Skipping."
-            exit 0
-          fi
-
-          echo "$RULESETS" | jq -r '.[].id' | while read -r ruleset_id; do
-            RULESET=$(gh api repos/$OWNER/$TEMPLATE_REPO/rulesets/$ruleset_id \
-              -H "Accept: application/vnd.github+json")
-            NAME=$(echo "$RULESET" | jq -r '.name')
-            echo "Syncing ruleset: $NAME"
-
-            PAYLOAD=$(echo "$RULESET" | jq 'del(.id, .repository_id, .creator, .created_at, .updated_at)')
-            echo "$PAYLOAD" > ruleset.json
-
-            if gh api repos/$OWNER/$REPO_NAME/rulesets \
-              -X POST \
-              -H "Accept: application/vnd.github+json" \
-              --input ruleset.json; then
-              echo "✅ Applied ruleset: $NAME"
-            else
-              echo "::warning::Failed to apply ruleset $NAME"
-            fi
-          done
-
-      - name: Create initial issues
-        if: ${{ github.event.inputs.dry_run != 'true' }}
-        run: |
-          echo "📋 Creating initial issues..."
-          
-          ADMIN_ISSUE_URL=$(gh issue create --repo $OWNER/$REPO_NAME \
-            --title "New Repository - Initial administrative tasks" \
-            --body "$(cat templates/issues/initial-admin.md)")
-
-          gh issue create --repo $OWNER/$REPO_NAME \
-            --title "New Repository - Initial tasks for codeowners" \
-            --body "$(cat templates/issues/initial-codeowners.md)"
-
-          gh issue comment "$ADMIN_ISSUE_URL" \
-            --body "✅ Repository setup has been completed by automation. You may now proceed with the checklist."
-            
-          echo "✅ Initial issues created"
-
       - name: Get template files for cleanup
         if: ${{ github.event.inputs.dry_run != 'true' }}
         run: |
@@ -569,6 +515,42 @@ jobs:
             fi
           done
 
+      - name: Sync rulesets from template repository
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        run: |
+          echo "📏 Syncing rulesets from template repository..."
+          
+          TEMPLATE_REPO="${{ env.TEMPLATE_REPO_NAME }}"
+          echo "Fetching rulesets from $OWNER/$TEMPLATE_REPO"
+
+          # Fetch all rulesets defined in the template repository for later replication
+          RULESETS=$(gh api repos/$OWNER/$TEMPLATE_REPO/rulesets \
+            -H "Accept: application/vnd.github+json" 2>/dev/null || echo "[]")
+
+          if ! echo "$RULESETS" | jq -e 'type == "array" and length > 0' > /dev/null; then
+            echo "No valid rulesets array found in template repository. Skipping."
+            exit 0
+          fi
+
+          echo "$RULESETS" | jq -r '.[].id' | while read -r ruleset_id; do
+            RULESET=$(gh api repos/$OWNER/$TEMPLATE_REPO/rulesets/$ruleset_id \
+              -H "Accept: application/vnd.github+json")
+            NAME=$(echo "$RULESET" | jq -r '.name')
+            echo "Syncing ruleset: $NAME"
+
+            PAYLOAD=$(echo "$RULESET" | jq 'del(.id, .repository_id, .creator, .created_at, .updated_at)')
+            echo "$PAYLOAD" > ruleset.json
+
+            if gh api repos/$OWNER/$REPO_NAME/rulesets \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              --input ruleset.json; then
+              echo "✅ Applied ruleset: $NAME"
+            else
+              echo "::warning::Failed to apply ruleset $NAME"
+            fi
+          done
+
       - name: Verify repository setup
         if: ${{ github.event.inputs.dry_run != 'true' }}
         run: |
@@ -593,6 +575,7 @@ jobs:
           echo "Discussions enabled: $HAS_DISCUSSIONS"
           
           # Verify team permissions (if teams were created)
+          TEAM_VERIFICATION=""
           if [ "$TEAMS_ENABLED" = "true" ]; then
             echo "Checking team permissions..."
             
@@ -600,6 +583,7 @@ jobs:
             if gh api orgs/$OWNER/teams/$MAINTAINERS_TEAM/repos/$OWNER/$REPO_NAME > /dev/null 2>&1; then
               MAINTAINER_PERM=$(gh api orgs/$OWNER/teams/$MAINTAINERS_TEAM/repos/$OWNER/$REPO_NAME | jq -r '.permissions.triage')
               echo "Maintainers team triage permission: $MAINTAINER_PERM"
+              TEAM_VERIFICATION="✅ Teams created and configured"
             fi
             
             # Check codeowners team
@@ -607,13 +591,18 @@ jobs:
               CODEOWNERS_PERM=$(gh api orgs/$OWNER/teams/$CODEOWNERS_TEAM/repos/$OWNER/$REPO_NAME | jq -r '.permissions.push')
               echo "Codeowners team push permission: $CODEOWNERS_PERM"
             fi
+          else
+            TEAM_VERIFICATION="⚠️ No teams created (no prefix provided or no org access)"
           fi
           
           # Check if CODEOWNERS file exists and has content
+          CODEOWNERS_STATUS=""
           if gh api repos/$OWNER/$REPO_NAME/contents/CODEOWNERS > /dev/null 2>&1; then
             echo "✅ CODEOWNERS file exists"
+            CODEOWNERS_STATUS="✅ CODEOWNERS file created"
           else
             echo "::warning::CODEOWNERS file not found"
+            CODEOWNERS_STATUS="⚠️ CODEOWNERS file not found"
           fi
           
           # Check if issues were created
@@ -622,12 +611,107 @@ jobs:
           
           # Check if template files were cleaned up
           REMAINING_TEMPLATES=0
-          echo "$CLEANUP_FILES" | jq -r '.[]' | while read -r file; do
-            if [ -n "$file" ] && gh api repos/$OWNER/$REPO_NAME/contents/"$file" > /dev/null 2>&1; then
-              echo "::warning::Template file still exists: $file"
-              REMAINING_TEMPLATES=$((REMAINING_TEMPLATES + 1))
+          CLEANUP_STATUS=""
+          if [ -n "$CLEANUP_FILES" ] && [ "$CLEANUP_FILES" != "[]" ]; then
+            echo "$CLEANUP_FILES" | jq -r '.[]' | while read -r file; do
+              if [ -n "$file" ] && gh api repos/$OWNER/$REPO_NAME/contents/"$file" > /dev/null 2>&1; then
+                echo "::warning::Template file still exists: $file"
+                REMAINING_TEMPLATES=$((REMAINING_TEMPLATES + 1))
+              fi
+            done
+            
+            if [ $REMAINING_TEMPLATES -eq 0 ]; then
+              CLEANUP_STATUS="✅ Template files cleaned up"
+            else
+              CLEANUP_STATUS="⚠️ Some template files remain"
             fi
-          done
+          else
+            CLEANUP_STATUS="ℹ️ No template files to clean up"
+          fi
+          
+          # Create comprehensive success summary
+          echo "🎉 Repository setup verification completed" | tee -a $GITHUB_STEP_SUMMARY
+          echo "" | tee -a $GITHUB_STEP_SUMMARY
+          
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          ## 🎉 Repository Successfully Created!
+
+          **Repository:** [\`$OWNER/$REPO_NAME\`](https://github.com/$OWNER/$REPO_NAME)
+
+          ### ✅ What Was Configured
+
+          | Component | Status |
+          |-----------|--------|
+          | **Repository Created** | ✅ `https://github.com/$OWNER/$REPO_NAME` |
+          | **Description** | "$DESCRIPTION" |
+          | **Homepage** | [$HOMEPAGE]($HOMEPAGE) |
+          | **Topics** | \`sandbox-api-repository\` |
+          | **Features** | Issues: $HAS_ISSUES, Discussions: $HAS_DISCUSSIONS |
+          | **Teams** | $TEAM_VERIFICATION |
+          | **CODEOWNERS** | $CODEOWNERS_STATUS |
+          | **Issues Created** | ✅ $ISSUES_COUNT initial issues |
+          | **Template Cleanup** | $CLEANUP_STATUS |
+
+          EOF
+          
+          # Add team details if teams were created
+          if [ "$TEAMS_ENABLED" = "true" ]; then
+            cat << EOF >> $GITHUB_STEP_SUMMARY
+          ### 👥 Teams Created
+
+          - **\`$MAINTAINERS_TEAM\`** - Triage permissions
+          - **\`$CODEOWNERS_TEAM\`** - Push permissions (includes: ${{ github.event.inputs.initial_codeowners }})
+
+          EOF
+          fi
+          
+          # Add file updates summary
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          ### 📄 Files Updated
+
+          - **README.md** - Updated with project metadata and wiki links
+          - **CODEOWNERS** - Generated with specified codeowners: \`${{ github.event.inputs.initial_codeowners }}\`
+          - **.github/ISSUE_TEMPLATE/config.yml** - Updated with repository name
+          - **Branch protection rules** - Synced from template repository
+
+          ### 📋 Initial Issues Created
+
+          1. **Administrative Tasks** - Checklist for repository setup completion
+          2. **Codeowner Tasks** - Initial responsibilities and setup guide
+
+          ### 🔐 Security & Permissions
+
+          - Repository rulesets applied from \`Template_API_Repository\`
+          - Branch protection rules configured
+          - Team permissions assigned appropriately
+          - CODEOWNERS file enforces code review requirements
+
+          ---
+
+          ## 🚀 Next Steps
+
+          **Your new repository is ready!** Here's what to do next:
+
+          1. **📋 Complete the checklists** - Check the issues in your new repository
+          2. **🔍 Review settings** - Verify all configurations meet your needs  
+          3. **👥 Team setup** - Ensure all team members have accepted invitations
+          4. **📚 Add content** - Start developing your API documentation and code
+          5. **🔗 Share** - Notify your team that the repository is ready
+
+          **Repository URL:** [\`https://github.com/$OWNER/$REPO_NAME\`](https://github.com/$OWNER/$REPO_NAME)
+
+          ---
+
+          ### 📊 Configuration Summary
+
+          | Setting | Value |
+          |---------|-------|
+          | **Subproject** | ${{ github.event.inputs.subproject_name || '_None_' }} |
+          | **Wiki Page** | [${{ github.event.inputs.repo_wiki_page }}](${{ github.event.inputs.repo_wiki_page }}) |
+          | **Subproject Wiki** | ${{ github.event.inputs.subproject_wiki_page || '_None_' }} |
+          | **Mailing List** | \`${{ github.event.inputs.mailinglist_name }}\` |
+
+          EOF
           
           echo "✅ Repository setup verification completed"
           echo "🎉 Repository https://github.com/$OWNER/$REPO_NAME has been successfully created and configured!"

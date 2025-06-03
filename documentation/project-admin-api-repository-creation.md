@@ -171,17 +171,9 @@ dry_run: false  # Default - creates the repository immediately
 
 - **CODEOWNERS file**: Generates from `templates/CODEOWNERS_TEMPLATE` template
 
-- **Initial issues**: Creates from templates in `templates/issues/`:
+- **Initial issues**: Creates from templates in `templates/issues/` **before template cleanup**:
   - Administrative tasks issue with automatic completion comment
   - Codeowner tasks issue with responsibilities
-
-### ✅ Rulesets
-
-- **Syncs all rulesets** from `Template_API_Repository` to new repository
-- Preserves ruleset configurations, including:
-  - Branch protection rules
-  - Required reviews and status checks
-  - Merge requirements and restrictions
 
 ### ✅ Cleanup
 
@@ -190,6 +182,18 @@ dry_run: false  # Default - creates the repository immediately
   - All files found in `templates/` directory and subdirectories
   - Includes CODEOWNERS templates, issue templates, documentation files
 - **Graceful handling** of missing files during cleanup
+- **Performed before ruleset application** to avoid conflicts with branch protection rules
+
+### ✅ Rulesets
+
+- **Syncs all rulesets** from `Template_API_Repository` to new repository
+- **Applied after template cleanup** to prevent conflicts with direct file operations
+- Preserves ruleset configurations, including:
+  - Branch protection rules
+  - Required reviews and status checks
+  - Merge requirements and restrictions
+
+**Note**: The cleanup-then-rulesets order is crucial - applying branch protection rules before cleanup would prevent direct file deletion and cause HTTP 409 errors.
 
 ### ✅ Verification
 
@@ -316,8 +320,8 @@ After successful execution, verify:
 - [ ] Teams created (if team_prefix provided) with correct permissions
 - [ ] CODEOWNERS file contains specified users
 - [ ] Initial issues created with admin and codeowner tasks
-- [ ] Branch protection rules applied from template
 - [ ] Template files cleaned up from new repository
+- [ ] Branch protection rules applied from template (after cleanup)
 - [ ] Repository description and homepage set correctly
 
 ---
@@ -362,6 +366,10 @@ If the workflow fails partway through:
    - Check if repository became available
    - Manually update files using the template patterns
 
+### Workflow Order Improvements
+
+**Template Cleanup vs. Rulesets**: The workflow has been optimized to perform template file cleanup *before* applying repository rulesets. This prevents HTTP 409 conflicts where branch protection rules would block direct file deletion operations. If you encounter ruleset-related cleanup errors, ensure you're using the latest version of the workflow.
+
 ---
 
 ## ❓ Frequently Asked Questions
@@ -405,6 +413,8 @@ A: The workflow is designed for API repositories but can be adapted. You may wan
 4. **Custom repository settings**: Modify the "Configure repository settings" step
 5. **Additional file processing**: Add new steps similar to the README and config file updates
 6. **Custom team structure**: Modify the team creation sections in the workflow
+7. **Custom cleanup logic**: Modify the cleanup steps (executed before ruleset application)
+8. **Custom rulesets**: Add or modify rulesets in the template repository (applied after cleanup)
 
 ### Template Repository Structure
 
