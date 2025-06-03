@@ -33,6 +33,7 @@ The system consists of three core workflows that work together:
 ### Current Operations
 - **disable-wiki**: Safely disables GitHub wiki on repositories (only if wiki has no content)
 - **add-changelog-codeowners**: Adds release management team as reviewers for CHANGELOG file changes (both .MD and .md variants)
+- **add-changelog-file**: Adds template CHANGELOG.md file to repositories that have neither changelog nor releases
 - **update-swagger-links**: Migrates swagger editor links to CAMARA's dedicated swagger-ui instance (in files)
 - **update-swagger-links-releases**: Migrates swagger editor links to CAMARA's dedicated swagger-ui instance (in release descriptions)
 
@@ -43,6 +44,17 @@ The system consists of three core workflows that work together:
 - ✅ Permission validation: Requires admin access to repository
 - ✅ Content protection: Skips repositories where wiki contains content
 - ✅ Clear status reporting: Different outcomes for various scenarios
+
+**add-changelog-file:**
+- ✅ **Smart decision logic**: Only acts when repository has neither CHANGELOG file nor releases
+- ✅ **Template integration**: Downloads the official CHANGELOG.md template from Template_API_Repository
+- ✅ **Safety checks**: 
+  - Detects both `CHANGELOG.md` and `CHANGELOG.MD` filename variants
+  - Checks for existing releases via GitHub API
+  - Issues warnings for mismatched states (CHANGELOG without releases or releases without CHANGELOG)
+- ✅ **File-based operation**: Creates pull requests for the new CHANGELOG.md file
+- ✅ **Standard template**: Uses the same template as new API repositories
+- ⚠️ Issues warnings for repositories with mismatched CHANGELOG/release states (requires manual review)
 
 **add-changelog-codeowners:**
 - ✅ **Comprehensive coverage**: Handles both `CHANGELOG.MD` and `CHANGELOG.md` filename variants
