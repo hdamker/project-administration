@@ -1,7 +1,7 @@
-# .github/workflows/setup-new-repo.yml
+# .github/workflows/api-repository-creation.yml
 #
 # Prerequisites:
-# - A GitHub environment named `repo-setup` must exist.
+# - A GitHub environment named `repository-creation` must exist.
 # - The environment must contain a secret `GH_REPO_CREATE_TOKEN`.
 # - This token must be a fine-grained personal access token (FGPAT) with the following:
 #     • Repository access: Allow access to the template repo and target org repos.
@@ -15,7 +15,7 @@
 #
 # See: https://github.com/settings/tokens for generating tokens
 #
-name: Setup New Repository
+name: API Repository Creation
 
 on:
   workflow_dispatch:
@@ -41,11 +41,15 @@ on:
       team_prefix:
         description: 'Repository name in kebab-case, used as prefix for creating {prefix}_maintainers and {prefix}_codeowners teams (leave empty to create no teams)'
         required: false
+      dry_run:
+        description: 'Dry run mode - validate inputs without creating repository'
+        type: boolean
+        default: true
 
 jobs:
   setup:
     runs-on: ubuntu-latest
-    environment: repo-setup
+    environment: repository-creation
     permissions:
       issues: write
       contents: write
@@ -54,26 +58,110 @@ jobs:
     
     env:
       TEMPLATE_REPO_NAME: Template_API_Repository
+      MAX_RETRIES: 3
+      RETRY_WAIT_BASE: 10
+      API_WAIT_TIME: 2
+      MAX_API_ATTEMPTS: 5
 
     steps:
 
+      - name: Validate inputs
+        run: |
+          echo "🔍 Validating workflow inputs..."
+          
+          # Validate repository name format
+          REPO_NAME="${{ github.event.inputs.repo_name }}"
+          if [[ ! "$REPO_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "::error::Repository name must contain only letters, numbers, dots, hyphens, and underscores"
+            exit 1
+          fi
+          
+          # Validate mailing list format
+          MAILINGLIST="${{ github.event.inputs.mailinglist_name }}"
+          if [[ ! "$MAILINGLIST" =~ ^sp-[a-z0-9-]+$ ]]; then
+            echo "::error::Mailing list must follow format 'sp-xxx' (lowercase letters, numbers, and hyphens only)"
+            exit 1
+          fi
+          
+          # Validate codeowners format
+          CODEOWNERS="${{ github.event.inputs.initial_codeowners }}"
+          for user in $CODEOWNERS; do
+            if [[ ! "$user" =~ ^@[a-zA-Z0-9-]+$ ]]; then
+              echo "::error::Codeowners must be in format '@username' (found: $user)"
+              exit 1
+            fi
+          done
+          
+          # Validate URLs format
+          REPO_WIKI="${{ github.event.inputs.repo_wiki_page }}"
+          if [[ ! "$REPO_WIKI" =~ ^https?:// ]]; then
+            echo "::error::Repository wiki page must be a valid URL starting with http:// or https://"
+            exit 1
+          fi
+          
+          SUBPROJECT_WIKI="${{ github.event.inputs.subproject_wiki_page }}"
+          if [[ -n "$SUBPROJECT_WIKI" ]] && [[ ! "$SUBPROJECT_WIKI" =~ ^https?:// ]]; then
+            echo "::error::Subproject wiki page must be a valid URL starting with http:// or https://"
+            exit 1
+          fi
+          
+          # Validate team prefix format if provided
+          TEAM_PREFIX="${{ github.event.inputs.team_prefix }}"
+          if [[ -n "$TEAM_PREFIX" ]] && [[ ! "$TEAM_PREFIX" =~ ^[a-z0-9-]+$ ]]; then
+            echo "::error::Team prefix must contain only lowercase letters, numbers, and hyphens"
+            exit 1
+          fi
+          
+          echo "✅ All inputs validated successfully"
+
+      - name: Set up GitHub CLI token and validate permissions
+        run: |
+          echo "🔐 Setting up authentication and validating token permissions..."
+          
+          # Use GH_REPO_CREATE_TOKEN as the authentication token for all GitHub CLI commands
+          echo "GH_TOKEN=${{ secrets.GH_REPO_CREATE_TOKEN }}" >> $GITHUB_ENV
+          if [ -z "${{ secrets.GH_REPO_CREATE_TOKEN }}" ]; then
+            echo "::error::GH_REPO_CREATE_TOKEN is not set. Please configure the secret in the 'repository-creation' environment."
+            exit 1
+          fi
+          
+          # Validate token has basic access
+          echo "Validating token permissions..."
+          if ! gh auth status > /dev/null 2>&1; then
+            echo "::error::Token authentication failed. Please check your GH_REPO_CREATE_TOKEN."
+            exit 1
+          fi
+          
+          # Test repository access
+          OWNER=$(echo '${{ github.repository }}' | cut -d'/' -f1)
+          if ! gh api user/repos?per_page=1 > /dev/null 2>&1; then
+            echo "::error::Token lacks repository access permissions"
+            exit 1
+          fi
+          
+          # Test organization access (non-fatal for personal repos)
+          if gh api orgs/$OWNER/teams > /dev/null 2>&1; then
+            echo "✅ Organization access confirmed - teams will be available"
+            echo "ORG_ACCESS=true" >> $GITHUB_ENV
+          else
+            echo "⚠️  Limited organization access - team operations will be skipped"
+            echo "ORG_ACCESS=false" >> $GITHUB_ENV
+          fi
+          
+          echo "✅ Token validation completed"
+
       - name: Checkout template repository
+        if: ${{ !github.event.inputs.dry_run }}
         uses: actions/checkout@v4
         with:
           repository: camaraproject/${{ env.TEMPLATE_REPO_NAME }}
           token: ${{ secrets.GH_REPO_CREATE_TOKEN }}
 
-      - name: Set up GitHub CLI token with personal fine grained access token
-        run: |
-          # Use GH_REPO_CREATE_TOKEN as the authentication token for all GitHub CLI commands
-          echo "GH_TOKEN=${{ secrets.GH_REPO_CREATE_TOKEN }}" >> $GITHUB_ENV
-          if [ -z "${{ secrets.GH_REPO_CREATE_TOKEN }}" ]; then
-            echo "::error::GH_REPO_CREATE_TOKEN is not set. Please configure the secret in the 'repo-setup' environment."
-            exit 1
-          fi
-
       - name: Create new repository and set variables
+        if: ${{ !github.event.inputs.dry_run }}
         run: |
+          echo "🏗️ Creating new repository..."
+          
           REPO_NAME=${{ github.event.inputs.repo_name }}
           # Extract the owner (user or organization) part of the current repository (before the slash)
           OWNER=$(echo '${{ github.repository }}' | cut -d'/' -f1)
@@ -87,7 +175,6 @@ jobs:
           fi
 
           # Retry logic for repository creation with backoff
-          MAX_RETRIES=3
           RETRY_COUNT=0
           SUCCESS=false
           
@@ -102,7 +189,7 @@ jobs:
             else
               echo "❌ Repository creation attempt $RETRY_COUNT failed"
               if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                WAIT_TIME=$((RETRY_COUNT * 10))
+                WAIT_TIME=$((RETRY_COUNT * RETRY_WAIT_BASE))
                 echo "Waiting ${WAIT_TIME} seconds before retry..."
                 sleep $WAIT_TIME
               fi
@@ -117,130 +204,150 @@ jobs:
 
           # Wait until the repository is fully accessible
           echo "Verifying repository accessibility..."
-          for i in {1..5}; do
+          for i in $(seq 1 $MAX_API_ATTEMPTS); do
             if gh api repos/$OWNER/$REPO_NAME > /dev/null 2>&1; then
               echo "::notice::Repository $OWNER/$REPO_NAME is now available."
               break
             else
               echo "Waiting for repository $OWNER/$REPO_NAME to become available..."
-              sleep 4
+              sleep $API_WAIT_TIME
             fi
           done
 
           if ! gh api repos/$OWNER/$REPO_NAME > /dev/null 2>&1; then
-            echo "::warning::Repository $OWNER/$REPO_NAME did not become available after 5 attempts. Continuing anyway."
+            echo "::warning::Repository $OWNER/$REPO_NAME did not become available after $MAX_API_ATTEMPTS attempts. Continuing anyway."
           fi
 
           echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
           echo "OWNER=$OWNER" >> $GITHUB_ENV
           
-          # Check if team_prefix is provided
+          # Set team configuration variables
           TEAM_PREFIX="${{ github.event.inputs.team_prefix }}"
-          if [ -n "$TEAM_PREFIX" ]; then
+          if [ -n "$TEAM_PREFIX" ] && [ "$ORG_ACCESS" = "true" ]; then
             echo "TEAM_PREFIX=$TEAM_PREFIX" >> $GITHUB_ENV
             echo "MAINTAINERS_TEAM=${TEAM_PREFIX}_maintainers" >> $GITHUB_ENV
             echo "CODEOWNERS_TEAM=${TEAM_PREFIX}_codeowners" >> $GITHUB_ENV
-            echo "SKIP_TEAMS=false" >> $GITHUB_ENV
+            echo "TEAMS_ENABLED=true" >> $GITHUB_ENV
             echo "Team operations enabled with prefix: $TEAM_PREFIX"
           else
-            echo "SKIP_TEAMS=true" >> $GITHUB_ENV
-            echo "No team prefix provided - skipping all team operations"
+            echo "TEAMS_ENABLED=false" >> $GITHUB_ENV
+            if [ -z "$TEAM_PREFIX" ]; then
+              echo "No team prefix provided - skipping all team operations"
+            else
+              echo "No organization access - skipping all team operations"
+            fi
           fi
           
           echo "CODEOWNERS_LIST=${{ github.event.inputs.initial_codeowners }}" >> $GITHUB_ENV
 
-      - name: Create teams
+      - name: Check team creation prerequisites
+        if: ${{ !github.event.inputs.dry_run && env.TEAMS_ENABLED == 'true' }}
         run: |
-          if [ "$SKIP_TEAMS" = "true" ]; then
-            echo "🚫 Team operations disabled - no team prefix provided"
-            echo "Skipping team creation, user invitations, and team permissions"
-            exit 0
+          echo "🔍 Checking team creation prerequisites..."
+          
+          # Verify parent teams exist
+          if ! gh api orgs/$OWNER/teams/maintainers > /dev/null 2>&1; then
+            echo "::error::Parent team 'maintainers' does not exist in organization $OWNER"
+            exit 1
           fi
           
-          echo "Debug: Checking organization context for: $OWNER"
-          echo "Debug: Current repository context: ${{ github.repository }}"
-          echo "Debug: Team prefix: $TEAM_PREFIX"
+          if ! gh api orgs/$OWNER/teams/codeowners > /dev/null 2>&1; then
+            echo "::error::Parent team 'codeowners' does not exist in organization $OWNER"
+            exit 1
+          fi
           
-          # Check if we can access the organization teams
-          if gh api orgs/$OWNER/teams > /dev/null 2>&1; then
-            echo "✅ Teams endpoint accessible for organization $OWNER"
+          # Get parent team IDs
+          MAINTAINERS_PARENT_ID=$(gh api orgs/$OWNER/teams/maintainers | jq -r '.id')
+          CODEOWNERS_PARENT_ID=$(gh api orgs/$OWNER/teams/codeowners | jq -r '.id')
+          
+          echo "MAINTAINERS_PARENT_ID=$MAINTAINERS_PARENT_ID" >> $GITHUB_ENV
+          echo "CODEOWNERS_PARENT_ID=$CODEOWNERS_PARENT_ID" >> $GITHUB_ENV
+          
+          echo "✅ Team creation prerequisites verified"
+
+      - name: Create maintainers team
+        if: ${{ !github.event.inputs.dry_run && env.TEAMS_ENABLED == 'true' }}
+        run: |
+          echo "👥 Creating maintainers team: $MAINTAINERS_TEAM"
+          
+          if gh api orgs/$OWNER/teams/$MAINTAINERS_TEAM > /dev/null 2>&1; then
+            echo "Team $MAINTAINERS_TEAM already exists. Skipping creation."
+          else
+            echo "{\"name\": \"$MAINTAINERS_TEAM\", \"description\": \"Maintainers for $REPO_NAME repository (team: $TEAM_PREFIX)\", \"parent_team_id\": $MAINTAINERS_PARENT_ID}" > maintainer_payload.json
             
-            if ! gh api orgs/$OWNER/teams/$MAINTAINERS_TEAM > /dev/null 2>&1; then
-              echo "Creating maintainers team: $MAINTAINERS_TEAM"
-              # Retrieve the numeric ID of the 'maintainers' team to use as the parent_team_id
-              MAINTAINERS_PARENT_ID=$(gh api orgs/$OWNER/teams/maintainers | jq -r '.id')
-              MAINTAINERS_PARENT_ID_NUM=$(echo "$MAINTAINERS_PARENT_ID" | grep -o '[0-9]*')
-              echo "Debug: MAINTAINERS_PARENT_ID_NUM=$MAINTAINERS_PARENT_ID_NUM"
-              if [ -z "$MAINTAINERS_PARENT_ID_NUM" ]; then
-                echo "::error::Invalid team ID format for maintainers. Expected numeric ID."
-                exit 1
-              fi
-              echo "{\"name\": \"$MAINTAINERS_TEAM\", \"description\": \"Maintainers for $REPO_NAME repository (team: $TEAM_PREFIX)\", \"parent_team_id\": $MAINTAINERS_PARENT_ID_NUM}" > maintainer_payload.json
-              gh api orgs/$OWNER/teams \
-                -X POST \
-                -H "Accept: application/vnd.github+json" \
-                --input maintainer_payload.json
+            if gh api orgs/$OWNER/teams -X POST -H "Accept: application/vnd.github+json" --input maintainer_payload.json; then
               echo "✅ Created maintainers team: $MAINTAINERS_TEAM"
             else
-              echo "Team $MAINTAINERS_TEAM already exists. Skipping creation."
+              echo "::error::Failed to create maintainers team"
+              exit 1
             fi
-
-            if ! gh api orgs/$OWNER/teams/$CODEOWNERS_TEAM > /dev/null 2>&1; then
-              echo "Creating codeowners team: $CODEOWNERS_TEAM"
-              CODEOWNERS_PARENT_ID=$(gh api orgs/$OWNER/teams/codeowners | jq -r '.id')
-              CODEOWNERS_PARENT_ID_NUM=$(echo "$CODEOWNERS_PARENT_ID" | grep -o '[0-9]*')
-              echo "Debug: CODEOWNERS_PARENT_ID_NUM=$CODEOWNERS_PARENT_ID_NUM"
-              if [ -z "$CODEOWNERS_PARENT_ID_NUM" ]; then
-                echo "::error::Invalid team ID format for codeowners. Expected numeric ID."
-                exit 1
-              fi
-              echo "{\"name\": \"$CODEOWNERS_TEAM\", \"description\": \"Codeowners for $REPO_NAME repository (team: $TEAM_PREFIX)\", \"parent_team_id\": $CODEOWNERS_PARENT_ID_NUM}" > codeowners_payload.json
-              gh api orgs/$OWNER/teams \
-                -X POST \
-                -H "Accept: application/vnd.github+json" \
-                --input codeowners_payload.json
-              echo "✅ Created codeowners team: $CODEOWNERS_TEAM"
-            else
-              echo "Team $CODEOWNERS_TEAM already exists. Skipping creation."
-            fi
-
-            CODEOWNERS_LIST=$(echo "$CODEOWNERS_LIST" | xargs)
-            # Loop through each provided GitHub username and invite them to the codeowners team
-            # Note: users who are not yet members of the organization will be invited to join
-            # and will need to accept the invitation before they are part of the team and the CODEOWNERS file get fully valid
-            echo "Inviting users to team $CODEOWNERS_TEAM: [$CODEOWNERS_LIST]"
-            for username in $CODEOWNERS_LIST; do
-              clean_user=$(echo "$username" | sed 's/^@//')
-              echo "Checking if @$clean_user is a valid GitHub user..."
-              if gh api users/$clean_user > /dev/null 2>&1; then
-                echo "Inviting @$clean_user to team $CODEOWNERS_TEAM"
-                gh api orgs/$OWNER/teams/$CODEOWNERS_TEAM/memberships/$clean_user -X PUT -f role=member || echo "Failed to invite $clean_user"
-              else
-                echo "::warning::User @$clean_user does not exist or cannot be looked up. Skipping."
-              fi
-            done
-          else
-            echo "::warning::Cannot access teams endpoint for organization $OWNER."
-            echo "This typically means the token lacks 'Organization permissions > Members: Read and write' permission."
-            echo "Please update your fine-grained personal access token to include this permission."
-            echo "Skipping team creation — insufficient permissions."
           fi
 
-      - name: Configure repository settings
+      - name: Create codeowners team
+        if: ${{ !github.event.inputs.dry_run && env.TEAMS_ENABLED == 'true' }}
         run: |
+          echo "👥 Creating codeowners team: $CODEOWNERS_TEAM"
+          
+          if gh api orgs/$OWNER/teams/$CODEOWNERS_TEAM > /dev/null 2>&1; then
+            echo "Team $CODEOWNERS_TEAM already exists. Skipping creation."
+          else
+            echo "{\"name\": \"$CODEOWNERS_TEAM\", \"description\": \"Codeowners for $REPO_NAME repository (team: $TEAM_PREFIX)\", \"parent_team_id\": $CODEOWNERS_PARENT_ID}" > codeowners_payload.json
+            
+            if gh api orgs/$OWNER/teams -X POST -H "Accept: application/vnd.github+json" --input codeowners_payload.json; then
+              echo "✅ Created codeowners team: $CODEOWNERS_TEAM"
+            else
+              echo "::error::Failed to create codeowners team"
+              exit 1
+            fi
+          fi
+
+      - name: Invite users to codeowners team
+        if: ${{ !github.event.inputs.dry_run && env.TEAMS_ENABLED == 'true' }}
+        run: |
+          echo "📧 Inviting users to codeowners team..."
+          
+          CODEOWNERS_LIST=$(echo "$CODEOWNERS_LIST" | xargs)
+          echo "Inviting users to team $CODEOWNERS_TEAM: [$CODEOWNERS_LIST]"
+          
+          for username in $CODEOWNERS_LIST; do
+            clean_user=$(echo "$username" | sed 's/^@//')
+            echo "Checking if @$clean_user is a valid GitHub user..."
+            
+            if gh api users/$clean_user > /dev/null 2>&1; then
+              echo "Inviting @$clean_user to team $CODEOWNERS_TEAM"
+              if gh api orgs/$OWNER/teams/$CODEOWNERS_TEAM/memberships/$clean_user -X PUT -f role=member; then
+                echo "✅ Successfully invited @$clean_user"
+              else
+                echo "::warning::Failed to invite @$clean_user to team"
+              fi
+            else
+              echo "::warning::User @$clean_user does not exist or cannot be looked up. Skipping."
+            fi
+          done
+
+      - name: Configure repository settings
+        if: ${{ !github.event.inputs.dry_run }}
+        run: |
+          echo "⚙️ Configuring repository settings..."
+          
           gh repo edit $OWNER/$REPO_NAME \
             --description "Sandbox API Repository for $REPO_NAME API(s)" \
             --homepage "${{ github.event.inputs.repo_wiki_page }}" \
             --add-topic sandbox-api-repository
+            
           gh api -X PATCH repos/$OWNER/$REPO_NAME \
             -F has_discussions=true \
             -F has_issues=true \
             -F has_wiki=false
+            
+          echo "✅ Repository settings configured"
 
       - name: Update README.md placeholders
+        if: ${{ !github.event.inputs.dry_run }}
         run: |
+          echo "📝 Updating README.md placeholders..."
+          
           # Replace placeholders in the template README.md and push the updated version to the new repository
-          # Note: the README.md file is expected to be in the root of the repository
           sed -i "s/{{repo_name}}/$REPO_NAME/g" README.md
           sed -i "s|{{repo_wiki_page}}|${{ github.event.inputs.repo_wiki_page }}|g" README.md
           sed -i "s|{{subproject_name}}|${{ github.event.inputs.subproject_name }}|g" README.md
@@ -248,16 +355,16 @@ jobs:
           sed -i "s|{{mailinglist_name}}|${{ github.event.inputs.mailinglist_name }}|g" README.md
           sed -i "s|{{initial_codeowners}}|${{ github.event.inputs.initial_codeowners }}|g" README.md
 
-          # Retry loop: waits for README.md to appear in the new repo (max 5 attempts)
+          # Wait for README.md to appear in the new repo
           SHA=""
-          for i in {1..5}; do
+          for i in $(seq 1 $MAX_API_ATTEMPTS); do
             SHA=$(gh api repos/$OWNER/$REPO_NAME/contents/README.md 2>/dev/null | jq -r '.sha')
             if [ "$SHA" != "null" ] && [ -n "$SHA" ]; then
               echo "Found README.md sha: $SHA"
               break
             else
-              echo "README.md not yet available, retrying in 2s..."
-              sleep 2
+              echo "README.md not yet available, retrying in ${API_WAIT_TIME}s..."
+              sleep $API_WAIT_TIME
             fi
           done
 
@@ -266,10 +373,14 @@ jobs:
             -F message='Update README.md with project metadata' \
             -F content="$(base64 -w 0 README.md)" \
             -F sha="$SHA"
+            
+          echo "✅ README.md updated"
 
       - name: Update issue template config placeholders
+        if: ${{ !github.event.inputs.dry_run }}
         run: |
-          # Update .github/ISSUE_TEMPLATE/config.yml placeholders
+          echo "📋 Updating issue template configuration..."
+          
           CONFIG_FILE=".github/ISSUE_TEMPLATE/config.yml"
           if [ -f "$CONFIG_FILE" ]; then
             echo "Updating $CONFIG_FILE placeholders..."
@@ -277,14 +388,14 @@ jobs:
 
             # Wait for the config.yml file to be available in the new repository
             CONFIG_SHA=""
-            for i in {1..5}; do
+            for i in $(seq 1 $MAX_API_ATTEMPTS); do
               CONFIG_SHA=$(gh api repos/$OWNER/$REPO_NAME/contents/$CONFIG_FILE 2>/dev/null | jq -r '.sha')
               if [ "$CONFIG_SHA" != "null" ] && [ -n "$CONFIG_SHA" ]; then
                 echo "Found $CONFIG_FILE sha: $CONFIG_SHA"
                 break
               else
-                echo "$CONFIG_FILE not yet available, retrying in 2s..."
-                sleep 2
+                echo "$CONFIG_FILE not yet available, retrying in ${API_WAIT_TIME}s..."
+                sleep $API_WAIT_TIME
               fi
             done
 
@@ -294,7 +405,7 @@ jobs:
                 -F message="Update $CONFIG_FILE with project metadata" \
                 -F content="$(base64 -w 0 $CONFIG_FILE)" \
                 -F sha="$CONFIG_SHA"
-              echo "Successfully updated $CONFIG_FILE"
+              echo "✅ Successfully updated $CONFIG_FILE"
             else
               echo "::warning::Could not find $CONFIG_FILE in the repository. Skipping update."
             fi
@@ -303,44 +414,41 @@ jobs:
           fi
 
       - name: Set team permissions
+        if: ${{ !github.event.inputs.dry_run && env.TEAMS_ENABLED == 'true' }}
         run: |
-          if [ "$SKIP_TEAMS" = "true" ]; then
-            echo "🚫 Team operations disabled - skipping team permission assignment"
-            exit 0
+          echo "🔐 Setting team permissions..."
+          
+          # Set maintainers team permissions
+          if gh api orgs/$OWNER/teams/$MAINTAINERS_TEAM > /dev/null 2>&1; then
+            gh api orgs/$OWNER/teams/$MAINTAINERS_TEAM/repos/$OWNER/$REPO_NAME \
+              -X PUT -H "Accept: application/vnd.github+json" -f permission=triage
+            echo "✅ Set permissions for $MAINTAINERS_TEAM"
+          else
+            echo "::error::Team $MAINTAINERS_TEAM does not exist. Cannot assign permissions."
+            exit 1
           fi
           
-          if gh api orgs/$OWNER/teams > /dev/null 2>&1; then
-            if gh api orgs/$OWNER/teams/$MAINTAINERS_TEAM > /dev/null 2>&1; then
-              gh api orgs/$OWNER/teams/$MAINTAINERS_TEAM/repos/$OWNER/$REPO_NAME \
-                -X PUT -H "Accept: application/vnd.github+json" -f permission=triage || \
-                echo "::error::Failed to set permissions for $MAINTAINERS_TEAM. Please check team and repository availability."
-            else
-              echo "::error::Team $MAINTAINERS_TEAM does not exist. Cannot assign permissions."
-              exit 1
-            fi
-            
-            if gh api orgs/$OWNER/teams/$CODEOWNERS_TEAM > /dev/null 2>&1; then
-                echo "Assigning permissions to CODEOWNERS_TEAM: [$CODEOWNERS_TEAM]"
-                gh api orgs/$OWNER/teams/$CODEOWNERS_TEAM/repos/$OWNER/$REPO_NAME \
-                  -X PUT -H "Accept: application/vnd.github+json" -f permission=push || \
-                  echo "::error::Failed to set permissions for $CODEOWNERS_TEAM. Please check team and repository availability."
-            else
-              echo "::error::Team $CODEOWNERS_TEAM does not exist. Cannot assign permissions."
-              exit 1
-            fi
-            
-            gh api orgs/$OWNER/teams/admins/repos/$OWNER/$REPO_NAME \
-              -X PUT -H "Accept: application/vnd.github+json" -f permission=maintain || \
-              echo "::error::Failed to set permissions for admin team. Please check team and repository availability."
+          # Set codeowners team permissions
+          if gh api orgs/$OWNER/teams/$CODEOWNERS_TEAM > /dev/null 2>&1; then
+            gh api orgs/$OWNER/teams/$CODEOWNERS_TEAM/repos/$OWNER/$REPO_NAME \
+              -X PUT -H "Accept: application/vnd.github+json" -f permission=push
+            echo "✅ Set permissions for $CODEOWNERS_TEAM"
           else
-            echo "Skipping team permission assignment — not running in an organization."
+            echo "::error::Team $CODEOWNERS_TEAM does not exist. Cannot assign permissions."
+            exit 1
           fi
+          
+          # Set admin team permissions
+          gh api orgs/$OWNER/teams/admins/repos/$OWNER/$REPO_NAME \
+            -X PUT -H "Accept: application/vnd.github+json" -f permission=maintain
+          echo "✅ Set permissions for admin team"
 
       - name: Update CODEOWNERS file
+        if: ${{ !github.event.inputs.dry_run }}
         run: |
+          echo "👤 Updating CODEOWNERS file..."
+          
           # Replace placeholder in CODEOWNERS template with actual list of codeowners
-          # Note: also users who are skipped during team invitation will be added to the CODEOWNERS file and
-          # might need to be corrected manually later and invited manually to the CODEOWNERS team
           sed "s|{{initial_codeowners}}|$CODEOWNERS_LIST|g" templates/CODEOWNERS_TEMPLATE > CODEOWNERS
           CODEOWNERS_SHA=$(gh api repos/$OWNER/$REPO_NAME/contents/CODEOWNERS | jq -r '.sha')
 
@@ -349,10 +457,14 @@ jobs:
             -F message='Update CODEOWNERS from template' \
             -F content="$(base64 -w 0 CODEOWNERS)" \
             -F sha="$CODEOWNERS_SHA"
-
+            
+          echo "✅ CODEOWNERS file updated"
 
       - name: Sync rulesets from template repository
+        if: ${{ !github.event.inputs.dry_run }}
         run: |
+          echo "📏 Syncing rulesets from template repository..."
+          
           TEMPLATE_REPO="${{ env.TEMPLATE_REPO_NAME }}"
           echo "Fetching rulesets from $OWNER/$TEMPLATE_REPO"
 
@@ -369,19 +481,26 @@ jobs:
             RULESET=$(gh api repos/$OWNER/$TEMPLATE_REPO/rulesets/$ruleset_id \
               -H "Accept: application/vnd.github+json")
             NAME=$(echo "$RULESET" | jq -r '.name')
-            echo "Syncing full ruleset: $NAME"
+            echo "Syncing ruleset: $NAME"
 
             PAYLOAD=$(echo "$RULESET" | jq 'del(.id, .repository_id, .creator, .created_at, .updated_at)')
             echo "$PAYLOAD" > ruleset.json
 
-            gh api repos/$OWNER/$REPO_NAME/rulesets \
+            if gh api repos/$OWNER/$REPO_NAME/rulesets \
               -X POST \
               -H "Accept: application/vnd.github+json" \
-              --input ruleset.json || echo "Warning: Failed to apply ruleset $NAME"
+              --input ruleset.json; then
+              echo "✅ Applied ruleset: $NAME"
+            else
+              echo "::warning::Failed to apply ruleset $NAME"
+            fi
           done
 
       - name: Create initial issues
+        if: ${{ !github.event.inputs.dry_run }}
         run: |
+          echo "📋 Creating initial issues..."
+          
           ADMIN_ISSUE_URL=$(gh issue create --repo $OWNER/$REPO_NAME \
             --title "New Repository - Initial administrative tasks" \
             --body "$(cat templates/issues/initial-admin.md)")
@@ -392,26 +511,135 @@ jobs:
 
           gh issue comment "$ADMIN_ISSUE_URL" \
             --body "✅ Repository setup has been completed by automation. You may now proceed with the checklist."
+            
+          echo "✅ Initial issues created"
+
+      - name: Get template files for cleanup
+        if: ${{ !github.event.inputs.dry_run }}
+        run: |
+          echo "🗂️ Identifying template files for cleanup..."
+          
+          # Find all files in templates directory
+          if [ -d "templates" ]; then
+            CLEANUP_FILES=$(find templates -type f -name "*" | jq -R -s -c 'split("\n")[:-1]')
+            echo "CLEANUP_FILES=$CLEANUP_FILES" >> $GITHUB_ENV
+            echo "Found template files for cleanup: $(echo "$CLEANUP_FILES" | jq -r '.[]' | tr '\n' ' ')"
+          else
+            echo "No templates directory found. Setting empty cleanup list."
+            echo "CLEANUP_FILES=[]" >> $GITHUB_ENV
+          fi
 
       - name: Cleanup template files from new repository
+        if: ${{ !github.event.inputs.dry_run }}
         run: |
-          # Explicit list of files to remove after setup from the newly created repository
-          FILES_TO_DELETE=(
-            "templates/CODEOWNERS_TEMPLATE"
-            "templates/issues/initial-admin.md"
-            "templates/issues/initial-codeowners.md"
-            "templates/README.md"
-          )
-
-          for file in "${FILES_TO_DELETE[@]}"; do
-            if gh api repos/$OWNER/$REPO_NAME/contents/$file > /dev/null 2>&1; then
-              sha=$(gh api repos/$OWNER/$REPO_NAME/contents/$file | jq -r '.sha')
-              gh api repos/$OWNER/$REPO_NAME/contents/$file \
-                -X DELETE \
-                -F message="Remove template file $file from new repository" \
-                -F sha="$sha" || echo "::error::Failed to delete $file"
-              echo "::notice::Deleted $file"
-            else
-              echo "::warning::File $file not found during cleanup. Skipping."
+          echo "🧹 Cleaning up template files from new repository..."
+          
+          # Parse the JSON array of files to delete
+          echo "$CLEANUP_FILES" | jq -r '.[]' | while read -r file; do
+            if [ -n "$file" ]; then
+              echo "Attempting to delete: $file"
+              if gh api repos/$OWNER/$REPO_NAME/contents/"$file" > /dev/null 2>&1; then
+                sha=$(gh api repos/$OWNER/$REPO_NAME/contents/"$file" | jq -r '.sha')
+                if gh api repos/$OWNER/$REPO_NAME/contents/"$file" \
+                  -X DELETE \
+                  -F message="Remove template file $file from new repository" \
+                  -F sha="$sha"; then
+                  echo "✅ Deleted $file"
+                else
+                  echo "::warning::Failed to delete $file"
+                fi
+              else
+                echo "::warning::File $file not found during cleanup. Skipping."
+              fi
             fi
           done
+
+      - name: Verify repository setup
+        if: ${{ !github.event.inputs.dry_run }}
+        run: |
+          echo "🔍 Verifying repository setup..."
+          
+          # Check repository exists and is accessible
+          if ! gh api repos/$OWNER/$REPO_NAME > /dev/null 2>&1; then
+            echo "::error::Repository verification failed - repository not accessible"
+            exit 1
+          fi
+          
+          # Check repository settings
+          REPO_INFO=$(gh api repos/$OWNER/$REPO_NAME)
+          DESCRIPTION=$(echo "$REPO_INFO" | jq -r '.description')
+          HOMEPAGE=$(echo "$REPO_INFO" | jq -r '.homepage')
+          HAS_ISSUES=$(echo "$REPO_INFO" | jq -r '.has_issues')
+          HAS_DISCUSSIONS=$(echo "$REPO_INFO" | jq -r '.has_discussions')
+          
+          echo "Repository description: $DESCRIPTION"
+          echo "Repository homepage: $HOMEPAGE"
+          echo "Issues enabled: $HAS_ISSUES"
+          echo "Discussions enabled: $HAS_DISCUSSIONS"
+          
+          # Verify team permissions (if teams were created)
+          if [ "$TEAMS_ENABLED" = "true" ]; then
+            echo "Checking team permissions..."
+            
+            # Check maintainers team
+            if gh api orgs/$OWNER/teams/$MAINTAINERS_TEAM/repos/$OWNER/$REPO_NAME > /dev/null 2>&1; then
+              MAINTAINER_PERM=$(gh api orgs/$OWNER/teams/$MAINTAINERS_TEAM/repos/$OWNER/$REPO_NAME | jq -r '.permissions.triage')
+              echo "Maintainers team triage permission: $MAINTAINER_PERM"
+            fi
+            
+            # Check codeowners team
+            if gh api orgs/$OWNER/teams/$CODEOWNERS_TEAM/repos/$OWNER/$REPO_NAME > /dev/null 2>&1; then
+              CODEOWNERS_PERM=$(gh api orgs/$OWNER/teams/$CODEOWNERS_TEAM/repos/$OWNER/$REPO_NAME | jq -r '.permissions.push')
+              echo "Codeowners team push permission: $CODEOWNERS_PERM"
+            fi
+          fi
+          
+          # Check if CODEOWNERS file exists and has content
+          if gh api repos/$OWNER/$REPO_NAME/contents/CODEOWNERS > /dev/null 2>&1; then
+            echo "✅ CODEOWNERS file exists"
+          else
+            echo "::warning::CODEOWNERS file not found"
+          fi
+          
+          # Check if issues were created
+          ISSUES_COUNT=$(gh api repos/$OWNER/$REPO_NAME/issues | jq length)
+          echo "Created issues count: $ISSUES_COUNT"
+          
+          # Check if template files were cleaned up
+          REMAINING_TEMPLATES=0
+          echo "$CLEANUP_FILES" | jq -r '.[]' | while read -r file; do
+            if [ -n "$file" ] && gh api repos/$OWNER/$REPO_NAME/contents/"$file" > /dev/null 2>&1; then
+              echo "::warning::Template file still exists: $file"
+              REMAINING_TEMPLATES=$((REMAINING_TEMPLATES + 1))
+            fi
+          done
+          
+          echo "✅ Repository setup verification completed"
+          echo "🎉 Repository https://github.com/$OWNER/$REPO_NAME has been successfully created and configured!"
+
+      - name: Dry run summary
+        if: ${{ github.event.inputs.dry_run }}
+        run: |
+          echo "🏃‍♂️ DRY RUN MODE - No repository created"
+          echo ""
+          echo "✅ Input validation passed"
+          echo "✅ Token permissions verified"
+          echo ""
+          echo "📋 Summary of what would be created:"
+          echo "Repository: ${{ github.event.inputs.repo_name }}"
+          echo "Wiki page: ${{ github.event.inputs.repo_wiki_page }}"
+          echo "Subproject: ${{ github.event.inputs.subproject_name }}"
+          echo "Subproject wiki: ${{ github.event.inputs.subproject_wiki_page }}"
+          echo "Mailing list: ${{ github.event.inputs.mailinglist_name }}"
+          echo "Initial codeowners: ${{ github.event.inputs.initial_codeowners }}"
+          echo "Team prefix: ${{ github.event.inputs.team_prefix }}"
+          echo ""
+          if [ -n "${{ github.event.inputs.team_prefix }}" ] && [ "$ORG_ACCESS" = "true" ]; then
+            echo "🔧 Teams that would be created:"
+            echo "  - ${{ github.event.inputs.team_prefix }}_maintainers"
+            echo "  - ${{ github.event.inputs.team_prefix }}_codeowners"
+          else
+            echo "🚫 No teams would be created (no prefix provided or no org access)"
+          fi
+          echo ""
+          echo "To create the repository, run this workflow again without the 'dry_run' option."
