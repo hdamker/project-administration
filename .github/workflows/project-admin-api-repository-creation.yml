@@ -166,14 +166,14 @@ jobs:
           echo "✅ Token validation completed"
           
       - name: Checkout template repository
-        if: ${{ !github.event.inputs.dry_run }}
+        if: ${{ github.event.inputs.dry_run != 'true' }}
         uses: actions/checkout@v4
         with:
           repository: camaraproject/${{ env.TEMPLATE_REPO_NAME }}
           token: ${{ secrets.GH_REPO_CREATE_TOKEN }}
 
       - name: Create new repository and set variables
-        if: ${{ !github.event.inputs.dry_run }}
+        if: ${{ github.event.inputs.dry_run != 'true' }}
         run: |
           echo "🏗️ Creating new repository..."
           
@@ -256,7 +256,7 @@ jobs:
           echo "CODEOWNERS_LIST=${{ github.event.inputs.initial_codeowners }}" >> $GITHUB_ENV
 
       - name: Check team creation prerequisites
-        if: ${{ !github.event.inputs.dry_run && env.TEAMS_ENABLED == 'true' }}
+        if: ${{ github.event.inputs.dry_run != 'true' && env.TEAMS_ENABLED == 'true' }}
         run: |
           echo "🔍 Checking team creation prerequisites..."
           
@@ -281,7 +281,7 @@ jobs:
           echo "✅ Team creation prerequisites verified"
 
       - name: Create maintainers team
-        if: ${{ !github.event.inputs.dry_run && env.TEAMS_ENABLED == 'true' }}
+        if: ${{ github.event.inputs.dry_run != 'true' && env.TEAMS_ENABLED == 'true' }}
         run: |
           echo "👥 Creating maintainers team: $MAINTAINERS_TEAM"
           
@@ -299,7 +299,7 @@ jobs:
           fi
 
       - name: Create codeowners team
-        if: ${{ !github.event.inputs.dry_run && env.TEAMS_ENABLED == 'true' }}
+        if: ${{ github.event.inputs.dry_run != 'true' && env.TEAMS_ENABLED == 'true' }}
         run: |
           echo "👥 Creating codeowners team: $CODEOWNERS_TEAM"
           
@@ -317,7 +317,7 @@ jobs:
           fi
 
       - name: Invite users to codeowners team
-        if: ${{ !github.event.inputs.dry_run && env.TEAMS_ENABLED == 'true' }}
+        if: ${{ github.event.inputs.dry_run != 'true' && env.TEAMS_ENABLED == 'true' }}
         run: |
           echo "📧 Inviting users to codeowners team..."
           
@@ -341,7 +341,7 @@ jobs:
           done
 
       - name: Configure repository settings
-        if: ${{ !github.event.inputs.dry_run }}
+        if: ${{ github.event.inputs.dry_run != 'true' }}
         run: |
           echo "⚙️ Configuring repository settings..."
           
@@ -358,7 +358,7 @@ jobs:
           echo "✅ Repository settings configured"
 
       - name: Update README.md placeholders
-        if: ${{ !github.event.inputs.dry_run }}
+        if: ${{ github.event.inputs.dry_run != 'true' }}
         run: |
           echo "📝 Updating README.md placeholders..."
           
@@ -392,7 +392,7 @@ jobs:
           echo "✅ README.md updated"
 
       - name: Update issue template config placeholders
-        if: ${{ !github.event.inputs.dry_run }}
+        if: ${{ github.event.inputs.dry_run != 'true' }}
         run: |
           echo "📋 Updating issue template configuration..."
           
@@ -429,7 +429,7 @@ jobs:
           fi
 
       - name: Set team permissions
-        if: ${{ !github.event.inputs.dry_run && env.TEAMS_ENABLED == 'true' }}
+        if: ${{ github.event.inputs.dry_run != 'true' && env.TEAMS_ENABLED == 'true' }}
         run: |
           echo "🔐 Setting team permissions..."
           
@@ -459,7 +459,7 @@ jobs:
           echo "✅ Set permissions for admin team"
 
       - name: Update CODEOWNERS file
-        if: ${{ !github.event.inputs.dry_run }}
+        if: ${{ github.event.inputs.dry_run != 'true' }}
         run: |
           echo "👤 Updating CODEOWNERS file..."
           
@@ -476,7 +476,7 @@ jobs:
           echo "✅ CODEOWNERS file updated"
 
       - name: Sync rulesets from template repository
-        if: ${{ !github.event.inputs.dry_run }}
+        if: ${{ github.event.inputs.dry_run != 'true' }}
         run: |
           echo "📏 Syncing rulesets from template repository..."
           
@@ -512,7 +512,7 @@ jobs:
           done
 
       - name: Create initial issues
-        if: ${{ !github.event.inputs.dry_run }}
+        if: ${{ github.event.inputs.dry_run != 'true' }}
         run: |
           echo "📋 Creating initial issues..."
           
@@ -530,7 +530,7 @@ jobs:
           echo "✅ Initial issues created"
 
       - name: Get template files for cleanup
-        if: ${{ !github.event.inputs.dry_run }}
+        if: ${{ github.event.inputs.dry_run != 'true' }}
         run: |
           echo "🗂️ Identifying template files for cleanup..."
           
@@ -545,7 +545,7 @@ jobs:
           fi
 
       - name: Cleanup template files from new repository
-        if: ${{ !github.event.inputs.dry_run }}
+        if: ${{ github.event.inputs.dry_run != 'true' }}
         run: |
           echo "🧹 Cleaning up template files from new repository..."
           
@@ -570,7 +570,7 @@ jobs:
           done
 
       - name: Verify repository setup
-        if: ${{ !github.event.inputs.dry_run }}
+        if: ${{ github.event.inputs.dry_run != 'true' }}
         run: |
           echo "🔍 Verifying repository setup..."
           
@@ -633,7 +633,7 @@ jobs:
           echo "🎉 Repository https://github.com/$OWNER/$REPO_NAME has been successfully created and configured!"
 
       - name: Dry run summary
-        if: ${{ github.event.inputs.dry_run }}
+        if: ${{ github.event.inputs.dry_run == 'true' }}
         run: |
           echo "🏃‍♂️ DRY RUN MODE - No repository created" | tee -a $GITHUB_STEP_SUMMARY
           echo "" | tee -a $GITHUB_STEP_SUMMARY
