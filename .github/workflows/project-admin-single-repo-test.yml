@@ -19,6 +19,7 @@ on:
         options:
           - 'disable-wiki'
           - 'add-changelog-codeowners'
+          - 'add-changelog-file'
           - 'update-swagger-links'
           - 'update-swagger-links-releases'
         default: 'disable-wiki'
@@ -201,7 +202,7 @@ jobs:
             summary += `**Action Taken**: ${actionTaken}\n`;
             
             // Add operation-specific details
-            if (['add-changelog-codeowners', 'update-swagger-links'].includes(operation)) {
+            if (['add-changelog-codeowners', 'add-changelog-file', 'update-swagger-links'].includes(operation)) {
               summary += `**Commit Strategy**: ${commitStrategy}\n`;
             }
             

@@ -14,9 +14,9 @@ on:
         options:
           - 'disable-wiki'
           - 'add-changelog-codeowners'
+          - 'add-changelog-file'
           - 'update-swagger-links'
           - 'update-swagger-links-releases'
-          - 'update-swagger-links'
         default: 'disable-wiki'
       
       dry_run:

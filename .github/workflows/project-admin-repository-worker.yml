@@ -79,7 +79,7 @@ jobs:
               }
               
               // For file-based operations, verify write access
-              if (['add-changelog-codeowners', 'update-swagger-links'].includes(operation)) {
+              if (['add-changelog-codeowners', 'add-changelog-file', 'update-swagger-links'].includes(operation)) {
                 console.log('✅ File-based operation - write permissions will be tested during git operations');
               }
               
@@ -102,7 +102,7 @@ jobs:
             }
 
       - name: Setup Git Configuration
-        if: contains(fromJson('["add-changelog-codeowners", "update-swagger-links"]'), inputs.operation)
+        if: contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links"]'), inputs.operation)
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.CAMARA_TOKEN }}
@@ -125,7 +125,7 @@ jobs:
             core.exportVariable('COMMIT_AUTHOR_EMAIL', gitEmail);
 
       - name: Configure Git
-        if: contains(fromJson('["add-changelog-codeowners", "update-swagger-links"]'), inputs.operation)
+        if: contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links"]'), inputs.operation)
         run: |
           git config user.name "${{ env.COMMIT_AUTHOR_NAME }}"
           git config user.email "${{ env.COMMIT_AUTHOR_EMAIL }}"
@@ -448,6 +448,143 @@ jobs:
           PRBODY
           echo "EOF" >> $GITHUB_ENV
 
+      - name: Execute Operation - Add Changelog File
+        if: inputs.operation == 'add-changelog-file'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.CAMARA_TOKEN }}
+          script: |
+            const [owner, repo] = '${{ inputs.repository_full_name }}'.split('/');
+            const fs = require('fs');
+            
+            try {
+              console.log('🔍 Checking for existing CHANGELOG file...');
+              
+              // Check for existing CHANGELOG files (both variants)
+              let hasChangelog = false;
+              let changelogVariant = '';
+              
+              if (fs.existsSync('CHANGELOG.md')) {
+                hasChangelog = true;
+                changelogVariant = 'CHANGELOG.md';
+                console.log('✅ Found CHANGELOG.md');
+              } else if (fs.existsSync('CHANGELOG.MD')) {
+                hasChangelog = true;
+                changelogVariant = 'CHANGELOG.MD';
+                console.log('✅ Found CHANGELOG.MD');
+              } else {
+                console.log('ℹ️ No CHANGELOG file found');
+              }
+              
+              console.log('🔍 Checking for existing releases...');
+              
+              // Check for releases using GitHub API
+              let hasReleases = false;
+              try {
+                const releasesResponse = await github.rest.repos.listReleases({
+                  owner: owner,
+                  repo: repo,
+                  per_page: 1
+                });
+                hasReleases = releasesResponse.data.length > 0;
+                
+                if (hasReleases) {
+                  console.log(`✅ Repository has ${releasesResponse.data.length > 0 ? 'releases' : 'no releases'}`);
+                } else {
+                  console.log('ℹ️ Repository has no releases');
+                }
+              } catch (releasesError) {
+                console.log(`ℹ️ Could not check releases (${releasesError.status}), assuming no releases`);
+                hasReleases = false;
+              }
+              
+              // Decision logic
+              if (hasChangelog && hasReleases) {
+                console.log('✅ Repository already has both CHANGELOG and releases');
+                core.exportVariable('operation_status', 'no-change');
+                core.exportVariable('result_type', 'no-change');
+                core.exportVariable('details', `Repository already has ${changelogVariant} file and releases`);
+                core.exportVariable('action_taken', 'none');
+                core.exportVariable('has_changes', 'false');
+                
+              } else if (!hasChangelog && !hasReleases) {
+                console.log('📥 Downloading template CHANGELOG.md...');
+                
+                try {
+                  // Download template CHANGELOG.md from Template_API_Repository
+                  const templateResponse = await github.rest.repos.getContent({
+                    owner: 'camaraproject',
+                    repo: 'Template_API_Repository',
+                    path: 'CHANGELOG.md'
+                  });
+                  
+                  // Decode base64 content
+                  const content = Buffer.from(templateResponse.data.content, 'base64').toString('utf8');
+                  
+                  // Write to file
+                  fs.writeFileSync('CHANGELOG.md', content);
+                  
+                  console.log('✅ Successfully downloaded and added template CHANGELOG.md');
+                  core.exportVariable('operation_status', 'files-modified');
+                  core.exportVariable('result_type', 'success');
+                  core.exportVariable('details', 'Added template CHANGELOG.md file from Template_API_Repository');
+                  core.exportVariable('action_taken', 'file-addition');
+                  core.exportVariable('has_changes', 'true');
+                  core.exportVariable('commit_message', 'chore: add template CHANGELOG.md file');
+                  core.exportVariable('pr_title', 'chore: add template CHANGELOG.md file');
+                  
+                  const prBody = `## CAMARA Project Admin Update
+
+            This pull request adds the standard CHANGELOG.md file template to this repository.
+
+            **Changes:**
+            - Added \`CHANGELOG.md\` using the template from Template_API_Repository
+            - This establishes the standard changelog format for tracking release history
+
+            **Why this change:**
+            - Repository had no CHANGELOG file and no releases yet
+            - Adding the template now ensures proper release documentation from the start
+            - Follows CAMARA project standards for repository structure
+
+            The CHANGELOG.md file should be updated with each release to document changes, improvements, and fixes.`;
+                  
+                  core.exportVariable('pr_body', prBody);
+                  
+                } catch (downloadError) {
+                  console.log(`❌ Failed to download template CHANGELOG.md: ${downloadError.message}`);
+                  core.exportVariable('operation_status', 'download-failed');
+                  core.exportVariable('result_type', 'error');
+                  core.exportVariable('details', `Failed to download template CHANGELOG.md: ${downloadError.message}`);
+                  core.exportVariable('action_taken', 'failed');
+                  core.exportVariable('has_changes', 'false');
+                }
+                
+              } else if (hasChangelog && !hasReleases) {
+                console.log('⚠️ Repository has CHANGELOG but no releases - manual review needed');
+                core.exportVariable('operation_status', 'changelog-without-releases');
+                core.exportVariable('result_type', 'warning');
+                core.exportVariable('details', `Repository has ${changelogVariant} file but no releases - manual review recommended`);
+                core.exportVariable('action_taken', 'skipped');
+                core.exportVariable('has_changes', 'false');
+                
+              } else if (!hasChangelog && hasReleases) {
+                console.log('⚠️ Repository has releases but no CHANGELOG - manual review needed');
+                core.exportVariable('operation_status', 'releases-without-changelog');
+                core.exportVariable('result_type', 'warning');
+                core.exportVariable('details', 'Repository has releases but no CHANGELOG file - manual review recommended');
+                core.exportVariable('action_taken', 'skipped');
+                core.exportVariable('has_changes', 'false');
+              }
+              
+            } catch (error) {
+              console.log(`❌ Operation failed: ${error.message}`);
+              core.exportVariable('operation_status', 'unexpected-error');
+              core.exportVariable('result_type', 'error');
+              core.exportVariable('details', `Operation failed: ${error.message}`);
+              core.exportVariable('action_taken', 'failed');
+              core.exportVariable('has_changes', 'false');
+            }
+
       - name: Execute Operation - Update Swagger Links
         if: inputs.operation == 'update-swagger-links'
         run: |
@@ -521,7 +658,7 @@ jobs:
             echo "commit_message=chore: migrate swagger editor links to CAMARA swagger-ui" >> $GITHUB_ENV
             echo "pr_title=chore: migrate swagger editor links to CAMARA swagger-ui" >> $GITHUB_ENV
             echo "pr_body<<EOF" >> $GITHUB_ENV
-            cat << PRBODY >> $GITHUB_ENV
+            cat << 'PRBODY' >> $GITHUB_ENV
           ## CAMARA Project Admin Update
           
           This pull request migrates swagger editor links to use the CAMARA project's dedicated swagger-ui instance for better reliability (original links to swagger.io were broken).
@@ -543,7 +680,7 @@ jobs:
           fi
 
       - name: Handle Dry Run
-        if: env.has_changes == 'true' && inputs.dry_run == true && contains(fromJson('["add-changelog-codeowners", "update-swagger-links"]'), inputs.operation)
+        if: env.has_changes == 'true' && inputs.dry_run == true && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links"]'), inputs.operation)
         run: |
           echo "🧪 DRY RUN: Would commit and create PR/commit with:"
           echo "  Commit message: ${{ env.commit_message }}"
@@ -558,7 +695,7 @@ jobs:
           echo "details=Dry run: Would apply changes using ${{ inputs.commit_strategy }} strategy" >> $GITHUB_ENV
 
       - name: Commit and Push Changes (Direct Strategy)
-        if: env.has_changes == 'true' && inputs.dry_run == false && (inputs.commit_strategy == 'direct-with-warning' || inputs.commit_strategy == 'direct-with-pr-fallback') && contains(fromJson('["add-changelog-codeowners", "update-swagger-links"]'), inputs.operation)
+        if: env.has_changes == 'true' && inputs.dry_run == false && (inputs.commit_strategy == 'direct-with-warning' || inputs.commit_strategy == 'direct-with-pr-fallback') && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links"]'), inputs.operation)
         id: direct-commit
         continue-on-error: true
         run: |
@@ -584,7 +721,7 @@ jobs:
           fi
 
       - name: Handle Direct Commit Failure
-        if: env.has_changes == 'true' && inputs.dry_run == false && steps.direct-commit.outcome == 'failure' && inputs.commit_strategy == 'direct-with-warning' && contains(fromJson('["add-changelog-codeowners", "update-swagger-links"]'), inputs.operation)
+        if: env.has_changes == 'true' && inputs.dry_run == false && steps.direct-commit.outcome == 'failure' && inputs.commit_strategy == 'direct-with-warning' && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links"]'), inputs.operation)
         run: |
           echo "⚠️ Direct commit blocked (likely branch protection) - operation skipped"
           echo "result_type=warning" >> $GITHUB_ENV
@@ -592,7 +729,7 @@ jobs:
           echo "details=Direct commit blocked by branch protection" >> $GITHUB_ENV
 
       - name: Create Pull Request
-        if: env.has_changes == 'true' && inputs.dry_run == false && (inputs.commit_strategy == 'pull-request' || (inputs.commit_strategy == 'direct-with-pr-fallback' && env.direct_commit_success != 'true')) && contains(fromJson('["add-changelog-codeowners", "update-swagger-links"]'), inputs.operation)
+        if: env.has_changes == 'true' && inputs.dry_run == false && (inputs.commit_strategy == 'pull-request' || (inputs.commit_strategy == 'direct-with-pr-fallback' && env.direct_commit_success != 'true')) && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links"]'), inputs.operation)
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.CAMARA_TOKEN }}
