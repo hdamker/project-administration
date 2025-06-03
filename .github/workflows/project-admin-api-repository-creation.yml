@@ -635,10 +635,97 @@ jobs:
       - name: Dry run summary
         if: ${{ github.event.inputs.dry_run }}
         run: |
-          echo "🏃‍♂️ DRY RUN MODE - No repository created"
-          echo ""
-          echo "✅ Input validation passed"
-          echo "✅ Token permissions verified"
+          echo "🏃‍♂️ DRY RUN MODE - No repository created" | tee -a $GITHUB_STEP_SUMMARY
+          echo "" | tee -a $GITHUB_STEP_SUMMARY
+          echo "✅ Input validation passed" | tee -a $GITHUB_STEP_SUMMARY
+          echo "✅ Token permissions verified" | tee -a $GITHUB_STEP_SUMMARY
+          echo "" | tee -a $GITHUB_STEP_SUMMARY
+          
+          # Create formatted summary
+          cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          ## 📋 Dry Run Summary - What Would Be Created
+
+          | Setting | Value |
+          |---------|-------|
+          | **Repository Name** | `${{ github.event.inputs.repo_name }}` |
+          | **Wiki Page** | ${{ github.event.inputs.repo_wiki_page }} |
+          | **Subproject** | ${{ github.event.inputs.subproject_name || '_None specified_' }} |
+          | **Subproject Wiki** | ${{ github.event.inputs.subproject_wiki_page || '_None specified_' }} |
+          | **Mailing List** | `${{ github.event.inputs.mailinglist_name }}` |
+          | **Initial Codeowners** | `${{ github.event.inputs.initial_codeowners }}` |
+          | **Team Prefix** | `${{ github.event.inputs.team_prefix || '_None - no teams will be created_' }}` |
+
+          EOF
+          
+          # Add team information
+          if [ -n "${{ github.event.inputs.team_prefix }}" ] && [ "$ORG_ACCESS" = "true" ]; then
+            cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          ## 🔧 Teams That Would Be Created
+
+          - `${{ github.event.inputs.team_prefix }}_maintainers` (under maintainers team)
+          - `${{ github.event.inputs.team_prefix }}_codeowners` (under codeowners team)
+
+          **Team Permissions:**
+          - Maintainers team: `triage` permission
+          - Codeowners team: `push` permission  
+          - Admin team: `maintain` permission
+
+          EOF
+          else
+            cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          ## 🚫 Team Creation
+
+          No teams would be created because:
+          EOF
+            
+            if [ -z "${{ github.event.inputs.team_prefix }}" ]; then
+              echo "- No team prefix provided" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            if [ "$ORG_ACCESS" != "true" ]; then
+              echo "- No organization access available" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Add repository settings
+          cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          ## ⚙️ Repository Configuration
+
+          - **Description:** "Sandbox API Repository for ${{ github.event.inputs.repo_name }} API(s)"
+          - **Homepage:** ${{ github.event.inputs.repo_wiki_page }}
+          - **Topics:** `sandbox-api-repository`
+          - **Features:** Issues ✅, Discussions ✅, Wiki ❌
+
+          ## 📄 Files That Would Be Updated
+
+          - `README.md` - Updated with project metadata
+          - `CODEOWNERS` - Generated from template with specified users
+          - `.github/ISSUE_TEMPLATE/config.yml` - Updated with repository name
+          - Initial issues created for admin and codeowner tasks
+
+          ## 🛡️ Security & Permissions
+
+          - Branch protection rules synced from template repository
+          - Repository rulesets applied from `Template_API_Repository`
+          - Template files cleaned up after setup
+
+          ---
+
+          ## ✅ Next Steps
+
+          **To create this repository for real:**
+          1. Run this workflow again
+          2. **Uncheck** the "Dry run mode" option
+          3. Keep all other inputs the same
+          4. Click "Run workflow"
+
+          **Repository URL (when created):** `https://github.com/${{ github.repository_owner }}/${{ github.event.inputs.repo_name }}`
+
+          EOF
+          
+          # Also log to console for workflow logs
           echo ""
           echo "📋 Summary of what would be created:"
           echo "Repository: ${{ github.event.inputs.repo_name }}"
