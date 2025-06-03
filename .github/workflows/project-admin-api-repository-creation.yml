@@ -44,7 +44,7 @@ on:
       dry_run:
         description: 'Dry run mode - validate inputs without creating repository'
         type: boolean
-        default: true
+        default: false
 
 jobs:
   setup:
@@ -717,7 +717,7 @@ jobs:
 
           **To create this repository for real:**
           1. Run this workflow again
-          2. **Uncheck** the "Dry run mode" option
+          2. **Leave** "Dry run mode" unchecked (default behavior)
           3. Keep all other inputs the same
           4. Click "Run workflow"
 

@@ -50,7 +50,7 @@ To automate the initial setup of a new repository using the `Template_API_Reposi
 1. Go to **Actions** → **API Repository Creation** in `camaraproject/project-administration`
 2. Click **"Run workflow"**
 3. Fill required inputs (see [example](#-example-usage) below)
-4. **Default**: "Dry run mode" is enabled by default to validate inputs safely
+4. **Recommended**: Check "Dry run mode" first to validate inputs safely
 5. Click **"Run workflow"** to start
 
 ---
@@ -73,7 +73,7 @@ Before running this workflow, ensure you have:
 2. Click on the **"API Repository Creation"** workflow in the left sidebar
 3. Click the **"Run workflow"** button
 4. Fill in the required inputs in the form
-5. **Note**: "Dry run mode" is enabled by default for safety - uncheck to create repository
+5. **Optional**: Check "Dry run mode" to validate inputs without creating repository
 6. Click **"Run workflow"** to start the process
 7. Monitor the workflow execution for any issues
 
@@ -88,7 +88,7 @@ Before running this workflow, ensure you have:
 | `mailinglist_name` | Yes | Mailing list name in the form "sp-xxx" | `sp-qod` |
 | `initial_codeowners` | Yes | GitHub usernames with `@` prefix | `@alice @bob @charlie` |
 | `team_prefix` | No | Repository name in kebab-case for team creation | `qos-booking` |
-| `dry_run` | No | Validate inputs without creating repository (default: enabled) | `true/false` |
+| `dry_run` | No | Validate inputs without creating repository | `true/false` |
 
 ### 📝 Example Usage
 
@@ -102,7 +102,7 @@ subproject_wiki_page: "https://lf-camaraproject.atlassian.net/wiki/x/XCPe"
 mailinglist_name: "sp-qod"
 initial_codeowners: "@alice @bob @charlie"
 team_prefix: "qos-booking"
-dry_run: false  # Set to false to actually create the repository
+dry_run: false  # Default - creates the repository immediately
 ```
 
 **Teams that would be created:**
@@ -279,15 +279,15 @@ templates/README.md                    # Template documentation (gets deleted)
 
 ### Dry Run Mode
 
-**Dry run mode is enabled by default** to safely validate inputs and permissions without creating a repository:
+**Enable dry run mode** to validate inputs and permissions without creating a repository:
 
-1. The "Dry run mode" option is checked by default when running the workflow
+1. Check the "Dry run mode" option when running the workflow
 2. The workflow will:
    - ✅ Validate all inputs according to format requirements
    - ✅ Verify token permissions and organization access
    - ✅ Show a summary of what would be created
    - ❌ **Not create any repository or teams**
-3. **To actually create the repository**: Uncheck "Dry run mode" before running
+3. **To actually create the repository**: Leave "Dry run mode" unchecked (default)
 
 **Dry run output includes:**
 - Input validation results
@@ -300,7 +300,7 @@ templates/README.md                    # Template documentation (gets deleted)
 
 - **Repository naming**: Use test names like `test-api-$(date +%s)` to avoid collisions
 - **Personal testing**: Run in a personal account to skip org/team features
-- **Use dry run first**: Always enabled by default for safety
+- **Use dry run first**: Enable dry run mode for initial validation
 - **Post-creation checklist**: Verify after creation:
   - Repository metadata and settings
   - CODEOWNERS file and team permissions
@@ -373,7 +373,7 @@ A: For centralized management of CAMARA project administration and automation wo
 A: Yes, but team-related steps will be automatically skipped.
 
 **Q: What's the difference between dry run and normal mode?**  
-A: Dry run (enabled by default) validates inputs and shows what would be created without actually creating anything. Normal mode (uncheck dry run) creates the repository and all components.
+A: Dry run (when enabled) validates inputs and shows what would be created without actually creating anything. Normal mode (default) creates the repository and all components.
 
 **Q: How do I modify the template files?**  
 A: Edit files in the `Template_API_Repository`, not in the `tooling` repository. The workflow syncs from the template.
