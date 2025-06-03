@@ -118,17 +118,32 @@ jobs:
         run: |
           echo "🔐 Setting up authentication and validating token permissions..."
           
-          # Use GH_REPO_CREATE_TOKEN as the authentication token for all GitHub CLI commands
-          echo "GH_TOKEN=${{ secrets.GH_REPO_CREATE_TOKEN }}" >> $GITHUB_ENV
+          # Check if token secret is available
           if [ -z "${{ secrets.GH_REPO_CREATE_TOKEN }}" ]; then
             echo "::error::GH_REPO_CREATE_TOKEN is not set. Please configure the secret in the 'repository-creation' environment."
+            echo "::error::Make sure the 'repository-creation' environment exists and contains the GH_REPO_CREATE_TOKEN secret."
             exit 1
           fi
           
+          # Use GH_REPO_CREATE_TOKEN as the authentication token for all GitHub CLI commands
+          echo "GH_TOKEN=${{ secrets.GH_REPO_CREATE_TOKEN }}" >> $GITHUB_ENV
+          
+          # Debug: Check token format (without revealing the token)
+          TOKEN_LENGTH=$(echo "${{ secrets.GH_REPO_CREATE_TOKEN }}" | wc -c)
+          echo "Debug: Token length: $TOKEN_LENGTH characters"
+          
           # Validate token has basic access
           echo "Validating token permissions..."
-          if ! gh auth status > /dev/null 2>&1; then
-            echo "::error::Token authentication failed. Please check your GH_REPO_CREATE_TOKEN."
+          if ! gh auth status 2>/dev/null; then
+            echo "::error::Token authentication failed."
+            echo "::error::This usually means:"
+            echo "::error::1. Token is invalid, expired, or malformed"
+            echo "::error::2. Token doesn't have access to this repository"
+            echo "::error::3. For fine-grained PATs: check repository access includes this repo"
+            
+            # Try to get more specific error info
+            echo "Debug: Attempting to get detailed auth status..."
+            gh auth status || true
             exit 1
           fi
           
