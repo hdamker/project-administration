@@ -475,6 +475,24 @@ jobs:
             
           echo "✅ CODEOWNERS file updated"
 
+      - name: Create initial issues
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        run: |
+          echo "📋 Creating initial issues..."
+          
+          ADMIN_ISSUE_URL=$(gh issue create --repo $OWNER/$REPO_NAME \
+            --title "New Repository - Initial administrative tasks" \
+            --body "$(cat templates/issues/initial-admin.md)")
+
+          gh issue create --repo $OWNER/$REPO_NAME \
+            --title "New Repository - Initial tasks for codeowners" \
+            --body "$(cat templates/issues/initial-codeowners.md)"
+
+          gh issue comment "$ADMIN_ISSUE_URL" \
+            --body "✅ Repository setup has been completed by automation. You may now proceed with the checklist."
+            
+          echo "✅ Initial issues created"
+
       - name: Get template files for cleanup
         if: ${{ github.event.inputs.dry_run != 'true' }}
         run: |

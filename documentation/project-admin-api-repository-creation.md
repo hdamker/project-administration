@@ -175,6 +175,13 @@ dry_run: false  # Default - creates the repository immediately
   - Administrative tasks issue with automatic completion comment
   - Codeowner tasks issue with responsibilities
 
+### ✅ Initial Issues
+
+- **Creates administrative tasks issue** from `templates/issues/initial-admin.md`
+- **Creates codeowner tasks issue** from `templates/issues/initial-codeowners.md`
+- **Adds completion comment** to admin issue confirming automation success
+- **Performed before template cleanup** to ensure templates are available
+
 ### ✅ Cleanup
 
 - **Dynamically identifies template files** in the `templates/` directory
