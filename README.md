@@ -4,83 +4,36 @@
 <a href="https://github.com/camaraproject/project-administration/graphs/contributors" title="Contributors"><img src="https://img.shields.io/github/contributors/camaraproject/project-administration?style=plastic"></a>
 <a href="https://github.com/camaraproject/project-administration" title="Repo Size"><img src="https://img.shields.io/github/repo-size/camaraproject/project-administration?style=plastic"></a>
 <a href="https://github.com/camaraproject/project-administration/blob/main/LICENSE" title="License"><img src="https://img.shields.io/badge/License-Apache%202.0-green.svg?style=plastic"></a>
-<a href="https://github.com/camaraproject/project-administration/releases/latest" title="Latest Release"><img src="https://img.shields.io/github/release/camaraproject/project-administration?style=plastic"></a>
-<a href="https://github.com/camaraproject/Governance/blob/main/ProjectStructureAndRoles.md" title="Sandbox API Repository"><img src="https://img.shields.io/badge/Sandbox%20API%20Repository-yellow?style=plastic"></a>
-<a href="https://github.com/camaraproject/Governance/blob/main/ProjectStructureAndRoles.md" title="Incubating API Repository"><img src="https://img.shields.io/badge/Incubating%20API%20Repository-green?style=plastic"></a>
-<a href="https://github.com/camaraproject/Governance/blob/main/ProjectStructureAndRoles.md" title="Graduated API Repository"><img src="https://img.shields.io/badge/Graduated%20API%20Repository-silver?style=plastic"></a>
 <a href="https://github.com/camaraproject/Governance/blob/main/ProjectStructureAndRoles.md" title="Working Group"><img src="https://img.shields.io/badge/Working%20Group-red?style=plastic"></a>
 <!-- Choose one of the above four alternative badges and then delete the remaining ones including this task -->
 
 # project-administration
 
-> [!NOTE]
-> What is this template repository about and how to use it:
->
-> * For codeowners of existing CAMARA repository it is a sample how a CAMARA repository should look like, e.g. to update legacy repositories. Have a look specifically on the [code of the README.md](https://github.com/camaraproject/Template_API_Repository/blob/main/README.md?plain=1) for different variants and copy relevant parts into your repository.
-> * For CAMARA admins to create new (Sandbox) API repositories together with the automated workflow (will be provided soon in a to be created `project-administration` repository)
->
-> The following is the template README for a new independent Sandbox repositories, Sandbox repositories within a Sub Project, and Incubated Repositories. Further variants are within the commented code.
->
-> This note must be deleted in newly created repositories
+Repository to develop and provide tooling and workflows to support the administration of CAMARA. Maintained under the supervision of TSC and the Release Management working group.
 
----
-<!-- Choose one of the following alternatives and then delete this task -->
-
-<!-- Alternative for new, independent Sandbox API Repositories. Choose the "Sandbox" badge above -->
-Sandbox API Repository to describe, develop, document, and test the project-administration Service API(s). The repository does not yet belong to a CAMARA Sub Project.
-
-* API Repository [wiki page](https://lf-camaraproject.atlassian.net/)
-
----
-<!-- Alternative for Sandbox API Repositories within the context of an existing Sub Project. Choose the "Sandbox" badge above -->
-
-Sandbox API Repository to describe, develop, document, and test the project-administration Service API(s) within the Sub Project []().
-
-* API Repository [wiki page](https://lf-camaraproject.atlassian.net/)
-
----
-<!-- Alternative for Incubating API Repositories (always part of Sub Project, potentially created as part of the Incubation). Choose the "Incubating" badge. Change the repository topic to "incubating-api-repository" --> 
-
-Incubating API Repository to evolve and maintain the definitions and documentation of project-administration Service API(s) within the Sub Project []()
-
-* API Repository [wiki page](https://lf-camaraproject.atlassian.net/)
-
-<!-- for Graduation of an API Repository replace "Incubating" with "Graduated" and don't forget to exchange the badge :-) -->
-
-<!-- Alternative if the repository will be used for a working group - in this case further points, e.g. the scope, of this template need to be adapted:
-
-Repository for xxx of the  Working Group"
-
-* Working Group [wiki home page](https://lf-camaraproject.atlassian.net/) 
-
--->
+CAMARA Governance: https://github.com/camaraproject/Governance
+Release Management repository: https://github.com/camaraproject/ReleaseManagement
 
 ## Scope
 
-* Service API(s) “project-administration” (see APIBacklog.md) 
-* The API(s) provide(s) the API consumer with the ability to:  
-  * §Short API scope description§ !! Add here a scope description according to the API proposal
-* Describe, develop, document, and test the API(s)
-* Started: §start date§
-<!-- * Incubating stage since: {{incubation date}} --> 
+* Tooling for CAMARA Admin team to automated recurring and buld tasks across the repositories of CAMARA.
+* The repository provides the admin team initially with:
+  * A workflow to create new (Sandbox) API Repositories
+  * A set of workflows which allows bulk changes across the repositories of CAMARA
+* Started: May 2025
 
-## Release Information
+## (Release) Information
 
-The repository has no (pre)releases yet, work in progress is within the main branch.
-<!-- Optional: an explicit listing of the latest (pre-)release with additional information, e.g. links to the API definitions -->
-<!-- In addition use/uncomment one or multiple the following alternative options when becoming applicable -->
-<!-- Pre-releases of this sub project are available in https://github.com/camaraproject/project-administration/releases -->
-<!-- The latest public release is available here: https://github.com/camaraproject/project-administration/releases/latest -->
-<!-- For changes see [CHANGELOG.md](https://github.com/camaraproject/project-administration/blob/main/CHANGELOG.md) -->
+The repository has no regular releases, the workflows are continously updated based on current needs, tested versions are in `main` branch, versions under test are in other branches.
+
+* Workflows are deployed within `.github/workflows`
+* Documentation of the workflows is within /documentation
 
 ## Contributing
-
-* Meetings are held virtually <!-- for new, independent Sandbox API repositories request a meeting link from the LF admin team or replace the information with the existing meeting information of the Sub Project -->
-
-  * Schedule: !! tbd
-  * [Registration / Join](https://zoom-lfx.platform.linuxfoundation.org/meetings/telcoapi) !! Update this link with your meeting registration/join link and delete the task
-  * Minutes: Access [meeting minutes](https://lf-camaraproject.atlassian.net/) !! update this link to your minutes archive page using the "Share" link and delete the task
-* Mailing List
-  <!-- Note: the `mailinglistname` is either already existing (for API Repositories within a Sub Projects) or will be created by the CAMARA Admin Team. -->
-  * Subscribe / Unsubscribe to the mailing list <https://lists.camaraproject.org/g/sp-adm>.
-  * A message to the community of this Sub Project can be sent using <sp-adm@lists.camaraproject.org>.
+ 
+* Issues and PRs for this repositories will be discussed within the meetings of the [Release Management working group](https://github.com/camaraproject/ReleaseManagement).
+* Larger changes impacting multiple or all repositories will be discussed with issues in Governance and approved by the [Technical Steering Committee (TSC)](https://lf-camaraproject.atlassian.net/wiki/x/0RDe).
+  
+* Mailing List (of CAMARA's admin team)
+  * Subscribe / Unsubscribe to the mailing list <https://lists.camaraproject.org/g/adm>.
+  * A message to the community of this Sub Project can be sent using <adm@lists.camaraproject.org>.
