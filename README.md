@@ -11,8 +11,8 @@
 
 Repository to develop and provide tooling and workflows to support the administration of CAMARA. Maintained under the supervision of TSC and the Release Management working group.
 
-CAMARA Governance: https://github.com/camaraproject/Governance
-Release Management repository: https://github.com/camaraproject/ReleaseManagement
+* CAMARA Governance: https://github.com/camaraproject/Governance
+* Release Management repository: https://github.com/camaraproject/ReleaseManagement
 
 ## Scope
 
