@@ -32,8 +32,7 @@ The repository has no regular releases, the workflows are continously updated ba
 ## Contributing
  
 * Issues and PRs for this repositories will be discussed within the meetings of the [Release Management working group](https://github.com/camaraproject/ReleaseManagement).
-* Larger changes impacting multiple or all repositories will be discussed with issues in Governance and approved by the [Technical Steering Committee (TSC)](https://lf-camaraproject.atlassian.net/wiki/x/0RDe).
+* Larger changes impacting multiple or all repositories will be discussed with issues in the Governance repository and approved by the [Technical Steering Committee (TSC)](https://lf-camaraproject.atlassian.net/wiki/x/0RDe).
   
 * Mailing List (of CAMARA's admin team)
-  * Subscribe / Unsubscribe to the mailing list <https://lists.camaraproject.org/g/adm>.
-  * A message to the community of this Sub Project can be sent using <adm@lists.camaraproject.org>.
+  * A message to the admin team CAMARA can be sent to <adm@lists.camaraproject.org>
