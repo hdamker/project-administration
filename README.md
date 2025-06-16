@@ -20,6 +20,7 @@ Repository to develop and provide tooling and workflows to support the administr
 * The repository provides the admin team initially with:
   * A workflow to create new (Sandbox) API Repositories
   * A set of workflows which allows bulk changes across the repositories of CAMARA
+  * Reporting workflows to support the administration of repositories and releases
 * Started: May 2025
 
 ## (Release) Information
@@ -28,6 +29,19 @@ The repository has no regular releases, the workflows are continously updated ba
 
 * Workflows are deployed within `.github/workflows`
 * Documentation of the workflows is within /documentation
+
+Current available workflows:
+
+* [API Repository Creation](documentation/project-admin-api-repository-creation.md)
+  * [Documentation](documentation/project-admin-api-repository-creation.md)
+  * Requires environment `repository-creation` and a token `GH_REPO_CREATE_TOKEN` within that environment
+* [Project Bulk Repository Administration](documentation/project-admin-bulk-repository-adminstration.md)
+  * Set up three workflows which allows to develop, test and apply operations across all or a subset of CAMARA repositories
+  * Please read the [documentation](documentation/project-admin-bulk-repository-adminstration.md) first
+  * Requires an appropriate token within `CAMARA_BULK_CHANGE_TOKEN` (use of bot account recommended for git/PR operations)
+* [Project Reporting workflows](documentation/project-report-generation-workflows.md)
+  * Currently two different one: "Repository Overview" and "API Releases"
+  * Requires token `CAMARA_REPORT_TOKEN`, see [documentation](documentation/project-report-generation-workflows.md)
 
 ## Contributing
  

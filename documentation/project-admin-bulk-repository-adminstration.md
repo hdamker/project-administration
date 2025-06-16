@@ -150,7 +150,7 @@ TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercont
 1. Create the workflow files in your repository (personal or organizational)
 2. If running from personal repo targeting `camaraproject`:
    - Create a Personal Access Token with `repo` and `read:org` scopes
-   - Add it as a repository secret named `CAMARA_TOKEN`
+   - Add it as a repository secret named `CAMARA_BULK_CHANGE_TOKEN`
 
 ### 2. Recommended Testing Workflow
 ```
@@ -235,7 +235,7 @@ The reusable git operations handle:
 **Setting up Personal Access Token:**
 1. Go to GitHub Settings → Developer settings → Personal access tokens
 2. Generate new token with `repo` scope
-3. Add token as repository secret named `CAMARA_TOKEN`
+3. Add token as repository secret named `CAMARA_BULK_CHANGE_TOKEN`
 4. Token identity will be automatically used for git operations
 
 ## Best Practices
