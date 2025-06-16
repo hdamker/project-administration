@@ -32,15 +32,15 @@ The repository has no regular releases, the workflows are continously updated ba
 
 Current available workflows:
 
-* [API Repository Creation](documentation/project-admin-api-repository-creation.md)
-  * [Documentation](documentation/project-admin-api-repository-creation.md)
+* **[API Repository Creation](documentation/project-admin-api-repository-creation.md)**
+  * Please read the [documentation](documentation/project-admin-api-repository-creation.md) first
   * Requires environment `repository-creation` and a token `GH_REPO_CREATE_TOKEN` within that environment
-* [Project Bulk Repository Administration](documentation/project-admin-bulk-repository-adminstration.md)
-  * Set up three workflows which allows to develop, test and apply operations across all or a subset of CAMARA repositories
+* **[Project Bulk Repository Administration](documentation/project-admin-bulk-repository-adminstration.md)**
+  * Set of three workflows which allows to develop, test and apply operations across all or a subset of CAMARA repositories
   * Please read the [documentation](documentation/project-admin-bulk-repository-adminstration.md) first
   * Requires an appropriate token within `CAMARA_BULK_CHANGE_TOKEN` (use of bot account recommended for git/PR operations)
-* [Project Reporting workflows](documentation/project-report-generation-workflows.md)
-  * Currently two different one: "Repository Overview" and "API Releases"
+* **[Project Reporting workflows](documentation/project-report-generation-workflows.md)**
+  * Currently two different reporting workflows: "Repository Overview" and "API Releases"
   * Requires token `CAMARA_REPORT_TOKEN`, see [documentation](documentation/project-report-generation-workflows.md)
 
 ## Contributing
