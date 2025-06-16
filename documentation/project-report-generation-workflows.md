@@ -56,7 +56,7 @@ Copy both workflow files to `.github/workflows/` in your repository:
 **Add Token as Repository Secret:**
 1. Wait for token approval (check status in GitHub settings)
 2. Repository Settings → Secrets and variables → Actions
-3. New repository secret: Name `CAMARA_TOKEN`, Value: approved token
+3. New repository secret: Name `CAMARA_REPORT_TOKEN`, Value: approved token
 
 ### 3. Run Your First Report
 1. Actions tab → "CAMARA Repository Overview"
@@ -139,7 +139,7 @@ Copy both workflow files to `.github/workflows/` in your repository:
 ### Common Issues
 
 **Authentication Errors**
-- ✅ Verify `CAMARA_TOKEN` secret is configured
+- ✅ Verify `CAMARA_REPORT_TOKEN` secret is configured
 - ✅ Check token approval status in GitHub Settings → Personal access tokens
 - ✅ Ensure token hasn't expired
 - ✅ Test manually: `curl -H "Authorization: token YOUR_TOKEN" https://api.github.com/orgs/camaraproject/repos`

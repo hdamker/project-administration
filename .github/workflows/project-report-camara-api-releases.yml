@@ -27,7 +27,7 @@ jobs:
         id: get-api-repos
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.CAMARA_TOKEN || secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.CAMARA_REPORT_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const org = 'camaraproject';
             
@@ -147,7 +147,7 @@ jobs:
         id: analyze-group
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.CAMARA_TOKEN || secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.CAMARA_REPORT_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const org = 'camaraproject';
             const groupId = ${{ matrix.group.id }};

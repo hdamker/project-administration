@@ -82,7 +82,7 @@ jobs:
         id: get-repos
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.CAMARA_TOKEN || secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const org = 'camaraproject';
             const filterPattern = '${{ github.event.inputs.repository_filter }}';
@@ -180,7 +180,7 @@ jobs:
       dry_run: ${{ fromJson(github.event.inputs.dry_run) }}
       commit_strategy: ${{ github.event.inputs.commit_strategy }}
     secrets:
-      CAMARA_TOKEN: ${{ secrets.CAMARA_TOKEN }}
+      CAMARA_BULK_CHANGE_TOKEN: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
 
   collect-results:
     needs: [get-repositories, execute-changes]

@@ -47,7 +47,7 @@ jobs:
       - name: Initialize Repository Overview Report
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.CAMARA_TOKEN || secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.CAMARA_REPORT_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const org = 'camaraproject';
             const includeArchived = '${{ github.event.inputs.include_archived }}' === 'true';
@@ -60,7 +60,7 @@ jobs:
       - name: Fetch All Repositories
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.CAMARA_TOKEN || secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.CAMARA_REPORT_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const org = 'camaraproject';
             const includeArchived = '${{ github.event.inputs.include_archived }}' === 'true';
@@ -107,7 +107,7 @@ jobs:
       - name: Process Repository Data
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.CAMARA_TOKEN || secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.CAMARA_REPORT_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const data = JSON.parse(fs.readFileSync('repositories-data.json', 'utf8'));
@@ -240,7 +240,7 @@ jobs:
         if: github.event.inputs.template_compliance == 'true'
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.CAMARA_TOKEN || secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.CAMARA_REPORT_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const data = JSON.parse(fs.readFileSync('enriched-repositories.json', 'utf8'));
