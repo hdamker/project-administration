@@ -22,6 +22,7 @@ on:
           - 'add-changelog-file'
           - 'update-swagger-links'
           - 'update-swagger-links-releases'
+          - 'update-api-readiness-checklist'
         default: 'disable-wiki'
       
       dry_run:
