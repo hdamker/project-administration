@@ -79,7 +79,7 @@ jobs:
               }
               
               // For file-based operations, verify write access
-              if (['add-changelog-codeowners', 'add-changelog-file', 'update-swagger-links'].includes(operation)) {
+              if (['add-changelog-codeowners', 'add-changelog-file', 'update-swagger-links', 'update-api-readiness-checklist'].includes(operation)) {
                 console.log('✅ File-based operation - write permissions will be tested during git operations');
               }
               
@@ -102,7 +102,7 @@ jobs:
             }
 
       - name: Setup Git Configuration
-        if: contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links"]'), inputs.operation)
+        if: contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links", "update-api-readiness-checklist"]'), inputs.operation)
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
@@ -125,7 +125,7 @@ jobs:
             core.exportVariable('COMMIT_AUTHOR_EMAIL', gitEmail);
 
       - name: Configure Git
-        if: contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links"]'), inputs.operation)
+        if: contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links", "update-api-readiness-checklist"]'), inputs.operation)
         run: |
           git config user.name "${{ env.COMMIT_AUTHOR_NAME }}"
           git config user.email "${{ env.COMMIT_AUTHOR_EMAIL }}"
@@ -681,8 +681,148 @@ jobs:
           EOF
           fi
 
+      - name: Execute Operation - Update API Readiness Checklist
+        if: inputs.operation == 'update-api-readiness-checklist'
+        run: |
+          echo "🔍 Searching for API-Readiness-Checklist.md files..."
+          
+          # Find all API-Readiness-Checklist.md files in the repository
+          CHECKLIST_FILES=()
+          while IFS= read -r -d '' file; do
+            CHECKLIST_FILES+=("$file")
+          done < <(find . -name "*API-Readiness-Checklist.md" -type f -print0 2>/dev/null)
+          
+          if [ ${#CHECKLIST_FILES[@]} -eq 0 ]; then
+            echo "ℹ️ No API-Readiness-Checklist.md files found"
+            echo "operation_status=no-checklist-files" >> $GITHUB_ENV
+            echo "result_type=no-change" >> $GITHUB_ENV
+            echo "details=No API-Readiness-Checklist.md files found in repository" >> $GITHUB_ENV
+            echo "action_taken=none" >> $GITHUB_ENV
+            echo "has_changes=false" >> $GITHUB_ENV
+            exit 0
+          fi
+          
+          echo "📋 Found ${#CHECKLIST_FILES[@]} API-Readiness-Checklist.md file(s)"
+          for file in "${CHECKLIST_FILES[@]}"; do
+            echo "   - $file"
+          done
+          
+          MODIFIED_FILES=0
+          UPDATED_FILES=""
+          SKIPPED_FILES=""
+          
+          for file in "${CHECKLIST_FILES[@]}"; do
+            echo "🔍 Checking $file..."
+            
+            # Check if line 13 (API description for marketing) already exists
+            if grep -q "API description (for marketing)" "$file"; then
+              echo "   ✅ Line 13 already exists in $file"
+              SKIPPED_FILES="$SKIPPED_FILES $file"
+              continue
+            fi
+            
+            # Check if the file has the expected structure (line 12 should exist)
+            if ! grep -q "Previous public release was certified" "$file"; then
+              echo "   ⚠️ File $file doesn't have expected structure (missing line 12) - skipping"
+              SKIPPED_FILES="$SKIPPED_FILES $file"
+              continue
+            fi
+            
+            # Create a temporary file for modifications
+            TEMP_FILE=$(mktemp)
+            
+            # Process the file line by line
+            ADDED_LINE=false
+            while IFS= read -r line || [[ -n "$line" ]]; do
+              echo "$line" >> "$TEMP_FILE"
+              
+              # After line 12 (Previous public release was certified), add line 13
+              if [[ "$line" == *"Previous public release was certified"* ]] && [[ "$line" == *"|"* ]] && [ "$ADDED_LINE" = false ]; then
+                echo "| 13 | API description (for marketing)              |   O   |         O         |    M    |    M   |      | [Wiki link](https://lf-camaraproject.atlassian.net/wiki/) |" >> "$TEMP_FILE"
+                ADDED_LINE=true
+                echo "   ✅ Added line 13 to $file"
+              fi
+            done < "$file"
+            
+            if [ "$ADDED_LINE" = true ]; then
+              # Replace original file with modified version
+              mv "$TEMP_FILE" "$file"
+              MODIFIED_FILES=$((MODIFIED_FILES + 1))
+              UPDATED_FILES="$UPDATED_FILES $file"
+            else
+              # Clean up temp file if no changes made
+              rm "$TEMP_FILE"
+              echo "   ⚠️ Could not find insertion point in $file - skipping"
+              SKIPPED_FILES="$SKIPPED_FILES $file"
+            fi
+          done
+          
+          # Generate summary
+          TOTAL_FILES=${#CHECKLIST_FILES[@]}
+          SKIPPED_COUNT=$(echo $SKIPPED_FILES | wc -w)
+          
+          if [ $MODIFIED_FILES -eq 0 ]; then
+            if [ $SKIPPED_COUNT -eq $TOTAL_FILES ]; then
+              echo "✅ All API-Readiness-Checklist.md files already have line 13 or were skipped"
+              echo "operation_status=no-change" >> $GITHUB_ENV
+              echo "result_type=no-change" >> $GITHUB_ENV
+              echo "details=All $TOTAL_FILES API-Readiness-Checklist.md file(s) already have line 13 or were skipped" >> $GITHUB_ENV
+              echo "action_taken=none" >> $GITHUB_ENV
+              echo "has_changes=false" >> $GITHUB_ENV
+            else
+              echo "⚠️ No files were modified due to structural issues"
+              echo "operation_status=structure-issues" >> $GITHUB_ENV
+              echo "result_type=warning" >> $GITHUB_ENV
+              echo "details=Found $TOTAL_FILES file(s) but none could be modified due to structural issues" >> $GITHUB_ENV
+              echo "action_taken=skipped" >> $GITHUB_ENV
+              echo "has_changes=false" >> $GITHUB_ENV
+            fi
+          else
+            echo "✅ Updated line 13 in $MODIFIED_FILES file(s):$UPDATED_FILES"
+            if [ $SKIPPED_COUNT -gt 0 ]; then
+              echo "ℹ️ Skipped $SKIPPED_COUNT file(s):$SKIPPED_FILES"
+            fi
+            
+            echo "operation_status=files-modified" >> $GITHUB_ENV
+            echo "result_type=success" >> $GITHUB_ENV
+            echo "details=Added line 13 (API description for marketing) to $MODIFIED_FILES API-Readiness-Checklist.md file(s)" >> $GITHUB_ENV
+            echo "action_taken=file-modification" >> $GITHUB_ENV
+            echo "has_changes=true" >> $GITHUB_ENV
+            echo "commit_message=chore: add line 13 (API description for marketing) to API readiness checklists" >> $GITHUB_ENV
+            echo "pr_title=chore: add line 13 (API description for marketing) to API readiness checklists" >> $GITHUB_ENV
+            
+            # Create PR body with proper variable substitution
+            cat << EOF >> $GITHUB_ENV
+          pr_body<<PRBODY
+          ## CAMARA Project Admin Update
+          
+          This pull request adds the new line 13 (API description for marketing) to existing API-Readiness-Checklist.md files to align them with the latest template.
+          
+          **Changes:**
+          - Added line 13: "API description (for marketing)" with appropriate requirements for each release stage
+          - Inserted after line 12 (Previous public release was certified) 
+          - Maintains proper table formatting and structure
+          
+          **New line added:**
+          \`\`\`
+          | 13 | API description (for marketing)              |   O   |         O         |    M    |    M   |      | [Wiki link](https://lf-camaraproject.atlassian.net/wiki/) |
+          \`\`\`
+          
+          **Requirements by release stage:**
+          - alpha: Optional (O)
+          - release-candidate: Optional (O)  
+          - initial public: Mandatory (M)
+          - stable public: Mandatory (M)
+          
+          This ensures all API readiness checklists include the marketing description requirement that becomes mandatory for public releases.
+          
+          **Files modified:**$UPDATED_FILES
+          PRBODY
+          EOF
+          fi
+
       - name: Handle Dry Run
-        if: env.has_changes == 'true' && inputs.dry_run == true && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links"]'), inputs.operation)
+        if: env.has_changes == 'true' && inputs.dry_run == true && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links", "update-api-readiness-checklist"]'), inputs.operation)
         run: |
           echo "🧪 DRY RUN: Would commit and create PR/commit with:"
           echo "  Commit message: ${{ env.commit_message }}"
@@ -697,7 +837,7 @@ jobs:
           echo "details=Dry run: Would apply changes using ${{ inputs.commit_strategy }} strategy" >> $GITHUB_ENV
 
       - name: Commit and Push Changes (Direct Strategy)
-        if: env.has_changes == 'true' && inputs.dry_run == false && (inputs.commit_strategy == 'direct-with-warning' || inputs.commit_strategy == 'direct-with-pr-fallback') && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links"]'), inputs.operation)
+        if: env.has_changes == 'true' && inputs.dry_run == false && (inputs.commit_strategy == 'direct-with-warning' || inputs.commit_strategy == 'direct-with-pr-fallback') && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links", "update-api-readiness-checklist"]'), inputs.operation)
         id: direct-commit
         continue-on-error: true
         run: |
@@ -723,7 +863,7 @@ jobs:
           fi
 
       - name: Handle Direct Commit Failure
-        if: env.has_changes == 'true' && inputs.dry_run == false && steps.direct-commit.outcome == 'failure' && inputs.commit_strategy == 'direct-with-warning' && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links"]'), inputs.operation)
+        if: env.has_changes == 'true' && inputs.dry_run == false && steps.direct-commit.outcome == 'failure' && inputs.commit_strategy == 'direct-with-warning' && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links", "update-api-readiness-checklist"]'), inputs.operation)
         run: |
           echo "⚠️ Direct commit blocked (likely branch protection) - operation skipped"
           echo "result_type=warning" >> $GITHUB_ENV
@@ -731,7 +871,7 @@ jobs:
           echo "details=Direct commit blocked by branch protection" >> $GITHUB_ENV
 
       - name: Create Pull Request
-        if: env.has_changes == 'true' && inputs.dry_run == false && (inputs.commit_strategy == 'pull-request' || (inputs.commit_strategy == 'direct-with-pr-fallback' && env.direct_commit_success != 'true')) && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links"]'), inputs.operation)
+        if: env.has_changes == 'true' && inputs.dry_run == false && (inputs.commit_strategy == 'pull-request' || (inputs.commit_strategy == 'direct-with-pr-fallback' && env.direct_commit_success != 'true')) && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links", "update-api-readiness-checklist"]'), inputs.operation)
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
