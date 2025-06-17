@@ -36,6 +36,7 @@ The system consists of three core workflows that work together:
 - **add-changelog-file**: Adds template CHANGELOG.md file to repositories that have neither changelog nor releases
 - **update-swagger-links**: Migrates swagger editor links to CAMARA's dedicated swagger-ui instance (in files)
 - **update-swagger-links-releases**: Migrates swagger editor links to CAMARA's dedicated swagger-ui instance (in release descriptions)
+- **update-api-readiness-checklist**: Adds line 13 (API description for marketing) to existing API-Readiness-Checklist.md files
 
 ### Operation Details
 
@@ -88,6 +89,26 @@ The system consists of three core workflows that work together:
 - ✅ **Permission validation**: Requires `Contents: Write` permission for release modifications
 - ✅ **CAMARA branding**: Migrates to `https://camaraproject.github.io/swagger-ui/` for consistent experience
 
+**update-api-readiness-checklist:**
+- ✅ **File discovery**: Automatically finds all `*API-Readiness-Checklist.md` files in repository
+- ✅ **Smart detection**: Skips files that already have line 13 (API description for marketing)
+- ✅ **Structure validation**: Only modifies files with expected format (line 12 present)
+- ✅ **Precise insertion**: Adds line 13 after line 12 with proper table formatting
+- ✅ **Multiple file support**: Handles repositories with multiple checklist files
+- ✅ **File-based operation**: Creates pull requests for changes
+- ⚠️ Skips files without expected structure (missing line 12) to prevent corruption
+
+**New Line 13 Added:**
+```
+| 13 | API description (for marketing)              |   O   |         O         |    M    |    M   |      | [Wiki link](https://lf-camaraproject.atlassian.net/wiki/) |
+```
+
+**Requirements by Release Stage:**
+- alpha: Optional (O)
+- release-candidate: Optional (O)  
+- initial public: Mandatory (M)
+- stable public: Mandatory (M)
+
 **Host Replacement Approach:**
 ```
 FROM: https://editor.swagger.io/ → TO: https://camaraproject.github.io/swagger-ui/
@@ -101,13 +122,6 @@ This simple host replacement approach:
 - ✅ **Same end result** - Complete URLs are transformed correctly
 
 **Link Transformation Example:**
-```
-FROM: https://editor.swagger.io/?url=https://raw.githubusercontent.com/camaraproject/QualityOnDemand/r2.2/code/API_definitions/quality-on-demand.yaml
-TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/QualityOnDemand/r2.2/code/API_definitions/quality-on-demand.yaml
-
-FROM: https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/camaraproject/DeviceLocation/r2.2/code/API_definitions/location-verification.yaml  
-TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/DeviceLocation/r2.2/code/API_definitions/location-verification.yaml
-```
 ```
 FROM: https://editor.swagger.io/?url=https://raw.githubusercontent.com/camaraproject/QualityOnDemand/r2.2/code/API_definitions/quality-on-demand.yaml
 TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/QualityOnDemand/r2.2/code/API_definitions/quality-on-demand.yaml
@@ -167,6 +181,7 @@ Single Repo Test (Dry Run) → Single Repo Test (Live) → Bulk Dry Run → Live
    - **add-changelog-codeowners**: For release management setup (file-based)
    - **update-swagger-links**: For swagger editor migration in files (file-based)
    - **update-swagger-links-releases**: For swagger editor migration in releases (API-based)
+   - **update-api-readiness-checklist**: For adding marketing description requirement to API checklists (file-based)
 4. Enable dry-run mode
 5. **Review structured results** with detailed feedback and next steps guidance
 
@@ -215,7 +230,7 @@ The reusable git operations handle:
 - `contents: write` - For reading/writing repository files
 - `pull-requests: write` - For creating pull requests
 
-**For File-Based Operations (CODEOWNERS, Swagger Links in Files):**
+**For File-Based Operations (CODEOWNERS, Swagger Links in Files, API Readiness Checklists):**
 - **Required Permissions**: Contents: Write and Pull Requests: Write permissions
 - **Token Scopes**: `repo` (for classic tokens) or `Contents: Write` + `Pull Requests: Write` (for FGPATs)
 - **Method**: Uses git operations with automatic fallback to pull requests for protected branches
