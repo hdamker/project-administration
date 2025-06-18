@@ -102,7 +102,7 @@ jobs:
             }
 
       - name: Setup Git Configuration
-        if: contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links", "update-api-readiness-checklist"]'), inputs.operation)
+        if: env.needs_git_workflow == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
@@ -125,7 +125,7 @@ jobs:
             core.exportVariable('COMMIT_AUTHOR_EMAIL', gitEmail);
 
       - name: Configure Git
-        if: contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links", "update-api-readiness-checklist"]'), inputs.operation)
+        if: env.needs_git_workflow == 'true'
         run: |
           git config user.name "${{ env.COMMIT_AUTHOR_NAME }}"
           git config user.email "${{ env.COMMIT_AUTHOR_EMAIL }}"
@@ -396,6 +396,9 @@ jobs:
         run: |
           echo "🔍 Checking for CODEOWNERS file..."
           
+          # Set operation type flag
+          echo "needs_git_workflow=true" >> $GITHUB_ENV
+          
           if [ ! -f "CODEOWNERS" ]; then
             echo "⚠️ CODEOWNERS file not found"
             echo "operation_status=no-codeowners-file" >> $GITHUB_ENV
@@ -459,6 +462,9 @@ jobs:
             
             try {
               console.log('🔍 Checking for existing CHANGELOG file...');
+              
+              // Set operation type flag
+              core.exportVariable('needs_git_workflow', 'true');
               
               // Check for existing CHANGELOG files (both variants)
               let hasChangelog = false;
@@ -590,6 +596,9 @@ jobs:
         run: |
           echo "🔍 Searching for swagger editor links to update..."
           
+          # Set operation type flag
+          echo "needs_git_workflow=true" >> $GITHUB_ENV
+          
           # Target files to check
           TARGET_FILES=("README.md" "README.MD" "CHANGELOG.md" "CHANGELOG.MD")
           
@@ -685,6 +694,9 @@ jobs:
         if: inputs.operation == 'update-api-readiness-checklist'
         run: |
           echo "🔍 Searching for API-Readiness-Checklist.md files..."
+          
+          # Set operation type flag
+          echo "needs_git_workflow=true" >> $GITHUB_ENV
           
           # Find all API-Readiness-Checklist.md files in the repository
           CHECKLIST_FILES=()
@@ -822,7 +834,7 @@ jobs:
           fi
 
       - name: Handle Dry Run
-        if: env.has_changes == 'true' && inputs.dry_run == true && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links", "update-api-readiness-checklist"]'), inputs.operation)
+        if: env.has_changes == 'true' && inputs.dry_run == true && env.needs_git_workflow == 'true'
         run: |
           echo "🧪 DRY RUN: Would commit and create PR/commit with:"
           echo "  Commit message: ${{ env.commit_message }}"
@@ -837,7 +849,7 @@ jobs:
           echo "details=Dry run: Would apply changes using ${{ inputs.commit_strategy }} strategy" >> $GITHUB_ENV
 
       - name: Commit and Push Changes (Direct Strategy)
-        if: env.has_changes == 'true' && inputs.dry_run == false && (inputs.commit_strategy == 'direct-with-warning' || inputs.commit_strategy == 'direct-with-pr-fallback') && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links", "update-api-readiness-checklist"]'), inputs.operation)
+        if: env.has_changes == 'true' && inputs.dry_run == false && (inputs.commit_strategy == 'direct-with-warning' || inputs.commit_strategy == 'direct-with-pr-fallback') && env.needs_git_workflow == 'true'
         id: direct-commit
         continue-on-error: true
         run: |
@@ -863,7 +875,7 @@ jobs:
           fi
 
       - name: Handle Direct Commit Failure
-        if: env.has_changes == 'true' && inputs.dry_run == false && steps.direct-commit.outcome == 'failure' && inputs.commit_strategy == 'direct-with-warning' && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links", "update-api-readiness-checklist"]'), inputs.operation)
+        if: env.has_changes == 'true' && inputs.dry_run == false && steps.direct-commit.outcome == 'failure' && inputs.commit_strategy == 'direct-with-warning' && env.needs_git_workflow == 'true'
         run: |
           echo "⚠️ Direct commit blocked (likely branch protection) - operation skipped"
           echo "result_type=warning" >> $GITHUB_ENV
@@ -871,7 +883,7 @@ jobs:
           echo "details=Direct commit blocked by branch protection" >> $GITHUB_ENV
 
       - name: Create Pull Request
-        if: env.has_changes == 'true' && inputs.dry_run == false && (inputs.commit_strategy == 'pull-request' || (inputs.commit_strategy == 'direct-with-pr-fallback' && env.direct_commit_success != 'true')) && contains(fromJson('["add-changelog-codeowners", "add-changelog-file", "update-swagger-links", "update-api-readiness-checklist"]'), inputs.operation)
+        if: env.has_changes == 'true' && inputs.dry_run == false && (inputs.commit_strategy == 'pull-request' || (inputs.commit_strategy == 'direct-with-pr-fallback' && env.direct_commit_success != 'true')) && env.needs_git_workflow == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
