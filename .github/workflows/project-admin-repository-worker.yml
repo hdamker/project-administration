@@ -530,8 +530,8 @@ jobs:
                   core.exportVariable('details', 'Added template CHANGELOG.md file from Template_API_Repository');
                   core.exportVariable('action_taken', 'file-addition');
                   core.exportVariable('has_changes', 'true');
-                  core.exportVariable('commit_message', 'bot: add template CHANGELOG.md file');
-                  core.exportVariable('pr_title', 'bot: add template CHANGELOG.md file');
+                  core.exportVariable('commit_message', 'admin: add template CHANGELOG.md file');
+                  core.exportVariable('pr_title', 'admin: add template CHANGELOG.md file');
                   
                   const prBody = `## CAMARA Project Admin Update
 
@@ -655,8 +655,8 @@ jobs:
             echo "details=Updated $TOTAL_REPLACEMENTS swagger editor link(s) in $MODIFIED_FILES file(s)" >> $GITHUB_ENV
             echo "action_taken=file-modification" >> $GITHUB_ENV
             echo "has_changes=true" >> $GITHUB_ENV
-            echo "commit_message=bot: migrate swagger editor links to CAMARA swagger-ui" >> $GITHUB_ENV
-            echo "pr_title=bot: migrate swagger editor links to CAMARA swagger-ui" >> $GITHUB_ENV
+            echo "commit_message=admin: migrate swagger editor links to CAMARA swagger-ui" >> $GITHUB_ENV
+            echo "pr_title=admin: migrate swagger editor links to CAMARA swagger-ui" >> $GITHUB_ENV
             
             # Create PR body with proper variable substitution
             cat << EOF >> $GITHUB_ENV
@@ -788,8 +788,8 @@ jobs:
             echo "details=Added line 13 (API description for marketing) to $MODIFIED_FILES API-Readiness-Checklist.md file(s)" >> $GITHUB_ENV
             echo "action_taken=file-modification" >> $GITHUB_ENV
             echo "has_changes=true" >> $GITHUB_ENV
-            echo "commit_message=bot: add line 13 (API description for marketing) to API readiness checklists" >> $GITHUB_ENV
-            echo "pr_title=bot: add line 13 (API description for marketing) to API readiness checklists" >> $GITHUB_ENV
+            echo "commit_message=admin: add line 13 (API description for marketing) to API readiness checklists" >> $GITHUB_ENV
+            echo "pr_title=admin: add line 13 (API description for marketing) to API readiness checklists" >> $GITHUB_ENV
             
             # Create PR body with proper variable substitution
             cat << EOF >> $GITHUB_ENV
@@ -911,21 +911,14 @@ jobs:
               
               // Get authenticated user for PR body personalization
               const authenticatedUser = await github.rest.users.getAuthenticated();
-              const isBot = authenticatedUser.data.type === 'Bot' || 
-                           authenticatedUser.data.login.includes('bot') ||
-                           authenticatedUser.data.login.includes('admin');
               
-              const prBodyFooter = isBot ? 
-                `🤖 **Automated by ${authenticatedUser.data.name || authenticatedUser.data.login}**  
-                Generated via project-admin workflow
+              const prBodyFooter = `🔧 **Generated via project-admin workflow**  
+                Triggered by ${context.actor}, executed via ${authenticatedUser.data.login}
+                
+                **➡️ Next Steps:** This PR should be reviewed, approved, and merged by repository codeowners following standard review processes.
                 
                 ---
-                *If you have questions about this automated change, please contact the CAMARA project administrators.*` :
-                `🔧 **Generated via project-admin workflow**  
-                Triggered by ${context.actor}
-                
-                ---
-                *This is an automated administrative update.*`;
+                *This is a manually triggered automated administrative update.*`;
               
               // Create pull request
               const prResponse = await github.rest.pulls.create({
