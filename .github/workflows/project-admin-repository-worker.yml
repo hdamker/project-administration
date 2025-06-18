@@ -916,6 +916,10 @@ jobs:
               // Stage and commit changes on feature branch
               const { execSync } = require('child_process');
               
+              // Configure git for this context
+              execSync(`git config user.name "${process.env.COMMIT_AUTHOR_NAME}"`, { stdio: 'inherit' });
+              execSync(`git config user.email "${process.env.COMMIT_AUTHOR_EMAIL}"`, { stdio: 'inherit' });
+              
               execSync(`git checkout -b ${branchName}`, { stdio: 'inherit' });
               execSync('git add .', { stdio: 'inherit' });
               execSync(`git commit -m "${{ env.commit_message }}\n\nApplied via project-admin workflow\nRepository: ${{ inputs.repository_name }}\nOperation: ${{ inputs.operation }}"`, { stdio: 'inherit' });
