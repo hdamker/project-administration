@@ -925,13 +925,13 @@ jobs:
               const authenticatedUser = await github.rest.users.getAuthenticated();
               
               const prBodyFooter = `🔧 **Generated via project-admin workflow**  
-                Triggered by ${context.actor}, executed via ${authenticatedUser.data.login}
-                
-                **➡️ Next Steps:** This PR should be reviewed, approved, and merged by repository codeowners following standard review processes.
-                
-                ---
-                *This is a manually triggered automated administrative update.*`;
-              
+              Triggered by ${context.actor}, executed via ${authenticatedUser.data.login}
+            
+              **➡️ Next Steps:** This PR should be reviewed, approved, and merged by repository codeowners following standard review processes.
+            
+              ---
+              *This is a manually triggered automated administrative update.*`;
+            
               // Create pull request
               const prResponse = await github.rest.pulls.create({
                 owner: owner,
