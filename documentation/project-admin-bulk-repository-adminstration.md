@@ -100,7 +100,7 @@ The system consists of three core workflows that work together:
 
 **New Line 13 Added:**
 ```
-| 13 | API description (for marketing)              |   O   |         O         |    M    |    M   |      | [Wiki link](https://lf-camaraproject.atlassian.net/wiki/) |
+| 13 | API description (for marketing)              |   O   |         O         |    M    |    M   |      | [wiki link](https://lf-camaraproject.atlassian.net/wiki/xxx) |
 ```
 
 **Requirements by Release Stage:**

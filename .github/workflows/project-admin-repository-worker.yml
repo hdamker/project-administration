@@ -530,8 +530,8 @@ jobs:
                   core.exportVariable('details', 'Added template CHANGELOG.md file from Template_API_Repository');
                   core.exportVariable('action_taken', 'file-addition');
                   core.exportVariable('has_changes', 'true');
-                  core.exportVariable('commit_message', 'chore: add template CHANGELOG.md file');
-                  core.exportVariable('pr_title', 'chore: add template CHANGELOG.md file');
+                  core.exportVariable('commit_message', 'bot: add template CHANGELOG.md file');
+                  core.exportVariable('pr_title', 'bot: add template CHANGELOG.md file');
                   
                   const prBody = `## CAMARA Project Admin Update
 
@@ -655,8 +655,8 @@ jobs:
             echo "details=Updated $TOTAL_REPLACEMENTS swagger editor link(s) in $MODIFIED_FILES file(s)" >> $GITHUB_ENV
             echo "action_taken=file-modification" >> $GITHUB_ENV
             echo "has_changes=true" >> $GITHUB_ENV
-            echo "commit_message=chore: migrate swagger editor links to CAMARA swagger-ui" >> $GITHUB_ENV
-            echo "pr_title=chore: migrate swagger editor links to CAMARA swagger-ui" >> $GITHUB_ENV
+            echo "commit_message=bot: migrate swagger editor links to CAMARA swagger-ui" >> $GITHUB_ENV
+            echo "pr_title=bot: migrate swagger editor links to CAMARA swagger-ui" >> $GITHUB_ENV
             
             # Create PR body with proper variable substitution
             cat << EOF >> $GITHUB_ENV
@@ -738,7 +738,7 @@ jobs:
               
               # After line 12 (Previous public release was certified), add line 13
               if [[ "$line" == *"Previous public release was certified"* ]] && [[ "$line" == *"|"* ]] && [ "$ADDED_LINE" = false ]; then
-                echo "| 13 | API description (for marketing)              |   O   |         O         |    M    |    M   |      | [Wiki link](https://lf-camaraproject.atlassian.net/wiki/) |" >> "$TEMP_FILE"
+                echo "| 13 | API description (for marketing)              |   O   |         O         |    M    |    M   |      | [wiki link](https://lf-camaraproject.atlassian.net/wiki/xxx) |" >> "$TEMP_FILE"
                 ADDED_LINE=true
                 echo "   ✅ Added line 13 to $file"
               fi
@@ -788,8 +788,8 @@ jobs:
             echo "details=Added line 13 (API description for marketing) to $MODIFIED_FILES API-Readiness-Checklist.md file(s)" >> $GITHUB_ENV
             echo "action_taken=file-modification" >> $GITHUB_ENV
             echo "has_changes=true" >> $GITHUB_ENV
-            echo "commit_message=chore: add line 13 (API description for marketing) to API readiness checklists" >> $GITHUB_ENV
-            echo "pr_title=chore: add line 13 (API description for marketing) to API readiness checklists" >> $GITHUB_ENV
+            echo "commit_message=bot: add line 13 (API description for marketing) to API readiness checklists" >> $GITHUB_ENV
+            echo "pr_title=bot: add line 13 (API description for marketing) to API readiness checklists" >> $GITHUB_ENV
             
             # Create PR body with proper variable substitution
             cat << EOF >> $GITHUB_ENV
@@ -805,7 +805,7 @@ jobs:
           
           **New line added:**
           \`\`\`
-          | 13 | API description (for marketing)              |   O   |         O         |    M    |    M   |      | [Wiki link](https://lf-camaraproject.atlassian.net/wiki/) |
+          | 13 | API description (for marketing)              |   O   |         O         |    M    |    M   |      | [wiki link](https://lf-camaraproject.atlassian.net/wiki/xxx) |
           \`\`\`
           
           **Requirements by release stage:**
