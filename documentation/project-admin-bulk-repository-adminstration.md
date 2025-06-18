@@ -138,11 +138,12 @@ TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercont
 
 ## Key Features
 
-### **Modular Architecture (New!)**
-- **Operation-specific steps**: Handle only file modifications
-- **Reusable git operations**: Shared commit/PR/branch logic across all file-based operations
+### **Modular Architecture**
+- **Operation-specific steps**: Handle only file modifications and declare workflow needs via flags
+- **Reusable git operations**: Shared commit/PR/branch logic triggered by operation flags
 - **Standardized interface**: Environment variables for communication between operation and git steps
-- **Easy extensibility**: Adding new operations requires only operation-specific logic
+- **Self-maintaining**: Operations declare needs (e.g. `needs_git_workflow=true`) - no hardcoded condition lists to update
+- **Easy extensibility**: Adding new operations requires only operation-specific logic and flag setting
 
 ### Safety Mechanisms
 - **Dry-run mode**: Test operations without making actual changes
@@ -196,13 +197,17 @@ Single Repo Test (Dry Run) → Single Repo Test (Live) → Bulk Dry Run → Live
 
 ## Adding New Operations
 
-The modular design makes adding new operations simple:
+The modular design makes adding new operations simple. Each operation declares what workflow features it needs:
 
+**For file-based operations (that need git/PR workflows):**
 ```yaml
 - name: Execute Operation - Your New Operation
   if: inputs.operation == 'your-new-operation'
   run: |
     echo "🔍 Doing your operation..."
+    
+    # Set operation type flag for file-based operations
+    echo "needs_git_workflow=true" >> $GITHUB_ENV
     
     # Your file modification logic here
     sed -i 's/old/new/g' some-file.txt
@@ -211,18 +216,35 @@ The modular design makes adding new operations simple:
     echo "has_changes=true" >> $GITHUB_ENV
     echo "result_type=success" >> $GITHUB_ENV
     echo "details=Updated some-file.txt" >> $GITHUB_ENV
-    echo "commit_message=chore: your operation description" >> $GITHUB_ENV
-    echo "pr_title=chore: your operation title" >> $GITHUB_ENV
+    echo "commit_message=admin: your operation description" >> $GITHUB_ENV
+    echo "pr_title=admin: your operation title" >> $GITHUB_ENV
     echo "pr_body=Your PR description here" >> $GITHUB_ENV
 ```
 
-The reusable git operations handle:
+**For API-based operations (like wiki/releases):**
+```yaml
+- name: Execute Operation - Your API Operation
+  if: inputs.operation == 'your-api-operation'
+  uses: actions/github-script@v7
+  with:
+    github-token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
+    script: |
+      // Your API logic here
+      // Set result variables directly with core.exportVariable()
+      core.exportVariable('result_type', 'success');
+      core.exportVariable('details', 'API operation completed');
+      core.exportVariable('action_taken', 'api-update');
+```
+
+The reusable git operations automatically handle:
 - ✅ Dynamic author detection from token
-- ✅ Dry run handling
+- ✅ Dry run handling  
 - ✅ Direct commit with fallbacks
 - ✅ Pull request creation
 - ✅ Branch protection compatibility
 - ✅ Error handling and reporting
+
+**No need to update condition lists** - operations declare their needs via flags, making the workflow self-maintaining.
 
 ## Token Requirements & Permissions
 
