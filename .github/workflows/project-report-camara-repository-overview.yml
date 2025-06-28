@@ -19,7 +19,7 @@ on:
         description: 'Include template compliance checks for API repositories'
         required: false
         type: boolean
-        default: false
+        default: true
 
   schedule:
     # Run weekly on Mondays at 07:35 UTC
