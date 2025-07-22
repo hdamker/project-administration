@@ -600,10 +600,16 @@ jobs:
             const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
             const recentReleases = [];
             
+            // FIXED: Include repository reference when collecting recent releases
             allRepositories.forEach(repo => {
               repo.releases.forEach(release => {
                 if (new Date(release.published_at) > thirtyDaysAgo) {
-                  recentReleases.push(release);
+                  recentReleases.push({
+                    ...release,
+                    repository_name: repo.name,
+                    repository_html_url: repo.html_url,
+                    repository_type: repo.repo_type
+                  });
                 }
               });
             });
@@ -736,7 +742,7 @@ jobs:
             report += '\n';
             report += '\\* *Note: "All releases" count never includes Legacy or Pre-releases, regardless of filter settings*\n\n';
             
-            // Recent releases section
+            // Recent releases section - FIXED
             if (recentReleases.length > 0) {
               report += '## Recent Releases (Last 30 Days)\n\n';
               report += '| Repository | Type | Release | APIs | Date | Meta-Release |\n';
@@ -750,11 +756,8 @@ jobs:
                 const apiList = release.api_definitions.map(api => `${api.name} v${api.version}`).join('<br>');
                 const metaRelease = release.meta_release.cycle;
                 
-                // Find repository info
-                const repo = allRepositories.find(r => r.releases.some(rel => rel.tag_name === release.tag_name));
-                if (repo) {
-                  report += `| [${repo.name}](${repo.html_url}) | ${repo.repo_type} | [${name}](${release.html_url}) | ${apiList} | ${date} | ${metaRelease} |\n`;
-                }
+                // FIXED: Use the stored repository information instead of trying to find it
+                report += `| [${release.repository_name}](${release.repository_html_url}) | ${release.repository_type} | [${name}](${release.html_url}) | ${apiList} | ${date} | ${metaRelease} |\n`;
               }
               report += '\n';
             }
