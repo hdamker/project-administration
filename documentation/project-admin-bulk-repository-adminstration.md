@@ -36,6 +36,7 @@ The system consists of three core workflows that work together:
 - **add-changelog-file**: Adds template CHANGELOG.md file to repositories that have neither changelog nor releases
 - **update-swagger-links**: Migrates swagger editor links to CAMARA's dedicated swagger-ui instance (in files)
 - **update-swagger-links-releases**: Migrates swagger editor links to CAMARA's dedicated swagger-ui instance (in release descriptions)
+- **update-api-readiness-checklist**: Adds line 13 (API description for marketing) to existing API-Readiness-Checklist.md files
 
 ### Operation Details
 
@@ -88,6 +89,26 @@ The system consists of three core workflows that work together:
 - ✅ **Permission validation**: Requires `Contents: Write` permission for release modifications
 - ✅ **CAMARA branding**: Migrates to `https://camaraproject.github.io/swagger-ui/` for consistent experience
 
+**update-api-readiness-checklist:**
+- ✅ **File discovery**: Automatically finds all `*API-Readiness-Checklist.md` files in repository
+- ✅ **Smart detection**: Skips files that already have line 13 (API description for marketing)
+- ✅ **Structure validation**: Only modifies files with expected format (line 12 present)
+- ✅ **Precise insertion**: Adds line 13 after line 12 with proper table formatting
+- ✅ **Multiple file support**: Handles repositories with multiple checklist files
+- ✅ **File-based operation**: Creates pull requests for changes
+- ⚠️ Skips files without expected structure (missing line 12) to prevent corruption
+
+**New Line 13 Added:**
+```
+| 13 | API description (for marketing)              |   O   |         O         |    M    |    M   |      | [wiki link](https://lf-camaraproject.atlassian.net/wiki/xxx) |
+```
+
+**Requirements by Release Stage:**
+- alpha: Optional (O)
+- release-candidate: Optional (O)  
+- initial public: Mandatory (M)
+- stable public: Mandatory (M)
+
 **Host Replacement Approach:**
 ```
 FROM: https://editor.swagger.io/ → TO: https://camaraproject.github.io/swagger-ui/
@@ -108,13 +129,6 @@ TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercont
 FROM: https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/camaraproject/DeviceLocation/r2.2/code/API_definitions/location-verification.yaml  
 TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/DeviceLocation/r2.2/code/API_definitions/location-verification.yaml
 ```
-```
-FROM: https://editor.swagger.io/?url=https://raw.githubusercontent.com/camaraproject/QualityOnDemand/r2.2/code/API_definitions/quality-on-demand.yaml
-TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/QualityOnDemand/r2.2/code/API_definitions/quality-on-demand.yaml
-
-FROM: https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/camaraproject/DeviceLocation/r2.2/code/API_definitions/location-verification.yaml  
-TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/DeviceLocation/r2.2/code/API_definitions/location-verification.yaml
-```
 
 **CODEOWNERS Rules Added:**
 ```
@@ -124,11 +138,12 @@ TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercont
 
 ## Key Features
 
-### **Modular Architecture (New!)**
-- **Operation-specific steps**: Handle only file modifications
-- **Reusable git operations**: Shared commit/PR/branch logic across all file-based operations
+### **Modular Architecture**
+- **Operation-specific steps**: Handle only file modifications and declare workflow needs via flags
+- **Reusable git operations**: Shared commit/PR/branch logic triggered by operation flags
 - **Standardized interface**: Environment variables for communication between operation and git steps
-- **Easy extensibility**: Adding new operations requires only operation-specific logic
+- **Self-maintaining**: Operations declare needs (e.g. `needs_git_workflow=true`) - no hardcoded condition lists to update
+- **Easy extensibility**: Adding new operations requires only operation-specific logic and flag setting
 
 ### Safety Mechanisms
 - **Dry-run mode**: Test operations without making actual changes
@@ -167,6 +182,7 @@ Single Repo Test (Dry Run) → Single Repo Test (Live) → Bulk Dry Run → Live
    - **add-changelog-codeowners**: For release management setup (file-based)
    - **update-swagger-links**: For swagger editor migration in files (file-based)
    - **update-swagger-links-releases**: For swagger editor migration in releases (API-based)
+   - **update-api-readiness-checklist**: For adding marketing description requirement to API checklists (file-based)
 4. Enable dry-run mode
 5. **Review structured results** with detailed feedback and next steps guidance
 
@@ -181,13 +197,17 @@ Single Repo Test (Dry Run) → Single Repo Test (Live) → Bulk Dry Run → Live
 
 ## Adding New Operations
 
-The modular design makes adding new operations simple:
+The modular design makes adding new operations simple. Each operation declares what workflow features it needs:
 
+**For file-based operations (that need git/PR workflows):**
 ```yaml
 - name: Execute Operation - Your New Operation
   if: inputs.operation == 'your-new-operation'
   run: |
     echo "🔍 Doing your operation..."
+    
+    # Set operation type flag for file-based operations
+    echo "needs_git_workflow=true" >> $GITHUB_ENV
     
     # Your file modification logic here
     sed -i 's/old/new/g' some-file.txt
@@ -196,18 +216,35 @@ The modular design makes adding new operations simple:
     echo "has_changes=true" >> $GITHUB_ENV
     echo "result_type=success" >> $GITHUB_ENV
     echo "details=Updated some-file.txt" >> $GITHUB_ENV
-    echo "commit_message=chore: your operation description" >> $GITHUB_ENV
-    echo "pr_title=chore: your operation title" >> $GITHUB_ENV
+    echo "commit_message=admin: your operation description" >> $GITHUB_ENV
+    echo "pr_title=admin: your operation title" >> $GITHUB_ENV
     echo "pr_body=Your PR description here" >> $GITHUB_ENV
 ```
 
-The reusable git operations handle:
+**For API-based operations (like wiki/releases):**
+```yaml
+- name: Execute Operation - Your API Operation
+  if: inputs.operation == 'your-api-operation'
+  uses: actions/github-script@v7
+  with:
+    github-token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
+    script: |
+      // Your API logic here
+      // Set result variables directly with core.exportVariable()
+      core.exportVariable('result_type', 'success');
+      core.exportVariable('details', 'API operation completed');
+      core.exportVariable('action_taken', 'api-update');
+```
+
+The reusable git operations automatically handle:
 - ✅ Dynamic author detection from token
-- ✅ Dry run handling
+- ✅ Dry run handling  
 - ✅ Direct commit with fallbacks
 - ✅ Pull request creation
 - ✅ Branch protection compatibility
 - ✅ Error handling and reporting
+
+**No need to update condition lists** - operations declare their needs via flags, making the workflow self-maintaining.
 
 ## Token Requirements & Permissions
 
@@ -215,7 +252,7 @@ The reusable git operations handle:
 - `contents: write` - For reading/writing repository files
 - `pull-requests: write` - For creating pull requests
 
-**For File-Based Operations (CODEOWNERS, Swagger Links in Files):**
+**For File-Based Operations (CODEOWNERS, Swagger Links in Files, API Readiness Checklists):**
 - **Required Permissions**: Contents: Write and Pull Requests: Write permissions
 - **Token Scopes**: `repo` (for classic tokens) or `Contents: Write` + `Pull Requests: Write` (for FGPATs)
 - **Method**: Uses git operations with automatic fallback to pull requests for protected branches
