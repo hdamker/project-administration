@@ -1,3 +1,21 @@
+# =========================================================================================
+# CAMARA Project - Repository Worker (Reusable Workflow)
+#
+# This reusable workflow executes administrative operations on individual CAMARA repositories.
+# It is called by both single repository test and bulk repository change workflows.
+#
+# CHANGELOG:
+# - 2025-07-26: Initial version as is for r1.1 release of camaraproject/project-administration
+#
+# USAGE:
+# - Called via workflow_call from other workflows
+# - Supports multiple operations: disable-wiki, add-changelog-codeowners, etc.
+# - Handles both API-based and file-based operations with git/PR support
+#
+# DOCUMENTATION:
+# see https://github.com/camaraproject/project-administration/blob/main/documentation/project-admin-bulk-repository-adminstration.md
+# =========================================================================================
+
 name: Repository Worker
 
 on:

@@ -1,4 +1,21 @@
-name: CAMARA API Releases
+# =========================================================================================
+# CAMARA Project - API Releases Report Workflow
+#
+# This GitHub Actions workflow analyzes API releases across CAMARA repositories with
+# parallel processing, meta-release categorization, and consistency validation.
+#
+# CHANGELOG:
+# - 2024-06-01: Initial version for r1.1 release
+#
+# USAGE:
+# - Manually triggered via workflow_dispatch
+# - Options: include pre-releases, include legacy releases
+# - Uses parallel processing for 70% faster execution (3-5 minutes)
+# - Requires CAMARA_REPORT_TOKEN for cross-repository access
+#
+# DOCUMENTATION:
+# see https://github.com/camaraproject/project-administration/blob/main/documentation/project-report-generation-workflows.md
+# =========================================================================================name: CAMARA API Releases
 
 on:
   workflow_dispatch:

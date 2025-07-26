@@ -1,3 +1,22 @@
+# =========================================================================================
+# CAMARA Project - Bulk Repository Changes Workflow
+#
+# This GitHub Actions workflow executes administrative operations across multiple CAMARA
+# repositories with filtering and parallel execution capabilities.
+#
+# CHANGELOG:
+# - 2025-07-26: Initial version as is for r1.1 release of camaraproject/project-administration
+#
+# USAGE:
+# - Manually triggered via workflow_dispatch
+# - Supports repository filtering by category and name patterns
+# - Always test with single repository first, then dry-run mode
+# - Processes up to 5 repositories in parallel
+#
+# DOCUMENTATION:
+# see https://github.com/camaraproject/project-administration/blob/main/documentation/project-admin-bulk-repository-adminstration.md
+# =========================================================================================
+
 name: Bulk Repository Changes
 
 permissions:
