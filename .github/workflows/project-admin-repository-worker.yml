@@ -597,7 +597,8 @@ jobs:
                 
                 // Export statistics for reporting
                 core.exportVariable('legacy_artifacts_count', foundArtifacts.length);
-                core.exportVariable('legacy_artifacts', JSON.stringify(foundArtifacts));
+                // Write artifacts to file to avoid JSON escaping issues in env vars
+                fs.writeFileSync('/tmp/legacy_artifacts.json', JSON.stringify(foundArtifacts));
                 core.exportVariable('had_prior_linting', hasLegacyLinting);
                 return;
               }
@@ -791,7 +792,8 @@ jobs:
               
               // Export statistics for reporting
               core.exportVariable('legacy_artifacts_count', removedArtifacts.length);
-              core.exportVariable('legacy_artifacts', JSON.stringify(removedArtifacts));
+              // Write artifacts to file to avoid JSON escaping issues in env vars
+              fs.writeFileSync('/tmp/legacy_artifacts.json', JSON.stringify(removedArtifacts));
               core.exportVariable('had_prior_linting', hasLegacyLinting);
               
             } catch (error) {
@@ -996,8 +998,14 @@ jobs:
           
           # Additional data for centralize-linting operation
           LEGACY_ARTIFACTS_COUNT="${{ env.legacy_artifacts_count }}"
-          LEGACY_ARTIFACTS="${{ env.legacy_artifacts }}"
           HAD_PRIOR_LINTING="${{ env.had_prior_linting }}"
+          
+          # Read legacy artifacts from file if it exists
+          if [ -f "/tmp/legacy_artifacts.json" ]; then
+            LEGACY_ARTIFACTS=$(cat /tmp/legacy_artifacts.json)
+          else
+            LEGACY_ARTIFACTS="[]"
+          fi
           
           cat > /tmp/results/result-${{ inputs.repository_name }}.json << EOF
           {
@@ -1013,7 +1021,7 @@ jobs:
             "pr_url": "${PR_URL:-}",
             "commit_sha": "${COMMIT_SHA:-}",
             "legacy_artifacts_count": "${LEGACY_ARTIFACTS_COUNT:-0}",
-            "legacy_artifacts": ${LEGACY_ARTIFACTS:-[]},
+            "legacy_artifacts": ${LEGACY_ARTIFACTS},
             "had_prior_linting": ${HAD_PRIOR_LINTING:-false},
             "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           }
