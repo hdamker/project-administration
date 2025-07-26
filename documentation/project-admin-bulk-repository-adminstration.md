@@ -1,6 +1,6 @@
 # CAMARA Project Bulk Repository Administration
 
-*Last updated: 2025-06-18*
+*Last updated: 2025-06-28*
 
 This system provides modular GitHub Actions workflows for managing bulk changes across all CAMARA project repositories with proper testing and safety mechanisms.
 
@@ -33,20 +33,12 @@ The system consists of three core workflows that work together:
 ## Available Operations
 
 ### Current Operations
-- **disable-wiki**: Safely disables GitHub wiki on repositories (only if wiki has no content)
-- **add-changelog-codeowners**: Adds release management team as reviewers for CHANGELOG file changes (both .MD and .md variants)
 - **add-changelog-file**: Adds template CHANGELOG.md file to repositories that have neither changelog nor releases
 - **update-swagger-links**: Migrates swagger editor links to CAMARA's dedicated swagger-ui instance (in files)
 - **update-swagger-links-releases**: Migrates swagger editor links to CAMARA's dedicated swagger-ui instance (in release descriptions)
-- **update-api-readiness-checklist**: Adds line 13 (API description for marketing) to existing API-Readiness-Checklist.md files
+- **centralize-linting-workflows**: Migrates repositories from local linting configurations to centralized workflows managed in the tooling repository
 
 ### Operation Details
-
-**disable-wiki:**
-- ✅ Safety check: Only disables wiki if currently enabled but has no content
-- ✅ Permission validation: Requires admin access to repository
-- ✅ Content protection: Skips repositories where wiki contains content
-- ✅ Clear status reporting: Different outcomes for various scenarios
 
 **add-changelog-file:**
 - ✅ **Smart decision logic**: Only acts when repository has neither CHANGELOG file nor releases
@@ -58,18 +50,6 @@ The system consists of three core workflows that work together:
 - ✅ **File-based operation**: Creates pull requests for the new CHANGELOG.md file
 - ✅ **Standard template**: Uses the same template as new API repositories
 - ⚠️ Issues warnings for repositories with mismatched CHANGELOG/release states (requires manual review)
-
-**add-changelog-codeowners:**
-- ✅ **Comprehensive coverage**: Handles both `CHANGELOG.MD` and `CHANGELOG.md` filename variants
-- ✅ Two commit strategies available:
-  - **pull-request** (default): Always creates pull requests for changes
-  - **direct-with-warning**: Attempts direct commit, issues warning if blocked (no PR created)
-- ✅ Smart detection: Skips if CHANGELOG rules already exist (either variant)
-- ✅ Only modifies existing CODEOWNERS files (won't create new ones)
-- ✅ Preserves existing CODEOWNERS content
-- ✅ Creates feature branch with unique timestamp-based naming (for PR strategy)
-- ✅ Generates descriptive pull requests with proper context (for PR strategy)
-- ⚠️ Issues warning if CODEOWNERS file is missing (requires investigation)
 
 **update-swagger-links:**
 - ✅ **Comprehensive link migration**: Replaces both `editor.swagger.io` and `editor-next.swagger.io` host URLs
@@ -91,25 +71,37 @@ The system consists of three core workflows that work together:
 - ✅ **Permission validation**: Requires `Contents: Write` permission for release modifications
 - ✅ **CAMARA branding**: Migrates to `https://camaraproject.github.io/swagger-ui/` for consistent experience
 
-**update-api-readiness-checklist:**
-- ✅ **File discovery**: Automatically finds all `*API-Readiness-Checklist.md` files in repository
-- ✅ **Smart detection**: Skips files that already have line 13 (API description for marketing)
-- ✅ **Structure validation**: Only modifies files with expected format (line 12 present)
-- ✅ **Precise insertion**: Adds line 13 after line 12 with proper table formatting
-- ✅ **Multiple file support**: Handles repositories with multiple checklist files
-- ✅ **File-based operation**: Creates pull requests for changes
-- ⚠️ Skips files without expected structure (missing line 12) to prevent corruption
+**centralize-linting-workflows:**
+- ✅ **Smart migration**: Detects existing linting setup and migrates appropriately
+- ✅ **Comprehensive cleanup**: Removes legacy workflow files, lint functions, and config files
+- ✅ **Centralized management**: Adds workflows that reference the tooling repository
+- ✅ **Category detection**: 
+  - Skips repositories already using centralized workflows
+  - Migrates repositories with local linting (removes old, adds new)
+  - Sets up new linting for repositories without any linting
+- ✅ **Detailed reporting**: Shows what files were removed/added per repository
+- ✅ **Dry-run support**: Full analysis and statistics collection in dry-run mode
+- ✅ **PR guidance**: Includes next steps for codeowners to test and adopt smoothly
+- ⚠️ Repositories without prior linting get additional warning about potential issues
 
-**New Line 13 Added:**
-```
-| 13 | API description (for marketing)              |   O   |         O         |    M    |    M   |      | [wiki link](https://lf-camaraproject.atlassian.net/wiki/xxx) |
-```
+**Files Removed (if present):**
+- `.github/workflows/megalinter.yml`
+- `.github/workflows/spectral_oas_lint.yml`
+- `lint_function/` directory and all contents
+- `.spectral.yml`
+- `.yamllint.yaml`
+- `.gherkin-lintrc`
 
-**Requirements by Release Stage:**
-- alpha: Optional (O)
-- release-candidate: Optional (O)  
-- initial public: Mandatory (M)
-- stable public: Mandatory (M)
+**Files Added:**
+- `.github/workflows/spectral-oas-caller.yml` - Spectral linting with CAMARA ruleset
+- `.github/workflows/pr_validation_caller.yml` - Comprehensive PR validation
+
+**Next Steps for Codeowners (included in PR):**
+1. Review and merge the PR
+2. Test workflows manually via Actions tab
+3. Address any linting errors found
+4. Create cleanup PR if needed
+5. Monitor initial PRs after merge
 
 **Host Replacement Approach:**
 ```
@@ -130,12 +122,6 @@ TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercont
 
 FROM: https://editor-next.swagger.io/?url=https://raw.githubusercontent.com/camaraproject/DeviceLocation/r2.2/code/API_definitions/location-verification.yaml  
 TO:   https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/DeviceLocation/r2.2/code/API_definitions/location-verification.yaml
-```
-
-**CODEOWNERS Rules Added:**
-```
-/CHANGELOG.MD @camaraproject/release-management_reviewers
-/CHANGELOG.md @camaraproject/release-management_reviewers
 ```
 
 ## Key Features
@@ -180,11 +166,10 @@ Single Repo Test (Dry Run) → Single Repo Test (Live) → Bulk Dry Run → Live
 1. Go to Actions → "Single Repository Test"
 2. Enter repository name (e.g., "DeviceStatus")
 3. Select operation type:
-   - **disable-wiki**: For disabling unused wikis (API-based)
-   - **add-changelog-codeowners**: For release management setup (file-based)
+   - **add-changelog-file**: For adding CHANGELOG.md template (file-based)
    - **update-swagger-links**: For swagger editor migration in files (file-based)
    - **update-swagger-links-releases**: For swagger editor migration in releases (API-based)
-   - **update-api-readiness-checklist**: For adding marketing description requirement to API checklists (file-based)
+   - **centralize-linting-workflows**: For migrating to centralized linting (file-based)
 4. Enable dry-run mode
 5. **Review structured results** with detailed feedback and next steps guidance
 
@@ -254,11 +239,17 @@ The reusable git operations automatically handle:
 - `contents: write` - For reading/writing repository files
 - `pull-requests: write` - For creating pull requests
 
-**For File-Based Operations (CODEOWNERS, Swagger Links in Files, API Readiness Checklists):**
+**For File-Based Operations (CHANGELOG, Swagger Links in Files):**
 - **Required Permissions**: Contents: Write and Pull Requests: Write permissions
 - **Token Scopes**: `repo` (for classic tokens) or `Contents: Write` + `Pull Requests: Write` (for FGPATs)
 - **Method**: Uses git operations with automatic fallback to pull requests for protected branches
 - **Dynamic Identity**: Automatically uses token's associated user identity for commits
+
+**For Workflow File Operations (Centralize Linting):**
+- **Required Permissions**: Contents: Write, Pull Requests: Write, and **Workflow** permissions
+- **Token Scopes**: `repo` + `workflow` (for classic tokens) or `Contents: Write` + `Pull Requests: Write` + `Actions: Write` (for FGPATs)
+- **Method**: Uses git operations to create/update workflow files
+- **Special Requirement**: GitHub requires explicit `workflow` scope to modify `.github/workflows/` files
 
 **For Release-Based Operations (Swagger Links in Releases):**
 - **Required Permissions**: Contents: Write permission (for release modifications)
@@ -266,16 +257,19 @@ The reusable git operations automatically handle:
 - **Method**: Uses GitHub API to update release descriptions directly
 - **Permission Check**: Automatically verified during API operations
 
-**For Wiki Operations:**
-- **Required Permissions**: Admin access to target repositories via your personal token
-- **Token Scopes**: `repo` (full repository access)
-- **Organization Role**: Must be organization owner or repository admin
-
 **Setting up Personal Access Token:**
 1. Go to GitHub Settings → Developer settings → Personal access tokens
-2. Generate new token with `repo` scope
+2. Generate new token with required scopes:
+   - **For most operations**: `repo` scope
+   - **For centralize-linting-workflows**: `repo` + `workflow` scopes
 3. Add token as repository secret named `CAMARA_BULK_CHANGE_TOKEN`
 4. Token identity will be automatically used for git operations
+
+**⚠️ Important Note for Centralize Linting Operation:**
+The `centralize-linting-workflows` operation creates workflow files in `.github/workflows/`. GitHub requires the `workflow` scope on your Personal Access Token to create or update workflow files. Without this scope, you'll see an error like:
+```
+refusing to allow a Personal Access Token to create or update workflow `.github/workflows/pr_validation_caller.yml` without `workflow` scope
+```
 
 ## Best Practices
 
