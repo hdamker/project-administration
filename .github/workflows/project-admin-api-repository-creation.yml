@@ -1,5 +1,20 @@
-# .github/workflows/api-repository-creation.yml
-# For documentation see /documentation/project-admin-api-repository-creation.md
+# =========================================================================================
+# CAMARA Project - API Repository Creation Workflow
+#
+# This GitHub Actions workflow automates the setup of new API repositories within the 
+# CAMARA GitHub organization using the Template_API_Repository as a template.
+#
+# CHANGELOG:
+# - 2025-07-26: Initial version as is for r1.1 release of camaraproject/project-administration
+#
+# USAGE:
+# - Manually triggered via workflow_dispatch with required inputs
+# - Requires environment 'repository-creation' with GH_REPO_CREATE_TOKEN secret
+# - Supports dry-run mode for testing without creating resources
+#
+# DOCUMENTATION:
+# see https://github.com/camaraproject/project-administration/blob/main/documentation/project-admin-api-repository-creation.md
+# =========================================================================================
 #
 # Prerequisites:
 # - A GitHub environment named `repository-creation` must exist.

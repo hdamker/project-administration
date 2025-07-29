@@ -1,5 +1,7 @@
 # CAMARA Reporting Workflows - User Guide
 
+*Last updated: 2025-06-18*
+
 ## Table of Contents
 1. [Overview](#overview)
 2. [Quick Start](#quick-start)

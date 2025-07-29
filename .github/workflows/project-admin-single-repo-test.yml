@@ -1,3 +1,21 @@
+# =========================================================================================
+# CAMARA Project - Single Repository Test Workflow
+#
+# This GitHub Actions workflow tests administrative operations on individual repositories
+# before bulk execution. Always use this workflow first when testing new operations.
+#
+# CHANGELOG:
+# - 2025-07-26: Initial version as is for r1.1 release of camaraproject/project-administration
+#
+# USAGE:
+# - Manually triggered via workflow_dispatch
+# - Select target repository and operation to test
+# - Supports dry-run mode (recommended for initial testing)
+#
+# DOCUMENTATION:
+# see https://github.com/camaraproject/project-administration/blob/main/documentation/project-admin-bulk-repository-adminstration.md
+# =========================================================================================
+
 name: Single Repository Test
 
 permissions:

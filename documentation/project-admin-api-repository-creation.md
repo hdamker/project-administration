@@ -1,5 +1,7 @@
 # 📘 API Repository Creation Automation for CAMARA
 
+*Last updated: 2025-06-10*
+
 This document describes how to use the GitHub Action in the `project-administration` repository to automate the setup of new API repositories within the CAMARA GitHub organization.
 
 ## 📋 Table of Contents

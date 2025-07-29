@@ -1,5 +1,7 @@
 # CAMARA Project Bulk Repository Administration
 
+*Last updated: 2025-06-18*
+
 This system provides modular GitHub Actions workflows for managing bulk changes across all CAMARA project repositories with proper testing and safety mechanisms.
 
 ## Workflow Architecture
