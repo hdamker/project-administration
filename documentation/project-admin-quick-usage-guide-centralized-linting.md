@@ -68,10 +68,10 @@ Same settings but:
 - Warning for repos without prior linting
 
 ### Next Steps for Codeowners
-1. Review and merge PR
-2. **Test manually** via Actions → "Caller for Spectral linting"
-3. Fix any linting errors found
-4. Create cleanup PR if needed
+1. Review linting results in PR checks
+2. Fix linting errors directly in this PR
+3. Monitor the new linting system
+4. Test with additional rules (optional)
 5. Monitor future PRs
 
 ## Expected Outcomes
