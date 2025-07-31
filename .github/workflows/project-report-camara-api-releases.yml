@@ -15,7 +15,9 @@
 #
 # DOCUMENTATION:
 # see https://github.com/camaraproject/project-administration/blob/main/documentation/project-report-generation-workflows.md
-# =========================================================================================name: CAMARA API Releases
+# =========================================================================================
+
+name: CAMARA API Releases
 
 on:
   workflow_dispatch:
