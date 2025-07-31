@@ -663,41 +663,40 @@ jobs:
               // Common next steps text
               const nextSteps = `### 👥 Next Steps for Codeowners
 
-                   ## Instructions for Linting Workflow Setup PR
+              ⚠️ **Important**: This PR introduces linting workflows that will validate repository content. Linting errors will **block this PR from merging** until resolved.
 
-         ⚠️ **Important**: This PR introduces linting workflows that will validate repository content. Linting errors will **block this PR from merging** until resolved.
+              #### Before This PR Can Be Merged:
 
-         ### Before This PR Can Be Merged:
+              1. **Review linting results in PR checks**:
+                  - Check the "Checks" tab for workflow results
+                  - All linting errors must be resolved before merge is possible
 
-         1. **Review linting results in PR checks**:
-            - Check the "Checks" tab for workflow results
-            - All linting errors must be resolved before merge is possible
+              2. **Fix linting errors directly in this PR**:
+                  - Address all OpenAPI specification issues (Spectral and yamllint errors)
+                  - Address all test definitions issues (gherkin-lint errors)
+                  - Push fixes to this PR branch to re-trigger validation
+                  - Repeat until all checks pass successfully
 
-         2. **Fix linting errors directly in this PR**:
-            - Address all OpenAPI specification issues (Spectral and yamllint errors)
-            - Address all test definitions issues (gherkin-lint errors)
-            - Push fixes to this PR branch to re-trigger validation
-            - Repeat until all checks pass successfully
+              #### Merge This PR 🚀
 
-         ### Merge This PR 🚀
+              #### After Successful Merge:
 
-         ### After Successful Merge:
+              1. **Monitor the new linting system**:
+                  - All future PRs will be subject to the same linting requirements
+                  - Contributors will need to fix linting issues before their PRs can merge
+                  - This ensures code quality standards are maintained going forward
 
-         1. **Monitor the new linting system**:
-            - All future PRs will be subject to the same linting requirements
-            - Contributors will need to fix linting issues before their PRs can merge
-            - This ensures code quality standards are maintained going forward
+              2. **Test with additional rules** (optional):
+                  - Verify OpenAPI specification with lower severity rules (warnings, hints, info)
+                  - Go to Actions tab → "Caller for Spectral linting with CAMARA ruleset" → Run workflow
+                  - Check workflow logs - if needed create an issue to improve your API specification
 
-         2. **Test with additional rules** (optional):
-            - Verify OpenAPI specification with lower severity rules (warnings, hints, info)
-            - Go to Actions tab → "Caller for Spectral linting with CAMARA ruleset" → Run workflow
-            - Check workflow logs - if needed start the issue to improve CAMARA API specification
+              3. **Monitor future PRs**:
+                  - First PRs after this may reveal new edge cases
+                  - Provide guidance to contributors on common linting fixes
+                  - The Release Management team can assist with complex issues
 
-         3. **Monitor future PRs**:
-            - First PRs after this may reveal new edge cases
-            - Provide guidance to contributors on common linting fixes
-            - The Release Management team can assist with complex issues
-            💡 **Pro tip**: Running the Spectral workflow manually NOW is highly recommended. This allows you to fix issues proactively rather than discovering them when submitting your next feature PR!`;
+              💡**Pro tip**: Running the Spectral workflow manually NOW is highly recommended. This allows you to fix issues proactively rather than discovering them when submitting your next feature PR!`;
               
               let prBody;
               if (hasLegacyLinting) {
