@@ -6,10 +6,11 @@
 #
 # CHANGELOG:
 # - 2025-07-26: Initial version as is for r1.1 release of camaraproject/project-administration
+# - 2025-07-28: Removed disable-wiki, add-changelog-codeowners, update-api-readiness-checklist; Added centralize-linting-workflows
 #
 # USAGE:
 # - Called via workflow_call from other workflows
-# - Supports multiple operations: disable-wiki, add-changelog-codeowners, etc.
+# - Supports multiple operations: add-changelog-file, update-swagger-links, centralize-linting-workflows, etc.
 # - Handles both API-based and file-based operations with git/PR support
 #
 # DOCUMENTATION:
@@ -77,27 +78,8 @@ jobs:
               console.log(`📝 Commit identity: ${userResponse.data.name || userResponse.data.login} <${userResponse.data.email || `${userResponse.data.login}@users.noreply.github.com`}>`);
               console.log(`✅ Repository access confirmed: ${repoResponse.data.full_name}`);
               
-              // Operation-specific permission checks
-              if (operation === 'disable-wiki') {
-                try {
-                  const collaboratorPermission = await github.rest.repos.getCollaboratorPermissionLevel({
-                    owner,
-                    repo,
-                    username: userResponse.data.login
-                  });
-                  
-                  if (collaboratorPermission.data.permission !== 'admin') {
-                    core.warning(`⚠️ User may lack admin permissions for wiki operations on ${owner}/${repo}`);
-                  } else {
-                    console.log('✅ Admin permissions confirmed for wiki operations');
-                  }
-                } catch (permissionError) {
-                  core.warning(`⚠️ Could not verify admin permissions - proceeding with wiki operation`);
-                }
-              }
-              
               // For file-based operations, verify write access
-              if (['add-changelog-codeowners', 'add-changelog-file', 'update-swagger-links', 'update-api-readiness-checklist'].includes(operation)) {
+              if (['add-changelog-file', 'update-swagger-links', 'centralize-linting-workflows'].includes(operation)) {
                 console.log('✅ File-based operation - write permissions will be tested during git operations');
               }
               
@@ -117,111 +99,6 @@ jobs:
               
               core.setFailed(`❌ Access verification failed: ${errorMsg}`);
               throw error;
-            }
-
-      - name: Execute Operation - Disable Wiki
-        if: inputs.operation == 'disable-wiki'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
-          script: |
-            const [owner, repo] = '${{ inputs.repository_full_name }}'.split('/');
-            
-            try {
-              // Check if wiki is enabled
-              const repoInfo = await github.rest.repos.get({
-                owner: owner,
-                repo: repo
-              });
-              
-              if (!repoInfo.data.has_wiki) {
-                console.log('✅ Wiki is already disabled');
-                core.exportVariable('operation_status', 'no-change');
-                core.exportVariable('result_type', 'no-change');
-                core.exportVariable('details', 'Wiki already disabled');
-                core.exportVariable('action_taken', 'none');
-                return;
-              }
-              
-              // Check if wiki has content
-              let hasWikiContent = false;
-              try {
-                await github.request('GET /repos/{owner}/{repo}/wiki', {
-                  owner: owner,
-                  repo: repo
-                });
-                hasWikiContent = true;
-              } catch (wikiError) {
-                hasWikiContent = wikiError.status !== 404;
-              }
-              
-              if (hasWikiContent) {
-                console.log('⚠️ Wiki contains content - skipping disable for safety');
-                core.exportVariable('operation_status', 'wiki-has-content');
-                core.exportVariable('result_type', 'warning');
-                core.exportVariable('details', 'Wiki has content - skipped for safety');
-                core.exportVariable('action_taken', 'skipped');
-                return;
-              }
-              
-              if (${{ inputs.dry_run }}) {
-                console.log('🧪 DRY RUN: Would disable wiki (currently enabled but empty)');
-                core.exportVariable('operation_status', 'would-disable-wiki');
-                core.exportVariable('result_type', 'would-action');
-                core.exportVariable('details', 'Dry run: Would disable wiki');
-                core.exportVariable('action_taken', 'dry-run');
-                return;
-              }
-              
-              // Disable wiki
-              try {
-                await github.rest.repos.update({
-                  owner: owner,
-                  repo: repo,
-                  has_wiki: false
-                });
-                console.log('✅ Wiki disabled successfully');
-                core.exportVariable('operation_status', 'wiki-disabled');
-                core.exportVariable('result_type', 'success');
-                core.exportVariable('details', 'Wiki disabled successfully');
-                core.exportVariable('action_taken', 'wiki-disabled');
-              } catch (updateError) {
-                if (updateError.status === 403) {
-                  core.setFailed(`❌ Permission denied: Admin access required to disable wiki on ${owner}/${repo}`);
-                  core.exportVariable('operation_status', 'permission-denied');
-                  core.exportVariable('result_type', 'error');
-                  core.exportVariable('details', 'Permission denied: Admin access required');
-                  core.exportVariable('action_taken', 'failed');
-                } else if (updateError.status === 404) {
-                  core.setFailed(`❌ Repository not found: ${owner}/${repo}`);
-                  core.exportVariable('operation_status', 'repo-not-found');
-                  core.exportVariable('result_type', 'error');
-                  core.exportVariable('details', 'Repository not found');
-                  core.exportVariable('action_taken', 'failed');
-                } else if (updateError.status === 422) {
-                  core.setFailed(`❌ Cannot update repository settings - may be restricted by organization policies`);
-                  core.exportVariable('operation_status', 'update-restricted');
-                  core.exportVariable('result_type', 'error');
-                  core.exportVariable('details', 'Cannot update repository settings - restricted by organization policies');
-                  core.exportVariable('action_taken', 'failed');
-                } else {
-                  core.setFailed(`❌ Failed to disable wiki: ${updateError.message} (HTTP ${updateError.status})`);
-                  core.exportVariable('operation_status', 'api-error');
-                  core.exportVariable('result_type', 'error');
-                  core.exportVariable('details', `Failed to disable wiki: ${updateError.message}`);
-                  core.exportVariable('action_taken', 'failed');
-                }
-                throw updateError;
-              }
-              
-            } catch (error) {
-              if (!error.message.includes('Permission denied') && !error.message.includes('Failed to disable wiki')) {
-                core.setFailed(`❌ Wiki operation failed: ${error.message}`);
-                core.exportVariable('operation_status', 'unexpected-error');
-                core.exportVariable('result_type', 'error');
-                core.exportVariable('details', `Wiki operation failed: ${error.message}`);
-                core.exportVariable('action_taken', 'failed');
-              }
             }
 
       - name: Execute Operation - Update Swagger Links in Releases
@@ -378,66 +255,6 @@ jobs:
               }
               throw error;
             }
-
-      - name: Execute Operation - Add Changelog CODEOWNERS
-        if: inputs.operation == 'add-changelog-codeowners'
-        run: |
-          echo "🔍 Checking for CODEOWNERS file..."
-          
-          # Set operation type flag
-          echo "needs_git_workflow=true" >> $GITHUB_ENV
-          
-          if [ ! -f "CODEOWNERS" ]; then
-            echo "⚠️ CODEOWNERS file not found"
-            echo "operation_status=no-codeowners-file" >> $GITHUB_ENV
-            echo "result_type=warning" >> $GITHUB_ENV
-            echo "details=No CODEOWNERS file found" >> $GITHUB_ENV
-            echo "action_taken=skipped" >> $GITHUB_ENV
-            echo "has_changes=false" >> $GITHUB_ENV
-            exit 0
-          fi
-          
-          # Check if CHANGELOG rules already exist
-          if grep -q "/CHANGELOG\.MD\|/CHANGELOG\.md" CODEOWNERS; then
-            echo "✅ CHANGELOG rule already exists"
-            echo "operation_status=no-change" >> $GITHUB_ENV
-            echo "result_type=no-change" >> $GITHUB_ENV
-            echo "details=CHANGELOG rule already exists" >> $GITHUB_ENV
-            echo "action_taken=none" >> $GITHUB_ENV
-            echo "has_changes=false" >> $GITHUB_ENV
-            exit 0
-          fi
-          
-          # Add CHANGELOG rules
-          echo "" >> CODEOWNERS
-          echo "# The following lines ensure that the release-management_reviewers team will automatically added as reviewers" >> CODEOWNERS
-          echo "# if a pull requests is changing the CHANGELOG file (aka \"release PR\") and that such PRs can only be merged with an approval from a team member." >> CODEOWNERS
-          echo "/CHANGELOG.MD @camaraproject/release-management_reviewers" >> CODEOWNERS
-          echo "/CHANGELOG.md @camaraproject/release-management_reviewers" >> CODEOWNERS
-          
-          echo "✅ Added CHANGELOG rules to CODEOWNERS"
-          echo "operation_status=files-modified" >> $GITHUB_ENV
-          echo "result_type=success" >> $GITHUB_ENV
-          echo "details=Added CHANGELOG files to CODEOWNERS" >> $GITHUB_ENV
-          echo "action_taken=file-modification" >> $GITHUB_ENV
-          echo "has_changes=true" >> $GITHUB_ENV
-          echo "commit_message=admin: add CHANGELOG files to CODEOWNERS for release management" >> $GITHUB_ENV
-          echo "pr_title=admin: add CHANGELOG files to CODEOWNERS for release management" >> $GITHUB_ENV
-          echo "pr_body<<EOF" >> $GITHUB_ENV
-          cat << 'PRBODY' >> $GITHUB_ENV
-          ## CAMARA Project Admin Update
-          
-          This pull request adds CHANGELOG files to CODEOWNERS to ensure that:
-          - The release-management_reviewers team is automatically added as reviewers for release PRs
-          - Release PRs (those changing CHANGELOG files) require approval from the release management team
-          
-          **Changes:**
-          - Added `/CHANGELOG.MD @camaraproject/release-management_reviewers` to CODEOWNERS
-          - Added `/CHANGELOG.md @camaraproject/release-management_reviewers` to CODEOWNERS
-          
-          This covers both uppercase and lowercase variants of the changelog filename.
-          PRBODY
-          echo "EOF" >> $GITHUB_ENV
 
       - name: Execute Operation - Add Changelog File
         if: inputs.operation == 'add-changelog-file'
@@ -678,148 +495,330 @@ jobs:
           EOF
           fi
 
-      - name: Execute Operation - Update API Readiness Checklist
-        if: inputs.operation == 'update-api-readiness-checklist'
-        run: |
-          echo "🔍 Searching for API-Readiness-Checklist.md files..."
-          
-          # Set operation type flag
-          echo "needs_git_workflow=true" >> $GITHUB_ENV
-          
-          # Find all API-Readiness-Checklist.md files in the repository
-          CHECKLIST_FILES=()
-          while IFS= read -r -d '' file; do
-            CHECKLIST_FILES+=("$file")
-          done < <(find . -name "*API-Readiness-Checklist.md" -type f -print0 2>/dev/null)
-          
-          if [ ${#CHECKLIST_FILES[@]} -eq 0 ]; then
-            echo "ℹ️ No API-Readiness-Checklist.md files found"
-            echo "operation_status=no-checklist-files" >> $GITHUB_ENV
-            echo "result_type=no-change" >> $GITHUB_ENV
-            echo "details=No API-Readiness-Checklist.md files found in repository" >> $GITHUB_ENV
-            echo "action_taken=none" >> $GITHUB_ENV
-            echo "has_changes=false" >> $GITHUB_ENV
-            exit 0
-          fi
-          
-          echo "📋 Found ${#CHECKLIST_FILES[@]} API-Readiness-Checklist.md file(s)"
-          for file in "${CHECKLIST_FILES[@]}"; do
-            echo "   - $file"
-          done
-          
-          MODIFIED_FILES=0
-          UPDATED_FILES=""
-          SKIPPED_FILES=""
-          
-          for file in "${CHECKLIST_FILES[@]}"; do
-            echo "🔍 Checking $file..."
+      - name: Execute Operation - Centralize Linting Workflows
+        if: inputs.operation == 'centralize-linting-workflows'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
+          script: |
+            const [owner, repo] = '${{ inputs.repository_full_name }}'.split('/');
+            const fs = require('fs');
+            const path = require('path');
             
-            # Check if line 13 (API description for marketing) already exists
-            if grep -q "API description (for marketing)" "$file"; then
-              echo "   ✅ Line 13 already exists in $file"
-              SKIPPED_FILES="$SKIPPED_FILES $file"
-              continue
-            fi
-            
-            # Check if the file has the expected structure (line 12 should exist)
-            if ! grep -q "Previous public release was certified" "$file"; then
-              echo "   ⚠️ File $file doesn't have expected structure (missing line 12) - skipping"
-              SKIPPED_FILES="$SKIPPED_FILES $file"
-              continue
-            fi
-            
-            # Create a temporary file for modifications
-            TEMP_FILE=$(mktemp)
-            
-            # Process the file line by line
-            ADDED_LINE=false
-            while IFS= read -r line || [[ -n "$line" ]]; do
-              echo "$line" >> "$TEMP_FILE"
+            try {
+              console.log('🔍 Analyzing current linting configuration...');
               
-              # After line 12 (Previous public release was certified), add line 13
-              if [[ "$line" == *"Previous public release was certified"* ]] && [[ "$line" == *"|"* ]] && [ "$ADDED_LINE" = false ]; then
-                echo "| 13 | API description (for marketing)              |   O   |         O         |    M    |    M   |      | [wiki link](https://lf-camaraproject.atlassian.net/wiki/xxx) |" >> "$TEMP_FILE"
-                ADDED_LINE=true
-                echo "   ✅ Added line 13 to $file"
-              fi
-            done < "$file"
-            
-            if [ "$ADDED_LINE" = true ]; then
-              # Replace original file with modified version
-              mv "$TEMP_FILE" "$file"
-              MODIFIED_FILES=$((MODIFIED_FILES + 1))
-              UPDATED_FILES="$UPDATED_FILES $file"
-            else
-              # Clean up temp file if no changes made
-              rm "$TEMP_FILE"
-              echo "   ⚠️ Could not find insertion point in $file - skipping"
-              SKIPPED_FILES="$SKIPPED_FILES $file"
-            fi
-          done
-          
-          # Generate summary
-          TOTAL_FILES=${#CHECKLIST_FILES[@]}
-          SKIPPED_COUNT=$(echo $SKIPPED_FILES | wc -w)
-          
-          if [ $MODIFIED_FILES -eq 0 ]; then
-            if [ $SKIPPED_COUNT -eq $TOTAL_FILES ]; then
-              echo "✅ All API-Readiness-Checklist.md files already have line 13 or were skipped"
-              echo "operation_status=no-change" >> $GITHUB_ENV
-              echo "result_type=no-change" >> $GITHUB_ENV
-              echo "details=All $TOTAL_FILES API-Readiness-Checklist.md file(s) already have line 13 or were skipped" >> $GITHUB_ENV
-              echo "action_taken=none" >> $GITHUB_ENV
-              echo "has_changes=false" >> $GITHUB_ENV
-            else
-              echo "⚠️ No files were modified due to structural issues"
-              echo "operation_status=structure-issues" >> $GITHUB_ENV
-              echo "result_type=warning" >> $GITHUB_ENV
-              echo "details=Found $TOTAL_FILES file(s) but none could be modified due to structural issues" >> $GITHUB_ENV
-              echo "action_taken=skipped" >> $GITHUB_ENV
-              echo "has_changes=false" >> $GITHUB_ENV
-            fi
-          else
-            echo "✅ Updated line 13 in $MODIFIED_FILES file(s):$UPDATED_FILES"
-            if [ $SKIPPED_COUNT -gt 0 ]; then
-              echo "ℹ️ Skipped $SKIPPED_COUNT file(s):$SKIPPED_FILES"
-            fi
-            
-            echo "operation_status=files-modified" >> $GITHUB_ENV
-            echo "result_type=success" >> $GITHUB_ENV
-            echo "details=Added line 13 (API description for marketing) to $MODIFIED_FILES API-Readiness-Checklist.md file(s)" >> $GITHUB_ENV
-            echo "action_taken=file-modification" >> $GITHUB_ENV
-            echo "has_changes=true" >> $GITHUB_ENV
-            echo "commit_message=admin: add line 13 (API description for marketing) to API readiness checklists" >> $GITHUB_ENV
-            echo "pr_title=admin: add line 13 (API description for marketing) to API readiness checklists" >> $GITHUB_ENV
-            
-            # Create PR body with proper variable substitution
-            cat << EOF >> $GITHUB_ENV
-          pr_body<<PRBODY
-          ## CAMARA Project Admin Update
-          
-          This pull request adds the new line 13 (API description for marketing) to existing API-Readiness-Checklist.md files to align them with the latest template.
-          
-          **Changes:**
-          - Added line 13: "API description (for marketing)" with appropriate requirements for each release stage
-          - Inserted after line 12 (Previous public release was certified) 
-          - Maintains proper table formatting and structure
-          
-          **New line added:**
-          \`\`\`
-          | 13 | API description (for marketing)              |   O   |         O         |    M    |    M   |      | [wiki link](https://lf-camaraproject.atlassian.net/wiki/xxx) |
-          \`\`\`
-          
-          **Requirements by release stage:**
-          - alpha: Optional (O)
-          - release-candidate: Optional (O)  
-          - initial public: Mandatory (M)
-          - stable public: Mandatory (M)
-          
-          This ensures all API readiness checklists include the marketing description requirement that becomes mandatory for public releases.
-          
-          **Files modified:**$UPDATED_FILES
-          PRBODY
-          EOF
-          fi
+              // Set operation type flag
+              core.exportVariable('needs_git_workflow', 'true');
+              
+              // Define files to check/remove
+              const lintingArtifacts = {
+                workflows: [
+                  '.github/workflows/megalinter.yml',
+                  '.github/workflows/spectral_oas_lint.yml'
+                ],
+                configs: [
+                  '.spectral.yml',
+                  '.yamllint.yaml',
+                  '.gherkin-lintrc'
+                ],
+                directory: 'lint_function'
+              };
+              
+              // Define new workflows to add
+              const newWorkflows = [
+                'spectral-oas-caller.yml',
+                'pr_validation_caller.yml'
+              ];
+              
+              // Check if already has centralized workflows
+              let hasCentralizedWorkflows = true;
+              for (const workflow of newWorkflows) {
+                if (!fs.existsSync(path.join('.github', 'workflows', workflow))) {
+                  hasCentralizedWorkflows = false;
+                  break;
+                }
+              }
+              
+              if (hasCentralizedWorkflows) {
+                console.log('✅ Repository already has centralized workflows');
+                core.exportVariable('operation_status', 'already-centralized');
+                core.exportVariable('result_type', 'no-change');
+                core.exportVariable('details', 'Repository already uses centralized linting workflows');
+                core.exportVariable('action_taken', 'none');
+                core.exportVariable('has_changes', 'false');
+                return;
+              }
+              
+              // Check for existing linting artifacts
+              const foundArtifacts = [];
+              let hasLegacyLinting = false;
+              
+              // Check workflow files
+              for (const workflow of lintingArtifacts.workflows) {
+                if (fs.existsSync(workflow)) {
+                  foundArtifacts.push(workflow);
+                  hasLegacyLinting = true;
+                  console.log(`📋 Found legacy workflow: ${workflow}`);
+                }
+              }
+              
+              // Check config files
+              for (const config of lintingArtifacts.configs) {
+                if (fs.existsSync(config)) {
+                  foundArtifacts.push(config);
+                  hasLegacyLinting = true;
+                  console.log(`📋 Found legacy config: ${config}`);
+                }
+              }
+              
+              // Check lint_function directory
+              if (fs.existsSync(lintingArtifacts.directory)) {
+                foundArtifacts.push(lintingArtifacts.directory);
+                hasLegacyLinting = true;
+                console.log(`📋 Found legacy directory: ${lintingArtifacts.directory}/`);
+              }
+              
+              console.log(`🔍 Legacy linting artifacts found: ${foundArtifacts.length}`);
+              
+              // Dry run mode - just report what would be done
+              if (${{ inputs.dry_run }}) {
+                const action = hasLegacyLinting ? 'migrate' : 'add';
+                const details = hasLegacyLinting 
+                  ? `Would migrate from local linting (remove ${foundArtifacts.length} artifacts, add 2 workflows)`
+                  : 'Would add centralized linting workflows (no prior linting)';
+                
+                console.log(`🧪 DRY RUN: ${details}`);
+                core.exportVariable('operation_status', `would-${action}`);
+                core.exportVariable('result_type', 'would-action');
+                core.exportVariable('details', `Dry run: ${details}`);
+                core.exportVariable('action_taken', 'dry-run');
+                core.exportVariable('has_changes', 'false');
+                
+                // Export statistics for reporting
+                core.exportVariable('legacy_artifacts_count', foundArtifacts.length);
+                // Write artifacts to file to avoid JSON escaping issues in env vars
+                fs.writeFileSync('/tmp/legacy_artifacts.json', JSON.stringify(foundArtifacts));
+                core.exportVariable('had_prior_linting', hasLegacyLinting);
+                return;
+              }
+              
+              // Download new workflows from tooling repository
+              console.log('📥 Downloading centralized workflows from tooling repository...');
+              
+              const workflowsDir = '.github/workflows';
+              if (!fs.existsSync(workflowsDir)) {
+                fs.mkdirSync(workflowsDir, { recursive: true });
+                console.log('📁 Created .github/workflows directory');
+              }
+              
+              const downloadedWorkflows = [];
+              for (const workflow of newWorkflows) {
+                try {
+                  console.log(`  📥 Downloading ${workflow}...`);
+                  const response = await github.rest.repos.getContent({
+                    owner: 'camaraproject',
+                    repo: 'tooling',
+                    path: `linting/workflows/${workflow}`
+                  });
+                  
+                  const content = Buffer.from(response.data.content, 'base64').toString('utf8');
+                  fs.writeFileSync(path.join(workflowsDir, workflow), content);
+                  downloadedWorkflows.push(workflow);
+                  console.log(`  ✅ Downloaded ${workflow}`);
+                } catch (downloadError) {
+                  console.log(`  ❌ Failed to download ${workflow}: ${downloadError.message}`);
+                  throw new Error(`Failed to download workflow ${workflow}: ${downloadError.message}`);
+                }
+              }
+              
+              // Remove legacy artifacts
+              const removedArtifacts = [];
+              if (hasLegacyLinting) {
+                console.log('🧹 Removing legacy linting artifacts...');
+                
+                for (const artifact of foundArtifacts) {
+                  try {
+                    if (artifact === lintingArtifacts.directory) {
+                      // Remove directory recursively
+                      fs.rmSync(artifact, { recursive: true, force: true });
+                      console.log(`  ✅ Removed directory: ${artifact}/`);
+                    } else {
+                      // Remove file
+                      fs.unlinkSync(artifact);
+                      console.log(`  ✅ Removed file: ${artifact}`);
+                    }
+                    removedArtifacts.push(artifact);
+                  } catch (removeError) {
+                    console.log(`  ⚠️ Could not remove ${artifact}: ${removeError.message}`);
+                  }
+                }
+              }
+              
+              // Prepare commit message and PR body
+              const action = hasLegacyLinting ? 'migrate' : 'add';
+              const commitMessage = 'admin: migrate to centralized linting workflows';
+              const prTitle = 'admin: migrate to centralized linting workflows';
+              
+              // Common next steps text
+              const nextSteps = `### 👥 Next Steps for Codeowners
+
+              ⚠️ **Important**: This PR introduces linting workflows that will validate repository content. Linting errors will **block this PR from merging** until resolved.
+
+              #### Before This PR Can Be Merged:
+
+              1. **Review linting results in PR checks**:
+                  - Check the "Checks" tab for workflow results
+                  - All linting errors must be resolved before merge is possible
+
+              2. **Fix linting errors directly in this PR**:
+                  - Address all OpenAPI specification issues (Spectral and yamllint errors)
+                  - Address all test definitions issues (gherkin-lint errors)
+                  - Push fixes to this PR branch to re-trigger validation
+                  - Repeat until all checks pass successfully
+
+              #### Approve and merge this PR 🚀
+
+              #### After Successful Merge:
+
+              1. **Monitor the new linting system**:
+                  - All future PRs will be subject to the same linting requirements
+                  - Contributors will need to fix linting issues before their PRs can merge
+                  - This ensures code quality standards are maintained going forward
+
+              2. **Test with additional rules** (optional):
+                  - Verify OpenAPI specification with lower severity rules (warnings, hints, info)
+                  - Go to Actions tab → "Caller for Spectral linting with CAMARA ruleset" → Run workflow
+                  - Check workflow logs - if needed create an issue to improve your API specification
+
+              3. **Monitor future PRs**:
+                  - First PRs after this may reveal new edge cases
+                  - Provide guidance to contributors on common linting fixes
+                  - The Release Management team can assist with complex issues
+
+              💡**Pro tip**: Running the Spectral workflow manually NOW is highly recommended. This allows you to fix issues proactively rather than discovering them when submitting your next feature PR!`;
+              
+              let prBody;
+              if (hasLegacyLinting) {
+                // Build list of removed artifacts for PR body
+                const removedList = removedArtifacts.map(a => {
+                  if (a.includes('megalinter.yml')) return '`megalinter.yml`';
+                  if (a.includes('spectral_oas_lint.yml')) return '`spectral_oas_lint.yml`';
+                  if (a === lintingArtifacts.directory) return 'Lint function scripts in `/lint_function/`';
+                  if (a.includes('.spectral.yml')) return '`.spectral.yml`';
+                  if (a.includes('.yamllint.yaml')) return '`.yamllint.yaml`';
+                  if (a.includes('.gherkin-lintrc')) return '`.gherkin-lintrc`';
+                  return `\`${a}\``;
+                });
+                
+                prBody = `## CAMARA Project Admin Update - Linting Migration
+
+            This pull request migrates this repository from local linting configuration to centralized linting workflows managed by the CAMARA project.
+
+            ### 🔄 Migration Summary
+
+            **Removed local linting artifacts:**
+            ${removedList.map(item => `- ${item}`).join('\n')}
+
+            **Added centralized workflows:**
+            - \`spectral-oas-caller.yml\` - Spectral linting with CAMARA ruleset
+            - \`pr_validation_caller.yml\` - Comprehensive PR validation
+
+            ### ✨ Benefits of Centralized Linting
+
+            1. **Always Up-to-Date**: Linting rules and workflows are automatically updated across all repositories
+            2. **Consistent Standards**: Ensures uniform code quality checks across all CAMARA APIs
+            3. **Reduced Maintenance**: No need to maintain linting configurations locally
+            4. **Enhanced Features**: Access to latest tooling improvements without manual updates
+            5. **Simplified Configuration**: Workflows reference the centralized tooling repository
+
+            ### 📋 What This Means for You
+
+            - **No action required** for basic operation - workflows will run automatically
+            - **All existing checks continue** with improved reliability
+            - **Custom configurations** can be discussed with the Release Management team if needed
+
+            ### 🔧 Technical Details
+
+            The new workflows reference reusable workflows from:
+            \`camaraproject/tooling/.github/workflows/\`
+
+            This ensures all repositories benefit from:
+            - Latest Spectral rules for OpenAPI validation
+            - Consistent PR validation checks
+            - Centralized rule management
+            - Automated tooling updates
+
+            ${nextSteps}`;
+              } else {
+                // No prior linting - prepend warning
+                prBody = `## CAMARA Project Admin Update - Linting Setup
+
+            This pull request adds centralized linting workflows to ensure code quality and API specification compliance.
+
+            ### ✅ Added Workflows
+
+            - \`spectral-oas-caller.yml\` - Spectral linting with CAMARA ruleset for OpenAPI validation
+            - \`pr_validation_caller.yml\` - Comprehensive PR validation checks
+
+            ### ✨ Benefits
+
+            1. **Automated Quality Checks**: Ensures API specifications meet CAMARA standards
+            2. **PR Validation**: Automatic checks on all pull requests
+            3. **Always Current**: Workflows reference centralized tooling for latest updates
+            4. **Zero Maintenance**: No local configuration needed
+
+            ### 📋 What This Means for You
+
+            - **Automated validation** on all pull requests to main branch
+            - **Immediate feedback** on API specification compliance
+            - **No local setup required** - everything is managed centrally
+
+            ### 🔧 Technical Details
+
+            The new workflows reference reusable workflows from:
+            \`camaraproject/tooling/.github/workflows/\`
+
+            This ensures all repositories benefit from:
+            - Latest Spectral rules for OpenAPI validation
+            - Consistent PR validation checks
+            - Centralized rule management
+            - Automated tooling updates
+
+            ### 👥 Next Steps for Codeowners
+
+            ⚠️ Since this repository had no prior linting, there may be existing issues to address.
+
+            ${nextSteps.split('\n').slice(1).join('\n')}`; // Skip the first line (header) to avoid duplication
+              }
+              
+              // Set result
+              console.log(`✅ Successfully ${action}d centralized linting workflows`);
+              core.exportVariable('operation_status', `${action}-completed`);
+              core.exportVariable('result_type', 'success');
+              core.exportVariable('details', hasLegacyLinting 
+                ? `Migrated from local linting (removed ${removedArtifacts.length} artifacts, added 2 workflows)`
+                : 'Added centralized linting workflows (no prior linting)');
+              core.exportVariable('action_taken', 'file-modification');
+              core.exportVariable('has_changes', 'true');
+              core.exportVariable('commit_message', commitMessage);
+              core.exportVariable('pr_title', prTitle);
+              core.exportVariable('pr_body', prBody);
+              
+              // Export statistics for reporting
+              core.exportVariable('legacy_artifacts_count', removedArtifacts.length);
+              // Write artifacts to file to avoid JSON escaping issues in env vars
+              fs.writeFileSync('/tmp/legacy_artifacts.json', JSON.stringify(removedArtifacts));
+              core.exportVariable('had_prior_linting', hasLegacyLinting);
+              
+            } catch (error) {
+              console.log(`❌ Operation failed: ${error.message}`);
+              core.exportVariable('operation_status', 'unexpected-error');
+              core.exportVariable('result_type', 'error');
+              core.exportVariable('details', `Operation failed: ${error.message}`);
+              core.exportVariable('action_taken', 'failed');
+              core.exportVariable('has_changes', 'false');
+            }
 
       - name: Setup Git Configuration
         if: env.needs_git_workflow == 'true'
@@ -942,10 +941,10 @@ jobs:
               // Get authenticated user for PR body personalization
               const authenticatedUser = await github.rest.users.getAuthenticated();
               
-              const prBodyFooter = `🔧 **Generated via project-admin workflow**  
+              const prBodyFooter = `\n\n---\n🤖 **Generated via project-admin workflow**  
               Triggered by ${context.actor}, executed via ${authenticatedUser.data.login}
             
-              **➡️ Next Steps:** This PR should be reviewed, approved, and merged by repository codeowners following standard review processes.
+              **➡️ Next Steps:** This PR should be reviewed, fixed as needed, approved, and merged by repository codeowners following standard review processes.
             
               ---
               *This is a manually triggered automated administrative update.*`;
@@ -957,7 +956,7 @@ jobs:
                 title: process.env.pr_title,
                 head: branchName,
                 base: defaultBranch,
-                body: `${process.env.pr_body}\n\n${prBodyFooter}`
+                body: `${process.env.pr_body}${prBodyFooter}`
               });
               
               console.log(`✅ Pull request created: ${prResponse.data.html_url}`);
@@ -1012,6 +1011,17 @@ jobs:
           PR_URL="${{ env.pr_url }}"
           COMMIT_SHA="${{ env.commit_sha }}"
           
+          # Additional data for centralize-linting operation
+          LEGACY_ARTIFACTS_COUNT="${{ env.legacy_artifacts_count }}"
+          HAD_PRIOR_LINTING="${{ env.had_prior_linting }}"
+          
+          # Read legacy artifacts from file if it exists
+          if [ -f "/tmp/legacy_artifacts.json" ]; then
+            LEGACY_ARTIFACTS=$(cat /tmp/legacy_artifacts.json)
+          else
+            LEGACY_ARTIFACTS="[]"
+          fi
+          
           cat > /tmp/results/result-${{ inputs.repository_name }}.json << EOF
           {
             "repository": "${{ inputs.repository_name }}",
@@ -1025,6 +1035,9 @@ jobs:
             "pr_number": "${PR_NUMBER:-}",
             "pr_url": "${PR_URL:-}",
             "commit_sha": "${COMMIT_SHA:-}",
+            "legacy_artifacts_count": "${LEGACY_ARTIFACTS_COUNT:-0}",
+            "legacy_artifacts": ${LEGACY_ARTIFACTS},
+            "had_prior_linting": ${HAD_PRIOR_LINTING:-false},
             "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           }
           EOF
