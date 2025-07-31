@@ -72,6 +72,9 @@ The system consists of three core workflows that work together:
 - ✅ **CAMARA branding**: Migrates to `https://camaraproject.github.io/swagger-ui/` for consistent experience
 
 **centralize-linting-workflows:**
+
+👉 There is a [**quick usage guide**](/documentation/project-admin-quick-usage-guide-centralized-linting.md) for this workflow available.
+
 - ✅ **Smart migration**: Detects existing linting setup and migrates appropriately
 - ✅ **Comprehensive cleanup**: Removes legacy workflow files, lint functions, and config files
 - ✅ **Centralized management**: Adds workflows that reference the tooling repository
