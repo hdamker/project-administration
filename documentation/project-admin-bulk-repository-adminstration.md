@@ -247,7 +247,7 @@ The reusable git operations automatically handle:
 
 **For Workflow File Operations (Centralize Linting):**
 - **Required Permissions**: Contents: Write, Pull Requests: Write, and **Workflow** permissions
-- **Token Scopes**: `repo` + `workflow` (for classic tokens) or `Contents: Write` + `Pull Requests: Write` + `Actions: Write` (for FGPATs)
+- **Token Scopes**: `repo` + `workflow` (for classic tokens) or `Contents: Write` + `Pull Requests: Write` + `Workflows: Write` (for FGPATs)
 - **Method**: Uses git operations to create/update workflow files
 - **Special Requirement**: GitHub requires explicit `workflow` scope to modify `.github/workflows/` files
 
