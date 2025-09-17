@@ -1,31 +1,59 @@
-# =========================================================================================
-# CAMARA Release Master Metadata
-#
-# This file contains the consolidated release information for all CAMARA API repositories.
-# It is automatically maintained by the Meta-Release Collector workflow.
-#
-# DO NOT EDIT MANUALLY unless correcting data issues.
-# =========================================================================================
-
 metadata:
-  last_updated: null    # Will be set by workflow
-  last_checked: null    # Will be set by workflow
-  workflow_version: "3.0.0"
-  schema_version: "1.0.0"
-
-# List of all releases with their API information
-# Sorted by repository name, then by release date
-releases: []
-
-# Example structure:
-# releases:
-#   - repository: "QualityOnDemand"
-#     release_tag: "r1.1"                    # Format: rX.Y
-#     release_date: "2024-09-15T12:00:00Z"   # ISO 8601
-#     meta_release: "Fall24"                 # From configuration
-#     github_url: "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.1"
-#     apis:
-#       - name: "quality-on-demand"          # From YAML filename
-#         version: "0.11.0"                   # From info.version
-#         title: "Quality on Demand API"     # From info.title
-#         commonalities: "0.4"                # From x-camara-commonalities
+  last_updated: '2025-09-17T12:25:53.829Z'
+  last_checked: '2025-09-17T12:25:53.829Z'
+  workflow_version: 3.0.0
+  schema_version: 1.0.0
+releases:
+  - repository: DeviceRoamingStatus
+    release_tag: r1.2
+    release_date: '2024-09-12T14:30:00Z'
+    meta_release: Fall25
+    github_url: https://github.com/camaraproject/DeviceRoamingStatus/releases/tag/r1.2
+    apis:
+      - api_name: device-roaming-status
+        file_name: device-roaming-status
+        version: 0.6.1
+        title: Device Roaming Status API
+        commonalities: '0.4'
+  - repository: QualityOnDemand
+    release_tag: r1.1
+    release_date: '2024-07-15T10:00:00Z'
+    meta_release: Fall24
+    github_url: https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.1
+    apis:
+      - api_name: quality-on-demand
+        file_name: quality-on-demand
+        version: 0.11.0
+        title: Quality on Demand API
+        commonalities: '0.4'
+      - api_name: qod-provisioning
+        file_name: qod-provisioning
+        version: 0.1.0
+        title: QoD Provisioning API
+        commonalities: '0.4'
+      - api_name: qos-profiles
+        file_name: qos-profiles
+        version: 0.11.0
+        title: QoS Profiles API
+        commonalities: '0.4'
+  - repository: WebRTC
+    release_tag: r2.1
+    release_date: '2025-01-10T09:15:00Z'
+    meta_release: Fall25
+    github_url: https://github.com/camaraproject/WebRTC/releases/tag/r2.1
+    apis:
+      - api_name: webrtc-session
+        file_name: webrtc-session
+        version: 0.3.0
+        title: WebRTC Session API
+        commonalities: '0.4'
+      - api_name: webrtc-signaling
+        file_name: webrtc-signaling
+        version: 0.2.0
+        title: WebRTC Signaling API
+        commonalities: '0.4'
+      - api_name: webrtc-media
+        file_name: webrtc-media
+        version: 0.2.0
+        title: WebRTC Media API
+        commonalities: '0.4'

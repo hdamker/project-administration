@@ -55,7 +55,7 @@ function loadMasterMetadata() {
  * Fetch all API repositories from GitHub
  */
 async function fetchAPIRepositories() {
-  console.log(`Fetching repositories from ${GITHUB_ORG}...`);
+  console.error(`Fetching repositories from ${GITHUB_ORG}...`);
 
   const repos = [];
   let page = 1;
@@ -70,17 +70,20 @@ async function fetchAPIRepositories() {
 
     if (data.length === 0) break;
 
-    // Filter for API repositories (have 'camara-api' topic or contain API definitions)
+    // Filter for API repositories by topics
+    // Topics: sandbox-api-repository, incubating-api-repository, graduated-api-repository
     const apiRepos = data.filter(repo =>
       !repo.archived &&
-      (repo.topics?.includes('camara-api') || repo.name.match(/^[A-Z]/))
+      (repo.topics?.includes('sandbox-api-repository') ||
+       repo.topics?.includes('incubating-api-repository') ||
+       repo.topics?.includes('graduated-api-repository'))
     );
 
     repos.push(...apiRepos);
     page++;
   }
 
-  console.log(`Found ${repos.length} API repositories`);
+  console.error(`Found ${repos.length} API repositories`);
   return repos;
 }
 
@@ -101,11 +104,11 @@ async function fetchReleases(repoName) {
 
     if (data.length === 0) break;
 
-    // Filter for public releases (exclude pre-releases for historical data)
+    // Get all public releases (exclude only pre-releases and drafts)
+    // No filtering by tag format - collect everything first
     const publicReleases = data.filter(release =>
       !release.prerelease &&
-      !release.draft &&
-      release.tag_name.match(/^r\d+\.\d+$/)  // Format: rX.Y
+      !release.draft
     );
 
     releases.push(...publicReleases);
@@ -146,73 +149,79 @@ function findNewReleases(currentReleases, storedReleases) {
  * Main execution
  */
 async function main() {
-  const mode = process.argv[2] || 'incremental';
+  const args = process.argv.slice(2);
+  let mode = 'incremental';
 
-  console.log(`🔍 Release Detection - Mode: ${mode}`);
-  console.log('================================');
+  // Parse arguments
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--mode' && i + 1 < args.length) {
+      mode = args[i + 1];
+      i++;
+    }
+  }
+
+  console.error(`🔍 Release Detection - Mode: ${mode}`);
+  console.error('================================');
 
   // Load existing metadata
   const masterData = loadMasterMetadata();
-  console.log(`Loaded ${masterData.releases.length} existing releases`);
+  console.error(`Loaded ${masterData.releases.length} existing releases`);
 
-  // Fetch current state from GitHub
+  // Fetch all API repositories with the specified topics
   const repositories = await fetchAPIRepositories();
-  const currentReleases = {};
+  const repositoriesToCheck = repositories.map(r => r.name).sort();
 
-  for (const repo of repositories) {
-    console.log(`Checking ${repo.name}...`);
-    const releases = await fetchReleases(repo.name);
-    if (releases.length > 0) {
-      currentReleases[repo.name] = releases;
-    }
-  }
-
-  // Determine what needs updating
-  let hasUpdates = false;
-  let releasesToAnalyze = [];
+  console.error(`Will check ${repositoriesToCheck.length} repositories`);
 
   if (mode === 'full') {
-    console.log('Full analysis requested - all releases will be analyzed');
-    hasUpdates = true;
+    // Full mode: analyze all repositories
+    const output = {
+      has_updates: true,
+      repositories_to_analyze: repositoriesToCheck,
+      releases_count: 0,  // Will be determined during analysis
+      mode: 'full'
+    };
+    console.log(JSON.stringify(output, null, 2));
+    return;
+  }
 
-    // Flatten all releases for analysis
-    for (const [repo, releases] of Object.entries(currentReleases)) {
+  // Incremental mode: check for new releases
+  const reposToAnalyze = new Set();
+  let newReleasesCount = 0;
+
+  // Create map of existing releases
+  const existingReleases = new Map();
+  for (const release of masterData.releases) {
+    const key = `${release.repository}:${release.release_tag}`;
+    existingReleases.set(key, true);
+  }
+
+  // Check each repository for new releases
+  for (const repo of repositoriesToCheck) {
+    try {
+      console.error(`Checking ${repo}...`);
+      const releases = await fetchReleases(repo);
+
       for (const release of releases) {
-        releasesToAnalyze.push({
-          repository: repo,
-          release_tag: release.tag_name,
-          release_date: release.published_at,
-          github_url: release.html_url
-        });
+        const key = `${repo}:${release.tag_name}`;
+        if (!existingReleases.has(key)) {
+          reposToAnalyze.add(repo);
+          newReleasesCount++;
+        }
       }
-    }
-  } else {
-    // Find only new releases
-    const newReleases = findNewReleases(currentReleases, masterData.releases);
-
-    if (newReleases.length > 0) {
-      console.log(`Found ${newReleases.length} new releases`);
-      hasUpdates = true;
-      releasesToAnalyze = newReleases;
-    } else {
-      console.log('No new releases found');
+    } catch (error) {
+      console.error(`Error checking ${repo}: ${error.message}`);
     }
   }
 
-  // Output results for workflow
-  console.log(`::set-output name=has_updates::${hasUpdates}`);
-  console.log(`::set-output name=new_releases::${JSON.stringify(releasesToAnalyze)}`);
-  console.log(`::set-output name=all_repos::${JSON.stringify(Object.keys(currentReleases))}`);
+  const output = {
+    has_updates: reposToAnalyze.size > 0,
+    repositories_to_analyze: Array.from(reposToAnalyze),
+    releases_count: newReleasesCount,
+    mode: 'incremental'
+  };
 
-  // Update last checked timestamp
-  masterData.metadata.last_checked = new Date().toISOString();
-
-  // Save updated metadata (just the timestamp for incremental mode)
-  if (mode !== 'dry-run') {
-    fs.writeFileSync(MASTER_METADATA_PATH, yaml.dump(masterData));
-  }
-
-  console.log('✅ Detection complete');
+  console.log(JSON.stringify(output, null, 2));
 }
 
 // Run if executed directly

@@ -1,0 +1,75 @@
+[
+  {
+    "repository": "QualityOnDemand",
+    "release_tag": "r1.1",
+    "release_date": "2024-07-15T10:00:00Z",
+    "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.1",
+    "apis": [
+      {
+        "api_name": "quality-on-demand",
+        "file_name": "quality-on-demand",
+        "version": "0.11.0",
+        "title": "Quality on Demand API",
+        "commonalities": "0.4"
+      },
+      {
+        "api_name": "qod-provisioning",
+        "file_name": "qod-provisioning",
+        "version": "0.1.0",
+        "title": "QoD Provisioning API",
+        "commonalities": "0.4"
+      },
+      {
+        "api_name": "qos-profiles",
+        "file_name": "qos-profiles",
+        "version": "0.11.0",
+        "title": "QoS Profiles API",
+        "commonalities": "0.4"
+      }
+    ]
+  },
+  {
+    "repository": "DeviceRoamingStatus",
+    "release_tag": "r1.2",
+    "release_date": "2024-09-12T14:30:00Z",
+    "github_url": "https://github.com/camaraproject/DeviceRoamingStatus/releases/tag/r1.2",
+    "apis": [
+      {
+        "api_name": "device-roaming-status",
+        "file_name": "device-roaming-status",
+        "version": "0.6.1",
+        "title": "Device Roaming Status API",
+        "commonalities": "0.4"
+      }
+    ]
+  },
+  {
+    "repository": "WebRTC",
+    "release_tag": "r2.1",
+    "release_date": "2025-01-10T09:15:00Z",
+    "github_url": "https://github.com/camaraproject/WebRTC/releases/tag/r2.1",
+    "apis": [
+      {
+        "api_name": "webrtc-session",
+        "file_name": "webrtc-session",
+        "version": "0.3.0",
+        "title": "WebRTC Session API",
+        "commonalities": "0.4"
+      },
+      {
+        "api_name": "webrtc-signaling",
+        "file_name": "webrtc-signaling",
+        "version": "0.2.0",
+        "title": "WebRTC Signaling API",
+        "commonalities": "0.4"
+      },
+      {
+        "api_name": "webrtc-media",
+        "file_name": "webrtc-media",
+        "version": "0.2.0",
+        "title": "WebRTC Media API",
+        "commonalities": "0.4"
+      }
+    ]
+  }
+]

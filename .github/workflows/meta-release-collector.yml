@@ -85,28 +85,37 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm install js-yaml axios
+          npm install js-yaml axios @octokit/rest
 
       - name: Detect releases
         id: detect
         run: |
           echo "🔍 Detecting releases in analysis mode: ${{ github.event.inputs.analysis_mode }}"
 
-          # For MVP, we'll implement a simple detection logic
-          # This will be replaced with actual script
+          # Run detection script
+          node scripts/detect-releases.js --mode ${{ github.event.inputs.analysis_mode }} > temp/detection-output.json
 
-          if [[ "${{ github.event.inputs.analysis_mode }}" == "full" ]]; then
-            echo "has_updates=true" >> $GITHUB_OUTPUT
-            echo "Full analysis requested - all releases will be analyzed"
-          else
-            # TODO: Implement actual detection logic
-            echo "has_updates=true" >> $GITHUB_OUTPUT
-            echo "Checking for new releases..."
-          fi
+          # Parse output
+          HAS_UPDATES=$(jq -r '.has_updates' temp/detection-output.json)
+          REPOS_TO_ANALYZE=$(jq -c '.repositories_to_analyze' temp/detection-output.json)
 
-          # Output list of repositories for parallel processing
-          # For now, using a sample list
-          echo 'all_repos=["QualityOnDemand","DeviceLocation","NumberVerification","SimSwap"]' >> $GITHUB_OUTPUT
+          echo "has_updates=${HAS_UPDATES}" >> $GITHUB_OUTPUT
+          echo "repos_to_analyze=${REPOS_TO_ANALYZE}" >> $GITHUB_OUTPUT
+
+          # Create repository groups for parallel processing
+          # Split into groups of 10 repositories
+          node -e "
+            const repos = ${REPOS_TO_ANALYZE};
+            const groupSize = 10;
+            const groups = [];
+            for (let i = 0; i < repos.length; i += groupSize) {
+              groups.push(repos.slice(i, i + groupSize));
+            }
+            console.log(JSON.stringify(groups));
+          " > temp/repo-groups.json
+
+          echo "repo_groups=$(cat temp/repo-groups.json)" >> $GITHUB_OUTPUT
+          echo "Found $(echo ${REPOS_TO_ANALYZE} | jq '. | length') repositories to analyze"
 
   # =========================================================================================
   # Phase 2: Release Analysis (Parallel)
@@ -119,8 +128,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # This will be dynamically generated based on repository groups
-        group: [1, 2, 3, 4]
+        repos: ${{ fromJSON(needs.detect-releases.outputs.repo_groups) }}
       max-parallel: 6
 
     steps:
@@ -138,15 +146,37 @@ jobs:
 
       - name: Analyze repository group
         run: |
-          echo "📊 Analyzing repository group ${{ matrix.group }}"
-          # TODO: Implement actual analysis logic
-          # node scripts/analyze-release.js --group ${{ matrix.group }}
+          echo "📊 Analyzing repositories: ${{ join(matrix.repos, ', ') }}"
+
+          # Create output file for this group
+          echo '[]' > temp/analysis-results.json
+
+          # Analyze each repository in the group
+          for repo in ${{ join(matrix.repos, ' ') }}; do
+            echo "Analyzing ${repo}..."
+
+            # Get releases for this repository
+            RELEASES=$(gh api repos/${GITHUB_ORG}/${repo}/releases --paginate | jq -r '.[] | select(.prerelease == false) | .tag_name' | grep '^r[0-9]\+\.[0-9]\+$' || true)
+
+            for release in ${RELEASES}; do
+              echo "  - Analyzing release ${release}"
+
+              # Run analysis script
+              node scripts/analyze-release.js --github "${repo}" "${release}" > temp/single-analysis.json
+
+              # Append to results
+              jq -s '.[0] + [.[1]]' temp/analysis-results.json temp/single-analysis.json > temp/analysis-updated.json
+              mv temp/analysis-updated.json temp/analysis-results.json
+            done
+          done
+
+          echo "Analysis complete for group"
 
       - name: Upload analysis results
         uses: actions/upload-artifact@v4
         with:
-          name: analysis-group-${{ matrix.group }}
-          path: temp/analysis-group-${{ matrix.group }}.json
+          name: analysis-group-${{ strategy.job-index }}
+          path: temp/analysis-results.json
 
   # =========================================================================================
   # Phase 3: Data Processing
@@ -178,8 +208,20 @@ jobs:
       - name: Combine and process data
         run: |
           echo "🔄 Processing release data..."
-          # TODO: Implement data processing
-          # node scripts/update-master.js
+
+          # Combine all analysis results
+          echo '[]' > temp/combined-analysis.json
+          for file in temp/analysis-group-*/analysis-results.json; do
+            if [[ -f "$file" ]]; then
+              jq -s '.[0] + .[1]' temp/combined-analysis.json "$file" > temp/combined-updated.json
+              mv temp/combined-updated.json temp/combined-analysis.json
+            fi
+          done
+
+          # Update master metadata with RAW data (no corrections)
+          node scripts/update-master.js --mode ${{ github.event.inputs.analysis_mode }} --input temp/combined-analysis.json
+
+          echo "Master metadata updated with $(jq '. | length' temp/combined-analysis.json) releases"
 
       - name: Generate meta-release reports
         run: |
