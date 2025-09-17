@@ -1,59 +1,383 @@
 metadata:
-  last_updated: '2025-09-17T12:25:53.829Z'
-  last_checked: '2025-09-17T12:25:53.829Z'
+  last_updated: '2025-09-17T14:07:54.611Z'
+  last_checked: '2025-09-17T14:07:54.611Z'
   workflow_version: 3.0.0
   schema_version: 1.0.0
 releases:
+  - repository: DeviceLocation
+    release_tag: r1.2
+    release_date: '2024-09-10T15:00:47Z'
+    meta_release: Fall24
+    github_url: https://github.com/camaraproject/DeviceLocation/releases/tag/r1.2
+    apis:
+      - api_name: location-retrieval
+        file_name: location-retrieval
+        version: 0.3.0
+        title: Device Location Retrieval
+        commonalities: 0.4.0
+      - api_name: location-verification
+        file_name: location-verification
+        version: 1.0.0
+        title: Device Location Verification
+        commonalities: 0.4.0
+  - repository: DeviceLocation
+    release_tag: r2.2
+    release_date: '2025-03-10T13:54:47Z'
+    meta_release: Spring25
+    github_url: https://github.com/camaraproject/DeviceLocation/releases/tag/r2.2
+    apis:
+      - api_name: location-retrieval
+        file_name: location-retrieval
+        version: 0.4.0
+        title: Device Location Retrieval
+        commonalities: 0.5
+      - api_name: location-verification
+        file_name: location-verification
+        version: 2.0.0
+        title: Device Location Verification
+        commonalities: 0.5
+  - repository: DeviceLocation
+    release_tag: r3.2
+    release_date: '2025-09-16T11:41:00Z'
+    meta_release: Fall25
+    github_url: https://github.com/camaraproject/DeviceLocation/releases/tag/r3.2
+    apis:
+      - api_name: location-retrieval
+        file_name: location-retrieval
+        version: 0.5.0
+        title: Device Location Retrieval
+        commonalities: 0.6
+      - api_name: location-verification
+        file_name: location-verification
+        version: 3.0.0
+        title: Device Location Verification
+        commonalities: 0.6
+  - repository: DeviceLocation
+    release_tag: v0.1.0
+    release_date: '2023-01-19T09:50:49Z'
+    meta_release: Legacy
+    github_url: https://github.com/camaraproject/DeviceLocation/releases/tag/v0.1.0
+    apis:
+      - api_name: location
+        file_name: location
+        version: 0.1.0
+        title: Device location API
+        commonalities: null
+  - repository: DeviceLocation
+    release_tag: v0.2.0
+    release_date: '2024-03-05T09:40:05Z'
+    meta_release: Legacy
+    github_url: https://github.com/camaraproject/DeviceLocation/releases/tag/v0.2.0
+    apis:
+      - api_name: geofencing
+        file_name: geofencing
+        version: 0.1.0
+        title: Device geofencing API
+        commonalities: null
+      - api_name: location-retrieval
+        file_name: location-retrieval
+        version: 0.1.0
+        title: Location retrieval API
+        commonalities: null
+      - api_name: location-verification
+        file_name: location-verification
+        version: 0.2.0
+        title: Device location verification API
+        commonalities: null
   - repository: DeviceRoamingStatus
     release_tag: r1.2
-    release_date: '2024-09-12T14:30:00Z'
+    release_date: '2025-09-16T11:51:25Z'
     meta_release: Fall25
     github_url: https://github.com/camaraproject/DeviceRoamingStatus/releases/tag/r1.2
     apis:
       - api_name: device-roaming-status
         file_name: device-roaming-status
-        version: 0.6.1
-        title: Device Roaming Status API
-        commonalities: '0.4'
-  - repository: QualityOnDemand
-    release_tag: r1.1
-    release_date: '2024-07-15T10:00:00Z'
+        version: 1.1.0
+        title: Device Roaming Status
+        commonalities: 0.6
+  - repository: NumberVerification
+    release_tag: r1.2
+    release_date: '2024-09-06T15:22:46Z'
     meta_release: Fall24
-    github_url: https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.1
+    github_url: https://github.com/camaraproject/NumberVerification/releases/tag/r1.2
     apis:
-      - api_name: quality-on-demand
-        file_name: quality-on-demand
-        version: 0.11.0
-        title: Quality on Demand API
-        commonalities: '0.4'
+      - api_name: number-verification
+        file_name: number-verification
+        version: 1.0.0
+        title: Number Verification
+        commonalities: 0.4.0
+  - repository: NumberVerification
+    release_tag: r1.3
+    release_date: '2024-10-01T12:49:13Z'
+    meta_release: Fall24
+    github_url: https://github.com/camaraproject/NumberVerification/releases/tag/r1.3
+    apis:
+      - api_name: number-verification
+        file_name: number-verification
+        version: 1.0.0
+        title: Number Verification
+        commonalities: 0.4.0
+  - repository: NumberVerification
+    release_tag: r2.4
+    release_date: '2025-03-20T14:24:37Z'
+    meta_release: Spring25
+    github_url: https://github.com/camaraproject/NumberVerification/releases/tag/r2.4
+    apis:
+      - api_name: number-verification
+        file_name: number-verification
+        version: 2.0.0
+        title: Number Verification
+        commonalities: 0.5
+  - repository: NumberVerification
+    release_tag: r3.2
+    release_date: '2025-09-12T09:55:34Z'
+    meta_release: Fall25
+    github_url: https://github.com/camaraproject/NumberVerification/releases/tag/r3.2
+    apis:
+      - api_name: number-verification
+        file_name: number-verification
+        version: 2.1.0
+        title: Number Verification
+        commonalities: 0.6
+  - repository: NumberVerification
+    release_tag: v0.3.1
+    release_date: '2023-11-17T10:05:24Z'
+    meta_release: Legacy
+    github_url: https://github.com/camaraproject/NumberVerification/releases/tag/v0.3.1
+    apis:
+      - api_name: null
+        file_name: null
+        version: 0.3.1
+        title: Number Verification
+        commonalities: null
+  - repository: QualityOnDemand
+    release_tag: r1.2
+    release_date: '2024-09-06T16:16:48Z'
+    meta_release: Fall24
+    github_url: https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.2
+    apis:
       - api_name: qod-provisioning
         file_name: qod-provisioning
         version: 0.1.0
         title: QoD Provisioning API
-        commonalities: '0.4'
+        commonalities: 0.4.0
       - api_name: qos-profiles
         file_name: qos-profiles
         version: 0.11.0
-        title: QoS Profiles API
-        commonalities: '0.4'
+        title: QoS Profiles
+        commonalities: 0.4.0
+      - api_name: quality-on-demand
+        file_name: quality-on-demand
+        version: 0.11.0
+        title: Quality-On-Demand
+        commonalities: 0.4.0
+  - repository: QualityOnDemand
+    release_tag: r1.3
+    release_date: '2024-12-18T14:58:23Z'
+    meta_release: Fall24
+    github_url: https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.3
+    apis:
+      - api_name: qod-provisioning
+        file_name: qod-provisioning
+        version: 0.1.1
+        title: QoD Provisioning API
+        commonalities: 0.4.0
+      - api_name: qos-profiles
+        file_name: qos-profiles
+        version: 0.11.1
+        title: QoS Profiles
+        commonalities: 0.4.0
+      - api_name: quality-on-demand
+        file_name: quality-on-demand
+        version: 0.11.1
+        title: Quality-On-Demand
+        commonalities: 0.4.0
+  - repository: QualityOnDemand
+    release_tag: r2.2
+    release_date: '2025-03-11T15:31:39Z'
+    meta_release: Spring25
+    github_url: https://github.com/camaraproject/QualityOnDemand/releases/tag/r2.2
+    apis:
+      - api_name: qod-provisioning
+        file_name: qod-provisioning
+        version: 0.2.0
+        title: QoD Provisioning API
+        commonalities: 0.5
+      - api_name: qos-profiles
+        file_name: qos-profiles
+        version: 1.0.0
+        title: QoS Profiles
+        commonalities: 0.5
+      - api_name: quality-on-demand
+        file_name: quality-on-demand
+        version: 1.0.0
+        title: Quality-On-Demand
+        commonalities: 0.5
+  - repository: QualityOnDemand
+    release_tag: r3.2
+    release_date: '2025-09-16T12:19:48Z'
+    meta_release: Fall25
+    github_url: https://github.com/camaraproject/QualityOnDemand/releases/tag/r3.2
+    apis:
+      - api_name: qos-profiles
+        file_name: qos-profiles
+        version: 1.1.0
+        title: QoS Profiles
+        commonalities: 0.6
+      - api_name: qos-provisioning
+        file_name: qos-provisioning
+        version: 0.3.0
+        title: QoS Provisioning
+        commonalities: 0.6
+      - api_name: quality-on-demand
+        file_name: quality-on-demand
+        version: 1.1.0
+        title: Quality-On-Demand
+        commonalities: 0.6
+  - repository: QualityOnDemand
+    release_tag: v0.1.0
+    release_date: '2023-01-18T12:47:18Z'
+    meta_release: Legacy
+    github_url: https://github.com/camaraproject/QualityOnDemand/releases/tag/v0.1.0
+    apis:
+      - api_name: qos-stable-latency
+        file_name: qos-stable-latency
+        version: 0.1.0
+        title: QoS for stable latency API
+        commonalities: null
+      - api_name: qos-throughput
+        file_name: qos-throughput
+        version: 0.1.0
+        title: QoS for stable throughput API
+        commonalities: null
+  - repository: QualityOnDemand
+    release_tag: v0.10.0
+    release_date: '2024-02-09T13:19:12Z'
+    meta_release: Legacy
+    github_url: https://github.com/camaraproject/QualityOnDemand/releases/tag/v0.10.0
+    apis:
+      - api_name: qod
+        file_name: qod-api
+        version: 0.10.0
+        title: QoD for enhanced communication
+        commonalities: null
+  - repository: QualityOnDemand
+    release_tag: v0.10.1
+    release_date: '2024-04-10T13:33:28Z'
+    meta_release: Legacy
+    github_url: https://github.com/camaraproject/QualityOnDemand/releases/tag/v0.10.1
+    apis:
+      - api_name: qod
+        file_name: qod-api
+        version: 0.10.1
+        title: QoD for enhanced communication
+        commonalities: null
+  - repository: QualityOnDemand
+    release_tag: v0.8.0
+    release_date: '2023-01-18T12:48:23Z'
+    meta_release: Legacy
+    github_url: https://github.com/camaraproject/QualityOnDemand/releases/tag/v0.8.0
+    apis:
+      - api_name: qod-api
+        file_name: qod-api
+        version: 0.8.0
+        title: QoD for enhanced communication
+        commonalities: null
+  - repository: QualityOnDemand
+    release_tag: v0.8.1
+    release_date: '2023-01-27T14:03:34Z'
+    meta_release: Legacy
+    github_url: https://github.com/camaraproject/QualityOnDemand/releases/tag/v0.8.1
+    apis:
+      - api_name: qod-api
+        file_name: qod-api
+        version: 0.8.1
+        title: QoD for enhanced communication
+        commonalities: null
+  - repository: QualityOnDemand
+    release_tag: v0.9.0
+    release_date: '2023-07-21T11:14:13Z'
+    meta_release: Legacy
+    github_url: https://github.com/camaraproject/QualityOnDemand/releases/tag/v0.9.0
+    apis:
+      - api_name: qod-api
+        file_name: qod-api
+        version: 0.9.0
+        title: QoD for enhanced communication
+        commonalities: null
+  - repository: SimSwap
+    release_tag: r1.2
+    release_date: '2024-09-12T15:07:04Z'
+    meta_release: Fall24
+    github_url: https://github.com/camaraproject/SimSwap/releases/tag/r1.2
+    apis:
+      - api_name: sim-swap
+        file_name: sim-swap
+        version: 1.0.0
+        title: SIM Swap
+        commonalities: 0.4.0
+  - repository: SimSwap
+    release_tag: r1.3
+    release_date: '2024-10-29T17:21:56Z'
+    meta_release: Fall24
+    github_url: https://github.com/camaraproject/SimSwap/releases/tag/r1.3
+    apis:
+      - api_name: sim-swap
+        file_name: sim-swap
+        version: 1.0.0
+        title: SIM Swap
+        commonalities: 0.4.0
+  - repository: SimSwap
+    release_tag: r1.4
+    release_date: '2025-04-04T11:51:06Z'
+    meta_release: Fall24
+    github_url: https://github.com/camaraproject/SimSwap/releases/tag/r1.4
+    apis:
+      - api_name: sim-swap
+        file_name: sim-swap
+        version: 1.0.0
+        title: SIM Swap
+        commonalities: 0.4.0
+  - repository: SimSwap
+    release_tag: r2.2
+    release_date: '2025-03-13T11:20:01Z'
+    meta_release: Spring25
+    github_url: https://github.com/camaraproject/SimSwap/releases/tag/r2.2
+    apis:
+      - api_name: sim-swap
+        file_name: sim-swap
+        version: 2.0.0
+        title: SIM Swap
+        commonalities: 0.5
+  - repository: SimSwap
+    release_tag: v0.4.0
+    release_date: '2023-11-14T14:10:12Z'
+    meta_release: Legacy
+    github_url: https://github.com/camaraproject/SimSwap/releases/tag/v0.4.0
+    apis:
+      - api_name: sim_swap
+        file_name: sim_swap
+        version: 0.4.0
+        title: SIM Swap
+        commonalities: null
   - repository: WebRTC
     release_tag: r2.1
-    release_date: '2025-01-10T09:15:00Z'
+    release_date: '2025-07-30T08:02:14Z'
     meta_release: Fall25
     github_url: https://github.com/camaraproject/WebRTC/releases/tag/r2.1
     apis:
-      - api_name: webrtc-session
-        file_name: webrtc-session
-        version: 0.3.0
-        title: WebRTC Session API
-        commonalities: '0.4'
-      - api_name: webrtc-signaling
-        file_name: webrtc-signaling
-        version: 0.2.0
-        title: WebRTC Signaling API
-        commonalities: '0.4'
-      - api_name: webrtc-media
-        file_name: webrtc-media
-        version: 0.2.0
-        title: WebRTC Media API
-        commonalities: '0.4'
+      - api_name: webrtc-call-handling
+        file_name: webrtc-call-handling
+        version: 0.3.0-rc.1
+        title: WebRTC Call Handling
+        commonalities: 0.6
+      - api_name: webrtc-events
+        file_name: webrtc-events
+        version: 0.2.0-rc.1
+        title: WebRTC Events
+        commonalities: 0.6
+      - api_name: webrtc-registration
+        file_name: webrtc-registration
+        version: 0.3.0-rc.1
+        title: WebRTC Registration Service
+        commonalities: 0.6

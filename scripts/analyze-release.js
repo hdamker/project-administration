@@ -98,7 +98,7 @@ function getMetaRelease(repository, releaseTag, mappings) {
  * Analyze release from local repository (for testing)
  */
 async function analyzeLocalRelease(repoPath, releaseTag) {
-  console.log(`Analyzing local release: ${repoPath} @ ${releaseTag}`);
+  console.error(`Analyzing local release: ${repoPath} @ ${releaseTag}`);
 
   const repoName = path.basename(repoPath);
 
@@ -128,7 +128,7 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
 
       if (spec && spec.info) {
         apis.push({
-          api_name: apiName,                    // Official name from server URL
+          api_name: apiName || fileName,        // Use filename as fallback for legacy releases
           file_name: fileName,                  // Filename for consistency check
           version: spec.info.version || 'unknown',
           title: spec.info.title || 'Untitled',
@@ -162,7 +162,7 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
  * Analyze release from GitHub API
  */
 async function analyzeGitHubRelease(repository, releaseTag) {
-  console.log(`Analyzing GitHub release: ${repository} @ ${releaseTag}`);
+  console.error(`Analyzing GitHub release: ${repository} @ ${releaseTag}`);
 
   // Get release information
   const { data: release } = await octokit.repos.getReleaseByTag({
@@ -214,7 +214,7 @@ async function analyzeGitHubRelease(repository, releaseTag) {
 
       if (spec && spec.info) {
         apis.push({
-          api_name: apiName,                    // Official name from server URL
+          api_name: apiName || fileName,        // Use filename as fallback for legacy releases
           file_name: fileName,                  // Filename for consistency check
           version: spec.info.version || 'unknown',
           title: spec.info.title || 'Untitled',

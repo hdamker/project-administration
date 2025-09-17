@@ -1,0 +1,271 @@
+{
+  "metadata": {
+    "generated": "2025-09-17T14:07:54.707Z",
+    "meta_release": "Fall25",
+    "source": "Meta-Release Collector v3"
+  },
+  "statistics": {
+    "repositories_count": 5,
+    "apis_count": 10,
+    "unique_apis_count": 10,
+    "api_maturity": {
+      "stable": 2,
+      "initial": 5,
+      "rc": 3
+    },
+    "commonalities_versions": [
+      0.6
+    ]
+  },
+  "repositories": {
+    "DeviceLocation": {
+      "releases": [
+        {
+          "tag": "r3.2",
+          "date": "2025-09-16T11:41:00Z",
+          "apis_count": 2
+        }
+      ],
+      "total_apis": 2
+    },
+    "DeviceRoamingStatus": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2025-09-16T11:51:25Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 1
+    },
+    "NumberVerification": {
+      "releases": [
+        {
+          "tag": "r3.2",
+          "date": "2025-09-12T09:55:34Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 1
+    },
+    "QualityOnDemand": {
+      "releases": [
+        {
+          "tag": "r3.2",
+          "date": "2025-09-16T12:19:48Z",
+          "apis_count": 3
+        }
+      ],
+      "total_apis": 3
+    },
+    "WebRTC": {
+      "releases": [
+        {
+          "tag": "r2.1",
+          "date": "2025-07-30T08:02:14Z",
+          "apis_count": 3
+        }
+      ],
+      "total_apis": 3
+    }
+  },
+  "releases": [
+    {
+      "repository": "DeviceLocation",
+      "release_tag": "r3.2",
+      "release_date": "2025-09-16T11:41:00Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/r3.2",
+      "apis": [
+        {
+          "api_name": "location-retrieval",
+          "file_name": "location-retrieval",
+          "version": "0.5.0",
+          "title": "Device Location Retrieval",
+          "commonalities": 0.6
+        },
+        {
+          "api_name": "location-verification",
+          "file_name": "location-verification",
+          "version": "3.0.0",
+          "title": "Device Location Verification",
+          "commonalities": 0.6
+        }
+      ]
+    },
+    {
+      "repository": "DeviceRoamingStatus",
+      "release_tag": "r1.2",
+      "release_date": "2025-09-16T11:51:25Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/DeviceRoamingStatus/releases/tag/r1.2",
+      "apis": [
+        {
+          "api_name": "device-roaming-status",
+          "file_name": "device-roaming-status",
+          "version": "1.1.0",
+          "title": "Device Roaming Status",
+          "commonalities": 0.6
+        }
+      ]
+    },
+    {
+      "repository": "NumberVerification",
+      "release_tag": "r3.2",
+      "release_date": "2025-09-12T09:55:34Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/r3.2",
+      "apis": [
+        {
+          "api_name": "number-verification",
+          "file_name": "number-verification",
+          "version": "2.1.0",
+          "title": "Number Verification",
+          "commonalities": 0.6
+        }
+      ]
+    },
+    {
+      "repository": "QualityOnDemand",
+      "release_tag": "r3.2",
+      "release_date": "2025-09-16T12:19:48Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r3.2",
+      "apis": [
+        {
+          "api_name": "qos-profiles",
+          "file_name": "qos-profiles",
+          "version": "1.1.0",
+          "title": "QoS Profiles",
+          "commonalities": 0.6
+        },
+        {
+          "api_name": "qos-provisioning",
+          "file_name": "qos-provisioning",
+          "version": "0.3.0",
+          "title": "QoS Provisioning",
+          "commonalities": 0.6
+        },
+        {
+          "api_name": "quality-on-demand",
+          "file_name": "quality-on-demand",
+          "version": "1.1.0",
+          "title": "Quality-On-Demand",
+          "commonalities": 0.6
+        }
+      ]
+    },
+    {
+      "repository": "WebRTC",
+      "release_tag": "r2.1",
+      "release_date": "2025-07-30T08:02:14Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/WebRTC/releases/tag/r2.1",
+      "apis": [
+        {
+          "api_name": "webrtc-call-handling",
+          "file_name": "webrtc-call-handling",
+          "version": "0.3.0-rc.1",
+          "title": "WebRTC Call Handling",
+          "commonalities": 0.6
+        },
+        {
+          "api_name": "webrtc-events",
+          "file_name": "webrtc-events",
+          "version": "0.2.0-rc.1",
+          "title": "WebRTC Events",
+          "commonalities": 0.6
+        },
+        {
+          "api_name": "webrtc-registration",
+          "file_name": "webrtc-registration",
+          "version": "0.3.0-rc.1",
+          "title": "WebRTC Registration Service",
+          "commonalities": 0.6
+        }
+      ]
+    }
+  ],
+  "apis": [
+    {
+      "api_name": "device-roaming-status",
+      "version": "1.1.0",
+      "repository": "DeviceRoamingStatus",
+      "release_tag": "r1.2",
+      "title": "Device Roaming Status",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "location-retrieval",
+      "version": "0.5.0",
+      "repository": "DeviceLocation",
+      "release_tag": "r3.2",
+      "title": "Device Location Retrieval",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "location-verification",
+      "version": "3.0.0",
+      "repository": "DeviceLocation",
+      "release_tag": "r3.2",
+      "title": "Device Location Verification",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "number-verification",
+      "version": "2.1.0",
+      "repository": "NumberVerification",
+      "release_tag": "r3.2",
+      "title": "Number Verification",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "qos-profiles",
+      "version": "1.1.0",
+      "repository": "QualityOnDemand",
+      "release_tag": "r3.2",
+      "title": "QoS Profiles",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "qos-provisioning",
+      "version": "0.3.0",
+      "repository": "QualityOnDemand",
+      "release_tag": "r3.2",
+      "title": "QoS Provisioning",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "quality-on-demand",
+      "version": "1.1.0",
+      "repository": "QualityOnDemand",
+      "release_tag": "r3.2",
+      "title": "Quality-On-Demand",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "webrtc-call-handling",
+      "version": "0.3.0-rc.1",
+      "repository": "WebRTC",
+      "release_tag": "r2.1",
+      "title": "WebRTC Call Handling",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "webrtc-events",
+      "version": "0.2.0-rc.1",
+      "repository": "WebRTC",
+      "release_tag": "r2.1",
+      "title": "WebRTC Events",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "webrtc-registration",
+      "version": "0.3.0-rc.1",
+      "repository": "WebRTC",
+      "release_tag": "r2.1",
+      "title": "WebRTC Registration Service",
+      "commonalities": 0.6
+    }
+  ]
+}

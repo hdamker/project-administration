@@ -1,0 +1,353 @@
+{
+  "metadata": {
+    "generated": "2025-09-17T14:07:54.699Z",
+    "meta_release": "Fall24",
+    "source": "Meta-Release Collector v3"
+  },
+  "statistics": {
+    "repositories_count": 4,
+    "apis_count": 13,
+    "unique_apis_count": 7,
+    "api_maturity": {
+      "stable": 0,
+      "initial": 13,
+      "rc": 0
+    },
+    "commonalities_versions": [
+      "0.4.0"
+    ]
+  },
+  "repositories": {
+    "DeviceLocation": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2024-09-10T15:00:47Z",
+          "apis_count": 2
+        }
+      ],
+      "total_apis": 2
+    },
+    "NumberVerification": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2024-09-06T15:22:46Z",
+          "apis_count": 1
+        },
+        {
+          "tag": "r1.3",
+          "date": "2024-10-01T12:49:13Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 2
+    },
+    "QualityOnDemand": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2024-09-06T16:16:48Z",
+          "apis_count": 3
+        },
+        {
+          "tag": "r1.3",
+          "date": "2024-12-18T14:58:23Z",
+          "apis_count": 3
+        }
+      ],
+      "total_apis": 6
+    },
+    "SimSwap": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2024-09-12T15:07:04Z",
+          "apis_count": 1
+        },
+        {
+          "tag": "r1.3",
+          "date": "2024-10-29T17:21:56Z",
+          "apis_count": 1
+        },
+        {
+          "tag": "r1.4",
+          "date": "2025-04-04T11:51:06Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 3
+    }
+  },
+  "releases": [
+    {
+      "repository": "DeviceLocation",
+      "release_tag": "r1.2",
+      "release_date": "2024-09-10T15:00:47Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/r1.2",
+      "apis": [
+        {
+          "api_name": "location-retrieval",
+          "file_name": "location-retrieval",
+          "version": "0.3.0",
+          "title": "Device Location Retrieval",
+          "commonalities": "0.4.0"
+        },
+        {
+          "api_name": "location-verification",
+          "file_name": "location-verification",
+          "version": "1.0.0",
+          "title": "Device Location Verification",
+          "commonalities": "0.4.0"
+        }
+      ]
+    },
+    {
+      "repository": "NumberVerification",
+      "release_tag": "r1.2",
+      "release_date": "2024-09-06T15:22:46Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/r1.2",
+      "apis": [
+        {
+          "api_name": "number-verification",
+          "file_name": "number-verification",
+          "version": "1.0.0",
+          "title": "Number Verification",
+          "commonalities": "0.4.0"
+        }
+      ]
+    },
+    {
+      "repository": "NumberVerification",
+      "release_tag": "r1.3",
+      "release_date": "2024-10-01T12:49:13Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/r1.3",
+      "apis": [
+        {
+          "api_name": "number-verification",
+          "file_name": "number-verification",
+          "version": "1.0.0",
+          "title": "Number Verification",
+          "commonalities": "0.4.0"
+        }
+      ]
+    },
+    {
+      "repository": "QualityOnDemand",
+      "release_tag": "r1.2",
+      "release_date": "2024-09-06T16:16:48Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.2",
+      "apis": [
+        {
+          "api_name": "qod-provisioning",
+          "file_name": "qod-provisioning",
+          "version": "0.1.0",
+          "title": "QoD Provisioning API",
+          "commonalities": "0.4.0"
+        },
+        {
+          "api_name": "qos-profiles",
+          "file_name": "qos-profiles",
+          "version": "0.11.0",
+          "title": "QoS Profiles",
+          "commonalities": "0.4.0"
+        },
+        {
+          "api_name": "quality-on-demand",
+          "file_name": "quality-on-demand",
+          "version": "0.11.0",
+          "title": "Quality-On-Demand",
+          "commonalities": "0.4.0"
+        }
+      ]
+    },
+    {
+      "repository": "QualityOnDemand",
+      "release_tag": "r1.3",
+      "release_date": "2024-12-18T14:58:23Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.3",
+      "apis": [
+        {
+          "api_name": "qod-provisioning",
+          "file_name": "qod-provisioning",
+          "version": "0.1.1",
+          "title": "QoD Provisioning API",
+          "commonalities": "0.4.0"
+        },
+        {
+          "api_name": "qos-profiles",
+          "file_name": "qos-profiles",
+          "version": "0.11.1",
+          "title": "QoS Profiles",
+          "commonalities": "0.4.0"
+        },
+        {
+          "api_name": "quality-on-demand",
+          "file_name": "quality-on-demand",
+          "version": "0.11.1",
+          "title": "Quality-On-Demand",
+          "commonalities": "0.4.0"
+        }
+      ]
+    },
+    {
+      "repository": "SimSwap",
+      "release_tag": "r1.2",
+      "release_date": "2024-09-12T15:07:04Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.2",
+      "apis": [
+        {
+          "api_name": "sim-swap",
+          "file_name": "sim-swap",
+          "version": "1.0.0",
+          "title": "SIM Swap",
+          "commonalities": "0.4.0"
+        }
+      ]
+    },
+    {
+      "repository": "SimSwap",
+      "release_tag": "r1.3",
+      "release_date": "2024-10-29T17:21:56Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.3",
+      "apis": [
+        {
+          "api_name": "sim-swap",
+          "file_name": "sim-swap",
+          "version": "1.0.0",
+          "title": "SIM Swap",
+          "commonalities": "0.4.0"
+        }
+      ]
+    },
+    {
+      "repository": "SimSwap",
+      "release_tag": "r1.4",
+      "release_date": "2025-04-04T11:51:06Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.4",
+      "apis": [
+        {
+          "api_name": "sim-swap",
+          "file_name": "sim-swap",
+          "version": "1.0.0",
+          "title": "SIM Swap",
+          "commonalities": "0.4.0"
+        }
+      ]
+    }
+  ],
+  "apis": [
+    {
+      "api_name": "location-retrieval",
+      "version": "0.3.0",
+      "repository": "DeviceLocation",
+      "release_tag": "r1.2",
+      "title": "Device Location Retrieval",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "location-verification",
+      "version": "1.0.0",
+      "repository": "DeviceLocation",
+      "release_tag": "r1.2",
+      "title": "Device Location Verification",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "number-verification",
+      "version": "1.0.0",
+      "repository": "NumberVerification",
+      "release_tag": "r1.2",
+      "title": "Number Verification",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "number-verification",
+      "version": "1.0.0",
+      "repository": "NumberVerification",
+      "release_tag": "r1.3",
+      "title": "Number Verification",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "qod-provisioning",
+      "version": "0.1.0",
+      "repository": "QualityOnDemand",
+      "release_tag": "r1.2",
+      "title": "QoD Provisioning API",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "qod-provisioning",
+      "version": "0.1.1",
+      "repository": "QualityOnDemand",
+      "release_tag": "r1.3",
+      "title": "QoD Provisioning API",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "qos-profiles",
+      "version": "0.11.0",
+      "repository": "QualityOnDemand",
+      "release_tag": "r1.2",
+      "title": "QoS Profiles",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "qos-profiles",
+      "version": "0.11.1",
+      "repository": "QualityOnDemand",
+      "release_tag": "r1.3",
+      "title": "QoS Profiles",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "quality-on-demand",
+      "version": "0.11.0",
+      "repository": "QualityOnDemand",
+      "release_tag": "r1.2",
+      "title": "Quality-On-Demand",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "quality-on-demand",
+      "version": "0.11.1",
+      "repository": "QualityOnDemand",
+      "release_tag": "r1.3",
+      "title": "Quality-On-Demand",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "sim-swap",
+      "version": "1.0.0",
+      "repository": "SimSwap",
+      "release_tag": "r1.2",
+      "title": "SIM Swap",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "sim-swap",
+      "version": "1.0.0",
+      "repository": "SimSwap",
+      "release_tag": "r1.3",
+      "title": "SIM Swap",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "sim-swap",
+      "version": "1.0.0",
+      "repository": "SimSwap",
+      "release_tag": "r1.4",
+      "title": "SIM Swap",
+      "commonalities": "0.4.0"
+    }
+  ]
+}
