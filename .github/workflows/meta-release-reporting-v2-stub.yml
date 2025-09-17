@@ -1,0 +1,22 @@
+name: Meta-Release Reporting v2 (Stub)
+# Full implementation available in branch: feat/meta-release-reporting-v2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Workflow Information
+        run: |
+          echo "=================================================="
+          echo "This is a stub workflow for Meta-Release Reporting v2"
+          echo "=================================================="
+          echo ""
+          echo "To use the full v2 workflow:"
+          echo "1. Switch to branch: feat/meta-release-reporting-v2"
+          echo "2. Run the workflow from that branch"
+          echo ""
+          echo "Full workflow file: .github/workflows/meta-release-reporting.yml"
+          echo "Documentation: See branch README for details"
