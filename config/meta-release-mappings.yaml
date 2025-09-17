@@ -1,0 +1,48 @@
+# =========================================================================================
+# Meta-Release Mappings Configuration
+#
+# Maps complete release cycles (rX) to meta-releases.
+# Each release cycle belongs to exactly one meta-release.
+#
+# Format: meta_release -> repository -> release_cycle
+# =========================================================================================
+
+mappings:
+  # Fall 2024 Meta-Release
+  # Released: September 2024
+  Fall24:
+    # Awaiting data from v2 workflow
+    # Format will be:
+    # QualityOnDemand: "r1"
+    # DeviceLocation: "r1"
+    # etc.
+
+  # Spring 2025 Meta-Release
+  # Target: March 2025
+  Spring25:
+    # Awaiting data from v2 workflow
+
+  # Fall 2025 Meta-Release
+  # Target: September 2025
+  Fall25:
+    # Awaiting data from v2 workflow
+
+# Special cases for repositories that don't follow standard patterns
+exceptions:
+  # Repository splits (original -> new repositories)
+  splits:
+    DeviceStatus:
+      # DeviceStatus was split into multiple repositories
+      original_release_cycles: ["r1", "r2"]
+      new_repositories:
+        DeviceRoaming:
+          starts_from: "r1"
+          contains_apis: ["roaming-status"]
+        ConnectivityInsights:
+          starts_from: "r1"
+          contains_apis: ["connectivity-status", "device-reachability"]
+
+# Legacy repositories that should be excluded
+excluded_repositories:
+  - "Test-repository"
+  - "Template-repository"

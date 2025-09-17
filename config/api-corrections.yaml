@@ -1,0 +1,32 @@
+# =========================================================================================
+# API Corrections Configuration
+#
+# Contains mappings and corrections for API names and versions.
+# Used to handle historical inconsistencies and naming changes.
+# =========================================================================================
+
+# API name corrections (old name -> new name)
+api_name_corrections:
+  "qod-provisioning": "qos-provisioning"
+  "traffic_influence": "traffic-influence"  # Handles underscore vs hyphen
+
+# Version corrections for specific releases
+# Format: repository -> release_tag -> api_name -> corrected_version
+version_corrections:
+  # Example:
+  # QualityOnDemand:
+  #   r1.0:
+  #     quality-on-demand: "0.10.0"  # Was incorrectly tagged as 0.9.0
+
+# API title standardizations
+# Add only verified title corrections here
+title_corrections:
+  # Example:
+  # "QoD API": "Quality-On-Demand"
+
+# Commonalities version mappings for releases without x-camara-commonalities
+# Format: meta_release -> default_version
+commonalities_defaults:
+  Fall24: "0.4"
+  Spring25: "0.5"
+  Fall25: "0.6"

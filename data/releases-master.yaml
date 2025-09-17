@@ -1,0 +1,31 @@
+# =========================================================================================
+# CAMARA Release Master Metadata
+#
+# This file contains the consolidated release information for all CAMARA API repositories.
+# It is automatically maintained by the Meta-Release Collector workflow.
+#
+# DO NOT EDIT MANUALLY unless correcting data issues.
+# =========================================================================================
+
+metadata:
+  last_updated: null    # Will be set by workflow
+  last_checked: null    # Will be set by workflow
+  workflow_version: "3.0.0"
+  schema_version: "1.0.0"
+
+# List of all releases with their API information
+# Sorted by repository name, then by release date
+releases: []
+
+# Example structure:
+# releases:
+#   - repository: "QualityOnDemand"
+#     release_tag: "r1.1"                    # Format: rX.Y
+#     release_date: "2024-09-15T12:00:00Z"   # ISO 8601
+#     meta_release: "Fall24"                 # From configuration
+#     github_url: "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.1"
+#     apis:
+#       - name: "quality-on-demand"          # From YAML filename
+#         version: "0.11.0"                   # From info.version
+#         title: "Quality on Demand API"     # From info.title
+#         commonalities: "0.4"                # From x-camara-commonalities

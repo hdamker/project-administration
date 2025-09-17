@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<!--
+  CAMARA API Release Dashboard - Template
+
+  This is a template file that will be populated with actual release data
+  by the Meta-Release Collector workflow. The workflow will:
+  1. Load release data from releases-master.yaml
+  2. Generate JSON for each meta-release
+  3. Embed the JSON data and create specific viewers (fall24.html, spring25.html, etc.)
+
+  The sample data below is for demonstration/testing only.
+-->
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAMARA API Release Dashboard</title>
+  <style>
+    /* CSS Variables for theming */
+    :root[data-theme="light"] {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f6f8fa;
+      --bg-tertiary: #ffffff;
+      --text-primary: #24292f;
+      --text-secondary: #57606a;
+      --text-tertiary: #6e7781;
+      --border-color: #d0d7de;
+      --border-subtle: #d8dee4;
+      --accent-color: #0969da;
+      --accent-hover: #0860ca;
+      --success-color: #1a7f37;
+      --warning-color: #9a6700;
+      --error-color: #cf222e;
+      --shadow: 0 1px 3px rgba(27,31,36,0.12);
+      --shadow-lg: 0 8px 24px rgba(140,149,159,0.2);
+    }
+
+    :root[data-theme="dark"] {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+      --text-primary: #c9d1d9;
+      --text-secondary: #8b949e;
+      --text-tertiary: #6e7681;
+      --border-color: #30363d;
+      --border-subtle: #21262d;
+      --accent-color: #58a6ff;
+      --accent-hover: #79c0ff;
+      --success-color: #3fb950;
+      --warning-color: #d29922;
+      --error-color: #f85149;
+      --shadow: 0 1px 3px rgba(0,0,0,0.12);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.2);
+    }
+
+    /* Reset and base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: var(--text-primary);
+      background-color: var(--bg-primary);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 600;
+    }
+
+    .theme-toggle {
+      background: none;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 20px;
+      transition: background-color 0.2s;
+    }
+
+    .theme-toggle:hover {
+      background-color: var(--bg-secondary);
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 8px 12px 8px 36px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+    }
+
+    select {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 14px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn:hover {
+      background-color: var(--bg-secondary);
+    }
+
+    .btn-primary {
+      background-color: var(--success-color);
+      color: white;
+      border-color: transparent;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    /* Statistics Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      padding: 16px;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--accent-color);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Table */
+    .table-container {
+      background-color: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    thead {
+      background-color: var(--bg-secondary);
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      white-space: nowrap;
+    }
+
+    th:hover {
+      background-color: var(--bg-primary);
+    }
+
+    .sort-indicator {
+      margin-left: 4px;
+      color: var(--text-tertiary);
+      font-size: 12px;
+    }
+
+    th.sorted-asc .sort-indicator::after {
+      content: '↑';
+      color: var(--accent-color);
+    }
+
+    th.sorted-desc .sort-indicator::after {
+      content: '↓';
+      color: var(--accent-color);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background-color 0.2s;
+    }
+
+    tbody tr:hover {
+      background-color: var(--bg-secondary);
+    }
+
+    td {
+      padding: 12px 16px;
+      color: var(--text-primary);
+    }
+
+    .api-name {
+      font-weight: 500;
+      color: var(--accent-color);
+    }
+
+    .version-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+
+    .meta-release-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .meta-release-fall24 {
+      background-color: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .meta-release-spring25 {
+      background-color: #f3e5f5;
+      color: #6a1b9a;
+    }
+
+    .meta-release-fall25 {
+      background-color: #fff3e0;
+      color: #e65100;
+    }
+
+    [data-theme="dark"] .meta-release-fall24 {
+      background-color: #1565c020;
+    }
+
+    [data-theme="dark"] .meta-release-spring25 {
+      background-color: #6a1b9a20;
+    }
+
+    [data-theme="dark"] .meta-release-fall25 {
+      background-color: #e6510020;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* Loading state */
+    .loading {
+      text-align: center;
+      padding: 48px;
+      color: var(--text-secondary);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--accent-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 12px;
+      }
+
+      .header-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .controls {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .search-box {
+        width: 100%;
+      }
+
+      .table-container {
+        overflow-x: auto;
+      }
+
+      table {
+        min-width: 600px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-top">
+        <h1>🚀 CAMARA API Release Dashboard</h1>
+        <button class="theme-toggle" id="theme-toggle" title="Toggle theme">
+          <span id="theme-icon">🌙</span>
+        </button>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="search" id="search" placeholder="Search APIs, repositories, versions...">
+        </div>
+
+        <select id="filter-meta">
+          <option value="">All Meta-Releases</option>
+          <option value="Fall24">Fall24</option>
+          <option value="Spring25">Spring25</option>
+          <option value="Fall25">Fall25</option>
+        </select>
+
+        <select id="filter-repo">
+          <option value="">All Repositories</option>
+        </select>
+
+        <select id="group-by">
+          <option value="none">No Grouping</option>
+          <option value="api">Group by API</option>
+          <option value="repo">Group by Repository</option>
+          <option value="meta">Group by Meta-Release</option>
+        </select>
+
+        <button class="btn" onclick="exportCSV()">📊 Export CSV</button>
+        <button class="btn" onclick="exportJSON()">📄 Export JSON</button>
+      </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-apis">0</div>
+        <div class="stat-label">Total APIs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-repos">0</div>
+        <div class="stat-label">Repositories</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-releases">0</div>
+        <div class="stat-label">Releases</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-updated">-</div>
+        <div class="stat-label">Last Updated</div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+      <table id="data-table">
+        <thead>
+          <tr>
+            <th data-sort="api" class="sortable">
+              API Name <span class="sort-indicator"></span>
+            </th>
+            <th data-sort="repo" class="sortable">
+              Repository <span class="sort-indicator"></span>
+            </th>
+            <th data-sort="version" class="sortable">
+              Version <span class="sort-indicator"></span>
+            </th>
+            <th data-sort="release" class="sortable">
+              Release <span class="sort-indicator"></span>
+            </th>
+            <th data-sort="meta" class="sortable">
+              Meta-Release <span class="sort-indicator"></span>
+            </th>
+            <th data-sort="date" class="sortable">
+              Date <span class="sort-indicator"></span>
+            </th>
+            <th data-sort="commonalities" class="sortable">
+              Commonalities <span class="sort-indicator"></span>
+            </th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <!-- Data will be inserted here -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Loading indicator -->
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Loading release data...</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>CAMARA Meta-Release Collector v3 | Data updated: <span id="footer-updated">-</span></p>
+    </div>
+  </div>
+
+  <script>
+    // Sample data structure (will be replaced with actual data)
+    let releaseData = {
+      metadata: {
+        last_updated: new Date().toISOString(),
+        workflow_version: "3.0.0"
+      },
+      releases: [
+        // Sample data for testing
+        {
+          repository: "QualityOnDemand",
+          release_tag: "r1.1",
+          release_date: "2024-09-15T12:00:00Z",
+          meta_release: "Fall24",
+          apis: [
+            {
+              name: "quality-on-demand",
+              version: "0.11.0",
+              title: "Quality on Demand API",
+              commonalities: "0.4"
+            }
+          ]
+        },
+        {
+          repository: "DeviceLocation",
+          release_tag: "r1.2",
+          release_date: "2025-03-20T14:00:00Z",
+          meta_release: "Spring25",
+          apis: [
+            {
+              name: "location-verification",
+              version: "2.0.0",
+              title: "Device Location Verification",
+              commonalities: "0.4"
+            },
+            {
+              name: "location-retrieval",
+              version: "1.0.0",
+              title: "Device Location Retrieval",
+              commonalities: "0.4"
+            }
+          ]
+        }
+      ]
+    };
+
+    // State
+    let currentSort = { field: 'api', direction: 'asc' };
+    let filteredData = [];
+    let allData = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeTheme();
+      loadData();
+      setupEventListeners();
+    });
+
+    // Theme management
+    function initializeTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      updateThemeIcon(savedTheme);
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeIcon(newTheme);
+    }
+
+    function updateThemeIcon(theme) {
+      document.getElementById('theme-icon').textContent = theme === 'light' ? '🌙' : '☀️';
+    }
+
+    // Event listeners
+    function setupEventListeners() {
+      document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+      document.getElementById('search').addEventListener('input', filterData);
+      document.getElementById('filter-meta').addEventListener('change', filterData);
+      document.getElementById('filter-repo').addEventListener('change', filterData);
+      document.getElementById('group-by').addEventListener('change', updateDisplay);
+
+      // Sort headers
+      document.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+          const field = th.dataset.sort;
+          sortData(field);
+        });
+      });
+    }
+
+    // Data loading
+    function loadData() {
+      // In production, this would load from embedded JSON
+      // For now, using sample data
+      processData(releaseData);
+    }
+
+    function processData(data) {
+      // Flatten data for table display
+      allData = [];
+      const repos = new Set();
+
+      data.releases.forEach(release => {
+        repos.add(release.repository);
+        release.apis.forEach(api => {
+          allData.push({
+            api_name: api.name,
+            repository: release.repository,
+            version: api.version,
+            release_tag: release.release_tag,
+            meta_release: release.meta_release,
+            release_date: release.release_date,
+            commonalities: api.commonalities || '-',
+            title: api.title
+          });
+        });
+      });
+
+      // Populate repository filter
+      const repoFilter = document.getElementById('filter-repo');
+      repos.forEach(repo => {
+        const option = document.createElement('option');
+        option.value = repo;
+        option.textContent = repo;
+        repoFilter.appendChild(option);
+      });
+
+      // Update statistics
+      updateStatistics(data);
+
+      // Initial display
+      filteredData = [...allData];
+      sortData('api');
+
+      // Hide loading
+      document.getElementById('loading').style.display = 'none';
+    }
+
+    // Statistics
+    function updateStatistics(data) {
+      const apiSet = new Set();
+      const repoSet = new Set();
+
+      data.releases.forEach(release => {
+        repoSet.add(release.repository);
+        release.apis.forEach(api => {
+          apiSet.add(api.name);
+        });
+      });
+
+      document.getElementById('stat-apis').textContent = apiSet.size;
+      document.getElementById('stat-repos').textContent = repoSet.size;
+      document.getElementById('stat-releases').textContent = data.releases.length;
+
+      const lastUpdated = new Date(data.metadata.last_updated);
+      const timeAgo = getTimeAgo(lastUpdated);
+      document.getElementById('stat-updated').textContent = timeAgo;
+      document.getElementById('footer-updated').textContent = lastUpdated.toLocaleString();
+    }
+
+    function getTimeAgo(date) {
+      const seconds = Math.floor((new Date() - date) / 1000);
+      const intervals = [
+        { label: 'y', seconds: 31536000 },
+        { label: 'mo', seconds: 2592000 },
+        { label: 'd', seconds: 86400 },
+        { label: 'h', seconds: 3600 },
+        { label: 'm', seconds: 60 }
+      ];
+
+      for (const interval of intervals) {
+        const count = Math.floor(seconds / interval.seconds);
+        if (count >= 1) {
+          return `${count}${interval.label} ago`;
+        }
+      }
+      return 'Just now';
+    }
+
+    // Filtering
+    function filterData() {
+      const searchTerm = document.getElementById('search').value.toLowerCase();
+      const metaFilter = document.getElementById('filter-meta').value;
+      const repoFilter = document.getElementById('filter-repo').value;
+
+      filteredData = allData.filter(item => {
+        // Search filter
+        if (searchTerm && !Object.values(item).some(val =>
+          String(val).toLowerCase().includes(searchTerm)
+        )) {
+          return false;
+        }
+
+        // Meta-release filter
+        if (metaFilter && item.meta_release !== metaFilter) {
+          return false;
+        }
+
+        // Repository filter
+        if (repoFilter && item.repository !== repoFilter) {
+          return false;
+        }
+
+        return true;
+      });
+
+      updateDisplay();
+    }
+
+    // Sorting
+    function sortData(field) {
+      if (currentSort.field === field) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.field = field;
+        currentSort.direction = 'asc';
+      }
+
+      filteredData.sort((a, b) => {
+        let aVal = a[field === 'api' ? 'api_name' : field === 'repo' ? 'repository' : field === 'meta' ? 'meta_release' : field === 'date' ? 'release_date' : field];
+        let bVal = b[field === 'api' ? 'api_name' : field === 'repo' ? 'repository' : field === 'meta' ? 'meta_release' : field === 'date' ? 'release_date' : field];
+
+        if (field === 'date') {
+          aVal = new Date(aVal);
+          bVal = new Date(bVal);
+        }
+
+        if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+
+      // Update sort indicators
+      document.querySelectorAll('th.sortable').forEach(th => {
+        th.classList.remove('sorted-asc', 'sorted-desc');
+        if (th.dataset.sort === field) {
+          th.classList.add(`sorted-${currentSort.direction}`);
+        }
+      });
+
+      updateDisplay();
+    }
+
+    // Display
+    function updateDisplay() {
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+
+      const groupBy = document.getElementById('group-by').value;
+
+      if (groupBy === 'none') {
+        filteredData.forEach(item => {
+          tbody.appendChild(createTableRow(item));
+        });
+      } else {
+        // Group data
+        const groups = {};
+        filteredData.forEach(item => {
+          const key = groupBy === 'api' ? item.api_name :
+                     groupBy === 'repo' ? item.repository :
+                     item.meta_release;
+
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(item);
+        });
+
+        // Display grouped data
+        Object.entries(groups).sort().forEach(([group, items]) => {
+          // Group header
+          const headerRow = document.createElement('tr');
+          headerRow.innerHTML = `<td colspan="7" style="background-color: var(--bg-secondary); font-weight: 600;">${group} (${items.length})</td>`;
+          tbody.appendChild(headerRow);
+
+          // Group items
+          items.forEach(item => {
+            tbody.appendChild(createTableRow(item));
+          });
+        });
+      }
+    }
+
+    function createTableRow(item) {
+      const row = document.createElement('tr');
+      const date = new Date(item.release_date);
+
+      row.innerHTML = `
+        <td><span class="api-name">${item.api_name}</span></td>
+        <td>${item.repository}</td>
+        <td><span class="version-badge">${item.version}</span></td>
+        <td>${item.release_tag}</td>
+        <td><span class="meta-release-badge meta-release-${item.meta_release.toLowerCase()}">${item.meta_release}</span></td>
+        <td>${date.toLocaleDateString()}</td>
+        <td>${item.commonalities}</td>
+      `;
+
+      return row;
+    }
+
+    // Export functions
+    function exportCSV() {
+      const headers = ['API Name', 'Repository', 'Version', 'Release', 'Meta-Release', 'Date', 'Commonalities'];
+      const rows = filteredData.map(item => [
+        item.api_name,
+        item.repository,
+        item.version,
+        item.release_tag,
+        item.meta_release,
+        item.release_date,
+        item.commonalities
+      ]);
+
+      let csv = headers.join(',') + '\n';
+      rows.forEach(row => {
+        csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+      });
+
+      downloadFile(csv, 'camara-releases.csv', 'text/csv');
+    }
+
+    function exportJSON() {
+      const json = JSON.stringify(filteredData, null, 2);
+      downloadFile(json, 'camara-releases.json', 'application/json');
+    }
+
+    function downloadFile(content, filename, contentType) {
+      const blob = new Blob([content], { type: contentType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
