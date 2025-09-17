@@ -213,6 +213,9 @@ jobs:
         run: |
           echo "🔄 Processing release data..."
 
+          # Ensure temp directory exists
+          mkdir -p temp
+
           # Combine all analysis results
           echo '[]' > temp/combined-analysis.json
           for file in temp/analysis-group-*/analysis-results.json; do
