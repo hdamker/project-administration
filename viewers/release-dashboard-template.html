@@ -3,7 +3,7 @@
   CAMARA API Release Dashboard - Template
 
   This is a template file that will be populated with actual release data
-  by the Meta-Release Collector workflow. The workflow will:
+  by the Meta-release Collector workflow. The workflow will:
   1. Load release data from releases-master.yaml
   2. Generate JSON for each meta-release
   3. Embed the JSON data and create specific viewers (fall24.html, spring25.html, etc.)
@@ -419,7 +419,7 @@
         </div>
 
         <select id="filter-meta">
-          <option value="">All Meta-Releases</option>
+          <option value="">All meta-releases</option>
           <option value="Fall24">Fall24</option>
           <option value="Spring25">Spring25</option>
           <option value="Fall25">Fall25</option>
@@ -433,7 +433,7 @@
           <option value="none">No Grouping</option>
           <option value="api">Group by API</option>
           <option value="repo">Group by Repository</option>
-          <option value="meta">Group by Meta-Release</option>
+          <option value="meta">Group by meta-release</option>
         </select>
 
         <button class="btn" onclick="exportCSV()">📊 Export CSV</button>
@@ -479,7 +479,7 @@
               Release <span class="sort-indicator"></span>
             </th>
             <th data-sort="meta" class="sortable">
-              Meta-Release <span class="sort-indicator"></span>
+              Meta-release <span class="sort-indicator"></span>
             </th>
             <th data-sort="date" class="sortable">
               Date <span class="sort-indicator"></span>
@@ -503,7 +503,7 @@
 
     <!-- Footer -->
     <div class="footer">
-      <p>CAMARA Meta-Release Collector v3 | Data updated: <span id="footer-updated">-</span></p>
+      <p>CAMARA Meta-release Collector v3 | Data updated: <span id="footer-updated">-</span></p>
     </div>
   </div>
 
@@ -811,7 +811,7 @@
 
     // Export functions
     function exportCSV() {
-      const headers = ['API Name', 'Repository', 'Version', 'Release', 'Meta-Release', 'Date', 'Commonalities'];
+      const headers = ['API Name', 'Repository', 'Version', 'Release', 'Meta-release', 'Date', 'Commonalities'];
       const rows = filteredData.map(item => [
         item.api_name,
         item.repository,

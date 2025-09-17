@@ -1,5 +1,5 @@
 # =========================================================================================
-# CAMARA Project - Meta-Release Collector Workflow v3
+# CAMARA Project - Meta-release Collector Workflow v3
 #
 # Interim solution for collecting and reporting release metadata across all CAMARA API
 # repositories until Spring 2026 when native release-metadata.yaml files become standard.
@@ -12,7 +12,7 @@
 #
 # =========================================================================================
 
-name: Meta-Release Collector v3
+name: Meta-release Collector v3
 
 on:
   workflow_dispatch:
@@ -341,7 +341,7 @@ jobs:
     steps:
       - name: Generate summary
         run: |
-          echo "## Meta-Release Collector Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Meta-release Collector Workflow Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Analysis Scope**: ${{ github.event.inputs.analysis_scope }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Execution Mode**: ${{ github.event.inputs.execution_mode }}" >> $GITHUB_STEP_SUMMARY
