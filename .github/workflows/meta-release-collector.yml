@@ -92,6 +92,9 @@ jobs:
         run: |
           echo "🔍 Detecting releases in analysis scope: ${{ github.event.inputs.analysis_scope }}"
 
+          # Create temp directory
+          mkdir -p temp
+
           # Run detection script
           node scripts/detect-releases.js --mode ${{ github.event.inputs.analysis_scope }} > temp/detection-output.json
 
