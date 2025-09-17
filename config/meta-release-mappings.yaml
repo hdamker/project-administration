@@ -11,21 +11,86 @@ mappings:
   # Fall 2024 Meta-Release
   # Released: September 2024
   Fall24:
-    # Awaiting data from v2 workflow
-    # Format will be:
-    # QualityOnDemand: "r1"
-    # DeviceLocation: "r1"
-    # etc.
+    CallForwardingSignal: "r1"
+    CarrierBillingCheckOut: "r1"
+    ConnectivityInsights: "r1"
+    DeviceLocation: "r1"
+    DeviceStatus: "r1"
+    HomeDevicesQoD: "r1"
+    KnowYourCustomer: "r1"
+    NumberVerification: "r1"
+    OTPValidation: "r1"
+    PopulationDensityData: "r1"
+    QualityOnDemand: "r1"
+    SimSwap: "r1"
+    SimpleEdgeDiscovery: "r1"
 
   # Spring 2025 Meta-Release
   # Target: March 2025
   Spring25:
-    # Awaiting data from v2 workflow
+    BlockchainPublicAddress: "r1"
+    CallForwardingSignal: "r2"
+    CarrierBillingCheckOut: "r2"
+    ConnectivityInsights: "r2"
+    CustomerInsights: "r1"
+    DeviceIdentifier: "r1"
+    DeviceLocation: "r2"
+    DeviceStatus: "r2"
+    DeviceSwap: "r2"
+    KnowYourCustomer: "r2"
+    NumberRecycling: "r1"
+    NumberVerification: "r2"
+    OTPValidation: "r2"
+    PopulationDensityData: "r2"
+    QualityOnDemand: "r2"
+    RegionDeviceCount: "r1"
+    SimSwap: "r2"
+    Tenure: "r1"
+    WebRTC: "r1"
 
   # Fall 2025 Meta-Release
   # Target: September 2025
   Fall25:
-    # Awaiting data from v2 workflow
+    ApplicationEndpointDiscovery: "r1"
+    ApplicationEndpointRegistration: "r1"
+    ApplicationProfiles: "r1"
+    BlockchainPublicAddress: "r2"
+    CallForwardingSignal: "r3"
+    CarrierBillingCheckOut: "r3"
+    ConnectedNetworkType: "r1"
+    ConnectivityInsights: "r3"
+    ConsentInfo: "r1"
+    CustomerInsights: "r2"
+    DedicatedNetworks: "r1"
+    DeviceDataVolume: "r1"
+    DeviceIdentifier: "r2"
+    DeviceLocation: "r3"
+    DeviceReachabilityStatus: "r1"
+    DeviceRoamingStatus: "r1"
+    DeviceSwap: "r3"
+    EnergyFootprintNotification: "r1"
+    KnowYourCustomerAgeVerification: "r1"
+    KnowYourCustomerFill-in: "r1"
+    KnowYourCustomerMatch: "r1"
+    ModelAsAService: "r1"
+    MostFrequentLocation: "r2"
+    NetworkSliceBooking: "r1"
+    NumberRecycling: "r2"
+    NumberVerification: "r3"
+    OTPValidation: "r3"
+    OptimalEdgeDiscovery: "r1"
+    PopulationDensityData: "r3"
+    PredictiveConnectivityData: "r1"
+    QoSBooking: "r1"
+    QualityOnDemand: "r3"
+    RegionDeviceCount: "r2"
+    SimSwap: "r3"
+    SimpleEdgeDiscovery: "r2"
+    SubscriptionStatus: "r1"
+    Tenure: "r2"
+    TrafficInfluence: "r1"
+    VerifiedCaller: "r1"
+    WebRTC: "r2"
 
 # Special cases for repositories that don't follow standard patterns
 exceptions:
