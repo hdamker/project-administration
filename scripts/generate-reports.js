@@ -149,7 +149,7 @@ function generateReport(metaRelease, releases) {
     metadata: {
       generated: timestamp,
       meta_release: metaRelease,
-      source: 'Meta-Release Collector v3'
+      source: 'Meta-release Collector v3'
     },
     statistics: generateStatistics(releases),
     repositories: repositories,
@@ -164,7 +164,7 @@ function generateReport(metaRelease, releases) {
  * Main execution
  */
 async function main() {
-  console.log('📊 Generating Meta-Release Reports');
+  console.log('📊 Generating Meta-release Reports');
   console.log('=' .repeat(50));
 
   // Ensure reports directory exists
