@@ -73,6 +73,7 @@ jobs:
       has_updates: ${{ steps.detect.outputs.has_updates }}
       new_releases: ${{ steps.detect.outputs.new_releases }}
       all_repos: ${{ steps.detect.outputs.all_repos }}
+      release_groups: ${{ steps.detect.outputs.release_groups }}
 
     steps:
       - name: Checkout repository
