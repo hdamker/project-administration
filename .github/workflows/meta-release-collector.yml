@@ -97,25 +97,26 @@ jobs:
 
           # Parse output
           HAS_UPDATES=$(jq -r '.has_updates' temp/detection-output.json)
-          REPOS_TO_ANALYZE=$(jq -c '.repositories_to_analyze' temp/detection-output.json)
+          RELEASES_TO_ANALYZE=$(jq -c '.releases_to_analyze' temp/detection-output.json)
+          RELEASES_COUNT=$(jq -r '.releases_count' temp/detection-output.json)
 
           echo "has_updates=${HAS_UPDATES}" >> $GITHUB_OUTPUT
-          echo "repos_to_analyze=${REPOS_TO_ANALYZE}" >> $GITHUB_OUTPUT
+          echo "releases_to_analyze=${RELEASES_TO_ANALYZE}" >> $GITHUB_OUTPUT
 
-          # Create repository groups for parallel processing
-          # Split into groups of 10 repositories
+          # Create release groups for parallel processing
+          # Split into groups of 20 releases
           node -e "
-            const repos = ${REPOS_TO_ANALYZE};
-            const groupSize = 10;
+            const releases = ${RELEASES_TO_ANALYZE};
+            const groupSize = 20;
             const groups = [];
-            for (let i = 0; i < repos.length; i += groupSize) {
-              groups.push(repos.slice(i, i + groupSize));
+            for (let i = 0; i < releases.length; i += groupSize) {
+              groups.push(releases.slice(i, i + groupSize));
             }
             console.log(JSON.stringify(groups));
-          " > temp/repo-groups.json
+          " > temp/release-groups.json
 
-          echo "repo_groups=$(cat temp/repo-groups.json)" >> $GITHUB_OUTPUT
-          echo "Found $(echo ${REPOS_TO_ANALYZE} | jq '. | length') repositories to analyze"
+          echo "release_groups=$(cat temp/release-groups.json)" >> $GITHUB_OUTPUT
+          echo "Found ${RELEASES_COUNT} releases to analyze"
 
   # =========================================================================================
   # Phase 2: Release Analysis (Parallel)
@@ -128,7 +129,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        repos: ${{ fromJSON(needs.detect-releases.outputs.repo_groups) }}
+        releases: ${{ fromJSON(needs.detect-releases.outputs.release_groups) }}
       max-parallel: 6
 
     steps:
@@ -144,30 +145,27 @@ jobs:
         run: |
           npm install js-yaml axios @octokit/rest
 
-      - name: Analyze repository group
+      - name: Analyze release group
         run: |
-          echo "📊 Analyzing repositories: ${{ join(matrix.repos, ', ') }}"
+          echo "📊 Analyzing release group"
 
           # Create output file for this group
           echo '[]' > temp/analysis-results.json
 
-          # Analyze each repository in the group
-          for repo in ${{ join(matrix.repos, ' ') }}; do
-            echo "Analyzing ${repo}..."
+          # Process each release in the group
+          RELEASES='${{ toJSON(matrix.releases) }}'
+          echo "${RELEASES}" | jq -c '.[]' | while read -r release; do
+            REPO=$(echo "${release}" | jq -r '.repository')
+            TAG=$(echo "${release}" | jq -r '.release_tag')
 
-            # Get releases for this repository
-            RELEASES=$(gh api repos/${GITHUB_ORG}/${repo}/releases --paginate | jq -r '.[] | select(.prerelease == false) | .tag_name' | grep '^r[0-9]\+\.[0-9]\+$' || true)
+            echo "Analyzing ${REPO} @ ${TAG}..."
 
-            for release in ${RELEASES}; do
-              echo "  - Analyzing release ${release}"
+            # Run analysis script
+            node scripts/analyze-release.js --github "${REPO}" "${TAG}" > temp/single-analysis.json
 
-              # Run analysis script
-              node scripts/analyze-release.js --github "${repo}" "${release}" > temp/single-analysis.json
-
-              # Append to results
-              jq -s '.[0] + [.[1]]' temp/analysis-results.json temp/single-analysis.json > temp/analysis-updated.json
-              mv temp/analysis-updated.json temp/analysis-results.json
-            done
+            # Append to results
+            jq -s '.[0] + [.[1]]' temp/analysis-results.json temp/single-analysis.json > temp/analysis-updated.json
+            mv temp/analysis-updated.json temp/analysis-results.json
           done
 
           echo "Analysis complete for group"

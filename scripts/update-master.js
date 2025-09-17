@@ -50,17 +50,14 @@ function loadMaster() {
 
 /**
  * Determine meta-release for a repository and release tag
+ * Now only processing rX.Y format releases
  */
 function getMetaRelease(repository, releaseTag, mappings) {
-  // Check if it's a vX.Y.Z format (Legacy)
-  if (releaseTag.match(/^v\d+\.\d+\.\d+$/)) {
-    return 'Legacy';
-  }
-
   // Extract release cycle from tag (rX.Y -> rX)
   const cycle = releaseTag.match(/^(r\d+)\./)?.[1];
   if (!cycle) {
-    return 'Others';  // Unknown format (not rX.Y or vX.Y.Z)
+    console.error(`Warning: Unexpected release tag format: ${releaseTag}`);
+    return 'Unknown';
   }
 
   // Check each meta-release
@@ -70,7 +67,7 @@ function getMetaRelease(repository, releaseTag, mappings) {
     }
   }
 
-  return 'Sandbox';  // rX.Y format but not mapped to a meta-release
+  return 'None (Sandbox)';  // rX.Y format but not mapped to a meta-release
 }
 
 /**

@@ -1,16 +1,16 @@
 {
   "metadata": {
-    "generated": "2025-09-17T14:07:54.707Z",
+    "generated": "2025-09-17T14:31:50.813Z",
     "meta_release": "Spring25",
     "source": "Meta-Release Collector v3"
   },
   "statistics": {
-    "repositories_count": 4,
-    "apis_count": 7,
-    "unique_apis_count": 7,
+    "repositories_count": 9,
+    "apis_count": 15,
+    "unique_apis_count": 14,
     "api_maturity": {
-      "stable": 3,
-      "initial": 4,
+      "stable": 2,
+      "initial": 13,
       "rc": 0
     },
     "commonalities_versions": [
@@ -18,6 +18,71 @@
     ]
   },
   "repositories": {
+    "BlockchainPublicAddress": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2025-03-10T16:50:34Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 1
+    },
+    "CallForwardingSignal": {
+      "releases": [
+        {
+          "tag": "r2.2",
+          "date": "2025-03-06T08:29:28Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 1
+    },
+    "CarrierBillingCheckOut": {
+      "releases": [
+        {
+          "tag": "r2.2",
+          "date": "2025-03-11T11:47:51Z",
+          "apis_count": 2
+        }
+      ],
+      "total_apis": 2
+    },
+    "ConnectivityInsights": {
+      "releases": [
+        {
+          "tag": "r2.2",
+          "date": "2025-03-14T16:33:24Z",
+          "apis_count": 2
+        }
+      ],
+      "total_apis": 2
+    },
+    "CustomerInsights": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2025-03-10T18:07:26Z",
+          "apis_count": 1
+        },
+        {
+          "tag": "r1.3",
+          "date": "2025-03-20T16:54:07Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 2
+    },
+    "DeviceIdentifier": {
+      "releases": [
+        {
+          "tag": "r1.3",
+          "date": "2025-03-13T18:05:07Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 1
+    },
     "DeviceLocation": {
       "releases": [
         {
@@ -28,31 +93,21 @@
       ],
       "total_apis": 2
     },
-    "NumberVerification": {
-      "releases": [
-        {
-          "tag": "r2.4",
-          "date": "2025-03-20T14:24:37Z",
-          "apis_count": 1
-        }
-      ],
-      "total_apis": 1
-    },
-    "QualityOnDemand": {
+    "DeviceStatus": {
       "releases": [
         {
           "tag": "r2.2",
-          "date": "2025-03-11T15:31:39Z",
+          "date": "2025-03-14T11:49:32Z",
           "apis_count": 3
         }
       ],
       "total_apis": 3
     },
-    "SimSwap": {
+    "DeviceSwap": {
       "releases": [
         {
           "tag": "r2.2",
-          "date": "2025-03-13T11:20:01Z",
+          "date": "2025-03-13T07:59:07Z",
           "apis_count": 1
         }
       ],
@@ -60,6 +115,132 @@
     }
   },
   "releases": [
+    {
+      "repository": "BlockchainPublicAddress",
+      "release_tag": "r1.2",
+      "release_date": "2025-03-10T16:50:34Z",
+      "meta_release": "Spring25",
+      "github_url": "https://github.com/camaraproject/BlockchainPublicAddress/releases/tag/r1.2",
+      "apis": [
+        {
+          "api_name": "blockchain-public-address",
+          "file_name": "blockchain-public-address",
+          "version": "v0.2.0",
+          "title": "Blockchain Public Address",
+          "commonalities": 0.5
+        }
+      ]
+    },
+    {
+      "repository": "CallForwardingSignal",
+      "release_tag": "r2.2",
+      "release_date": "2025-03-06T08:29:28Z",
+      "meta_release": "Spring25",
+      "github_url": "https://github.com/camaraproject/CallForwardingSignal/releases/tag/r2.2",
+      "apis": [
+        {
+          "api_name": "call-forwarding-signal",
+          "file_name": "call-forwarding-signal",
+          "version": "0.3.0",
+          "title": "Call Forwarding Signal",
+          "commonalities": 0.5
+        }
+      ]
+    },
+    {
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r2.2",
+      "release_date": "2025-03-11T11:47:51Z",
+      "meta_release": "Spring25",
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r2.2",
+      "apis": [
+        {
+          "api_name": "carrier-billing-refund",
+          "file_name": "carrier-billing-refund",
+          "version": "0.2.0",
+          "title": "Carrier Billing Refunds",
+          "commonalities": 0.5
+        },
+        {
+          "api_name": "carrier-billing",
+          "file_name": "carrier-billing",
+          "version": "0.4.0",
+          "title": "Carrier Billing",
+          "commonalities": 0.5
+        }
+      ]
+    },
+    {
+      "repository": "ConnectivityInsights",
+      "release_tag": "r2.2",
+      "release_date": "2025-03-14T16:33:24Z",
+      "meta_release": "Spring25",
+      "github_url": "https://github.com/camaraproject/ConnectivityInsights/releases/tag/r2.2",
+      "apis": [
+        {
+          "api_name": "application-profiles",
+          "file_name": "application-profiles",
+          "version": "0.4.0",
+          "title": "Connectivity Insights - Application Profiles",
+          "commonalities": 0.5
+        },
+        {
+          "api_name": "connectivity-insights",
+          "file_name": "connectivity-insights",
+          "version": "0.5.0",
+          "title": "Connectivity Insights",
+          "commonalities": 0.5
+        }
+      ]
+    },
+    {
+      "repository": "CustomerInsights",
+      "release_tag": "r1.2",
+      "release_date": "2025-03-10T18:07:26Z",
+      "meta_release": "Spring25",
+      "github_url": "https://github.com/camaraproject/CustomerInsights/releases/tag/r1.2",
+      "apis": [
+        {
+          "api_name": "customer-insights",
+          "file_name": "customer-insights",
+          "version": "0.1.0",
+          "title": "Customer Insights",
+          "commonalities": 0.5
+        }
+      ]
+    },
+    {
+      "repository": "CustomerInsights",
+      "release_tag": "r1.3",
+      "release_date": "2025-03-20T16:54:07Z",
+      "meta_release": "Spring25",
+      "github_url": "https://github.com/camaraproject/CustomerInsights/releases/tag/r1.3",
+      "apis": [
+        {
+          "api_name": "customer-insights",
+          "file_name": "customer-insights",
+          "version": "0.1.1",
+          "title": "Customer Insights",
+          "commonalities": 0.5
+        }
+      ]
+    },
+    {
+      "repository": "DeviceIdentifier",
+      "release_tag": "r1.3",
+      "release_date": "2025-03-13T18:05:07Z",
+      "meta_release": "Spring25",
+      "github_url": "https://github.com/camaraproject/DeviceIdentifier/releases/tag/r1.3",
+      "apis": [
+        {
+          "api_name": "device-identifier",
+          "file_name": "device-identifier",
+          "version": "0.2.0",
+          "title": "CAMARA Mobile Device Identifier",
+          "commonalities": 0.5
+        }
+      ]
+    },
     {
       "repository": "DeviceLocation",
       "release_tag": "r2.2",
@@ -84,69 +265,157 @@
       ]
     },
     {
-      "repository": "NumberVerification",
-      "release_tag": "r2.4",
-      "release_date": "2025-03-20T14:24:37Z",
+      "repository": "DeviceStatus",
+      "release_tag": "r2.2",
+      "release_date": "2025-03-14T11:49:32Z",
       "meta_release": "Spring25",
-      "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/r2.4",
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r2.2",
       "apis": [
         {
-          "api_name": "number-verification",
-          "file_name": "number-verification",
-          "version": "2.0.0",
-          "title": "Number Verification",
+          "api_name": "connected-network-type",
+          "file_name": "connected-network-type",
+          "version": "0.1.0",
+          "title": "Connected Network Type",
+          "commonalities": 0.5
+        },
+        {
+          "api_name": "device-reachability-status",
+          "file_name": "device-reachability-status",
+          "version": "1.0.0",
+          "title": "Device Reachability Status",
+          "commonalities": 0.5
+        },
+        {
+          "api_name": "device-roaming-status",
+          "file_name": "device-roaming-status",
+          "version": "1.0.0",
+          "title": "Device Roaming Status",
           "commonalities": 0.5
         }
       ]
     },
     {
-      "repository": "QualityOnDemand",
+      "repository": "DeviceSwap",
       "release_tag": "r2.2",
-      "release_date": "2025-03-11T15:31:39Z",
+      "release_date": "2025-03-13T07:59:07Z",
       "meta_release": "Spring25",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r2.2",
+      "github_url": "https://github.com/camaraproject/DeviceSwap/releases/tag/r2.2",
       "apis": [
         {
-          "api_name": "qod-provisioning",
-          "file_name": "qod-provisioning",
+          "api_name": "device-swap",
+          "file_name": "device-swap",
           "version": "0.2.0",
-          "title": "QoD Provisioning API",
-          "commonalities": 0.5
-        },
-        {
-          "api_name": "qos-profiles",
-          "file_name": "qos-profiles",
-          "version": "1.0.0",
-          "title": "QoS Profiles",
-          "commonalities": 0.5
-        },
-        {
-          "api_name": "quality-on-demand",
-          "file_name": "quality-on-demand",
-          "version": "1.0.0",
-          "title": "Quality-On-Demand",
-          "commonalities": 0.5
-        }
-      ]
-    },
-    {
-      "repository": "SimSwap",
-      "release_tag": "r2.2",
-      "release_date": "2025-03-13T11:20:01Z",
-      "meta_release": "Spring25",
-      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r2.2",
-      "apis": [
-        {
-          "api_name": "sim-swap",
-          "file_name": "sim-swap",
-          "version": "2.0.0",
-          "title": "SIM Swap",
+          "title": "Device Swap",
           "commonalities": 0.5
         }
       ]
     }
   ],
   "apis": [
+    {
+      "api_name": "application-profiles",
+      "version": "0.4.0",
+      "repository": "ConnectivityInsights",
+      "release_tag": "r2.2",
+      "title": "Connectivity Insights - Application Profiles",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "blockchain-public-address",
+      "version": "v0.2.0",
+      "repository": "BlockchainPublicAddress",
+      "release_tag": "r1.2",
+      "title": "Blockchain Public Address",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "call-forwarding-signal",
+      "version": "0.3.0",
+      "repository": "CallForwardingSignal",
+      "release_tag": "r2.2",
+      "title": "Call Forwarding Signal",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "carrier-billing",
+      "version": "0.4.0",
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r2.2",
+      "title": "Carrier Billing",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "carrier-billing-refund",
+      "version": "0.2.0",
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r2.2",
+      "title": "Carrier Billing Refunds",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "connected-network-type",
+      "version": "0.1.0",
+      "repository": "DeviceStatus",
+      "release_tag": "r2.2",
+      "title": "Connected Network Type",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "connectivity-insights",
+      "version": "0.5.0",
+      "repository": "ConnectivityInsights",
+      "release_tag": "r2.2",
+      "title": "Connectivity Insights",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "customer-insights",
+      "version": "0.1.0",
+      "repository": "CustomerInsights",
+      "release_tag": "r1.2",
+      "title": "Customer Insights",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "customer-insights",
+      "version": "0.1.1",
+      "repository": "CustomerInsights",
+      "release_tag": "r1.3",
+      "title": "Customer Insights",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "device-identifier",
+      "version": "0.2.0",
+      "repository": "DeviceIdentifier",
+      "release_tag": "r1.3",
+      "title": "CAMARA Mobile Device Identifier",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "device-reachability-status",
+      "version": "1.0.0",
+      "repository": "DeviceStatus",
+      "release_tag": "r2.2",
+      "title": "Device Reachability Status",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "device-roaming-status",
+      "version": "1.0.0",
+      "repository": "DeviceStatus",
+      "release_tag": "r2.2",
+      "title": "Device Roaming Status",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "device-swap",
+      "version": "0.2.0",
+      "repository": "DeviceSwap",
+      "release_tag": "r2.2",
+      "title": "Device Swap",
+      "commonalities": 0.5
+    },
     {
       "api_name": "location-retrieval",
       "version": "0.4.0",
@@ -161,46 +430,6 @@
       "repository": "DeviceLocation",
       "release_tag": "r2.2",
       "title": "Device Location Verification",
-      "commonalities": 0.5
-    },
-    {
-      "api_name": "number-verification",
-      "version": "2.0.0",
-      "repository": "NumberVerification",
-      "release_tag": "r2.4",
-      "title": "Number Verification",
-      "commonalities": 0.5
-    },
-    {
-      "api_name": "qod-provisioning",
-      "version": "0.2.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "r2.2",
-      "title": "QoD Provisioning API",
-      "commonalities": 0.5
-    },
-    {
-      "api_name": "qos-profiles",
-      "version": "1.0.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "r2.2",
-      "title": "QoS Profiles",
-      "commonalities": 0.5
-    },
-    {
-      "api_name": "quality-on-demand",
-      "version": "1.0.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "r2.2",
-      "title": "Quality-On-Demand",
-      "commonalities": 0.5
-    },
-    {
-      "api_name": "sim-swap",
-      "version": "2.0.0",
-      "repository": "SimSwap",
-      "release_tag": "r2.2",
-      "title": "SIM Swap",
       "commonalities": 0.5
     }
   ]

@@ -104,11 +104,11 @@ async function fetchReleases(repoName) {
 
     if (data.length === 0) break;
 
-    // Get all public releases (exclude only pre-releases and drafts)
-    // No filtering by tag format - collect everything first
+    // Get all public releases with rX.Y format (exclude pre-releases, drafts, and legacy formats)
     const publicReleases = data.filter(release =>
       !release.prerelease &&
-      !release.draft
+      !release.draft &&
+      /^r\d+\.\d+$/.test(release.tag_name)  // Only rX.Y format
     );
 
     releases.push(...publicReleases);
@@ -121,24 +121,17 @@ async function fetchReleases(repoName) {
 /**
  * Compare releases to find new ones
  */
-function findNewReleases(currentReleases, storedReleases) {
+function findNewReleases(repoReleases, storedReleases) {
   const storedTags = new Set(
     storedReleases.map(r => `${r.repository}:${r.release_tag}`)
   );
 
   const newReleases = [];
 
-  for (const [repo, releases] of Object.entries(currentReleases)) {
-    for (const release of releases) {
-      const key = `${repo}:${release.tag_name}`;
-      if (!storedTags.has(key)) {
-        newReleases.push({
-          repository: repo,
-          release_tag: release.tag_name,
-          release_date: release.published_at,
-          github_url: release.html_url
-        });
-      }
+  for (const releaseInfo of repoReleases) {
+    const key = `${releaseInfo.repository}:${releaseInfo.release_tag}`;
+    if (!storedTags.has(key)) {
+      newReleases.push(releaseInfo);
     }
   }
 
@@ -173,52 +166,58 @@ async function main() {
 
   console.error(`Will check ${repositoriesToCheck.length} repositories`);
 
-  if (mode === 'full') {
-    // Full mode: analyze all repositories
-    const output = {
-      has_updates: true,
-      repositories_to_analyze: repositoriesToCheck,
-      releases_count: 0,  // Will be determined during analysis
-      mode: 'full'
-    };
-    console.log(JSON.stringify(output, null, 2));
-    return;
-  }
+  // Fetch all releases from all repositories
+  const allReleases = [];
 
-  // Incremental mode: check for new releases
-  const reposToAnalyze = new Set();
-  let newReleasesCount = 0;
-
-  // Create map of existing releases
-  const existingReleases = new Map();
-  for (const release of masterData.releases) {
-    const key = `${release.repository}:${release.release_tag}`;
-    existingReleases.set(key, true);
-  }
-
-  // Check each repository for new releases
   for (const repo of repositoriesToCheck) {
     try {
       console.error(`Checking ${repo}...`);
       const releases = await fetchReleases(repo);
 
+      // Add repository info to each release
       for (const release of releases) {
-        const key = `${repo}:${release.tag_name}`;
-        if (!existingReleases.has(key)) {
-          reposToAnalyze.add(repo);
-          newReleasesCount++;
-        }
+        allReleases.push({
+          repository: repo,
+          release_tag: release.tag_name,
+          release_date: release.published_at,
+          github_url: release.html_url
+        });
       }
     } catch (error) {
       console.error(`Error checking ${repo}: ${error.message}`);
     }
   }
 
+  console.error(`Found ${allReleases.length} total rX.Y releases`);
+
+  let releasesToAnalyze = [];
+
+  if (mode === 'full') {
+    // Full mode: analyze all rX.Y releases
+    releasesToAnalyze = allReleases;
+    console.error(`Full mode: Will analyze all ${releasesToAnalyze.length} releases`);
+  } else {
+    // Incremental mode: only new releases
+    releasesToAnalyze = findNewReleases(allReleases, masterData.releases);
+    console.error(`Incremental mode: Found ${releasesToAnalyze.length} new releases`);
+  }
+
+  // Group releases by repository for summary
+  const repoSummary = {};
+  for (const release of releasesToAnalyze) {
+    if (!repoSummary[release.repository]) {
+      repoSummary[release.repository] = 0;
+    }
+    repoSummary[release.repository]++;
+  }
+
   const output = {
-    has_updates: reposToAnalyze.size > 0,
-    repositories_to_analyze: Array.from(reposToAnalyze),
-    releases_count: newReleasesCount,
-    mode: 'incremental'
+    has_updates: releasesToAnalyze.length > 0,
+    releases_to_analyze: releasesToAnalyze,
+    releases_count: releasesToAnalyze.length,
+    repositories_affected: Object.keys(repoSummary).length,
+    repository_summary: repoSummary,
+    mode: mode
   };
 
   console.log(JSON.stringify(output, null, 2));

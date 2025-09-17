@@ -1,17 +1,17 @@
 {
   "metadata": {
-    "generated": "2025-09-17T14:07:54.676Z",
+    "generated": "2025-09-17T14:31:50.803Z",
     "meta_release": "All",
     "source": "Meta-Release Collector v3"
   },
   "statistics": {
-    "repositories_count": 6,
-    "apis_count": 43,
-    "unique_apis_count": 20,
+    "repositories_count": 15,
+    "apis_count": 44,
+    "unique_apis_count": 18,
     "api_maturity": {
-      "stable": 5,
-      "initial": 35,
-      "rc": 3
+      "stable": 3,
+      "initial": 41,
+      "rc": 0
     },
     "commonalities_versions": [
       "0.4.0",
@@ -20,6 +20,156 @@
     ]
   },
   "repositories": {
+    "ApplicationEndpointDiscovery": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2025-09-16T19:23:11Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 1
+    },
+    "ApplicationEndpointRegistration": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2025-09-17T09:17:03Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 1
+    },
+    "BlockchainPublicAddress": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2025-03-10T16:50:34Z",
+          "apis_count": 1
+        },
+        {
+          "tag": "r2.2",
+          "date": "2025-09-11T10:58:35Z",
+          "apis_count": 2
+        }
+      ],
+      "total_apis": 3
+    },
+    "CallForwardingSignal": {
+      "releases": [
+        {
+          "tag": "r1.3",
+          "date": "2024-09-05T11:05:48Z",
+          "apis_count": 1
+        },
+        {
+          "tag": "r2.2",
+          "date": "2025-03-06T08:29:28Z",
+          "apis_count": 1
+        },
+        {
+          "tag": "r3.3",
+          "date": "2025-09-16T14:38:30Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 3
+    },
+    "CarrierBillingCheckOut": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2024-09-05T15:39:42Z",
+          "apis_count": 2
+        },
+        {
+          "tag": "r1.3",
+          "date": "2024-11-23T07:48:50Z",
+          "apis_count": 2
+        },
+        {
+          "tag": "r2.2",
+          "date": "2025-03-11T11:47:51Z",
+          "apis_count": 2
+        },
+        {
+          "tag": "r3.2",
+          "date": "2025-09-11T09:51:40Z",
+          "apis_count": 2
+        }
+      ],
+      "total_apis": 8
+    },
+    "ConnectedNetworkType": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2025-09-16T16:21:44Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 1
+    },
+    "ConnectivityInsights": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2024-09-11T03:30:01Z",
+          "apis_count": 2
+        },
+        {
+          "tag": "r2.2",
+          "date": "2025-03-14T16:33:24Z",
+          "apis_count": 2
+        }
+      ],
+      "total_apis": 4
+    },
+    "CustomerInsights": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2025-03-10T18:07:26Z",
+          "apis_count": 1
+        },
+        {
+          "tag": "r1.3",
+          "date": "2025-03-20T16:54:07Z",
+          "apis_count": 1
+        },
+        {
+          "tag": "r2.2",
+          "date": "2025-09-11T10:31:53Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 3
+    },
+    "DeviceDataVolume": {
+      "releases": [
+        {
+          "tag": "r1.3",
+          "date": "2025-09-12T09:19:47Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 1
+    },
+    "DeviceIdentifier": {
+      "releases": [
+        {
+          "tag": "r1.3",
+          "date": "2025-03-13T18:05:07Z",
+          "apis_count": 1
+        },
+        {
+          "tag": "r2.2",
+          "date": "2025-09-16T16:22:11Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 2
+    },
     "DeviceLocation": {
       "releases": [
         {
@@ -36,19 +186,19 @@
           "tag": "r3.2",
           "date": "2025-09-16T11:41:00Z",
           "apis_count": 2
-        },
-        {
-          "tag": "v0.1.0",
-          "date": "2023-01-19T09:50:49Z",
-          "apis_count": 1
-        },
-        {
-          "tag": "v0.2.0",
-          "date": "2024-03-05T09:40:05Z",
-          "apis_count": 3
         }
       ],
-      "total_apis": 10
+      "total_apis": 6
+    },
+    "DeviceReachabilityStatus": {
+      "releases": [
+        {
+          "tag": "r1.2",
+          "date": "2025-09-16T12:14:22Z",
+          "apis_count": 1
+        }
+      ],
+      "total_apis": 1
     },
     "DeviceRoamingStatus": {
       "releases": [
@@ -60,133 +210,412 @@
       ],
       "total_apis": 1
     },
-    "NumberVerification": {
+    "DeviceStatus": {
       "releases": [
         {
           "tag": "r1.2",
-          "date": "2024-09-06T15:22:46Z",
-          "apis_count": 1
-        },
-        {
-          "tag": "r1.3",
-          "date": "2024-10-01T12:49:13Z",
-          "apis_count": 1
-        },
-        {
-          "tag": "r2.4",
-          "date": "2025-03-20T14:24:37Z",
-          "apis_count": 1
-        },
-        {
-          "tag": "r3.2",
-          "date": "2025-09-12T09:55:34Z",
-          "apis_count": 1
-        },
-        {
-          "tag": "v0.3.1",
-          "date": "2023-11-17T10:05:24Z",
-          "apis_count": 1
-        }
-      ],
-      "total_apis": 5
-    },
-    "QualityOnDemand": {
-      "releases": [
-        {
-          "tag": "r1.2",
-          "date": "2024-09-06T16:16:48Z",
-          "apis_count": 3
-        },
-        {
-          "tag": "r1.3",
-          "date": "2024-12-18T14:58:23Z",
-          "apis_count": 3
-        },
-        {
-          "tag": "r2.2",
-          "date": "2025-03-11T15:31:39Z",
-          "apis_count": 3
-        },
-        {
-          "tag": "r3.2",
-          "date": "2025-09-16T12:19:48Z",
-          "apis_count": 3
-        },
-        {
-          "tag": "v0.1.0",
-          "date": "2023-01-18T12:47:18Z",
+          "date": "2024-09-10T07:58:36Z",
           "apis_count": 2
         },
         {
-          "tag": "v0.10.0",
-          "date": "2024-02-09T13:19:12Z",
-          "apis_count": 1
+          "tag": "r1.3",
+          "date": "2024-11-05T21:11:50Z",
+          "apis_count": 2
         },
         {
-          "tag": "v0.10.1",
-          "date": "2024-04-10T13:33:28Z",
-          "apis_count": 1
-        },
-        {
-          "tag": "v0.8.0",
-          "date": "2023-01-18T12:48:23Z",
-          "apis_count": 1
-        },
-        {
-          "tag": "v0.8.1",
-          "date": "2023-01-27T14:03:34Z",
-          "apis_count": 1
-        },
-        {
-          "tag": "v0.9.0",
-          "date": "2023-07-21T11:14:13Z",
-          "apis_count": 1
+          "tag": "r2.2",
+          "date": "2025-03-14T11:49:32Z",
+          "apis_count": 3
         }
       ],
-      "total_apis": 19
+      "total_apis": 7
     },
-    "SimSwap": {
+    "DeviceSwap": {
       "releases": [
         {
           "tag": "r1.2",
-          "date": "2024-09-12T15:07:04Z",
-          "apis_count": 1
-        },
-        {
-          "tag": "r1.3",
-          "date": "2024-10-29T17:21:56Z",
-          "apis_count": 1
-        },
-        {
-          "tag": "r1.4",
-          "date": "2025-04-04T11:51:06Z",
+          "date": "2024-12-12T16:40:48Z",
           "apis_count": 1
         },
         {
           "tag": "r2.2",
-          "date": "2025-03-13T11:20:01Z",
-          "apis_count": 1
-        },
-        {
-          "tag": "v0.4.0",
-          "date": "2023-11-14T14:10:12Z",
+          "date": "2025-03-13T07:59:07Z",
           "apis_count": 1
         }
       ],
-      "total_apis": 5
-    },
-    "WebRTC": {
-      "releases": [
-        {
-          "tag": "r2.1",
-          "date": "2025-07-30T08:02:14Z",
-          "apis_count": 3
-        }
-      ],
-      "total_apis": 3
+      "total_apis": 2
     }
   },
   "releases": [
+    {
+      "repository": "ApplicationEndpointDiscovery",
+      "release_tag": "r1.2",
+      "release_date": "2025-09-16T19:23:11Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/ApplicationEndpointDiscovery/releases/tag/r1.2",
+      "apis": [
+        {
+          "api_name": "application-endpoint-discovery",
+          "file_name": "application-endpoint-discovery",
+          "version": "0.1.0",
+          "title": "Application Endpoint Discovery",
+          "commonalities": 0.6
+        }
+      ]
+    },
+    {
+      "repository": "ApplicationEndpointRegistration",
+      "release_tag": "r1.2",
+      "release_date": "2025-09-17T09:17:03Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/ApplicationEndpointRegistration/releases/tag/r1.2",
+      "apis": [
+        {
+          "api_name": "application-endpoint-registration",
+          "file_name": "application-endpoint-registration",
+          "version": "0.1.0",
+          "title": "Application Endpoints Registration",
+          "commonalities": 0.6
+        }
+      ]
+    },
+    {
+      "repository": "BlockchainPublicAddress",
+      "release_tag": "r1.2",
+      "release_date": "2025-03-10T16:50:34Z",
+      "meta_release": "Spring25",
+      "github_url": "https://github.com/camaraproject/BlockchainPublicAddress/releases/tag/r1.2",
+      "apis": [
+        {
+          "api_name": "blockchain-public-address",
+          "file_name": "blockchain-public-address",
+          "version": "v0.2.0",
+          "title": "Blockchain Public Address",
+          "commonalities": 0.5
+        }
+      ]
+    },
+    {
+      "repository": "BlockchainPublicAddress",
+      "release_tag": "r2.2",
+      "release_date": "2025-09-11T10:58:35Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/BlockchainPublicAddress/releases/tag/r2.2",
+      "apis": [
+        {
+          "api_name": "blockchain-public-address-validation",
+          "file_name": "blockchain-public-address-validation",
+          "version": "0.1.0",
+          "title": "Blockchain Public Address Validation",
+          "commonalities": 0.6
+        },
+        {
+          "api_name": "blockchain-public-address",
+          "file_name": "blockchain-public-address",
+          "version": "0.3.0",
+          "title": "Blockchain Public Address",
+          "commonalities": 0.6
+        }
+      ]
+    },
+    {
+      "repository": "CallForwardingSignal",
+      "release_tag": "r1.3",
+      "release_date": "2024-09-05T11:05:48Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/CallForwardingSignal/releases/tag/r1.3",
+      "apis": [
+        {
+          "api_name": "call-forwarding-signal",
+          "file_name": "call-forwarding-signal",
+          "version": "0.2.0",
+          "title": "Call Forwarding Signal",
+          "commonalities": "0.4.0"
+        }
+      ]
+    },
+    {
+      "repository": "CallForwardingSignal",
+      "release_tag": "r2.2",
+      "release_date": "2025-03-06T08:29:28Z",
+      "meta_release": "Spring25",
+      "github_url": "https://github.com/camaraproject/CallForwardingSignal/releases/tag/r2.2",
+      "apis": [
+        {
+          "api_name": "call-forwarding-signal",
+          "file_name": "call-forwarding-signal",
+          "version": "0.3.0",
+          "title": "Call Forwarding Signal",
+          "commonalities": 0.5
+        }
+      ]
+    },
+    {
+      "repository": "CallForwardingSignal",
+      "release_tag": "r3.3",
+      "release_date": "2025-09-16T14:38:30Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/CallForwardingSignal/releases/tag/r3.3",
+      "apis": [
+        {
+          "api_name": "call-forwarding-signal",
+          "file_name": "call-forwarding-signal",
+          "version": "0.4.0",
+          "title": "Call Forwarding Signal",
+          "commonalities": 0.6
+        }
+      ]
+    },
+    {
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r1.2",
+      "release_date": "2024-09-05T15:39:42Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.2",
+      "apis": [
+        {
+          "api_name": "carrier-billing-refund",
+          "file_name": "carrier-billing-refund",
+          "version": "0.1.0",
+          "title": "Carrier Billing Refunds",
+          "commonalities": null
+        },
+        {
+          "api_name": "carrier-billing",
+          "file_name": "carrier-billing",
+          "version": "0.3.0",
+          "title": "Carrier Billing",
+          "commonalities": null
+        }
+      ]
+    },
+    {
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r1.3",
+      "release_date": "2024-11-23T07:48:50Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.3",
+      "apis": [
+        {
+          "api_name": "carrier-billing-refund",
+          "file_name": "carrier-billing-refund",
+          "version": "0.1.1",
+          "title": "Carrier Billing Refunds",
+          "commonalities": null
+        },
+        {
+          "api_name": "carrier-billing",
+          "file_name": "carrier-billing",
+          "version": "0.3.1",
+          "title": "Carrier Billing",
+          "commonalities": null
+        }
+      ]
+    },
+    {
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r2.2",
+      "release_date": "2025-03-11T11:47:51Z",
+      "meta_release": "Spring25",
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r2.2",
+      "apis": [
+        {
+          "api_name": "carrier-billing-refund",
+          "file_name": "carrier-billing-refund",
+          "version": "0.2.0",
+          "title": "Carrier Billing Refunds",
+          "commonalities": 0.5
+        },
+        {
+          "api_name": "carrier-billing",
+          "file_name": "carrier-billing",
+          "version": "0.4.0",
+          "title": "Carrier Billing",
+          "commonalities": 0.5
+        }
+      ]
+    },
+    {
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r3.2",
+      "release_date": "2025-09-11T09:51:40Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r3.2",
+      "apis": [
+        {
+          "api_name": "carrier-billing-refund",
+          "file_name": "carrier-billing-refund",
+          "version": "0.3.0",
+          "title": "Carrier Billing Refund",
+          "commonalities": 0.6
+        },
+        {
+          "api_name": "carrier-billing",
+          "file_name": "carrier-billing",
+          "version": "0.5.0",
+          "title": "Carrier Billing",
+          "commonalities": 0.6
+        }
+      ]
+    },
+    {
+      "repository": "ConnectedNetworkType",
+      "release_tag": "r1.2",
+      "release_date": "2025-09-16T16:21:44Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/ConnectedNetworkType/releases/tag/r1.2",
+      "apis": [
+        {
+          "api_name": "connected-network-type",
+          "file_name": "connected-network-type",
+          "version": "0.2.0",
+          "title": "Connected Network Type",
+          "commonalities": 0.6
+        }
+      ]
+    },
+    {
+      "repository": "ConnectivityInsights",
+      "release_tag": "r1.2",
+      "release_date": "2024-09-11T03:30:01Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/ConnectivityInsights/releases/tag/r1.2",
+      "apis": [
+        {
+          "api_name": "application-profiles",
+          "file_name": "application-profiles",
+          "version": "0.3.0",
+          "title": "Connectivity Insights - Application Profiles",
+          "commonalities": "0.4.0"
+        },
+        {
+          "api_name": "connectivity-insights",
+          "file_name": "connectivity-insights",
+          "version": "0.4.0",
+          "title": "Connectivity Insights",
+          "commonalities": "0.4.0"
+        }
+      ]
+    },
+    {
+      "repository": "ConnectivityInsights",
+      "release_tag": "r2.2",
+      "release_date": "2025-03-14T16:33:24Z",
+      "meta_release": "Spring25",
+      "github_url": "https://github.com/camaraproject/ConnectivityInsights/releases/tag/r2.2",
+      "apis": [
+        {
+          "api_name": "application-profiles",
+          "file_name": "application-profiles",
+          "version": "0.4.0",
+          "title": "Connectivity Insights - Application Profiles",
+          "commonalities": 0.5
+        },
+        {
+          "api_name": "connectivity-insights",
+          "file_name": "connectivity-insights",
+          "version": "0.5.0",
+          "title": "Connectivity Insights",
+          "commonalities": 0.5
+        }
+      ]
+    },
+    {
+      "repository": "CustomerInsights",
+      "release_tag": "r1.2",
+      "release_date": "2025-03-10T18:07:26Z",
+      "meta_release": "Spring25",
+      "github_url": "https://github.com/camaraproject/CustomerInsights/releases/tag/r1.2",
+      "apis": [
+        {
+          "api_name": "customer-insights",
+          "file_name": "customer-insights",
+          "version": "0.1.0",
+          "title": "Customer Insights",
+          "commonalities": 0.5
+        }
+      ]
+    },
+    {
+      "repository": "CustomerInsights",
+      "release_tag": "r1.3",
+      "release_date": "2025-03-20T16:54:07Z",
+      "meta_release": "Spring25",
+      "github_url": "https://github.com/camaraproject/CustomerInsights/releases/tag/r1.3",
+      "apis": [
+        {
+          "api_name": "customer-insights",
+          "file_name": "customer-insights",
+          "version": "0.1.1",
+          "title": "Customer Insights",
+          "commonalities": 0.5
+        }
+      ]
+    },
+    {
+      "repository": "CustomerInsights",
+      "release_tag": "r2.2",
+      "release_date": "2025-09-11T10:31:53Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/CustomerInsights/releases/tag/r2.2",
+      "apis": [
+        {
+          "api_name": "customer-insights",
+          "file_name": "customer-insights",
+          "version": "0.2.0",
+          "title": "Customer Insights",
+          "commonalities": 0.6
+        }
+      ]
+    },
+    {
+      "repository": "DeviceDataVolume",
+      "release_tag": "r1.3",
+      "release_date": "2025-09-12T09:19:47Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/DeviceDataVolume/releases/tag/r1.3",
+      "apis": [
+        {
+          "api_name": "device-data-volume",
+          "file_name": "device-data-volume",
+          "version": "0.1.0",
+          "title": "Device Data Volume",
+          "commonalities": 0.6
+        }
+      ]
+    },
+    {
+      "repository": "DeviceIdentifier",
+      "release_tag": "r1.3",
+      "release_date": "2025-03-13T18:05:07Z",
+      "meta_release": "Spring25",
+      "github_url": "https://github.com/camaraproject/DeviceIdentifier/releases/tag/r1.3",
+      "apis": [
+        {
+          "api_name": "device-identifier",
+          "file_name": "device-identifier",
+          "version": "0.2.0",
+          "title": "CAMARA Mobile Device Identifier",
+          "commonalities": 0.5
+        }
+      ]
+    },
+    {
+      "repository": "DeviceIdentifier",
+      "release_tag": "r2.2",
+      "release_date": "2025-09-16T16:22:11Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/DeviceIdentifier/releases/tag/r2.2",
+      "apis": [
+        {
+          "api_name": "device-identifier",
+          "file_name": "device-identifier",
+          "version": "0.3.0",
+          "title": "Device Identifier",
+          "commonalities": 0.6
+        }
+      ]
+    },
     {
       "repository": "DeviceLocation",
       "release_tag": "r1.2",
@@ -257,48 +686,18 @@
       ]
     },
     {
-      "repository": "DeviceLocation",
-      "release_tag": "v0.1.0",
-      "release_date": "2023-01-19T09:50:49Z",
-      "meta_release": "Legacy",
-      "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/v0.1.0",
+      "repository": "DeviceReachabilityStatus",
+      "release_tag": "r1.2",
+      "release_date": "2025-09-16T12:14:22Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/DeviceReachabilityStatus/releases/tag/r1.2",
       "apis": [
         {
-          "api_name": "location",
-          "file_name": "location",
-          "version": "0.1.0",
-          "title": "Device location API",
-          "commonalities": null
-        }
-      ]
-    },
-    {
-      "repository": "DeviceLocation",
-      "release_tag": "v0.2.0",
-      "release_date": "2024-03-05T09:40:05Z",
-      "meta_release": "Legacy",
-      "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/v0.2.0",
-      "apis": [
-        {
-          "api_name": "geofencing",
-          "file_name": "geofencing",
-          "version": "0.1.0",
-          "title": "Device geofencing API",
-          "commonalities": null
-        },
-        {
-          "api_name": "location-retrieval",
-          "file_name": "location-retrieval",
-          "version": "0.1.0",
-          "title": "Location retrieval API",
-          "commonalities": null
-        },
-        {
-          "api_name": "location-verification",
-          "file_name": "location-verification",
-          "version": "0.2.0",
-          "title": "Device location verification API",
-          "commonalities": null
+          "api_name": "device-reachability-status",
+          "file_name": "device-reachability-status",
+          "version": "1.1.0",
+          "title": "Device Reachability Status",
+          "commonalities": 0.6
         }
       ]
     },
@@ -319,427 +718,370 @@
       ]
     },
     {
-      "repository": "NumberVerification",
+      "repository": "DeviceStatus",
       "release_tag": "r1.2",
-      "release_date": "2024-09-06T15:22:46Z",
+      "release_date": "2024-09-10T07:58:36Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/r1.2",
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.2",
       "apis": [
         {
-          "api_name": "number-verification",
-          "file_name": "number-verification",
-          "version": "1.0.0",
-          "title": "Number Verification",
+          "api_name": "device-reachability-status",
+          "file_name": "device-reachability-status",
+          "version": "0.6.0",
+          "title": "Device Reachability Status",
+          "commonalities": "0.4.0"
+        },
+        {
+          "api_name": "device-roaming-status",
+          "file_name": "device-roaming-status",
+          "version": "0.6.0",
+          "title": "Device Roaming Status",
           "commonalities": "0.4.0"
         }
       ]
     },
     {
-      "repository": "NumberVerification",
+      "repository": "DeviceStatus",
       "release_tag": "r1.3",
-      "release_date": "2024-10-01T12:49:13Z",
+      "release_date": "2024-11-05T21:11:50Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/r1.3",
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.3",
       "apis": [
         {
-          "api_name": "number-verification",
-          "file_name": "number-verification",
-          "version": "1.0.0",
-          "title": "Number Verification",
+          "api_name": "device-reachability-status",
+          "file_name": "device-reachability-status",
+          "version": "0.6.1",
+          "title": "Device Reachability Status",
+          "commonalities": "0.4.0"
+        },
+        {
+          "api_name": "device-roaming-status",
+          "file_name": "device-roaming-status",
+          "version": "0.6.1",
+          "title": "Device Roaming Status",
           "commonalities": "0.4.0"
         }
       ]
     },
     {
-      "repository": "NumberVerification",
-      "release_tag": "r2.4",
-      "release_date": "2025-03-20T14:24:37Z",
+      "repository": "DeviceStatus",
+      "release_tag": "r2.2",
+      "release_date": "2025-03-14T11:49:32Z",
       "meta_release": "Spring25",
-      "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/r2.4",
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r2.2",
       "apis": [
         {
-          "api_name": "number-verification",
-          "file_name": "number-verification",
-          "version": "2.0.0",
-          "title": "Number Verification",
+          "api_name": "connected-network-type",
+          "file_name": "connected-network-type",
+          "version": "0.1.0",
+          "title": "Connected Network Type",
+          "commonalities": 0.5
+        },
+        {
+          "api_name": "device-reachability-status",
+          "file_name": "device-reachability-status",
+          "version": "1.0.0",
+          "title": "Device Reachability Status",
+          "commonalities": 0.5
+        },
+        {
+          "api_name": "device-roaming-status",
+          "file_name": "device-roaming-status",
+          "version": "1.0.0",
+          "title": "Device Roaming Status",
           "commonalities": 0.5
         }
       ]
     },
     {
-      "repository": "NumberVerification",
-      "release_tag": "r3.2",
-      "release_date": "2025-09-12T09:55:34Z",
-      "meta_release": "Fall25",
-      "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/r3.2",
-      "apis": [
-        {
-          "api_name": "number-verification",
-          "file_name": "number-verification",
-          "version": "2.1.0",
-          "title": "Number Verification",
-          "commonalities": 0.6
-        }
-      ]
-    },
-    {
-      "repository": "NumberVerification",
-      "release_tag": "v0.3.1",
-      "release_date": "2023-11-17T10:05:24Z",
-      "meta_release": "Legacy",
-      "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/v0.3.1",
-      "apis": [
-        {
-          "api_name": null,
-          "file_name": null,
-          "version": "0.3.1",
-          "title": "Number Verification",
-          "commonalities": null
-        }
-      ]
-    },
-    {
-      "repository": "QualityOnDemand",
+      "repository": "DeviceSwap",
       "release_tag": "r1.2",
-      "release_date": "2024-09-06T16:16:48Z",
-      "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.2",
+      "release_date": "2024-12-12T16:40:48Z",
+      "meta_release": "None (Sandbox)",
+      "github_url": "https://github.com/camaraproject/DeviceSwap/releases/tag/r1.2",
       "apis": [
         {
-          "api_name": "qod-provisioning",
-          "file_name": "qod-provisioning",
+          "api_name": "device-swap",
+          "file_name": "device-swap",
           "version": "0.1.0",
-          "title": "QoD Provisioning API",
-          "commonalities": "0.4.0"
-        },
-        {
-          "api_name": "qos-profiles",
-          "file_name": "qos-profiles",
-          "version": "0.11.0",
-          "title": "QoS Profiles",
-          "commonalities": "0.4.0"
-        },
-        {
-          "api_name": "quality-on-demand",
-          "file_name": "quality-on-demand",
-          "version": "0.11.0",
-          "title": "Quality-On-Demand",
+          "title": "Device Swap",
           "commonalities": "0.4.0"
         }
       ]
     },
     {
-      "repository": "QualityOnDemand",
-      "release_tag": "r1.3",
-      "release_date": "2024-12-18T14:58:23Z",
-      "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.3",
-      "apis": [
-        {
-          "api_name": "qod-provisioning",
-          "file_name": "qod-provisioning",
-          "version": "0.1.1",
-          "title": "QoD Provisioning API",
-          "commonalities": "0.4.0"
-        },
-        {
-          "api_name": "qos-profiles",
-          "file_name": "qos-profiles",
-          "version": "0.11.1",
-          "title": "QoS Profiles",
-          "commonalities": "0.4.0"
-        },
-        {
-          "api_name": "quality-on-demand",
-          "file_name": "quality-on-demand",
-          "version": "0.11.1",
-          "title": "Quality-On-Demand",
-          "commonalities": "0.4.0"
-        }
-      ]
-    },
-    {
-      "repository": "QualityOnDemand",
+      "repository": "DeviceSwap",
       "release_tag": "r2.2",
-      "release_date": "2025-03-11T15:31:39Z",
+      "release_date": "2025-03-13T07:59:07Z",
       "meta_release": "Spring25",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r2.2",
+      "github_url": "https://github.com/camaraproject/DeviceSwap/releases/tag/r2.2",
       "apis": [
         {
-          "api_name": "qod-provisioning",
-          "file_name": "qod-provisioning",
+          "api_name": "device-swap",
+          "file_name": "device-swap",
           "version": "0.2.0",
-          "title": "QoD Provisioning API",
+          "title": "Device Swap",
           "commonalities": 0.5
-        },
-        {
-          "api_name": "qos-profiles",
-          "file_name": "qos-profiles",
-          "version": "1.0.0",
-          "title": "QoS Profiles",
-          "commonalities": 0.5
-        },
-        {
-          "api_name": "quality-on-demand",
-          "file_name": "quality-on-demand",
-          "version": "1.0.0",
-          "title": "Quality-On-Demand",
-          "commonalities": 0.5
-        }
-      ]
-    },
-    {
-      "repository": "QualityOnDemand",
-      "release_tag": "r3.2",
-      "release_date": "2025-09-16T12:19:48Z",
-      "meta_release": "Fall25",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r3.2",
-      "apis": [
-        {
-          "api_name": "qos-profiles",
-          "file_name": "qos-profiles",
-          "version": "1.1.0",
-          "title": "QoS Profiles",
-          "commonalities": 0.6
-        },
-        {
-          "api_name": "qos-provisioning",
-          "file_name": "qos-provisioning",
-          "version": "0.3.0",
-          "title": "QoS Provisioning",
-          "commonalities": 0.6
-        },
-        {
-          "api_name": "quality-on-demand",
-          "file_name": "quality-on-demand",
-          "version": "1.1.0",
-          "title": "Quality-On-Demand",
-          "commonalities": 0.6
-        }
-      ]
-    },
-    {
-      "repository": "QualityOnDemand",
-      "release_tag": "v0.1.0",
-      "release_date": "2023-01-18T12:47:18Z",
-      "meta_release": "Legacy",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/v0.1.0",
-      "apis": [
-        {
-          "api_name": "qos-stable-latency",
-          "file_name": "qos-stable-latency",
-          "version": "0.1.0",
-          "title": "QoS for stable latency API",
-          "commonalities": null
-        },
-        {
-          "api_name": "qos-throughput",
-          "file_name": "qos-throughput",
-          "version": "0.1.0",
-          "title": "QoS for stable throughput API",
-          "commonalities": null
-        }
-      ]
-    },
-    {
-      "repository": "QualityOnDemand",
-      "release_tag": "v0.10.0",
-      "release_date": "2024-02-09T13:19:12Z",
-      "meta_release": "Legacy",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/v0.10.0",
-      "apis": [
-        {
-          "api_name": "qod",
-          "file_name": "qod-api",
-          "version": "0.10.0",
-          "title": "QoD for enhanced communication",
-          "commonalities": null
-        }
-      ]
-    },
-    {
-      "repository": "QualityOnDemand",
-      "release_tag": "v0.10.1",
-      "release_date": "2024-04-10T13:33:28Z",
-      "meta_release": "Legacy",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/v0.10.1",
-      "apis": [
-        {
-          "api_name": "qod",
-          "file_name": "qod-api",
-          "version": "0.10.1",
-          "title": "QoD for enhanced communication",
-          "commonalities": null
-        }
-      ]
-    },
-    {
-      "repository": "QualityOnDemand",
-      "release_tag": "v0.8.0",
-      "release_date": "2023-01-18T12:48:23Z",
-      "meta_release": "Legacy",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/v0.8.0",
-      "apis": [
-        {
-          "api_name": "qod-api",
-          "file_name": "qod-api",
-          "version": "0.8.0",
-          "title": "QoD for enhanced communication",
-          "commonalities": null
-        }
-      ]
-    },
-    {
-      "repository": "QualityOnDemand",
-      "release_tag": "v0.8.1",
-      "release_date": "2023-01-27T14:03:34Z",
-      "meta_release": "Legacy",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/v0.8.1",
-      "apis": [
-        {
-          "api_name": "qod-api",
-          "file_name": "qod-api",
-          "version": "0.8.1",
-          "title": "QoD for enhanced communication",
-          "commonalities": null
-        }
-      ]
-    },
-    {
-      "repository": "QualityOnDemand",
-      "release_tag": "v0.9.0",
-      "release_date": "2023-07-21T11:14:13Z",
-      "meta_release": "Legacy",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/v0.9.0",
-      "apis": [
-        {
-          "api_name": "qod-api",
-          "file_name": "qod-api",
-          "version": "0.9.0",
-          "title": "QoD for enhanced communication",
-          "commonalities": null
-        }
-      ]
-    },
-    {
-      "repository": "SimSwap",
-      "release_tag": "r1.2",
-      "release_date": "2024-09-12T15:07:04Z",
-      "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.2",
-      "apis": [
-        {
-          "api_name": "sim-swap",
-          "file_name": "sim-swap",
-          "version": "1.0.0",
-          "title": "SIM Swap",
-          "commonalities": "0.4.0"
-        }
-      ]
-    },
-    {
-      "repository": "SimSwap",
-      "release_tag": "r1.3",
-      "release_date": "2024-10-29T17:21:56Z",
-      "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.3",
-      "apis": [
-        {
-          "api_name": "sim-swap",
-          "file_name": "sim-swap",
-          "version": "1.0.0",
-          "title": "SIM Swap",
-          "commonalities": "0.4.0"
-        }
-      ]
-    },
-    {
-      "repository": "SimSwap",
-      "release_tag": "r1.4",
-      "release_date": "2025-04-04T11:51:06Z",
-      "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.4",
-      "apis": [
-        {
-          "api_name": "sim-swap",
-          "file_name": "sim-swap",
-          "version": "1.0.0",
-          "title": "SIM Swap",
-          "commonalities": "0.4.0"
-        }
-      ]
-    },
-    {
-      "repository": "SimSwap",
-      "release_tag": "r2.2",
-      "release_date": "2025-03-13T11:20:01Z",
-      "meta_release": "Spring25",
-      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r2.2",
-      "apis": [
-        {
-          "api_name": "sim-swap",
-          "file_name": "sim-swap",
-          "version": "2.0.0",
-          "title": "SIM Swap",
-          "commonalities": 0.5
-        }
-      ]
-    },
-    {
-      "repository": "SimSwap",
-      "release_tag": "v0.4.0",
-      "release_date": "2023-11-14T14:10:12Z",
-      "meta_release": "Legacy",
-      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/v0.4.0",
-      "apis": [
-        {
-          "api_name": "sim_swap",
-          "file_name": "sim_swap",
-          "version": "0.4.0",
-          "title": "SIM Swap",
-          "commonalities": null
-        }
-      ]
-    },
-    {
-      "repository": "WebRTC",
-      "release_tag": "r2.1",
-      "release_date": "2025-07-30T08:02:14Z",
-      "meta_release": "Fall25",
-      "github_url": "https://github.com/camaraproject/WebRTC/releases/tag/r2.1",
-      "apis": [
-        {
-          "api_name": "webrtc-call-handling",
-          "file_name": "webrtc-call-handling",
-          "version": "0.3.0-rc.1",
-          "title": "WebRTC Call Handling",
-          "commonalities": 0.6
-        },
-        {
-          "api_name": "webrtc-events",
-          "file_name": "webrtc-events",
-          "version": "0.2.0-rc.1",
-          "title": "WebRTC Events",
-          "commonalities": 0.6
-        },
-        {
-          "api_name": "webrtc-registration",
-          "file_name": "webrtc-registration",
-          "version": "0.3.0-rc.1",
-          "title": "WebRTC Registration Service",
-          "commonalities": 0.6
         }
       ]
     }
   ],
   "apis": [
     {
-      "api_name": null,
-      "version": "0.3.1",
-      "repository": "NumberVerification",
-      "release_tag": "v0.3.1",
-      "title": "Number Verification",
+      "api_name": "application-endpoint-discovery",
+      "version": "0.1.0",
+      "repository": "ApplicationEndpointDiscovery",
+      "release_tag": "r1.2",
+      "title": "Application Endpoint Discovery",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "application-endpoint-registration",
+      "version": "0.1.0",
+      "repository": "ApplicationEndpointRegistration",
+      "release_tag": "r1.2",
+      "title": "Application Endpoints Registration",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "application-profiles",
+      "version": "0.3.0",
+      "repository": "ConnectivityInsights",
+      "release_tag": "r1.2",
+      "title": "Connectivity Insights - Application Profiles",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "application-profiles",
+      "version": "0.4.0",
+      "repository": "ConnectivityInsights",
+      "release_tag": "r2.2",
+      "title": "Connectivity Insights - Application Profiles",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "blockchain-public-address",
+      "version": "v0.2.0",
+      "repository": "BlockchainPublicAddress",
+      "release_tag": "r1.2",
+      "title": "Blockchain Public Address",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "blockchain-public-address",
+      "version": "0.3.0",
+      "repository": "BlockchainPublicAddress",
+      "release_tag": "r2.2",
+      "title": "Blockchain Public Address",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "blockchain-public-address-validation",
+      "version": "0.1.0",
+      "repository": "BlockchainPublicAddress",
+      "release_tag": "r2.2",
+      "title": "Blockchain Public Address Validation",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "call-forwarding-signal",
+      "version": "0.2.0",
+      "repository": "CallForwardingSignal",
+      "release_tag": "r1.3",
+      "title": "Call Forwarding Signal",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "call-forwarding-signal",
+      "version": "0.3.0",
+      "repository": "CallForwardingSignal",
+      "release_tag": "r2.2",
+      "title": "Call Forwarding Signal",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "call-forwarding-signal",
+      "version": "0.4.0",
+      "repository": "CallForwardingSignal",
+      "release_tag": "r3.3",
+      "title": "Call Forwarding Signal",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "carrier-billing",
+      "version": "0.3.0",
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r1.2",
+      "title": "Carrier Billing",
       "commonalities": null
+    },
+    {
+      "api_name": "carrier-billing",
+      "version": "0.3.1",
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r1.3",
+      "title": "Carrier Billing",
+      "commonalities": null
+    },
+    {
+      "api_name": "carrier-billing",
+      "version": "0.4.0",
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r2.2",
+      "title": "Carrier Billing",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "carrier-billing",
+      "version": "0.5.0",
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r3.2",
+      "title": "Carrier Billing",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "carrier-billing-refund",
+      "version": "0.1.0",
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r1.2",
+      "title": "Carrier Billing Refunds",
+      "commonalities": null
+    },
+    {
+      "api_name": "carrier-billing-refund",
+      "version": "0.1.1",
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r1.3",
+      "title": "Carrier Billing Refunds",
+      "commonalities": null
+    },
+    {
+      "api_name": "carrier-billing-refund",
+      "version": "0.2.0",
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r2.2",
+      "title": "Carrier Billing Refunds",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "carrier-billing-refund",
+      "version": "0.3.0",
+      "repository": "CarrierBillingCheckOut",
+      "release_tag": "r3.2",
+      "title": "Carrier Billing Refund",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "connected-network-type",
+      "version": "0.2.0",
+      "repository": "ConnectedNetworkType",
+      "release_tag": "r1.2",
+      "title": "Connected Network Type",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "connected-network-type",
+      "version": "0.1.0",
+      "repository": "DeviceStatus",
+      "release_tag": "r2.2",
+      "title": "Connected Network Type",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "connectivity-insights",
+      "version": "0.4.0",
+      "repository": "ConnectivityInsights",
+      "release_tag": "r1.2",
+      "title": "Connectivity Insights",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "connectivity-insights",
+      "version": "0.5.0",
+      "repository": "ConnectivityInsights",
+      "release_tag": "r2.2",
+      "title": "Connectivity Insights",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "customer-insights",
+      "version": "0.1.0",
+      "repository": "CustomerInsights",
+      "release_tag": "r1.2",
+      "title": "Customer Insights",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "customer-insights",
+      "version": "0.1.1",
+      "repository": "CustomerInsights",
+      "release_tag": "r1.3",
+      "title": "Customer Insights",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "customer-insights",
+      "version": "0.2.0",
+      "repository": "CustomerInsights",
+      "release_tag": "r2.2",
+      "title": "Customer Insights",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "device-data-volume",
+      "version": "0.1.0",
+      "repository": "DeviceDataVolume",
+      "release_tag": "r1.3",
+      "title": "Device Data Volume",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "device-identifier",
+      "version": "0.2.0",
+      "repository": "DeviceIdentifier",
+      "release_tag": "r1.3",
+      "title": "CAMARA Mobile Device Identifier",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "device-identifier",
+      "version": "0.3.0",
+      "repository": "DeviceIdentifier",
+      "release_tag": "r2.2",
+      "title": "Device Identifier",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "device-reachability-status",
+      "version": "1.1.0",
+      "repository": "DeviceReachabilityStatus",
+      "release_tag": "r1.2",
+      "title": "Device Reachability Status",
+      "commonalities": 0.6
+    },
+    {
+      "api_name": "device-reachability-status",
+      "version": "0.6.0",
+      "repository": "DeviceStatus",
+      "release_tag": "r1.2",
+      "title": "Device Reachability Status",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "device-reachability-status",
+      "version": "0.6.1",
+      "repository": "DeviceStatus",
+      "release_tag": "r1.3",
+      "title": "Device Reachability Status",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "device-reachability-status",
+      "version": "1.0.0",
+      "repository": "DeviceStatus",
+      "release_tag": "r2.2",
+      "title": "Device Reachability Status",
+      "commonalities": 0.5
     },
     {
       "api_name": "device-roaming-status",
@@ -750,20 +1092,44 @@
       "commonalities": 0.6
     },
     {
-      "api_name": "geofencing",
-      "version": "0.1.0",
-      "repository": "DeviceLocation",
-      "release_tag": "v0.2.0",
-      "title": "Device geofencing API",
-      "commonalities": null
+      "api_name": "device-roaming-status",
+      "version": "0.6.0",
+      "repository": "DeviceStatus",
+      "release_tag": "r1.2",
+      "title": "Device Roaming Status",
+      "commonalities": "0.4.0"
     },
     {
-      "api_name": "location",
+      "api_name": "device-roaming-status",
+      "version": "0.6.1",
+      "repository": "DeviceStatus",
+      "release_tag": "r1.3",
+      "title": "Device Roaming Status",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "device-roaming-status",
+      "version": "1.0.0",
+      "repository": "DeviceStatus",
+      "release_tag": "r2.2",
+      "title": "Device Roaming Status",
+      "commonalities": 0.5
+    },
+    {
+      "api_name": "device-swap",
       "version": "0.1.0",
-      "repository": "DeviceLocation",
-      "release_tag": "v0.1.0",
-      "title": "Device location API",
-      "commonalities": null
+      "repository": "DeviceSwap",
+      "release_tag": "r1.2",
+      "title": "Device Swap",
+      "commonalities": "0.4.0"
+    },
+    {
+      "api_name": "device-swap",
+      "version": "0.2.0",
+      "repository": "DeviceSwap",
+      "release_tag": "r2.2",
+      "title": "Device Swap",
+      "commonalities": 0.5
     },
     {
       "api_name": "location-retrieval",
@@ -790,14 +1156,6 @@
       "commonalities": 0.6
     },
     {
-      "api_name": "location-retrieval",
-      "version": "0.1.0",
-      "repository": "DeviceLocation",
-      "release_tag": "v0.2.0",
-      "title": "Location retrieval API",
-      "commonalities": null
-    },
-    {
       "api_name": "location-verification",
       "version": "1.0.0",
       "repository": "DeviceLocation",
@@ -819,262 +1177,6 @@
       "repository": "DeviceLocation",
       "release_tag": "r3.2",
       "title": "Device Location Verification",
-      "commonalities": 0.6
-    },
-    {
-      "api_name": "location-verification",
-      "version": "0.2.0",
-      "repository": "DeviceLocation",
-      "release_tag": "v0.2.0",
-      "title": "Device location verification API",
-      "commonalities": null
-    },
-    {
-      "api_name": "number-verification",
-      "version": "1.0.0",
-      "repository": "NumberVerification",
-      "release_tag": "r1.2",
-      "title": "Number Verification",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "number-verification",
-      "version": "1.0.0",
-      "repository": "NumberVerification",
-      "release_tag": "r1.3",
-      "title": "Number Verification",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "number-verification",
-      "version": "2.0.0",
-      "repository": "NumberVerification",
-      "release_tag": "r2.4",
-      "title": "Number Verification",
-      "commonalities": 0.5
-    },
-    {
-      "api_name": "number-verification",
-      "version": "2.1.0",
-      "repository": "NumberVerification",
-      "release_tag": "r3.2",
-      "title": "Number Verification",
-      "commonalities": 0.6
-    },
-    {
-      "api_name": "qod",
-      "version": "0.10.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "v0.10.0",
-      "title": "QoD for enhanced communication",
-      "commonalities": null
-    },
-    {
-      "api_name": "qod",
-      "version": "0.10.1",
-      "repository": "QualityOnDemand",
-      "release_tag": "v0.10.1",
-      "title": "QoD for enhanced communication",
-      "commonalities": null
-    },
-    {
-      "api_name": "qod-api",
-      "version": "0.8.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "v0.8.0",
-      "title": "QoD for enhanced communication",
-      "commonalities": null
-    },
-    {
-      "api_name": "qod-api",
-      "version": "0.8.1",
-      "repository": "QualityOnDemand",
-      "release_tag": "v0.8.1",
-      "title": "QoD for enhanced communication",
-      "commonalities": null
-    },
-    {
-      "api_name": "qod-api",
-      "version": "0.9.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "v0.9.0",
-      "title": "QoD for enhanced communication",
-      "commonalities": null
-    },
-    {
-      "api_name": "qod-provisioning",
-      "version": "0.1.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "r1.2",
-      "title": "QoD Provisioning API",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "qod-provisioning",
-      "version": "0.1.1",
-      "repository": "QualityOnDemand",
-      "release_tag": "r1.3",
-      "title": "QoD Provisioning API",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "qod-provisioning",
-      "version": "0.2.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "r2.2",
-      "title": "QoD Provisioning API",
-      "commonalities": 0.5
-    },
-    {
-      "api_name": "qos-profiles",
-      "version": "0.11.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "r1.2",
-      "title": "QoS Profiles",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "qos-profiles",
-      "version": "0.11.1",
-      "repository": "QualityOnDemand",
-      "release_tag": "r1.3",
-      "title": "QoS Profiles",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "qos-profiles",
-      "version": "1.0.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "r2.2",
-      "title": "QoS Profiles",
-      "commonalities": 0.5
-    },
-    {
-      "api_name": "qos-profiles",
-      "version": "1.1.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "r3.2",
-      "title": "QoS Profiles",
-      "commonalities": 0.6
-    },
-    {
-      "api_name": "qos-provisioning",
-      "version": "0.3.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "r3.2",
-      "title": "QoS Provisioning",
-      "commonalities": 0.6
-    },
-    {
-      "api_name": "qos-stable-latency",
-      "version": "0.1.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "v0.1.0",
-      "title": "QoS for stable latency API",
-      "commonalities": null
-    },
-    {
-      "api_name": "qos-throughput",
-      "version": "0.1.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "v0.1.0",
-      "title": "QoS for stable throughput API",
-      "commonalities": null
-    },
-    {
-      "api_name": "quality-on-demand",
-      "version": "0.11.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "r1.2",
-      "title": "Quality-On-Demand",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "quality-on-demand",
-      "version": "0.11.1",
-      "repository": "QualityOnDemand",
-      "release_tag": "r1.3",
-      "title": "Quality-On-Demand",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "quality-on-demand",
-      "version": "1.0.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "r2.2",
-      "title": "Quality-On-Demand",
-      "commonalities": 0.5
-    },
-    {
-      "api_name": "quality-on-demand",
-      "version": "1.1.0",
-      "repository": "QualityOnDemand",
-      "release_tag": "r3.2",
-      "title": "Quality-On-Demand",
-      "commonalities": 0.6
-    },
-    {
-      "api_name": "sim_swap",
-      "version": "0.4.0",
-      "repository": "SimSwap",
-      "release_tag": "v0.4.0",
-      "title": "SIM Swap",
-      "commonalities": null
-    },
-    {
-      "api_name": "sim-swap",
-      "version": "1.0.0",
-      "repository": "SimSwap",
-      "release_tag": "r1.2",
-      "title": "SIM Swap",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "sim-swap",
-      "version": "1.0.0",
-      "repository": "SimSwap",
-      "release_tag": "r1.3",
-      "title": "SIM Swap",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "sim-swap",
-      "version": "1.0.0",
-      "repository": "SimSwap",
-      "release_tag": "r1.4",
-      "title": "SIM Swap",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "sim-swap",
-      "version": "2.0.0",
-      "repository": "SimSwap",
-      "release_tag": "r2.2",
-      "title": "SIM Swap",
-      "commonalities": 0.5
-    },
-    {
-      "api_name": "webrtc-call-handling",
-      "version": "0.3.0-rc.1",
-      "repository": "WebRTC",
-      "release_tag": "r2.1",
-      "title": "WebRTC Call Handling",
-      "commonalities": 0.6
-    },
-    {
-      "api_name": "webrtc-events",
-      "version": "0.2.0-rc.1",
-      "repository": "WebRTC",
-      "release_tag": "r2.1",
-      "title": "WebRTC Events",
-      "commonalities": 0.6
-    },
-    {
-      "api_name": "webrtc-registration",
-      "version": "0.3.0-rc.1",
-      "repository": "WebRTC",
-      "release_tag": "r2.1",
-      "title": "WebRTC Registration Service",
       "commonalities": 0.6
     }
   ]
