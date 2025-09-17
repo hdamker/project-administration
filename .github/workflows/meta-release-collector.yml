@@ -17,24 +17,24 @@ name: Meta-Release Collector v3
 on:
   workflow_dispatch:
     inputs:
-      analysis_mode:
-        description: 'Analysis mode'
+      analysis_scope:
+        description: 'What to analyze'
         required: true
         type: choice
         options:
-          - incremental    # Default: detect new releases only
+          - incremental    # Detect and analyze new releases only
           - full          # Re-analyze all releases
-          - dry-run       # Test without committing
         default: incremental
 
-      commit_mode:
-        description: 'How to commit changes'
+      execution_mode:
+        description: 'How to handle results'
         required: true
         type: choice
         options:
-          - direct        # Direct commit to branch
-          - pr            # Create pull request
-        default: direct
+          - dry-run       # Test mode - no commits, artifacts only
+          - commit        # Direct commit to branch
+          - pr            # Create pull request for review
+        default: dry-run
 
       debug_mode:
         description: 'Enable debug logging'
@@ -90,10 +90,10 @@ jobs:
       - name: Detect releases
         id: detect
         run: |
-          echo "🔍 Detecting releases in analysis mode: ${{ github.event.inputs.analysis_mode }}"
+          echo "🔍 Detecting releases in analysis scope: ${{ github.event.inputs.analysis_scope }}"
 
           # Run detection script
-          node scripts/detect-releases.js --mode ${{ github.event.inputs.analysis_mode }} > temp/detection-output.json
+          node scripts/detect-releases.js --mode ${{ github.event.inputs.analysis_scope }} > temp/detection-output.json
 
           # Parse output
           HAS_UPDATES=$(jq -r '.has_updates' temp/detection-output.json)
@@ -148,6 +148,9 @@ jobs:
       - name: Analyze release group
         run: |
           echo "📊 Analyzing release group"
+
+          # Create temp directory
+          mkdir -p temp
 
           # Create output file for this group
           echo '[]' > temp/analysis-results.json
@@ -217,15 +220,15 @@ jobs:
           done
 
           # Update master metadata with RAW data (no corrections)
-          node scripts/update-master.js --mode ${{ github.event.inputs.analysis_mode }} --input temp/combined-analysis.json
+          node scripts/update-master.js --mode ${{ github.event.inputs.analysis_scope }} --input temp/combined-analysis.json
 
           echo "Master metadata updated with $(jq '. | length' temp/combined-analysis.json) releases"
 
       - name: Generate meta-release reports
         run: |
           echo "📝 Generating reports..."
-          # TODO: Generate JSON files for each meta-release
-          # node scripts/generate-reports.js
+          # Generate JSON files for each meta-release
+          node scripts/generate-reports.js
 
       - name: Upload processed data
         uses: actions/upload-artifact@v4
@@ -242,7 +245,7 @@ jobs:
   publish-reports:
     name: Publish Reports
     needs: update-metadata
-    if: github.event.inputs.analysis_mode != 'dry-run'
+    if: github.event.inputs.execution_mode != 'dry-run'
     runs-on: ubuntu-latest
 
     steps:
@@ -254,14 +257,33 @@ jobs:
         with:
           name: processed-data
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm install js-yaml
+
       - name: Generate HTML viewers
         run: |
           echo "🎨 Generating HTML viewers..."
-          # TODO: Build viewers with embedded JSON
-          # node scripts/generate-viewers.js
+          # Build viewers with embedded JSON
+          node scripts/generate-viewers.js
+
+      - name: Upload final outputs as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-reports-${{ github.run_number }}
+          path: |
+            data/releases-master.yaml
+            reports/*.json
+            viewers/*.html
+          retention-days: 30
 
       - name: Commit changes (direct)
-        if: github.event.inputs.commit_mode == 'direct'
+        if: github.event.inputs.execution_mode == 'commit'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
@@ -272,13 +294,13 @@ jobs:
 
           git commit -m "chore: Update release metadata and reports
 
-          Analysis mode: ${{ github.event.inputs.analysis_mode }}
+          Analysis scope: ${{ github.event.inputs.analysis_scope }}
           Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
           git push origin feat/meta-release-collector-v3
 
       - name: Create pull request
-        if: github.event.inputs.commit_mode == 'pr'
+        if: github.event.inputs.execution_mode == 'pr'
         uses: peter-evans/create-pull-request@v5
         with:
           branch: update-release-metadata-${{ github.run_number }}
@@ -286,7 +308,7 @@ jobs:
           body: |
             ## Release Metadata Update
 
-            **Analysis mode**: ${{ github.event.inputs.analysis_mode }}
+            **Analysis scope**: ${{ github.event.inputs.analysis_scope }}
             **Workflow run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
             ### Changes
@@ -318,11 +340,18 @@ jobs:
         run: |
           echo "## Meta-Release Collector Workflow Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Analysis Mode**: ${{ github.event.inputs.analysis_mode }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit Mode**: ${{ github.event.inputs.commit_mode }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Analysis Scope**: ${{ github.event.inputs.analysis_scope }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Execution Mode**: ${{ github.event.inputs.execution_mode }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Updates Found**: ${{ needs.detect-releases.outputs.has_updates }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Workflow Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts Available" >> $GITHUB_STEP_SUMMARY
+          echo "- **release-reports-${{ github.run_number }}**: Contains all generated files" >> $GITHUB_STEP_SUMMARY
+          echo "  - Master metadata (YAML)" >> $GITHUB_STEP_SUMMARY
+          echo "  - JSON reports for each meta-release" >> $GITHUB_STEP_SUMMARY
+          echo "  - HTML viewers with embedded data" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Download artifacts from the workflow run page" >> $GITHUB_STEP_SUMMARY
           echo "- Review the generated reports in the viewers" >> $GITHUB_STEP_SUMMARY
           echo "- Check for any inconsistencies in the logs" >> $GITHUB_STEP_SUMMARY
