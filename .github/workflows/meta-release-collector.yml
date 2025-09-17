@@ -246,13 +246,12 @@ jobs:
             reports/*.json
 
   # =========================================================================================
-  # Phase 4: Publishing
-  # Generate HTML viewers and commit/deploy results
+  # Phase 4: Generate Viewers
+  # Generate HTML viewers with embedded data
   # =========================================================================================
-  publish-reports:
-    name: Publish Reports
+  generate-viewers:
+    name: Generate HTML Viewers
     needs: update-metadata
-    if: github.event.inputs.execution_mode != 'dry-run'
     runs-on: ubuntu-latest
 
     steps:
@@ -288,6 +287,24 @@ jobs:
             reports/*.json
             viewers/*.html
           retention-days: 30
+
+  # =========================================================================================
+  # Phase 5: Commit/PR (only if not dry-run)
+  # =========================================================================================
+  publish-changes:
+    name: Publish Changes
+    needs: generate-viewers
+    if: github.event.inputs.execution_mode != 'dry-run'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download final artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-reports-${{ github.run_number }}
 
       - name: Commit changes (direct)
         if: github.event.inputs.execution_mode == 'commit'
@@ -326,19 +343,14 @@ jobs:
             Please review the changes before merging.
           commit-message: 'chore: Update release metadata'
 
-      - name: Deploy to GitHub Pages
-        if: success()
-        run: |
-          echo "🚀 Deploying viewers to GitHub Pages..."
-          # TODO: Copy viewers to pages repository
-          # This will be implemented when we have the viewer ready
+      # TODO: Deploy to GitHub Pages when ready
 
   # =========================================================================================
   # Summary Job
   # =========================================================================================
   summary:
     name: Workflow Summary
-    needs: [detect-releases, publish-reports]
+    needs: [detect-releases, generate-viewers]
     if: always()
     runs-on: ubuntu-latest
 
