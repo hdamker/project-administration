@@ -41,10 +41,10 @@ function loadConfig() {
 }
 
 /**
- * Extract API name from file path
+ * Extract filename from file path (without extension)
  * code/API_definitions/quality-on-demand.yaml -> quality-on-demand
  */
-function extractAPIName(filePath) {
+function extractFileName(filePath) {
   const match = filePath.match(/API_definitions\/([^\/]+)\.yaml$/);
   if (match) {
     return match[1];
@@ -53,10 +53,25 @@ function extractAPIName(filePath) {
 }
 
 /**
- * Apply corrections to API name
+ * Extract API name from server URL in OpenAPI spec
+ * Server URL format: https://example.com/{api-name}/{version}
  */
-function correctAPIName(apiName, corrections) {
-  return corrections.api_name_corrections[apiName] || apiName;
+function extractAPINameFromSpec(spec) {
+  if (!spec.servers || !Array.isArray(spec.servers) || spec.servers.length === 0) {
+    return null;
+  }
+
+  // Take first server URL
+  const serverUrl = spec.servers[0].url;
+
+  // Match pattern /{api-name}/{version}
+  // API name is between first and second slash from the end
+  const match = serverUrl.match(/\/([^\/]+)\/[^\/]+\/?$/);
+  if (match) {
+    return match[1];
+  }
+
+  return null;
 }
 
 /**
@@ -86,7 +101,6 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
   console.log(`Analyzing local release: ${repoPath} @ ${releaseTag}`);
 
   const repoName = path.basename(repoPath);
-  const config = loadConfig();
 
   // Checkout the release tag
   await execAsync(`git checkout ${releaseTag} --quiet`, { cwd: repoPath });
@@ -101,7 +115,7 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
       .map(file => path.join(apiSpecPath, file));
   }
 
-  // Extract API information
+  // Extract API information - just the facts, no corrections
   const apis = [];
 
   for (const apiFile of apiFiles) {
@@ -109,16 +123,16 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
       const content = fs.readFileSync(apiFile, 'utf8');
       const spec = yaml.load(content);
 
-      const rawApiName = extractAPIName(apiFile);
-      const apiName = correctAPIName(rawApiName, config.corrections);
+      const fileName = extractFileName(apiFile);
+      const apiName = extractAPINameFromSpec(spec);
 
       if (spec && spec.info) {
         apis.push({
-          name: apiName,
+          api_name: apiName,                    // Official name from server URL
+          file_name: fileName,                  // Filename for consistency check
           version: spec.info.version || 'unknown',
           title: spec.info.title || 'Untitled',
-          commonalities: spec.info['x-camara-commonalities'] || null,
-          raw_name: rawApiName  // Keep original for debugging
+          commonalities: spec.info['x-camara-commonalities'] || null
         });
       }
     } catch (error) {
@@ -139,7 +153,6 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
     repository: repoName,
     release_tag: releaseTag,
     release_date: releaseDate.trim(),
-    meta_release: getMetaRelease(repoName, releaseTag, config.mappings),
     github_url: `https://github.com/${GITHUB_ORG}/${repoName}/releases/tag/${releaseTag}`,
     apis: apis
   };
@@ -150,8 +163,6 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
  */
 async function analyzeGitHubRelease(repository, releaseTag) {
   console.log(`Analyzing GitHub release: ${repository} @ ${releaseTag}`);
-
-  const config = loadConfig();
 
   // Get release information
   const { data: release } = await octokit.repos.getReleaseByTag({
@@ -198,12 +209,13 @@ async function analyzeGitHubRelease(repository, releaseTag) {
       const content = Buffer.from(blob.content, 'base64').toString('utf8');
       const spec = yaml.load(content);
 
-      const rawApiName = extractAPIName(file.path);
-      const apiName = correctAPIName(rawApiName, config.corrections);
+      const fileName = extractFileName(file.path);
+      const apiName = extractAPINameFromSpec(spec);
 
       if (spec && spec.info) {
         apis.push({
-          name: apiName,
+          api_name: apiName,                    // Official name from server URL
+          file_name: fileName,                  // Filename for consistency check
           version: spec.info.version || 'unknown',
           title: spec.info.title || 'Untitled',
           commonalities: spec.info['x-camara-commonalities'] || null
@@ -218,7 +230,6 @@ async function analyzeGitHubRelease(repository, releaseTag) {
     repository: repository,
     release_tag: releaseTag,
     release_date: release.published_at,
-    meta_release: getMetaRelease(repository, releaseTag, config.mappings),
     github_url: release.html_url,
     apis: apis
   };
@@ -274,6 +285,6 @@ module.exports = {
   analyzeLocalRelease,
   analyzeGitHubRelease,
   getMetaRelease,
-  correctAPIName,
-  extractAPIName
+  extractAPINameFromSpec,
+  extractFileName
 };
