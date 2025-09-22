@@ -99,17 +99,23 @@ generate-viewers.js (create HTML viewers)
   - Categories, URLs, tooltips
   - Previous names for renamed APIs
 
-### Data Corrections
-
-- `config/data-corrections.yaml`: Format correction rules for master metadata
-
 ## Format Corrections Applied
 
-The following format corrections are automatically applied by `analyze-release.js`:
+The following format corrections are hardcoded and unconditionally applied by `analyze-release.js`:
 
 1. **Version format**: Remove 'v' prefix (v0.11.0 → 0.11.0)
+   - Applied to all version fields from OpenAPI spec
+   - Ensures consistent semantic versioning format
+
 2. **Commonalities type**: Ensure string type (0.4 → "0.4", strings unchanged)
+   - Converts numbers to strings
+   - Preserves existing strings exactly (including patch versions like "0.4.0")
+
 3. **API names**: Convert to lowercase for consistency
+   - Applied to api_name field extracted from server URLs
+   - Ensures consistent naming across all APIs
+
+These corrections are always applied and do not require any configuration files.
 
 ## Historical Facts Preserved
 

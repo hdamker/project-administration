@@ -36,15 +36,7 @@ function loadConfig() {
     fs.readFileSync(path.join(CONFIG_PATH, 'meta-release-mappings.yaml'), 'utf8')
   );
 
-  // Load data corrections config if available (for format corrections only)
-  let dataCorrections = null;
-  const dataCorrectionsPath = path.join(CONFIG_PATH, 'data-corrections.yaml');
-
-  if (fs.existsSync(dataCorrectionsPath)) {
-    dataCorrections = yaml.load(fs.readFileSync(dataCorrectionsPath, 'utf8'));
-  }
-
-  return { mappings, dataCorrections };
+  return { mappings };
 }
 
 /**
@@ -83,47 +75,31 @@ function extractAPINameFromSpec(spec) {
 
 /**
  * Apply format corrections to API data
- * Only fixes format issues, not content changes
+ * These corrections are hardcoded and always applied:
+ * 1. Remove 'v' prefix from version (v0.11.0 → 0.11.0)
+ * 2. Ensure commonalities is a string (0.4 → "0.4", strings unchanged)
+ * 3. Convert API names to lowercase for consistency
  */
-function applyFormatCorrections(api, dataCorrections) {
-  if (!dataCorrections || !dataCorrections.corrections) {
-    return api;
-  }
-
+function applyFormatCorrections(api) {
   const corrected = { ...api };
 
-  // Apply version corrections
-  if (dataCorrections.corrections.version) {
-    const versionCorrections = dataCorrections.corrections.version;
-
-    // Strip 'v' prefix if present
-    if (versionCorrections.strip_v_prefix?.enabled && corrected.version) {
-      corrected.version = corrected.version.replace(/^v/, '');
-    }
+  // 1. Strip 'v' prefix from version if present
+  if (corrected.version && typeof corrected.version === 'string') {
+    corrected.version = corrected.version.replace(/^v/, '');
   }
 
-  // Apply commonalities corrections
-  if (dataCorrections.corrections.commonalities) {
-    const commonalitiesCorrections = dataCorrections.corrections.commonalities;
-
-    // Convert commonalities to string if it's a number, leave strings unchanged
-    if (commonalitiesCorrections.ensure_string?.enabled && corrected.commonalities !== null && corrected.commonalities !== undefined) {
-      if (typeof corrected.commonalities === 'number') {
-        // Convert number to string
-        corrected.commonalities = String(corrected.commonalities);
-      }
-      // If it's already a string, leave it unchanged (including any patch version)
+  // 2. Ensure commonalities is a string (convert numbers, preserve existing strings)
+  if (corrected.commonalities !== null && corrected.commonalities !== undefined) {
+    if (typeof corrected.commonalities === 'number') {
+      // Convert number to string
+      corrected.commonalities = String(corrected.commonalities);
     }
+    // If it's already a string, leave it unchanged (including any patch version)
   }
 
-  // Apply API name format corrections (lowercase only, no content changes)
-  if (dataCorrections.corrections.api_names) {
-    const apiNameCorrections = dataCorrections.corrections.api_names;
-
-    // Enforce lowercase (format correction, not content change)
-    if (apiNameCorrections.enforce_lowercase?.enabled && corrected.api_name) {
-      corrected.api_name = corrected.api_name.toLowerCase();
-    }
+  // 3. Convert API name to lowercase for consistency
+  if (corrected.api_name && typeof corrected.api_name === 'string') {
+    corrected.api_name = corrected.api_name.toLowerCase();
   }
 
   return corrected;
@@ -152,7 +128,7 @@ function getMetaRelease(repository, releaseTag, mappings) {
 /**
  * Analyze release from local repository (for testing)
  */
-async function analyzeLocalRelease(repoPath, releaseTag, dataCorrections = null) {
+async function analyzeLocalRelease(repoPath, releaseTag) {
   console.error(`Analyzing local release: ${repoPath} @ ${releaseTag}`);
 
   const repoName = path.basename(repoPath);
@@ -191,7 +167,7 @@ async function analyzeLocalRelease(repoPath, releaseTag, dataCorrections = null)
         };
 
         // Apply format corrections only (not content changes)
-        const correctedApi = applyFormatCorrections(apiData, dataCorrections);
+        const correctedApi = applyFormatCorrections(apiData);
         apis.push(correctedApi);
       }
     } catch (error) {
@@ -220,7 +196,7 @@ async function analyzeLocalRelease(repoPath, releaseTag, dataCorrections = null)
 /**
  * Analyze release from GitHub API
  */
-async function analyzeGitHubRelease(repository, releaseTag, dataCorrections = null) {
+async function analyzeGitHubRelease(repository, releaseTag) {
   console.error(`Analyzing GitHub release: ${repository} @ ${releaseTag}`);
 
   // Get release information
@@ -281,7 +257,7 @@ async function analyzeGitHubRelease(repository, releaseTag, dataCorrections = nu
         };
 
         // Apply format corrections only (not content changes)
-        const correctedApi = applyFormatCorrections(apiData, dataCorrections);
+        const correctedApi = applyFormatCorrections(apiData);
         apis.push(correctedApi);
       }
     } catch (error) {
@@ -318,16 +294,13 @@ async function main() {
   const mode = args[0];
   let result;
 
-  // Load configuration for format corrections
-  const { dataCorrections } = loadConfig();
-
   try {
     if (mode === '--local') {
       const [, repoPath, releaseTag] = args;
-      result = await analyzeLocalRelease(repoPath, releaseTag, dataCorrections);
+      result = await analyzeLocalRelease(repoPath, releaseTag);
     } else if (mode === '--github') {
       const [, repoName, releaseTag] = args;
-      result = await analyzeGitHubRelease(repoName, releaseTag, dataCorrections);
+      result = await analyzeGitHubRelease(repoName, releaseTag);
     } else {
       console.error('Invalid mode. Use --local or --github');
       process.exit(1);
