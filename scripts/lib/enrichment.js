@@ -124,6 +124,63 @@ function enrichReleaseData(masterData, landscape) {
 }
 
 /**
+ * Compare semantic versions for CAMARA API versioning
+ * Handles formats: x.y.z, x.y.z-alpha, x.y.z-rc, x.y.z-alpha.n, x.y.z-rc.n
+ * @param {string} v1 - First version
+ * @param {string} v2 - Second version
+ * @returns {number} 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+ */
+function compareVersions(v1, v2) {
+  // Parse version: x.y.z[-prerelease[.n]]
+  const parseVersion = (v) => {
+    const [base, ...prerelease] = v.split('-');
+    const [major, minor, patch] = base.split('.').map(Number);
+    const pre = prerelease.join('-');  // Rejoin in case there are multiple hyphens
+
+    let preType = '';
+    let preNum = 0;
+
+    if (pre) {
+      if (pre.startsWith('alpha')) {
+        preType = 'alpha';
+        const num = pre.split('.')[1];
+        preNum = num ? parseInt(num) : 1;  // alpha = alpha.1
+      } else if (pre.startsWith('rc')) {
+        preType = 'rc';
+        const num = pre.split('.')[1];
+        preNum = num ? parseInt(num) : 1;  // rc = rc.1
+      }
+    }
+
+    return { major, minor, patch, preType, preNum };
+  };
+
+  const v1p = parseVersion(v1);
+  const v2p = parseVersion(v2);
+
+  // Compare major.minor.patch
+  if (v1p.major !== v2p.major) return v1p.major > v2p.major ? 1 : -1;
+  if (v1p.minor !== v2p.minor) return v1p.minor > v2p.minor ? 1 : -1;
+  if (v1p.patch !== v2p.patch) return v1p.patch > v2p.patch ? 1 : -1;
+
+  // Both are release versions (no pre-release)
+  if (!v1p.preType && !v2p.preType) return 0;
+
+  // Pre-release has lower precedence than release
+  if (v1p.preType && !v2p.preType) return -1;
+  if (!v1p.preType && v2p.preType) return 1;
+
+  // Both have pre-release, compare type (alpha < rc)
+  if (v1p.preType !== v2p.preType) {
+    if (v1p.preType === 'alpha') return -1;
+    if (v2p.preType === 'alpha') return 1;
+  }
+
+  // Same pre-release type, compare numbers
+  return v1p.preNum > v2p.preNum ? 1 : v1p.preNum < v2p.preNum ? -1 : 0;
+}
+
+/**
  * Generate statistics with canonical name grouping
  * @param {array} releases - Array of release objects with enriched APIs
  * @returns {object} Statistics object
@@ -139,6 +196,12 @@ function generateEnrichedStatistics(releases) {
       initial: 0,
       rc: 0
     },
+    unique_api_maturity: {
+      stable: 0,
+      initial: 0,
+      rc: 0
+    },
+    latest_versions: new Map(),  // Track latest version per canonical API
     categories: {},
     commonalities_versions: new Set(),
     apis_with_renames: 0
@@ -163,10 +226,17 @@ function generateEnrichedStatistics(releases) {
       if (api.version) {
         if (api.version.includes('-rc')) {
           stats.api_maturity.rc++;
-        } else if (api.version.match(/^[01]\./)) {
+        } else if (api.version.match(/^0\./)) {
           stats.api_maturity.initial++;
         } else {
           stats.api_maturity.stable++;
+        }
+
+        // Track latest version per canonical API
+        const canonicalName = api.canonical_name || api.api_name;
+        const currentLatest = stats.latest_versions.get(canonicalName);
+        if (!currentLatest || compareVersions(api.version, currentLatest) > 0) {
+          stats.latest_versions.set(canonicalName, api.version);
         }
       }
 
@@ -183,12 +253,24 @@ function generateEnrichedStatistics(releases) {
     }
   }
 
+  // Calculate unique API maturity based on latest versions
+  for (const [canonicalName, version] of stats.latest_versions) {
+    if (version.includes('-rc')) {
+      stats.unique_api_maturity.rc++;
+    } else if (version.match(/^0\./)) {
+      stats.unique_api_maturity.initial++;
+    } else {
+      stats.unique_api_maturity.stable++;
+    }
+  }
+
   return {
     repositories_count: stats.total_repositories.size,
-    apis_count: stats.total_apis,
-    unique_apis_count: stats.unique_apis.size,
-    canonical_apis_count: stats.canonical_apis.size,  // After grouping by canonical names
-    api_maturity: stats.api_maturity,
+    api_versions_count: stats.total_apis,  // Total API versions (apis × versions)
+    unique_api_names_count: stats.unique_apis.size,  // Count of different API names found
+    unique_apis_count: stats.canonical_apis.size,  // Count of unique APIs after canonical grouping
+    api_version_maturity: stats.api_maturity,  // Maturity count by version (not unique APIs)
+    unique_api_maturity: stats.unique_api_maturity,  // Maturity based on latest version per API
     categories: stats.categories,
     commonalities_versions: Array.from(stats.commonalities_versions).sort(),
     apis_with_previous_names: stats.apis_with_renames

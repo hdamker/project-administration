@@ -166,6 +166,12 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
           commonalities: spec.info['x-camara-commonalities'] || null
         };
 
+        // Exclude known invalid RC release
+        if (apiData.api_name === 'region-device-count' && apiData.version === '0.1.0-rc.1') {
+          console.log(`Excluding invalid RC release: ${apiData.api_name} ${apiData.version}`);
+          continue;
+        }
+
         // Apply format corrections only (not content changes)
         const correctedApi = applyFormatCorrections(apiData);
         apis.push(correctedApi);
@@ -254,6 +260,12 @@ async function analyzeGitHubRelease(repository, releaseTag) {
           title: spec.info.title || 'Untitled',
           commonalities: spec.info['x-camara-commonalities'] || null
         };
+
+        // Exclude known invalid RC release
+        if (apiData.api_name === 'region-device-count' && apiData.version === '0.1.0-rc.1') {
+          console.log(`Excluding invalid RC release: ${apiData.api_name} ${apiData.version}`);
+          continue;
+        }
 
         // Apply format corrections only (not content changes)
         const correctedApi = applyFormatCorrections(apiData);
