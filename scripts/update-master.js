@@ -181,11 +181,10 @@ async function main() {
     }
     const analysisResults = JSON.parse(fs.readFileSync(inputFile, 'utf8'));
 
-    // If full mode, clear existing releases for analyzed repositories
+    // If full mode, completely rebuild from scratch
     if (mode === 'full') {
-      const analyzedRepos = new Set(analysisResults.map(r => r.repository));
-      master.releases = master.releases.filter(r => !analyzedRepos.has(r.repository));
-      console.log(`Full mode: Cleared releases for ${analyzedRepos.size} repositories`);
+      console.log(`Full mode: Rebuilding master metadata from scratch`);
+      master.releases = [];  // Clear ALL existing releases
     }
 
     // Update master with new data
