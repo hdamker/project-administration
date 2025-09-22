@@ -386,7 +386,7 @@ categories:
   api_count: 13
 - name: Communication Quality
   description: APIs for managing network quality and performance
-  api_count: 16
+  api_count: 17
 - name: Communication Services
   description: APIs for voice, video, and messaging services
   api_count: 5
