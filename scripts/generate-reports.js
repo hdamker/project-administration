@@ -15,6 +15,7 @@ const yaml = require('js-yaml');
 // Import enrichment utilities
 const {
   loadLandscape,
+  findEnrichment,
   enrichReleaseData,
   generateEnrichedStatistics,
   createFlattenedAPIView,
@@ -120,7 +121,7 @@ async function main() {
     console.log('⚠️  No landscape data found - reports will not be enriched');
   }
 
-  // Apply runtime enrichment to master data
+  // Apply runtime enrichment to master data (without specific meta-release)
   const enrichedMaster = landscape ? enrichReleaseData(master, landscape) : master;
 
   // Group by meta-release
@@ -144,7 +145,20 @@ async function main() {
 
   for (const metaRelease of metaReleases) {
     if (grouped[metaRelease]) {
-      const report = generateEnrichedReport(metaRelease, grouped[metaRelease], landscape);
+      // Re-enrich with specific meta-release for isNew calculation
+      const metaReleaseData = landscape ?
+        grouped[metaRelease].map(release => ({
+          ...release,
+          apis: release.apis.map(api => {
+            const enrichment = findEnrichment(api.api_name, landscape);
+            return {
+              ...api,
+              isNew: enrichment && enrichment.first_release === metaRelease
+            };
+          })
+        })) : grouped[metaRelease];
+
+      const report = generateEnrichedReport(metaRelease, metaReleaseData, landscape);
       const filename = `${metaRelease.toLowerCase()}.json`;
       const filepath = path.join(REPORTS_PATH, filename);
       fs.writeFileSync(filepath, JSON.stringify(report, null, 2));

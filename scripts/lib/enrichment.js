@@ -70,27 +70,53 @@ function findEnrichment(apiName, landscape) {
  * Apply enrichment to a single API object
  * @param {object} api - The API object from master metadata
  * @param {object} landscape - The loaded landscape data
+ * @param {string} currentMetaRelease - Current meta-release being processed (for isNew)
  * @returns {object} Enriched API object
  */
-function enrichAPI(api, landscape) {
+function enrichAPI(api, landscape, currentMetaRelease = null) {
   const enrichment = findEnrichment(api.api_name, landscape);
+
+  // Determine API maturity based on version
+  let maturity = 'initial';  // default
+  if (api.version && typeof api.version === 'string') {
+    if (api.version.match(/^0\./)) {
+      maturity = 'initial';
+    } else {
+      maturity = 'stable';
+    }
+  }
 
   if (!enrichment) {
     // No enrichment found - return API as-is with defaults
     return {
       ...api,
+      maturity: maturity,
       portfolio_category: null,
       website_url: null,
       tooltip: null,
       display_name: api.title || api.api_name,
       published: true,  // Default to published if not specified
-      canonical_name: api.api_name
+      canonical_name: api.api_name,
+      first_release: 'Sandbox',  // Default for unknown APIs
+      // Add isNew for meta-release reports
+      ...(currentMetaRelease && ['Fall24', 'Spring25', 'Fall25'].includes(currentMetaRelease) ? {
+        isNew: false  // Default to false for unknown APIs
+      } : {})
     };
+  }
+
+  // Determine isNew based on first_release and current meta-release
+  let isNew = false;
+  if (currentMetaRelease && enrichment.first_release &&
+      ['Fall24', 'Spring25', 'Fall25'].includes(currentMetaRelease)) {
+    isNew = enrichment.first_release === currentMetaRelease;
   }
 
   // Apply enrichment
   return {
     ...api,
+    // Maturity based on version
+    maturity: maturity,
     // Enrichment fields
     portfolio_category: enrichment.category || null,
     website_url: enrichment.website_url || null,
@@ -98,8 +124,13 @@ function enrichAPI(api, landscape) {
     display_name: enrichment.display_name || api.title || api.api_name,
     published: enrichment.published !== false,  // Default to true
     canonical_name: enrichment.canonical_name || api.api_name,
+    first_release: enrichment.first_release || 'Sandbox',
     // Include previous names if this was matched via previous name
-    ...(enrichment.previous_names ? { previous_names: enrichment.previous_names } : {})
+    ...(enrichment.previous_names ? { previous_names: enrichment.previous_names } : {}),
+    // Add isNew for meta-release reports
+    ...(currentMetaRelease && ['Fall24', 'Spring25', 'Fall25'].includes(currentMetaRelease) ? {
+      isNew: isNew
+    } : {})
   };
 }
 
@@ -107,9 +138,10 @@ function enrichAPI(api, landscape) {
  * Apply enrichment to release data
  * @param {object} masterData - The master metadata with releases
  * @param {object} landscape - The loaded landscape data
+ * @param {string} currentMetaRelease - Current meta-release being processed (optional)
  * @returns {object} Enriched release data
  */
-function enrichReleaseData(masterData, landscape) {
+function enrichReleaseData(masterData, landscape, currentMetaRelease = null) {
   if (!masterData || !masterData.releases) {
     return masterData;
   }
@@ -118,7 +150,7 @@ function enrichReleaseData(masterData, landscape) {
     ...masterData,
     releases: masterData.releases.map(release => ({
       ...release,
-      apis: release.apis.map(api => enrichAPI(api, landscape))
+      apis: release.apis.map(api => enrichAPI(api, landscape, currentMetaRelease || release.meta_release))
     }))
   };
 }

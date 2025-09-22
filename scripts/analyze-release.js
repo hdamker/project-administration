@@ -77,7 +77,7 @@ function extractAPINameFromSpec(spec) {
  * Apply format corrections to API data
  * These corrections are hardcoded and always applied:
  * 1. Remove 'v' prefix from version (v0.11.0 → 0.11.0)
- * 2. Ensure commonalities is a string (0.4 → "0.4", strings unchanged)
+ * 2. Ensure commonalities is a string and correct format (0.4.0 → 0.4 for Fall24)
  * 3. Convert API names to lowercase for consistency
  */
 function applyFormatCorrections(api) {
@@ -94,7 +94,10 @@ function applyFormatCorrections(api) {
       // Convert number to string
       corrected.commonalities = String(corrected.commonalities);
     }
-    // If it's already a string, leave it unchanged (including any patch version)
+    // Specific correction: 0.4.0 → 0.4 (Fall24 rule change to use only major.minor)
+    if (corrected.commonalities === '0.4.0') {
+      corrected.commonalities = '0.4';
+    }
   }
 
   // 3. Convert API name to lowercase for consistency
