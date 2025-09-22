@@ -142,7 +142,7 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
 
   if (fs.existsSync(apiSpecPath)) {
     apiFiles = fs.readdirSync(apiSpecPath)
-      .filter(file => file.endsWith('.yaml') && !file.includes('subscription'))
+      .filter(file => file.endsWith('.yaml'))
       .map(file => path.join(apiSpecPath, file));
   }
 
@@ -224,7 +224,6 @@ async function analyzeGitHubRelease(repository, releaseTag) {
   const apiFiles = tree.tree.filter(item =>
     item.path.startsWith('code/API_definitions/') &&
     item.path.endsWith('.yaml') &&
-    !item.path.includes('subscription') &&
     item.type === 'blob'
   );
 
