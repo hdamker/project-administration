@@ -99,9 +99,9 @@ generate-viewers.js (create HTML viewers)
   - Categories, URLs, tooltips
   - Previous names for renamed APIs
 
-### Optional Configuration
+### Data Corrections
 
-- `../private-dev-docs/.../config/data-corrections.yaml`: Format correction rules (reference)
+- `config/data-corrections.yaml`: Format correction rules for master metadata
 
 ## Format Corrections Applied
 

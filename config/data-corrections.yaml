@@ -1,0 +1,41 @@
+# =========================================================================================
+# Data Corrections Configuration
+#
+# Defines format corrections to be applied during release analysis.
+# These fix format/structure errors, NOT content changes.
+# =========================================================================================
+
+metadata:
+  description: Format correction rules for master metadata
+  version: "1.0.0"
+  last_updated: "2025-09-22"
+
+# Format corrections to apply to extracted data
+corrections:
+
+  # Version format corrections
+  version:
+    strip_v_prefix:
+      enabled: true
+      description: Remove 'v' prefix from semantic versions
+      # Examples: v0.11.0 → 0.11.0, v2.1.0-rc.1 → 2.1.0-rc.1
+
+  # Commonalities version corrections
+  commonalities:
+    ensure_string:
+      enabled: true
+      description: Ensure commonalities is stored as string (convert numbers only)
+      # Examples: 0.4 → "0.4", 0.6 → "0.6"
+      # Strings left unchanged: "0.6.0" stays "0.6.0"
+
+  # API name format corrections
+  api_names:
+    enforce_lowercase:
+      enabled: true
+      description: Ensure API names are lowercase
+      # Format correction only, not content change
+
+# Note: Historical facts are preserved
+# - API name changes (e.g., "qod-provisioning") are NOT corrected
+# - Repository names are preserved as-is
+# - API titles are preserved as-is

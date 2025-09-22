@@ -1,0 +1,104 @@
+# API Landscape Schema
+# Schema for api-landscape.yaml containing enrichment data
+# Version: 1.0.0
+
+$schema: http://json-schema.org/draft-07/schema#
+title: CAMARA API Landscape
+description: Schema for API landscape enrichment data
+type: object
+required:
+  - metadata
+  - apis
+
+properties:
+  metadata:
+    type: object
+    required:
+      - version
+      - last_updated
+      - description
+    properties:
+      version:
+        type: string
+        pattern: "^\\d+\\.\\d+\\.\\d+$"
+        description: Version of the landscape data
+      last_updated:
+        type: string
+        pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+        description: Date of last update (YYYY-MM-DD)
+      description:
+        type: string
+        description: Description of the landscape data
+      allowed_categories:
+        type: array
+        description: List of allowed portfolio categories
+        items:
+          type: string
+
+  apis:
+    type: object
+    description: API enrichment data keyed by API name
+    additionalProperties:
+      type: object
+      required:
+        - category
+        - tooltip
+        - published
+      properties:
+        category:
+          type: string
+          description: Portfolio category
+          enum:
+            - "Authentication and Fraud Prevention"
+            - "Communication Quality"
+            - "Communication Services"
+            - "Computing Services"
+            - "Device Information"
+            - "Location Services"
+            - "Payments and Charging"
+            - "Service Management"
+
+        website_url:
+          type: ["string", "null"]
+          format: uri
+          description: Documentation website URL
+
+        tooltip:
+          type: string
+          description: Short description for UI tooltips
+
+        display_name:
+          type: string
+          description: Display name for UI (optional, falls back to title)
+
+        published:
+          type: boolean
+          description: Whether API is published for external viewing
+          default: true
+
+        previous_names:
+          type: array
+          description: |
+            Historical names of this API (optional).
+            Only present for APIs that have been renamed.
+          items:
+            type: string
+            pattern: "^[a-z][a-z0-9-]*$"
+
+  categories:
+    type: array
+    description: Category summary for reporting
+    items:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Category name
+        description:
+          type: string
+          description: Category description
+        api_count:
+          type: integer
+          description: Number of APIs in this category

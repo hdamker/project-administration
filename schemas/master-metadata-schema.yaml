@@ -1,0 +1,117 @@
+# Master Metadata Schema
+# Schema for releases-master.yaml containing GitHub facts with format corrections only
+# Version: 1.0.0
+
+$schema: http://json-schema.org/draft-07/schema#
+title: CAMARA Master Metadata
+description: Schema for master release metadata with format corrections applied
+type: object
+required:
+  - metadata
+  - releases
+
+properties:
+  metadata:
+    type: object
+    description: Metadata about the collection process
+    required:
+      - last_updated
+      - last_checked
+      - workflow_version
+      - schema_version
+    properties:
+      last_updated:
+        type: string
+        format: date-time
+        description: When data was last modified
+      last_checked:
+        type: string
+        format: date-time
+        description: When repositories were last scanned
+      workflow_version:
+        type: string
+        pattern: "^\\d+\\.\\d+\\.\\d+$"
+        description: Version of the workflow that generated this data
+      schema_version:
+        type: string
+        pattern: "^\\d+\\.\\d+\\.\\d+$"
+        description: Version of this schema
+
+  releases:
+    type: array
+    description: List of all releases across all repositories
+    items:
+      type: object
+      required:
+        - repository
+        - release_tag
+        - release_date
+        - meta_release
+        - github_url
+        - apis
+      properties:
+        repository:
+          type: string
+          pattern: "^[A-Za-z][A-Za-z0-9-]*$"
+          description: GitHub repository name
+
+        release_tag:
+          type: string
+          pattern: "^r\\d+\\.\\d+$"
+          description: Release tag in rX.Y format
+
+        release_date:
+          type: string
+          format: date-time
+          description: ISO 8601 release timestamp
+
+        meta_release:
+          type: string
+          description: Assigned meta-release cycle from configuration
+          examples: ["Fall24", "Spring25", "Fall25", "Sandbox", "None"]
+
+        github_url:
+          type: string
+          format: uri
+          pattern: "^https://github\\.com/camaraproject/.*"
+          description: Direct link to GitHub release
+
+        apis:
+          type: array
+          description: API specifications in this release
+          minItems: 1
+          items:
+            type: object
+            required:
+              - file_name
+              - version
+            properties:
+              api_name:
+                type: ["string", "null"]
+                pattern: "^[a-z][a-z0-9-]*$"
+                description: |
+                  API name extracted from server URL (historical fact).
+                  This is NOT corrected - preserved as found.
+
+              file_name:
+                type: string
+                pattern: "^[a-zA-Z][a-zA-Z0-9-_]*$"
+                description: Original YAML filename without extension
+
+              version:
+                type: string
+                pattern: "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9]+)?$"
+                description: |
+                  Semantic version with format corrections applied.
+                  'v' prefix is removed if present (v0.11.0 → 0.11.0)
+
+              title:
+                type: ["string", "null"]
+                description: Human-readable API title from OpenAPI spec
+
+              commonalities:
+                type: ["string", "null"]
+                pattern: "^\\d+\\.\\d+(?:\\.\\d+)?$"
+                description: |
+                  CAMARA Commonalities version as string.
+                  Numbers are converted to strings, existing strings preserved as-is.

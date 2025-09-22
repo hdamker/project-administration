@@ -38,8 +38,7 @@ function loadConfig() {
 
   // Load data corrections config if available (for format corrections only)
   let dataCorrections = null;
-  const dataCorrectionsPath = path.join(__dirname, '..', '..', '..', 'private-dev-docs',
-    'project-administration', 'workflow-v3-planning', 'config', 'data-corrections.yaml');
+  const dataCorrectionsPath = path.join(CONFIG_PATH, 'data-corrections.yaml');
 
   if (fs.existsSync(dataCorrectionsPath)) {
     dataCorrections = yaml.load(fs.readFileSync(dataCorrectionsPath, 'utf8'));
