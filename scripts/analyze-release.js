@@ -107,13 +107,13 @@ function applyFormatCorrections(api, dataCorrections) {
   if (dataCorrections.corrections.commonalities) {
     const commonalitiesCorrections = dataCorrections.corrections.commonalities;
 
-    // Convert string to number
-    if (commonalitiesCorrections.normalize_type?.enabled && corrected.commonalities) {
-      if (typeof corrected.commonalities === 'string') {
-        // Parse to float and handle x.y.z -> x.y
-        const parsed = parseFloat(corrected.commonalities);
-        corrected.commonalities = isNaN(parsed) ? null : parsed;
+    // Convert commonalities to string if it's a number, leave strings unchanged
+    if (commonalitiesCorrections.ensure_string?.enabled && corrected.commonalities !== null && corrected.commonalities !== undefined) {
+      if (typeof corrected.commonalities === 'number') {
+        // Convert number to string
+        corrected.commonalities = String(corrected.commonalities);
       }
+      // If it's already a string, leave it unchanged (including any patch version)
     }
   }
 

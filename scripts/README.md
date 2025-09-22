@@ -108,7 +108,7 @@ generate-viewers.js (create HTML viewers)
 The following format corrections are automatically applied by `analyze-release.js`:
 
 1. **Version format**: Remove 'v' prefix (v0.11.0 → 0.11.0)
-2. **Commonalities type**: Convert string to number ("0.4" → 0.4)
+2. **Commonalities type**: Ensure string type (0.4 → "0.4", strings unchanged)
 3. **API names**: Convert to lowercase for consistency
 
 ## Historical Facts Preserved
