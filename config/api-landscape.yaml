@@ -1,0 +1,430 @@
+# =========================================================================================
+# API Landscape Configuration
+#
+# Contains enrichment data for CAMARA APIs including categories, URLs, and tooltips.
+# Applied at runtime during report generation - NOT stored in master metadata.
+#
+# Version: 1.1.0
+# Last Updated: 2025-09-22
+# =========================================================================================
+
+metadata:
+  version: "1.1.0"
+  last_updated: "2025-09-22"
+  description: "CAMARA API landscape enrichment data"
+  allowed_categories:
+    - "Authentication and Fraud Prevention"
+    - "Communication Quality"
+    - "Communication Services"
+    - "Computing Services"
+    - "Device Information"
+    - "Location Services"
+    - "Payments and Charging"
+    - "Service Management"
+
+# API Enrichment Data
+# Each entry contains portfolio metadata not available from GitHub
+apis:
+  # Authentication and Fraud Prevention
+  sim-swap:
+    category: "Authentication and Fraud Prevention"
+    website_url: "https://camaraproject.org/sim-swap/"
+    tooltip: "Allows users to get information on SIM pairing changes"
+    published: true
+
+  sim-swap-subscriptions:
+    category: "Authentication and Fraud Prevention"
+    website_url: "https://camaraproject.org/sim-swap-subscriptions/"
+    tooltip: "Get notifications if a SIM changes"
+    published: true
+
+  device-swap:
+    category: "Authentication and Fraud Prevention"
+    website_url: "https://camaraproject.org/device-swap/"
+    tooltip: "Check if the MSISDN has had a change of device in the last 30 days"
+    published: true
+
+  number-verification:
+    category: "Authentication and Fraud Prevention"
+    website_url: "https://camaraproject.org/number-verification/"
+    tooltip: "Allows users to verify the phone number of the connected device"
+    published: true
+
+  one-time-password-sms:
+    category: "Authentication and Fraud Prevention"
+    website_url: "https://camaraproject.org/one-time-password-sms/"
+    tooltip: "To offer secure user authentication to service providers"
+    published: true
+
+  kyc-age-verification:
+    category: "Authentication and Fraud Prevention"
+    website_url: "https://camaraproject.org/know-your-customer-age-verification/"
+    tooltip: "Allows service providers to validate age information with operators"
+    published: true
+
+  kyc-fill-in:
+    category: "Authentication and Fraud Prevention"
+    website_url: "https://camaraproject.org/know-your-customer-fill-in/"
+    tooltip: "Fill in web dialogues using operator data"
+    published: true
+
+  kyc-match:
+    category: "Authentication and Fraud Prevention"
+    website_url: "https://camaraproject.org/know-your-customer-match/"
+    tooltip: "Allows service providers to validate user information with operators"
+    published: true
+
+  kyc-tenure:
+    category: "Authentication and Fraud Prevention"
+    website_url: "https://camaraproject.org/know-your-customer-tenure/"
+    tooltip: "Verifying the length of tenure for a mobile user who is bound to a mobile number with their current mobile operator"
+    published: true
+
+  number-recycling:
+    category: "Authentication and Fraud Prevention"
+    website_url: "https://camaraproject.org/number-recycling/"
+    tooltip: "Check whether the subscriber of the phone number has changed"
+    published: true
+
+  device-identifier:
+    category: "Authentication and Fraud Prevention"
+    website_url: "https://camaraproject.org/device-identifier/"
+    tooltip: "Check the identity of the subscribers' device"
+    published: true
+
+  customer-insights:
+    category: "Authentication and Fraud Prevention"
+    website_url: "https://camaraproject.org/customer-insights/"
+    tooltip: "Provides an index or scoring related to the user's credit profile"
+    published: true
+
+  call-forwarding-signal:
+    category: "Authentication and Fraud Prevention"
+    website_url: "https://camaraproject.org/call-forwarding-signal/"
+    tooltip: "Determine if a \"call forwarding\" service is enabled"
+    published: true
+
+  # Location Services
+  location-retrieval:
+    category: "Location Services"
+    website_url: "https://camaraproject.org/location-retrieval/"
+    tooltip: "Provide the location of a device"
+    published: true
+
+  location-verification:
+    category: "Location Services"
+    website_url: "https://camaraproject.org/location-verification/"
+    tooltip: "Check the location of a device"
+    published: true
+
+  geofencing-subscriptions:
+    category: "Location Services"
+    website_url: "https://camaraproject.org/geofencing-subscriptions/"
+    tooltip: "Get notifications if a device reaches an area"
+    published: true
+
+  most-frequent-location:
+    category: "Location Services"
+    website_url: "https://camaraproject.org/most-frequent-location/"
+    tooltip: "Provides validation, in terms of scoring, of the user's expected home area"
+    published: true
+
+  population-density-data:
+    category: "Location Services"
+    website_url: "https://camaraproject.org/population-density-data/"
+    tooltip: "Get dynamic population density data in a specific area for a future date & time"
+    published: true
+
+  region-device-count:
+    category: "Location Services"
+    website_url: "https://camaraproject.org/region-user-count/"
+    tooltip: "Query the number of active devices in the specified area"
+    published: true
+
+  # Communication Services
+  verified-caller:
+    category: "Communication Services"
+    website_url: "https://camaraproject.org/verified-caller/"
+    tooltip: "Show certified information on the phone before a call is answered"
+    published: true
+
+  brand-registration:
+    category: "Communication Services"
+    website_url: null
+    tooltip: "Register brand for verified communications"
+    published: true
+
+  webrtc-call-handling:
+    category: "Communication Services"
+    website_url: "https://camaraproject.org/webrtc-apis/"
+    tooltip: "Create, recover, update and terminate 1-1 voice and video sessions"
+    published: true
+
+  webrtc-events:
+    category: "Communication Services"
+    website_url: "https://camaraproject.org/webrtc-apis/"
+    tooltip: "Receive events about updates of an active session or new sessions requests (incoming calls)"
+    published: true
+
+  webrtc-registration:
+    category: "Communication Services"
+    website_url: "https://camaraproject.org/webrtc-apis/"
+    tooltip: "Manage registration and connectivity (RACM) towards MNO's IMS Network"
+    published: true
+
+  # Communication Quality
+  quality-on-demand:
+    category: "Communication Quality"
+    website_url: "https://camaraproject.org/quality-on-demand/"
+    tooltip: "Allows users to set mobile connection quality and get notifications"
+    published: true
+
+  qos-profiles:
+    category: "Communication Quality"
+    website_url: "https://camaraproject.org/qos-profiles/"
+    tooltip: "Provide the ability to set certain profile of QoS"
+    published: true
+
+  # This is the renamed API - adding previous_names ONLY for this case
+  qos-provisioning:
+    category: "Communication Quality"
+    website_url: "https://camaraproject.org/qod-provisioning/"
+    tooltip: "Creating, getting, updating, removing a QoD provision for a device"
+    previous_names: ["qod-provisioning"]  # Historical name that appears in older releases
+    published: true
+
+  qos-booking:
+    category: "Communication Quality"
+    website_url: "https://camaraproject.org/qos-booking/"
+    tooltip: "Request an assignment of a certain QoS Profile to a certain device"
+    published: true
+
+  qos-booking-and-assignment:
+    category: "Communication Quality"
+    website_url: "https://camaraproject.org/qos-booking-and-assignment/"
+    tooltip: "Request an assignment of a certain QoS Profile to a certain device"
+    published: true
+
+  connectivity-insights:
+    category: "Communication Quality"
+    website_url: "https://camaraproject.org/connectivity-insights/"
+    tooltip: "Get information if the QoS threshold has breached"
+    published: true
+
+  connectivity-insights-subscriptions:
+    category: "Communication Quality"
+    website_url: "https://camaraproject.org/connectivity-insights-subscriptions/"
+    tooltip: "Alerts the consumers if and when the QoS threshold has breached"
+    published: true
+
+  connected-network-type:
+    category: "Communication Quality"
+    website_url: "https://camaraproject.org/connected-network-type/"
+    tooltip: "Query the device's connected network type"
+    published: true
+
+  connected-network-type-subscriptions:
+    category: "Communication Quality"
+    website_url: "https://camaraproject.org/connected-network-type-subscriptions/"
+    tooltip: "Receive notifications when the connected network type changes"
+    published: true
+
+  traffic-influence:
+    category: "Communication Quality"
+    website_url: "https://camaraproject.org/traffic-influence/"
+    tooltip: "Modify the connection policies of devices in terms of how the traffic flows"
+    published: true
+
+  predictive-connectivity-data:
+    category: "Communication Quality"
+    website_url: "https://camaraproject.org/predictive-connectivity-data/"
+    tooltip: "Provides information about the connectivity along a volume/area for a future date, time and height"
+    published: true
+
+  application-profiles:
+    category: "Communication Quality"
+    website_url: "https://camaraproject.org/application-profiles/"
+    tooltip: "Share information about applications relevant for network related decision making"
+    published: true
+
+  network-slice-booking:
+    category: "Communication Quality"
+    website_url: "https://camaraproject.org/network-slice-booking/"
+    tooltip: "Reserve, dynamically provision, query, dynamically delete a slice"
+    published: true
+
+  dedicated-network:
+    category: "Communication Quality"
+    website_url: null
+    tooltip: "Manage dedicated private networks"
+    published: true
+
+  dedicated-network-accesses:
+    category: "Communication Quality"
+    website_url: null
+    tooltip: "Control access to dedicated networks"
+    published: true
+
+  dedicated-network-profiles:
+    category: "Communication Quality"
+    website_url: null
+    tooltip: "Configure dedicated network profiles"
+    published: true
+
+  # Device Information
+  device-reachability-status:
+    category: "Device Information"
+    website_url: "https://camaraproject.org/device-reachability-status/"
+    tooltip: "Check the network connection status of a device"
+    published: true
+
+  device-reachability-status-subscriptions:
+    category: "Device Information"
+    website_url: "https://camaraproject.org/device-reachability-status-subscriptions/"
+    tooltip: "Get notifications if the network connection status of a device changes"
+    published: true
+
+  device-roaming-status:
+    category: "Device Information"
+    website_url: "https://camaraproject.org/device-roaming-status/"
+    tooltip: "Check the roaming status of a device"
+    published: true
+
+  device-roaming-status-subscriptions:
+    category: "Device Information"
+    website_url: "https://camaraproject.org/device-roaming-status-subscriptions/"
+    tooltip: "Get notifications if the roaming status of a device changes"
+    published: true
+
+  device-data-volume:
+    category: "Device Information"
+    website_url: "https://camaraproject.org/device-data-volume/"
+    tooltip: "Provide insights into the customer's data usage status"
+    published: true
+
+  device-data-volume-subscriptions:
+    category: "Device Information"
+    website_url: "https://camaraproject.org/device-data-volume-subscriptions/"
+    tooltip: "Receive notifications regarding data volume usage thresholds"
+    published: true
+
+  subscription-status:
+    category: "Device Information"
+    website_url: null
+    tooltip: "Obtain the current subscription status of a certain phone number"
+    published: true
+
+  # Computing Services
+  simple-edge-discovery:
+    category: "Computing Services"
+    website_url: "https://camaraproject.org/simple-edge-discovery/"
+    tooltip: "Discover the closest edge cloud zone to a given device"
+    published: true
+
+  optimal-edge-discovery:
+    category: "Computing Services"
+    website_url: null
+    tooltip: "Find optimal edge computing locations"
+    published: true
+
+  application-endpoint-discovery:
+    category: "Computing Services"
+    website_url: "https://camaraproject.org/application-endpoint-discovery/"
+    tooltip: "Locating the nearest edge cloud zone but also directly linking to the application endpoints"
+    published: true
+
+  application-endpoint-registration:
+    category: "Computing Services"
+    website_url: null
+    tooltip: "Register application endpoints"
+    published: true
+
+  qa-assistant-manage:
+    category: "Computing Services"
+    website_url: null
+    tooltip: "Quickly construct unique Q&A assistant applications"
+    published: true
+
+  qa-assistant-service:
+    category: "Computing Services"
+    website_url: null
+    tooltip: "Provide Q&A services to the users of the application"
+    published: true
+
+  knowledge-base:
+    category: "Computing Services"
+    website_url: null
+    tooltip: "Build and manage personalized knowledge bases"
+    published: true
+
+  energy-footprint-notification:
+    category: "Computing Services"
+    website_url: "https://camaraproject.org/energy-footprint-notification/"
+    tooltip: "Provide information about the E2E energy consumption and carbon footprint for a specified service"
+    published: true
+
+  # Payments and Charging
+  carrier-billing:
+    category: "Payments and Charging"
+    website_url: "https://camaraproject.org/carrier-billing/"
+    tooltip: "Purchase, pay, and follow up on fulfilment of products"
+    published: true
+
+  carrier-billing-refund:
+    category: "Payments and Charging"
+    website_url: "https://camaraproject.org/carrier-billing-refund/"
+    tooltip: "Perform a refund over a given payment"
+    published: true
+
+  blockchain-public-address:
+    category: "Payments and Charging"
+    website_url: "https://camaraproject.org/blockchain-public-address/"
+    tooltip: "Manage a blockchain public address associated to a phone number"
+    published: true
+
+  blockchain-public-address-validation:
+    category: "Payments and Charging"
+    website_url: null
+    tooltip: "Validate blockchain addresses"
+    published: true
+
+  # Service Management
+  consent-info:
+    category: "Service Management"
+    website_url: null
+    tooltip: "Determine the need for consent and get current consent"
+    published: true
+
+# Category summary for reporting
+categories:
+  - name: "Authentication and Fraud Prevention"
+    description: "APIs for identity verification, fraud prevention, and security"
+    api_count: 13
+
+  - name: "Communication Quality"
+    description: "APIs for managing network quality and performance"
+    api_count: 16
+
+  - name: "Communication Services"
+    description: "APIs for voice, video, and messaging services"
+    api_count: 5
+
+  - name: "Computing Services"
+    description: "APIs for edge computing and AI services"
+    api_count: 8
+
+  - name: "Device Information"
+    description: "APIs for device status and connectivity information"
+    api_count: 7
+
+  - name: "Location Services"
+    description: "APIs for location-based services and geofencing"
+    api_count: 6
+
+  - name: "Payments and Charging"
+    description: "APIs for billing and payment services"
+    api_count: 4
+
+  - name: "Service Management"
+    description: "APIs for service configuration and management"
+    api_count: 1

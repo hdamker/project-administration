@@ -4,12 +4,22 @@
  * Generate Reports Script
  *
  * Generates JSON report files for each meta-release from the master metadata.
+ * Applies runtime enrichment from API landscape data.
  * Creates separate files for Fall24, Spring25, Fall25, Legacy, Sandbox, etc.
  */
 
 const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
+
+// Import enrichment utilities
+const {
+  loadLandscape,
+  enrichReleaseData,
+  generateEnrichedStatistics,
+  createFlattenedAPIView,
+  createRepositorySummary
+} = require('./lib/enrichment');
 
 // Paths
 const DATA_PATH = path.join(__dirname, '..', 'data');
@@ -45,58 +55,11 @@ function groupByMetaRelease(releases) {
 }
 
 /**
- * Generate statistics for a meta-release
+ * Generate report for a meta-release with runtime enrichment
  */
-function generateStatistics(releases) {
-  const stats = {
-    total_repositories: new Set(),
-    total_apis: 0,
-    api_types: {
-      stable: 0,      // version >= 1.0.0
-      initial: 0,     // version < 1.0.0
-      rc: 0           // version contains -rc
-    },
-    unique_apis: new Set(),
-    commonalities_versions: new Set()
-  };
-
-  for (const release of releases) {
-    stats.total_repositories.add(release.repository);
-
-    for (const api of release.apis) {
-      stats.total_apis++;
-      stats.unique_apis.add(api.api_name);
-
-      // Determine API maturity
-      if (api.version.includes('-rc')) {
-        stats.api_types.rc++;
-      } else if (api.version.match(/^[01]\./)) {
-        stats.api_types.initial++;
-      } else {
-        stats.api_types.stable++;
-      }
-
-      // Track commonalities versions
-      if (api.commonalities) {
-        stats.commonalities_versions.add(api.commonalities);
-      }
-    }
-  }
-
-  return {
-    repositories_count: stats.total_repositories.size,
-    apis_count: stats.total_apis,
-    unique_apis_count: stats.unique_apis.size,
-    api_maturity: stats.api_types,
-    commonalities_versions: Array.from(stats.commonalities_versions).sort()
-  };
-}
-
-/**
- * Generate report for a meta-release
- */
-function generateReport(metaRelease, releases) {
+function generateEnrichedReport(metaRelease, releases, landscape) {
   const timestamp = new Date().toISOString();
+  const landscapeVersion = landscape?.metadata?.version || 'unknown';
 
   // Sort releases by repository name and release tag
   releases.sort((a, b) => {
@@ -106,66 +69,38 @@ function generateReport(metaRelease, releases) {
     return a.release_tag.localeCompare(b.release_tag);
   });
 
-  // Generate repository list with API counts
-  const repositories = {};
-  for (const release of releases) {
-    if (!repositories[release.repository]) {
-      repositories[release.repository] = {
-        releases: [],
-        total_apis: 0
-      };
-    }
-    repositories[release.repository].releases.push({
-      tag: release.release_tag,
-      date: release.release_date,
-      apis_count: release.apis.length
-    });
-    repositories[release.repository].total_apis += release.apis.length;
-  }
+  // Generate statistics using enriched data
+  const statistics = generateEnrichedStatistics(releases);
 
-  // Flatten all APIs for listing
-  const allApis = [];
-  for (const release of releases) {
-    for (const api of release.apis) {
-      allApis.push({
-        api_name: api.api_name,
-        version: api.version,
-        repository: release.repository,
-        release_tag: release.release_tag,
-        title: api.title,
-        commonalities: api.commonalities
-      });
-    }
-  }
+  // Create repository summary
+  const repositories = createRepositorySummary(releases);
 
-  // Sort APIs by name (handle null values for legacy releases)
-  allApis.sort((a, b) => {
-    const nameA = a.api_name || '';
-    const nameB = b.api_name || '';
-    return nameA.localeCompare(nameB);
-  });
+  // Create flattened API view
+  const apis = createFlattenedAPIView(releases);
 
   const report = {
     metadata: {
       generated: timestamp,
       meta_release: metaRelease,
-      source: 'Meta-release Collector v3'
+      source: 'Meta-release Collector v3',
+      landscape_version: landscapeVersion
     },
-    statistics: generateStatistics(releases),
+    statistics: statistics,
     repositories: repositories,
     releases: releases,
-    apis: allApis
+    apis: apis
   };
 
   return report;
 }
 
+
 /**
  * Main execution
  */
 async function main() {
-  console.log('📊 Generating Meta-release Reports');
-  console.log('=' .repeat(50));
+  console.log('📊 Generating Meta-release Reports with Runtime Enrichment');
+  console.log('=' .repeat(60));
 
   // Ensure reports directory exists
   if (!fs.existsSync(REPORTS_PATH)) {
@@ -176,18 +111,30 @@ async function main() {
   const master = loadMaster();
   console.log(`\nLoaded ${master.releases.length} releases from master metadata`);
 
+  // Load API landscape for enrichment
+  console.log('\nLoading API landscape data...');
+  const landscape = loadLandscape();
+  if (landscape) {
+    console.log(`✓ Loaded landscape v${landscape.metadata.version} with ${Object.keys(landscape.apis).length} APIs`);
+  } else {
+    console.log('⚠️  No landscape data found - reports will not be enriched');
+  }
+
+  // Apply runtime enrichment to master data
+  const enrichedMaster = landscape ? enrichReleaseData(master, landscape) : master;
+
   // Group by meta-release
-  const grouped = groupByMetaRelease(master.releases);
+  const grouped = groupByMetaRelease(enrichedMaster.releases);
   console.log(`\nFound ${Object.keys(grouped).length} meta-releases:`);
   for (const [mr, releases] of Object.entries(grouped)) {
     console.log(`  - ${mr}: ${releases.length} releases`);
   }
 
   // Generate reports
-  console.log('\nGenerating reports...');
+  console.log('\nGenerating enriched reports...');
 
   // 1. Generate ALL releases report (everything)
-  const allReport = generateReport('All', master.releases);
+  const allReport = generateEnrichedReport('All', enrichedMaster.releases, landscape);
   const allFilepath = path.join(REPORTS_PATH, 'all-releases.json');
   fs.writeFileSync(allFilepath, JSON.stringify(allReport, null, 2));
   console.log(`  ✓ all-releases.json - ${allReport.statistics.repositories_count} repos, ${allReport.statistics.apis_count} APIs`);
@@ -197,7 +144,7 @@ async function main() {
 
   for (const metaRelease of metaReleases) {
     if (grouped[metaRelease]) {
-      const report = generateReport(metaRelease, grouped[metaRelease]);
+      const report = generateEnrichedReport(metaRelease, grouped[metaRelease], landscape);
       const filename = `${metaRelease.toLowerCase()}.json`;
       const filepath = path.join(REPORTS_PATH, filename);
       fs.writeFileSync(filepath, JSON.stringify(report, null, 2));
@@ -207,7 +154,27 @@ async function main() {
     }
   }
 
-  console.log('\n✅ Reports generated successfully');
+  // Show enrichment statistics
+  if (landscape) {
+    console.log('\nEnrichment Statistics:');
+    const enrichedCount = enrichedMaster.releases.reduce((count, release) =>
+      count + release.apis.filter(api => api.portfolio_category).length, 0
+    );
+    const totalApis = enrichedMaster.releases.reduce((count, release) =>
+      count + release.apis.length, 0
+    );
+    console.log(`  - APIs enriched: ${enrichedCount}/${totalApis}`);
+
+    // Count APIs with previous names
+    const apisWithPrevNames = enrichedMaster.releases.reduce((count, release) =>
+      count + release.apis.filter(api => api.previous_names && api.previous_names.length > 0).length, 0
+    );
+    if (apisWithPrevNames > 0) {
+      console.log(`  - APIs with previous names: ${apisWithPrevNames}`);
+    }
+  }
+
+  console.log('\n✅ Reports generated successfully with runtime enrichment');
 }
 
 // Run if executed directly
@@ -221,6 +188,5 @@ if (require.main === module) {
 module.exports = {
   loadMaster,
   groupByMetaRelease,
-  generateStatistics,
-  generateReport
+  generateEnrichedReport
 };

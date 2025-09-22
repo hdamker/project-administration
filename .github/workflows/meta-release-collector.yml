@@ -226,7 +226,7 @@ jobs:
             fi
           done
 
-          # Update master metadata with RAW data (no corrections)
+          # Update master metadata (format corrections already applied by analyze-release.js)
           node scripts/update-master.js --mode ${{ github.event.inputs.analysis_scope }} --input temp/combined-analysis.json
 
           echo "Master metadata updated with $(jq '. | length' temp/combined-analysis.json) releases"

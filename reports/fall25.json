@@ -1,21 +1,32 @@
 {
   "metadata": {
-    "generated": "2025-09-17T15:28:50.381Z",
+    "generated": "2025-09-22T07:48:09.754Z",
     "meta_release": "Fall25",
-    "source": "Meta-Release Collector v3"
+    "source": "Meta-release Collector v3",
+    "landscape_version": "1.1.0"
   },
   "statistics": {
     "repositories_count": 12,
     "apis_count": 15,
     "unique_apis_count": 15,
+    "canonical_apis_count": 15,
     "api_maturity": {
       "stable": 1,
       "initial": 14,
       "rc": 0
     },
+    "categories": {
+      "Computing Services": 2,
+      "Payments and Charging": 4,
+      "Authentication and Fraud Prevention": 3,
+      "Communication Quality": 1,
+      "Device Information": 3,
+      "Location Services": 2
+    },
     "commonalities_versions": [
       0.6
-    ]
+    ],
+    "apis_with_previous_names": 0
   },
   "repositories": {
     "ApplicationEndpointDiscovery": {
@@ -26,7 +37,8 @@
           "apis_count": 1
         }
       ],
-      "total_apis": 1
+      "total_apis": 1,
+      "unique_apis_count": 1
     },
     "ApplicationEndpointRegistration": {
       "releases": [
@@ -36,7 +48,8 @@
           "apis_count": 1
         }
       ],
-      "total_apis": 1
+      "total_apis": 1,
+      "unique_apis_count": 1
     },
     "BlockchainPublicAddress": {
       "releases": [
@@ -46,7 +59,8 @@
           "apis_count": 2
         }
       ],
-      "total_apis": 2
+      "total_apis": 2,
+      "unique_apis_count": 2
     },
     "CallForwardingSignal": {
       "releases": [
@@ -56,7 +70,8 @@
           "apis_count": 1
         }
       ],
-      "total_apis": 1
+      "total_apis": 1,
+      "unique_apis_count": 1
     },
     "CarrierBillingCheckOut": {
       "releases": [
@@ -66,7 +81,8 @@
           "apis_count": 2
         }
       ],
-      "total_apis": 2
+      "total_apis": 2,
+      "unique_apis_count": 2
     },
     "ConnectedNetworkType": {
       "releases": [
@@ -76,7 +92,8 @@
           "apis_count": 1
         }
       ],
-      "total_apis": 1
+      "total_apis": 1,
+      "unique_apis_count": 1
     },
     "CustomerInsights": {
       "releases": [
@@ -86,7 +103,8 @@
           "apis_count": 1
         }
       ],
-      "total_apis": 1
+      "total_apis": 1,
+      "unique_apis_count": 1
     },
     "DeviceDataVolume": {
       "releases": [
@@ -96,7 +114,8 @@
           "apis_count": 1
         }
       ],
-      "total_apis": 1
+      "total_apis": 1,
+      "unique_apis_count": 1
     },
     "DeviceIdentifier": {
       "releases": [
@@ -106,7 +125,8 @@
           "apis_count": 1
         }
       ],
-      "total_apis": 1
+      "total_apis": 1,
+      "unique_apis_count": 1
     },
     "DeviceLocation": {
       "releases": [
@@ -116,7 +136,8 @@
           "apis_count": 2
         }
       ],
-      "total_apis": 2
+      "total_apis": 2,
+      "unique_apis_count": 2
     },
     "DeviceReachabilityStatus": {
       "releases": [
@@ -126,7 +147,8 @@
           "apis_count": 1
         }
       ],
-      "total_apis": 1
+      "total_apis": 1,
+      "unique_apis_count": 1
     },
     "DeviceRoamingStatus": {
       "releases": [
@@ -136,7 +158,8 @@
           "apis_count": 1
         }
       ],
-      "total_apis": 1
+      "total_apis": 1,
+      "unique_apis_count": 1
     }
   },
   "releases": [
@@ -152,7 +175,13 @@
           "file_name": "application-endpoint-discovery",
           "version": "0.1.0",
           "title": "Application Endpoint Discovery",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Computing Services",
+          "website_url": "https://camaraproject.org/application-endpoint-discovery/",
+          "tooltip": "Locating the nearest edge cloud zone but also directly linking to the application endpoints",
+          "display_name": "Application Endpoint Discovery",
+          "published": true,
+          "canonical_name": "application-endpoint-discovery"
         }
       ]
     },
@@ -168,7 +197,13 @@
           "file_name": "application-endpoint-registration",
           "version": "0.1.0",
           "title": "Application Endpoints Registration",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Computing Services",
+          "website_url": null,
+          "tooltip": "Register application endpoints",
+          "display_name": "Application Endpoints Registration",
+          "published": true,
+          "canonical_name": "application-endpoint-registration"
         }
       ]
     },
@@ -184,14 +219,26 @@
           "file_name": "blockchain-public-address-validation",
           "version": "0.1.0",
           "title": "Blockchain Public Address Validation",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Payments and Charging",
+          "website_url": null,
+          "tooltip": "Validate blockchain addresses",
+          "display_name": "Blockchain Public Address Validation",
+          "published": true,
+          "canonical_name": "blockchain-public-address-validation"
         },
         {
           "api_name": "blockchain-public-address",
           "file_name": "blockchain-public-address",
           "version": "0.3.0",
           "title": "Blockchain Public Address",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Payments and Charging",
+          "website_url": "https://camaraproject.org/blockchain-public-address/",
+          "tooltip": "Manage a blockchain public address associated to a phone number",
+          "display_name": "Blockchain Public Address",
+          "published": true,
+          "canonical_name": "blockchain-public-address"
         }
       ]
     },
@@ -207,7 +254,13 @@
           "file_name": "call-forwarding-signal",
           "version": "0.4.0",
           "title": "Call Forwarding Signal",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Authentication and Fraud Prevention",
+          "website_url": "https://camaraproject.org/call-forwarding-signal/",
+          "tooltip": "Determine if a \"call forwarding\" service is enabled",
+          "display_name": "Call Forwarding Signal",
+          "published": true,
+          "canonical_name": "call-forwarding-signal"
         }
       ]
     },
@@ -223,14 +276,26 @@
           "file_name": "carrier-billing-refund",
           "version": "0.3.0",
           "title": "Carrier Billing Refund",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Payments and Charging",
+          "website_url": "https://camaraproject.org/carrier-billing-refund/",
+          "tooltip": "Perform a refund over a given payment",
+          "display_name": "Carrier Billing Refund",
+          "published": true,
+          "canonical_name": "carrier-billing-refund"
         },
         {
           "api_name": "carrier-billing",
           "file_name": "carrier-billing",
           "version": "0.5.0",
           "title": "Carrier Billing",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Payments and Charging",
+          "website_url": "https://camaraproject.org/carrier-billing/",
+          "tooltip": "Purchase, pay, and follow up on fulfilment of products",
+          "display_name": "Carrier Billing",
+          "published": true,
+          "canonical_name": "carrier-billing"
         }
       ]
     },
@@ -246,7 +311,13 @@
           "file_name": "connected-network-type",
           "version": "0.2.0",
           "title": "Connected Network Type",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Communication Quality",
+          "website_url": "https://camaraproject.org/connected-network-type/",
+          "tooltip": "Query the device's connected network type",
+          "display_name": "Connected Network Type",
+          "published": true,
+          "canonical_name": "connected-network-type"
         }
       ]
     },
@@ -262,7 +333,13 @@
           "file_name": "customer-insights",
           "version": "0.2.0",
           "title": "Customer Insights",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Authentication and Fraud Prevention",
+          "website_url": "https://camaraproject.org/customer-insights/",
+          "tooltip": "Provides an index or scoring related to the user's credit profile",
+          "display_name": "Customer Insights",
+          "published": true,
+          "canonical_name": "customer-insights"
         }
       ]
     },
@@ -278,7 +355,13 @@
           "file_name": "device-data-volume",
           "version": "0.1.0",
           "title": "Device Data Volume",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Device Information",
+          "website_url": "https://camaraproject.org/device-data-volume/",
+          "tooltip": "Provide insights into the customer's data usage status",
+          "display_name": "Device Data Volume",
+          "published": true,
+          "canonical_name": "device-data-volume"
         }
       ]
     },
@@ -294,7 +377,13 @@
           "file_name": "device-identifier",
           "version": "0.3.0",
           "title": "Device Identifier",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Authentication and Fraud Prevention",
+          "website_url": "https://camaraproject.org/device-identifier/",
+          "tooltip": "Check the identity of the subscribers' device",
+          "display_name": "Device Identifier",
+          "published": true,
+          "canonical_name": "device-identifier"
         }
       ]
     },
@@ -310,14 +399,26 @@
           "file_name": "location-retrieval",
           "version": "0.5.0",
           "title": "Device Location Retrieval",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Location Services",
+          "website_url": "https://camaraproject.org/location-retrieval/",
+          "tooltip": "Provide the location of a device",
+          "display_name": "Device Location Retrieval",
+          "published": true,
+          "canonical_name": "location-retrieval"
         },
         {
           "api_name": "location-verification",
           "file_name": "location-verification",
           "version": "3.0.0",
           "title": "Device Location Verification",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Location Services",
+          "website_url": "https://camaraproject.org/location-verification/",
+          "tooltip": "Check the location of a device",
+          "display_name": "Device Location Verification",
+          "published": true,
+          "canonical_name": "location-verification"
         }
       ]
     },
@@ -333,7 +434,13 @@
           "file_name": "device-reachability-status",
           "version": "1.1.0",
           "title": "Device Reachability Status",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Device Information",
+          "website_url": "https://camaraproject.org/device-reachability-status/",
+          "tooltip": "Check the network connection status of a device",
+          "display_name": "Device Reachability Status",
+          "published": true,
+          "canonical_name": "device-reachability-status"
         }
       ]
     },
@@ -349,7 +456,13 @@
           "file_name": "device-roaming-status",
           "version": "1.1.0",
           "title": "Device Roaming Status",
-          "commonalities": 0.6
+          "commonalities": 0.6,
+          "portfolio_category": "Device Information",
+          "website_url": "https://camaraproject.org/device-roaming-status/",
+          "tooltip": "Check the roaming status of a device",
+          "display_name": "Device Roaming Status",
+          "published": true,
+          "canonical_name": "device-roaming-status"
         }
       ]
     }
@@ -357,123 +470,273 @@
   "apis": [
     {
       "api_name": "application-endpoint-discovery",
+      "file_name": "application-endpoint-discovery",
       "version": "0.1.0",
+      "title": "Application Endpoint Discovery",
+      "commonalities": 0.6,
+      "portfolio_category": "Computing Services",
+      "website_url": "https://camaraproject.org/application-endpoint-discovery/",
+      "tooltip": "Locating the nearest edge cloud zone but also directly linking to the application endpoints",
+      "display_name": "Application Endpoint Discovery",
+      "published": true,
+      "canonical_name": "application-endpoint-discovery",
       "repository": "ApplicationEndpointDiscovery",
       "release_tag": "r1.2",
-      "title": "Application Endpoint Discovery",
-      "commonalities": 0.6
+      "release_date": "2025-09-16T19:23:11Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/ApplicationEndpointDiscovery/releases/tag/r1.2"
     },
     {
       "api_name": "application-endpoint-registration",
+      "file_name": "application-endpoint-registration",
       "version": "0.1.0",
+      "title": "Application Endpoints Registration",
+      "commonalities": 0.6,
+      "portfolio_category": "Computing Services",
+      "website_url": null,
+      "tooltip": "Register application endpoints",
+      "display_name": "Application Endpoints Registration",
+      "published": true,
+      "canonical_name": "application-endpoint-registration",
       "repository": "ApplicationEndpointRegistration",
       "release_tag": "r1.2",
-      "title": "Application Endpoints Registration",
-      "commonalities": 0.6
+      "release_date": "2025-09-17T09:17:03Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/ApplicationEndpointRegistration/releases/tag/r1.2"
     },
     {
       "api_name": "blockchain-public-address",
+      "file_name": "blockchain-public-address",
       "version": "0.3.0",
+      "title": "Blockchain Public Address",
+      "commonalities": 0.6,
+      "portfolio_category": "Payments and Charging",
+      "website_url": "https://camaraproject.org/blockchain-public-address/",
+      "tooltip": "Manage a blockchain public address associated to a phone number",
+      "display_name": "Blockchain Public Address",
+      "published": true,
+      "canonical_name": "blockchain-public-address",
       "repository": "BlockchainPublicAddress",
       "release_tag": "r2.2",
-      "title": "Blockchain Public Address",
-      "commonalities": 0.6
+      "release_date": "2025-09-11T10:58:35Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/BlockchainPublicAddress/releases/tag/r2.2"
     },
     {
       "api_name": "blockchain-public-address-validation",
+      "file_name": "blockchain-public-address-validation",
       "version": "0.1.0",
+      "title": "Blockchain Public Address Validation",
+      "commonalities": 0.6,
+      "portfolio_category": "Payments and Charging",
+      "website_url": null,
+      "tooltip": "Validate blockchain addresses",
+      "display_name": "Blockchain Public Address Validation",
+      "published": true,
+      "canonical_name": "blockchain-public-address-validation",
       "repository": "BlockchainPublicAddress",
       "release_tag": "r2.2",
-      "title": "Blockchain Public Address Validation",
-      "commonalities": 0.6
+      "release_date": "2025-09-11T10:58:35Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/BlockchainPublicAddress/releases/tag/r2.2"
     },
     {
       "api_name": "call-forwarding-signal",
+      "file_name": "call-forwarding-signal",
       "version": "0.4.0",
+      "title": "Call Forwarding Signal",
+      "commonalities": 0.6,
+      "portfolio_category": "Authentication and Fraud Prevention",
+      "website_url": "https://camaraproject.org/call-forwarding-signal/",
+      "tooltip": "Determine if a \"call forwarding\" service is enabled",
+      "display_name": "Call Forwarding Signal",
+      "published": true,
+      "canonical_name": "call-forwarding-signal",
       "repository": "CallForwardingSignal",
       "release_tag": "r3.3",
-      "title": "Call Forwarding Signal",
-      "commonalities": 0.6
+      "release_date": "2025-09-16T14:38:30Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/CallForwardingSignal/releases/tag/r3.3"
     },
     {
       "api_name": "carrier-billing",
+      "file_name": "carrier-billing",
       "version": "0.5.0",
+      "title": "Carrier Billing",
+      "commonalities": 0.6,
+      "portfolio_category": "Payments and Charging",
+      "website_url": "https://camaraproject.org/carrier-billing/",
+      "tooltip": "Purchase, pay, and follow up on fulfilment of products",
+      "display_name": "Carrier Billing",
+      "published": true,
+      "canonical_name": "carrier-billing",
       "repository": "CarrierBillingCheckOut",
       "release_tag": "r3.2",
-      "title": "Carrier Billing",
-      "commonalities": 0.6
+      "release_date": "2025-09-11T09:51:40Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r3.2"
     },
     {
       "api_name": "carrier-billing-refund",
+      "file_name": "carrier-billing-refund",
       "version": "0.3.0",
+      "title": "Carrier Billing Refund",
+      "commonalities": 0.6,
+      "portfolio_category": "Payments and Charging",
+      "website_url": "https://camaraproject.org/carrier-billing-refund/",
+      "tooltip": "Perform a refund over a given payment",
+      "display_name": "Carrier Billing Refund",
+      "published": true,
+      "canonical_name": "carrier-billing-refund",
       "repository": "CarrierBillingCheckOut",
       "release_tag": "r3.2",
-      "title": "Carrier Billing Refund",
-      "commonalities": 0.6
+      "release_date": "2025-09-11T09:51:40Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r3.2"
     },
     {
       "api_name": "connected-network-type",
+      "file_name": "connected-network-type",
       "version": "0.2.0",
+      "title": "Connected Network Type",
+      "commonalities": 0.6,
+      "portfolio_category": "Communication Quality",
+      "website_url": "https://camaraproject.org/connected-network-type/",
+      "tooltip": "Query the device's connected network type",
+      "display_name": "Connected Network Type",
+      "published": true,
+      "canonical_name": "connected-network-type",
       "repository": "ConnectedNetworkType",
       "release_tag": "r1.2",
-      "title": "Connected Network Type",
-      "commonalities": 0.6
+      "release_date": "2025-09-16T16:21:44Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/ConnectedNetworkType/releases/tag/r1.2"
     },
     {
       "api_name": "customer-insights",
+      "file_name": "customer-insights",
       "version": "0.2.0",
+      "title": "Customer Insights",
+      "commonalities": 0.6,
+      "portfolio_category": "Authentication and Fraud Prevention",
+      "website_url": "https://camaraproject.org/customer-insights/",
+      "tooltip": "Provides an index or scoring related to the user's credit profile",
+      "display_name": "Customer Insights",
+      "published": true,
+      "canonical_name": "customer-insights",
       "repository": "CustomerInsights",
       "release_tag": "r2.2",
-      "title": "Customer Insights",
-      "commonalities": 0.6
+      "release_date": "2025-09-11T10:31:53Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/CustomerInsights/releases/tag/r2.2"
     },
     {
       "api_name": "device-data-volume",
+      "file_name": "device-data-volume",
       "version": "0.1.0",
+      "title": "Device Data Volume",
+      "commonalities": 0.6,
+      "portfolio_category": "Device Information",
+      "website_url": "https://camaraproject.org/device-data-volume/",
+      "tooltip": "Provide insights into the customer's data usage status",
+      "display_name": "Device Data Volume",
+      "published": true,
+      "canonical_name": "device-data-volume",
       "repository": "DeviceDataVolume",
       "release_tag": "r1.3",
-      "title": "Device Data Volume",
-      "commonalities": 0.6
+      "release_date": "2025-09-12T09:19:47Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/DeviceDataVolume/releases/tag/r1.3"
     },
     {
       "api_name": "device-identifier",
+      "file_name": "device-identifier",
       "version": "0.3.0",
+      "title": "Device Identifier",
+      "commonalities": 0.6,
+      "portfolio_category": "Authentication and Fraud Prevention",
+      "website_url": "https://camaraproject.org/device-identifier/",
+      "tooltip": "Check the identity of the subscribers' device",
+      "display_name": "Device Identifier",
+      "published": true,
+      "canonical_name": "device-identifier",
       "repository": "DeviceIdentifier",
       "release_tag": "r2.2",
-      "title": "Device Identifier",
-      "commonalities": 0.6
-    },
-    {
-      "api_name": "device-reachability-status",
-      "version": "1.1.0",
-      "repository": "DeviceReachabilityStatus",
-      "release_tag": "r1.2",
-      "title": "Device Reachability Status",
-      "commonalities": 0.6
-    },
-    {
-      "api_name": "device-roaming-status",
-      "version": "1.1.0",
-      "repository": "DeviceRoamingStatus",
-      "release_tag": "r1.2",
-      "title": "Device Roaming Status",
-      "commonalities": 0.6
+      "release_date": "2025-09-16T16:22:11Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/DeviceIdentifier/releases/tag/r2.2"
     },
     {
       "api_name": "location-retrieval",
+      "file_name": "location-retrieval",
       "version": "0.5.0",
+      "title": "Device Location Retrieval",
+      "commonalities": 0.6,
+      "portfolio_category": "Location Services",
+      "website_url": "https://camaraproject.org/location-retrieval/",
+      "tooltip": "Provide the location of a device",
+      "display_name": "Device Location Retrieval",
+      "published": true,
+      "canonical_name": "location-retrieval",
       "repository": "DeviceLocation",
       "release_tag": "r3.2",
-      "title": "Device Location Retrieval",
-      "commonalities": 0.6
+      "release_date": "2025-09-16T11:41:00Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/r3.2"
     },
     {
       "api_name": "location-verification",
+      "file_name": "location-verification",
       "version": "3.0.0",
+      "title": "Device Location Verification",
+      "commonalities": 0.6,
+      "portfolio_category": "Location Services",
+      "website_url": "https://camaraproject.org/location-verification/",
+      "tooltip": "Check the location of a device",
+      "display_name": "Device Location Verification",
+      "published": true,
+      "canonical_name": "location-verification",
       "repository": "DeviceLocation",
       "release_tag": "r3.2",
-      "title": "Device Location Verification",
-      "commonalities": 0.6
+      "release_date": "2025-09-16T11:41:00Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/r3.2"
+    },
+    {
+      "api_name": "device-reachability-status",
+      "file_name": "device-reachability-status",
+      "version": "1.1.0",
+      "title": "Device Reachability Status",
+      "commonalities": 0.6,
+      "portfolio_category": "Device Information",
+      "website_url": "https://camaraproject.org/device-reachability-status/",
+      "tooltip": "Check the network connection status of a device",
+      "display_name": "Device Reachability Status",
+      "published": true,
+      "canonical_name": "device-reachability-status",
+      "repository": "DeviceReachabilityStatus",
+      "release_tag": "r1.2",
+      "release_date": "2025-09-16T12:14:22Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/DeviceReachabilityStatus/releases/tag/r1.2"
+    },
+    {
+      "api_name": "device-roaming-status",
+      "file_name": "device-roaming-status",
+      "version": "1.1.0",
+      "title": "Device Roaming Status",
+      "commonalities": 0.6,
+      "portfolio_category": "Device Information",
+      "website_url": "https://camaraproject.org/device-roaming-status/",
+      "tooltip": "Check the roaming status of a device",
+      "display_name": "Device Roaming Status",
+      "published": true,
+      "canonical_name": "device-roaming-status",
+      "repository": "DeviceRoamingStatus",
+      "release_tag": "r1.2",
+      "release_date": "2025-09-16T11:51:25Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/DeviceRoamingStatus/releases/tag/r1.2"
     }
   ]
 }

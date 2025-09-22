@@ -31,13 +31,21 @@ const octokit = new Octokit({
  * Load configuration files
  */
 function loadConfig() {
-  const corrections = yaml.load(
-    fs.readFileSync(path.join(CONFIG_PATH, 'api-corrections.yaml'), 'utf8')
-  );
+  // Load meta-release mappings
   const mappings = yaml.load(
     fs.readFileSync(path.join(CONFIG_PATH, 'meta-release-mappings.yaml'), 'utf8')
   );
-  return { corrections, mappings };
+
+  // Load data corrections config if available (for format corrections only)
+  let dataCorrections = null;
+  const dataCorrectionsPath = path.join(__dirname, '..', '..', '..', 'private-dev-docs',
+    'project-administration', 'workflow-v3-planning', 'config', 'data-corrections.yaml');
+
+  if (fs.existsSync(dataCorrectionsPath)) {
+    dataCorrections = yaml.load(fs.readFileSync(dataCorrectionsPath, 'utf8'));
+  }
+
+  return { mappings, dataCorrections };
 }
 
 /**
@@ -75,6 +83,54 @@ function extractAPINameFromSpec(spec) {
 }
 
 /**
+ * Apply format corrections to API data
+ * Only fixes format issues, not content changes
+ */
+function applyFormatCorrections(api, dataCorrections) {
+  if (!dataCorrections || !dataCorrections.corrections) {
+    return api;
+  }
+
+  const corrected = { ...api };
+
+  // Apply version corrections
+  if (dataCorrections.corrections.version) {
+    const versionCorrections = dataCorrections.corrections.version;
+
+    // Strip 'v' prefix if present
+    if (versionCorrections.strip_v_prefix?.enabled && corrected.version) {
+      corrected.version = corrected.version.replace(/^v/, '');
+    }
+  }
+
+  // Apply commonalities corrections
+  if (dataCorrections.corrections.commonalities) {
+    const commonalitiesCorrections = dataCorrections.corrections.commonalities;
+
+    // Convert string to number
+    if (commonalitiesCorrections.normalize_type?.enabled && corrected.commonalities) {
+      if (typeof corrected.commonalities === 'string') {
+        // Parse to float and handle x.y.z -> x.y
+        const parsed = parseFloat(corrected.commonalities);
+        corrected.commonalities = isNaN(parsed) ? null : parsed;
+      }
+    }
+  }
+
+  // Apply API name format corrections (lowercase only, no content changes)
+  if (dataCorrections.corrections.api_names) {
+    const apiNameCorrections = dataCorrections.corrections.api_names;
+
+    // Enforce lowercase (format correction, not content change)
+    if (apiNameCorrections.enforce_lowercase?.enabled && corrected.api_name) {
+      corrected.api_name = corrected.api_name.toLowerCase();
+    }
+  }
+
+  return corrected;
+}
+
+/**
  * Determine meta-release for a repository and release tag
  */
 function getMetaRelease(repository, releaseTag, mappings) {
@@ -97,7 +153,7 @@ function getMetaRelease(repository, releaseTag, mappings) {
 /**
  * Analyze release from local repository (for testing)
  */
-async function analyzeLocalRelease(repoPath, releaseTag) {
+async function analyzeLocalRelease(repoPath, releaseTag, dataCorrections = null) {
   console.error(`Analyzing local release: ${repoPath} @ ${releaseTag}`);
 
   const repoName = path.basename(repoPath);
@@ -115,7 +171,7 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
       .map(file => path.join(apiSpecPath, file));
   }
 
-  // Extract API information - just the facts, no corrections
+  // Extract API information
   const apis = [];
 
   for (const apiFile of apiFiles) {
@@ -127,13 +183,17 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
       const apiName = extractAPINameFromSpec(spec);
 
       if (spec && spec.info) {
-        apis.push({
+        const apiData = {
           api_name: apiName || fileName,        // Use filename as fallback for legacy releases
           file_name: fileName,                  // Filename for consistency check
           version: spec.info.version || 'unknown',
           title: spec.info.title || 'Untitled',
           commonalities: spec.info['x-camara-commonalities'] || null
-        });
+        };
+
+        // Apply format corrections only (not content changes)
+        const correctedApi = applyFormatCorrections(apiData, dataCorrections);
+        apis.push(correctedApi);
       }
     } catch (error) {
       console.error(`Error parsing ${apiFile}:`, error.message);
@@ -161,7 +221,7 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
 /**
  * Analyze release from GitHub API
  */
-async function analyzeGitHubRelease(repository, releaseTag) {
+async function analyzeGitHubRelease(repository, releaseTag, dataCorrections = null) {
   console.error(`Analyzing GitHub release: ${repository} @ ${releaseTag}`);
 
   // Get release information
@@ -213,13 +273,17 @@ async function analyzeGitHubRelease(repository, releaseTag) {
       const apiName = extractAPINameFromSpec(spec);
 
       if (spec && spec.info) {
-        apis.push({
+        const apiData = {
           api_name: apiName || fileName,        // Use filename as fallback for legacy releases
           file_name: fileName,                  // Filename for consistency check
           version: spec.info.version || 'unknown',
           title: spec.info.title || 'Untitled',
           commonalities: spec.info['x-camara-commonalities'] || null
-        });
+        };
+
+        // Apply format corrections only (not content changes)
+        const correctedApi = applyFormatCorrections(apiData, dataCorrections);
+        apis.push(correctedApi);
       }
     } catch (error) {
       console.error(`Error parsing ${file.path}:`, error.message);
@@ -255,13 +319,16 @@ async function main() {
   const mode = args[0];
   let result;
 
+  // Load configuration for format corrections
+  const { dataCorrections } = loadConfig();
+
   try {
     if (mode === '--local') {
       const [, repoPath, releaseTag] = args;
-      result = await analyzeLocalRelease(repoPath, releaseTag);
+      result = await analyzeLocalRelease(repoPath, releaseTag, dataCorrections);
     } else if (mode === '--github') {
       const [, repoName, releaseTag] = args;
-      result = await analyzeGitHubRelease(repoName, releaseTag);
+      result = await analyzeGitHubRelease(repoName, releaseTag, dataCorrections);
     } else {
       console.error('Invalid mode. Use --local or --github');
       process.exit(1);
@@ -286,5 +353,7 @@ module.exports = {
   analyzeGitHubRelease,
   getMetaRelease,
   extractAPINameFromSpec,
-  extractFileName
+  extractFileName,
+  applyFormatCorrections,
+  loadConfig
 };

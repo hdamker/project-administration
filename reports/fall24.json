@@ -1,21 +1,31 @@
 {
   "metadata": {
-    "generated": "2025-09-17T15:28:50.363Z",
+    "generated": "2025-09-22T07:48:09.747Z",
     "meta_release": "Fall24",
-    "source": "Meta-Release Collector v3"
+    "source": "Meta-release Collector v3",
+    "landscape_version": "1.1.0"
   },
   "statistics": {
     "repositories_count": 5,
     "apis_count": 13,
     "unique_apis_count": 9,
+    "canonical_apis_count": 9,
     "api_maturity": {
       "stable": 0,
       "initial": 13,
       "rc": 0
     },
+    "categories": {
+      "Authentication and Fraud Prevention": 1,
+      "Payments and Charging": 4,
+      "Communication Quality": 2,
+      "Location Services": 2,
+      "Device Information": 4
+    },
     "commonalities_versions": [
       "0.4.0"
-    ]
+    ],
+    "apis_with_previous_names": 0
   },
   "repositories": {
     "CallForwardingSignal": {
@@ -26,22 +36,24 @@
           "apis_count": 1
         }
       ],
-      "total_apis": 1
+      "total_apis": 1,
+      "unique_apis_count": 1
     },
     "CarrierBillingCheckOut": {
       "releases": [
         {
-          "tag": "r1.2",
-          "date": "2024-09-05T15:39:42Z",
-          "apis_count": 2
-        },
-        {
           "tag": "r1.3",
           "date": "2024-11-23T07:48:50Z",
           "apis_count": 2
+        },
+        {
+          "tag": "r1.2",
+          "date": "2024-09-05T15:39:42Z",
+          "apis_count": 2
         }
       ],
-      "total_apis": 4
+      "total_apis": 4,
+      "unique_apis_count": 2
     },
     "ConnectivityInsights": {
       "releases": [
@@ -51,7 +63,8 @@
           "apis_count": 2
         }
       ],
-      "total_apis": 2
+      "total_apis": 2,
+      "unique_apis_count": 2
     },
     "DeviceLocation": {
       "releases": [
@@ -61,22 +74,24 @@
           "apis_count": 2
         }
       ],
-      "total_apis": 2
+      "total_apis": 2,
+      "unique_apis_count": 2
     },
     "DeviceStatus": {
       "releases": [
         {
-          "tag": "r1.2",
-          "date": "2024-09-10T07:58:36Z",
-          "apis_count": 2
-        },
-        {
           "tag": "r1.3",
           "date": "2024-11-05T21:11:50Z",
           "apis_count": 2
+        },
+        {
+          "tag": "r1.2",
+          "date": "2024-09-10T07:58:36Z",
+          "apis_count": 2
         }
       ],
-      "total_apis": 4
+      "total_apis": 4,
+      "unique_apis_count": 2
     }
   },
   "releases": [
@@ -92,7 +107,13 @@
           "file_name": "call-forwarding-signal",
           "version": "0.2.0",
           "title": "Call Forwarding Signal",
-          "commonalities": "0.4.0"
+          "commonalities": "0.4.0",
+          "portfolio_category": "Authentication and Fraud Prevention",
+          "website_url": "https://camaraproject.org/call-forwarding-signal/",
+          "tooltip": "Determine if a \"call forwarding\" service is enabled",
+          "display_name": "Call Forwarding Signal",
+          "published": true,
+          "canonical_name": "call-forwarding-signal"
         }
       ]
     },
@@ -108,14 +129,26 @@
           "file_name": "carrier-billing-refund",
           "version": "0.1.0",
           "title": "Carrier Billing Refunds",
-          "commonalities": null
+          "commonalities": null,
+          "portfolio_category": "Payments and Charging",
+          "website_url": "https://camaraproject.org/carrier-billing-refund/",
+          "tooltip": "Perform a refund over a given payment",
+          "display_name": "Carrier Billing Refunds",
+          "published": true,
+          "canonical_name": "carrier-billing-refund"
         },
         {
           "api_name": "carrier-billing",
           "file_name": "carrier-billing",
           "version": "0.3.0",
           "title": "Carrier Billing",
-          "commonalities": null
+          "commonalities": null,
+          "portfolio_category": "Payments and Charging",
+          "website_url": "https://camaraproject.org/carrier-billing/",
+          "tooltip": "Purchase, pay, and follow up on fulfilment of products",
+          "display_name": "Carrier Billing",
+          "published": true,
+          "canonical_name": "carrier-billing"
         }
       ]
     },
@@ -131,14 +164,26 @@
           "file_name": "carrier-billing-refund",
           "version": "0.1.1",
           "title": "Carrier Billing Refunds",
-          "commonalities": null
+          "commonalities": null,
+          "portfolio_category": "Payments and Charging",
+          "website_url": "https://camaraproject.org/carrier-billing-refund/",
+          "tooltip": "Perform a refund over a given payment",
+          "display_name": "Carrier Billing Refunds",
+          "published": true,
+          "canonical_name": "carrier-billing-refund"
         },
         {
           "api_name": "carrier-billing",
           "file_name": "carrier-billing",
           "version": "0.3.1",
           "title": "Carrier Billing",
-          "commonalities": null
+          "commonalities": null,
+          "portfolio_category": "Payments and Charging",
+          "website_url": "https://camaraproject.org/carrier-billing/",
+          "tooltip": "Purchase, pay, and follow up on fulfilment of products",
+          "display_name": "Carrier Billing",
+          "published": true,
+          "canonical_name": "carrier-billing"
         }
       ]
     },
@@ -154,14 +199,26 @@
           "file_name": "application-profiles",
           "version": "0.3.0",
           "title": "Connectivity Insights - Application Profiles",
-          "commonalities": "0.4.0"
+          "commonalities": "0.4.0",
+          "portfolio_category": "Communication Quality",
+          "website_url": "https://camaraproject.org/application-profiles/",
+          "tooltip": "Share information about applications relevant for network related decision making",
+          "display_name": "Connectivity Insights - Application Profiles",
+          "published": true,
+          "canonical_name": "application-profiles"
         },
         {
           "api_name": "connectivity-insights",
           "file_name": "connectivity-insights",
           "version": "0.4.0",
           "title": "Connectivity Insights",
-          "commonalities": "0.4.0"
+          "commonalities": "0.4.0",
+          "portfolio_category": "Communication Quality",
+          "website_url": "https://camaraproject.org/connectivity-insights/",
+          "tooltip": "Get information if the QoS threshold has breached",
+          "display_name": "Connectivity Insights",
+          "published": true,
+          "canonical_name": "connectivity-insights"
         }
       ]
     },
@@ -177,14 +234,26 @@
           "file_name": "location-retrieval",
           "version": "0.3.0",
           "title": "Device Location Retrieval",
-          "commonalities": "0.4.0"
+          "commonalities": "0.4.0",
+          "portfolio_category": "Location Services",
+          "website_url": "https://camaraproject.org/location-retrieval/",
+          "tooltip": "Provide the location of a device",
+          "display_name": "Device Location Retrieval",
+          "published": true,
+          "canonical_name": "location-retrieval"
         },
         {
           "api_name": "location-verification",
           "file_name": "location-verification",
           "version": "1.0.0",
           "title": "Device Location Verification",
-          "commonalities": "0.4.0"
+          "commonalities": "0.4.0",
+          "portfolio_category": "Location Services",
+          "website_url": "https://camaraproject.org/location-verification/",
+          "tooltip": "Check the location of a device",
+          "display_name": "Device Location Verification",
+          "published": true,
+          "canonical_name": "location-verification"
         }
       ]
     },
@@ -200,14 +269,26 @@
           "file_name": "device-reachability-status",
           "version": "0.6.0",
           "title": "Device Reachability Status",
-          "commonalities": "0.4.0"
+          "commonalities": "0.4.0",
+          "portfolio_category": "Device Information",
+          "website_url": "https://camaraproject.org/device-reachability-status/",
+          "tooltip": "Check the network connection status of a device",
+          "display_name": "Device Reachability Status",
+          "published": true,
+          "canonical_name": "device-reachability-status"
         },
         {
           "api_name": "device-roaming-status",
           "file_name": "device-roaming-status",
           "version": "0.6.0",
           "title": "Device Roaming Status",
-          "commonalities": "0.4.0"
+          "commonalities": "0.4.0",
+          "portfolio_category": "Device Information",
+          "website_url": "https://camaraproject.org/device-roaming-status/",
+          "tooltip": "Check the roaming status of a device",
+          "display_name": "Device Roaming Status",
+          "published": true,
+          "canonical_name": "device-roaming-status"
         }
       ]
     },
@@ -223,122 +304,264 @@
           "file_name": "device-reachability-status",
           "version": "0.6.1",
           "title": "Device Reachability Status",
-          "commonalities": "0.4.0"
+          "commonalities": "0.4.0",
+          "portfolio_category": "Device Information",
+          "website_url": "https://camaraproject.org/device-reachability-status/",
+          "tooltip": "Check the network connection status of a device",
+          "display_name": "Device Reachability Status",
+          "published": true,
+          "canonical_name": "device-reachability-status"
         },
         {
           "api_name": "device-roaming-status",
           "file_name": "device-roaming-status",
           "version": "0.6.1",
           "title": "Device Roaming Status",
-          "commonalities": "0.4.0"
+          "commonalities": "0.4.0",
+          "portfolio_category": "Device Information",
+          "website_url": "https://camaraproject.org/device-roaming-status/",
+          "tooltip": "Check the roaming status of a device",
+          "display_name": "Device Roaming Status",
+          "published": true,
+          "canonical_name": "device-roaming-status"
         }
       ]
     }
   ],
   "apis": [
     {
-      "api_name": "application-profiles",
-      "version": "0.3.0",
-      "repository": "ConnectivityInsights",
-      "release_tag": "r1.2",
-      "title": "Connectivity Insights - Application Profiles",
-      "commonalities": "0.4.0"
-    },
-    {
       "api_name": "call-forwarding-signal",
+      "file_name": "call-forwarding-signal",
       "version": "0.2.0",
+      "title": "Call Forwarding Signal",
+      "commonalities": "0.4.0",
+      "portfolio_category": "Authentication and Fraud Prevention",
+      "website_url": "https://camaraproject.org/call-forwarding-signal/",
+      "tooltip": "Determine if a \"call forwarding\" service is enabled",
+      "display_name": "Call Forwarding Signal",
+      "published": true,
+      "canonical_name": "call-forwarding-signal",
       "repository": "CallForwardingSignal",
       "release_tag": "r1.3",
-      "title": "Call Forwarding Signal",
-      "commonalities": "0.4.0"
+      "release_date": "2024-09-05T11:05:48Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/CallForwardingSignal/releases/tag/r1.3"
     },
     {
       "api_name": "carrier-billing",
+      "file_name": "carrier-billing",
       "version": "0.3.0",
+      "title": "Carrier Billing",
+      "commonalities": null,
+      "portfolio_category": "Payments and Charging",
+      "website_url": "https://camaraproject.org/carrier-billing/",
+      "tooltip": "Purchase, pay, and follow up on fulfilment of products",
+      "display_name": "Carrier Billing",
+      "published": true,
+      "canonical_name": "carrier-billing",
       "repository": "CarrierBillingCheckOut",
       "release_tag": "r1.2",
-      "title": "Carrier Billing",
-      "commonalities": null
+      "release_date": "2024-09-05T15:39:42Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.2"
     },
     {
       "api_name": "carrier-billing",
+      "file_name": "carrier-billing",
       "version": "0.3.1",
+      "title": "Carrier Billing",
+      "commonalities": null,
+      "portfolio_category": "Payments and Charging",
+      "website_url": "https://camaraproject.org/carrier-billing/",
+      "tooltip": "Purchase, pay, and follow up on fulfilment of products",
+      "display_name": "Carrier Billing",
+      "published": true,
+      "canonical_name": "carrier-billing",
       "repository": "CarrierBillingCheckOut",
       "release_tag": "r1.3",
-      "title": "Carrier Billing",
-      "commonalities": null
+      "release_date": "2024-11-23T07:48:50Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.3"
     },
     {
       "api_name": "carrier-billing-refund",
+      "file_name": "carrier-billing-refund",
       "version": "0.1.0",
+      "title": "Carrier Billing Refunds",
+      "commonalities": null,
+      "portfolio_category": "Payments and Charging",
+      "website_url": "https://camaraproject.org/carrier-billing-refund/",
+      "tooltip": "Perform a refund over a given payment",
+      "display_name": "Carrier Billing Refunds",
+      "published": true,
+      "canonical_name": "carrier-billing-refund",
       "repository": "CarrierBillingCheckOut",
       "release_tag": "r1.2",
-      "title": "Carrier Billing Refunds",
-      "commonalities": null
+      "release_date": "2024-09-05T15:39:42Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.2"
     },
     {
       "api_name": "carrier-billing-refund",
+      "file_name": "carrier-billing-refund",
       "version": "0.1.1",
+      "title": "Carrier Billing Refunds",
+      "commonalities": null,
+      "portfolio_category": "Payments and Charging",
+      "website_url": "https://camaraproject.org/carrier-billing-refund/",
+      "tooltip": "Perform a refund over a given payment",
+      "display_name": "Carrier Billing Refunds",
+      "published": true,
+      "canonical_name": "carrier-billing-refund",
       "repository": "CarrierBillingCheckOut",
       "release_tag": "r1.3",
-      "title": "Carrier Billing Refunds",
-      "commonalities": null
+      "release_date": "2024-11-23T07:48:50Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.3"
+    },
+    {
+      "api_name": "application-profiles",
+      "file_name": "application-profiles",
+      "version": "0.3.0",
+      "title": "Connectivity Insights - Application Profiles",
+      "commonalities": "0.4.0",
+      "portfolio_category": "Communication Quality",
+      "website_url": "https://camaraproject.org/application-profiles/",
+      "tooltip": "Share information about applications relevant for network related decision making",
+      "display_name": "Connectivity Insights - Application Profiles",
+      "published": true,
+      "canonical_name": "application-profiles",
+      "repository": "ConnectivityInsights",
+      "release_tag": "r1.2",
+      "release_date": "2024-09-11T03:30:01Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/ConnectivityInsights/releases/tag/r1.2"
     },
     {
       "api_name": "connectivity-insights",
+      "file_name": "connectivity-insights",
       "version": "0.4.0",
+      "title": "Connectivity Insights",
+      "commonalities": "0.4.0",
+      "portfolio_category": "Communication Quality",
+      "website_url": "https://camaraproject.org/connectivity-insights/",
+      "tooltip": "Get information if the QoS threshold has breached",
+      "display_name": "Connectivity Insights",
+      "published": true,
+      "canonical_name": "connectivity-insights",
       "repository": "ConnectivityInsights",
       "release_tag": "r1.2",
-      "title": "Connectivity Insights",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "device-reachability-status",
-      "version": "0.6.0",
-      "repository": "DeviceStatus",
-      "release_tag": "r1.2",
-      "title": "Device Reachability Status",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "device-reachability-status",
-      "version": "0.6.1",
-      "repository": "DeviceStatus",
-      "release_tag": "r1.3",
-      "title": "Device Reachability Status",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "device-roaming-status",
-      "version": "0.6.0",
-      "repository": "DeviceStatus",
-      "release_tag": "r1.2",
-      "title": "Device Roaming Status",
-      "commonalities": "0.4.0"
-    },
-    {
-      "api_name": "device-roaming-status",
-      "version": "0.6.1",
-      "repository": "DeviceStatus",
-      "release_tag": "r1.3",
-      "title": "Device Roaming Status",
-      "commonalities": "0.4.0"
+      "release_date": "2024-09-11T03:30:01Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/ConnectivityInsights/releases/tag/r1.2"
     },
     {
       "api_name": "location-retrieval",
+      "file_name": "location-retrieval",
       "version": "0.3.0",
+      "title": "Device Location Retrieval",
+      "commonalities": "0.4.0",
+      "portfolio_category": "Location Services",
+      "website_url": "https://camaraproject.org/location-retrieval/",
+      "tooltip": "Provide the location of a device",
+      "display_name": "Device Location Retrieval",
+      "published": true,
+      "canonical_name": "location-retrieval",
       "repository": "DeviceLocation",
       "release_tag": "r1.2",
-      "title": "Device Location Retrieval",
-      "commonalities": "0.4.0"
+      "release_date": "2024-09-10T15:00:47Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/r1.2"
     },
     {
       "api_name": "location-verification",
+      "file_name": "location-verification",
       "version": "1.0.0",
+      "title": "Device Location Verification",
+      "commonalities": "0.4.0",
+      "portfolio_category": "Location Services",
+      "website_url": "https://camaraproject.org/location-verification/",
+      "tooltip": "Check the location of a device",
+      "display_name": "Device Location Verification",
+      "published": true,
+      "canonical_name": "location-verification",
       "repository": "DeviceLocation",
       "release_tag": "r1.2",
-      "title": "Device Location Verification",
-      "commonalities": "0.4.0"
+      "release_date": "2024-09-10T15:00:47Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/r1.2"
+    },
+    {
+      "api_name": "device-reachability-status",
+      "file_name": "device-reachability-status",
+      "version": "0.6.0",
+      "title": "Device Reachability Status",
+      "commonalities": "0.4.0",
+      "portfolio_category": "Device Information",
+      "website_url": "https://camaraproject.org/device-reachability-status/",
+      "tooltip": "Check the network connection status of a device",
+      "display_name": "Device Reachability Status",
+      "published": true,
+      "canonical_name": "device-reachability-status",
+      "repository": "DeviceStatus",
+      "release_tag": "r1.2",
+      "release_date": "2024-09-10T07:58:36Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.2"
+    },
+    {
+      "api_name": "device-reachability-status",
+      "file_name": "device-reachability-status",
+      "version": "0.6.1",
+      "title": "Device Reachability Status",
+      "commonalities": "0.4.0",
+      "portfolio_category": "Device Information",
+      "website_url": "https://camaraproject.org/device-reachability-status/",
+      "tooltip": "Check the network connection status of a device",
+      "display_name": "Device Reachability Status",
+      "published": true,
+      "canonical_name": "device-reachability-status",
+      "repository": "DeviceStatus",
+      "release_tag": "r1.3",
+      "release_date": "2024-11-05T21:11:50Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.3"
+    },
+    {
+      "api_name": "device-roaming-status",
+      "file_name": "device-roaming-status",
+      "version": "0.6.0",
+      "title": "Device Roaming Status",
+      "commonalities": "0.4.0",
+      "portfolio_category": "Device Information",
+      "website_url": "https://camaraproject.org/device-roaming-status/",
+      "tooltip": "Check the roaming status of a device",
+      "display_name": "Device Roaming Status",
+      "published": true,
+      "canonical_name": "device-roaming-status",
+      "repository": "DeviceStatus",
+      "release_tag": "r1.2",
+      "release_date": "2024-09-10T07:58:36Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.2"
+    },
+    {
+      "api_name": "device-roaming-status",
+      "file_name": "device-roaming-status",
+      "version": "0.6.1",
+      "title": "Device Roaming Status",
+      "commonalities": "0.4.0",
+      "portfolio_category": "Device Information",
+      "website_url": "https://camaraproject.org/device-roaming-status/",
+      "tooltip": "Check the roaming status of a device",
+      "display_name": "Device Roaming Status",
+      "published": true,
+      "canonical_name": "device-roaming-status",
+      "repository": "DeviceStatus",
+      "release_tag": "r1.3",
+      "release_date": "2024-11-05T21:11:50Z",
+      "meta_release": "Fall24",
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.3"
     }
   ]
 }

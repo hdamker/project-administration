@@ -4,8 +4,8 @@
  * Update Master Metadata Script
  *
  * Combines analyzed release data from multiple repositories and updates
- * the master metadata file. This script processes RAW data without
- * applying corrections - that happens in a later phase.
+ * the master metadata file. Format corrections have already been applied
+ * by analyze-release.js (v-prefix removal, commonalities as numbers, etc).
  *
  * Usage:
  *   node update-master.js --mode incremental --input analysis-results.json
@@ -81,7 +81,7 @@ function findExistingRelease(releases, repository, releaseTag) {
 
 /**
  * Update master metadata with new analysis results
- * NO CORRECTIONS APPLIED - just raw data
+ * Format corrections have already been applied by analyze-release.js
  */
 function updateMaster(master, analysisResults, mode, mappings) {
   const timestamp = new Date().toISOString();
@@ -94,7 +94,7 @@ function updateMaster(master, analysisResults, mode, mappings) {
   for (const result of analysisResults) {
     const metaRelease = getMetaRelease(result.repository, result.release_tag, mappings);
 
-    // Build release entry with RAW data
+    // Build release entry (with format corrections already applied)
     const releaseEntry = {
       repository: result.repository,
       release_tag: result.release_tag,
