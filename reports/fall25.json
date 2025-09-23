@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated": "2025-09-22T15:54:29.619Z",
+    "generated": "2025-09-23T06:08:42.595Z",
     "meta_release": "Fall25",
     "source": "Meta-release Collector v3",
     "landscape_version": "1.1.0"
@@ -644,7 +644,7 @@
           "display_name": "Carrier Billing",
           "published": true,
           "canonical_name": "carrier-billing",
-          "first_release": "Legacy",
+          "first_release": "PreFall24",
           "isNew": false
         }
       ]
@@ -940,7 +940,7 @@
           "display_name": "Device Location Retrieval",
           "published": true,
           "canonical_name": "location-retrieval",
-          "first_release": "Legacy",
+          "first_release": "PreFall24",
           "isNew": false
         },
         {
@@ -956,7 +956,7 @@
           "display_name": "Device Location Verification",
           "published": true,
           "canonical_name": "location-verification",
-          "first_release": "Legacy",
+          "first_release": "PreFall24",
           "isNew": false
         }
       ]
@@ -997,7 +997,7 @@
           "display_name": "Device Reachability Status",
           "published": true,
           "canonical_name": "device-reachability-status",
-          "first_release": "Legacy",
+          "first_release": "PreFall24",
           "isNew": false
         }
       ]
@@ -1038,7 +1038,7 @@
           "display_name": "Device Roaming Status",
           "published": true,
           "canonical_name": "device-roaming-status",
-          "first_release": "Legacy",
+          "first_release": "PreFall24",
           "isNew": false
         }
       ]
@@ -1138,7 +1138,7 @@
           "display_name": "Know Your Customer Fill-in",
           "published": true,
           "canonical_name": "kyc-fill-in",
-          "first_release": "Legacy",
+          "first_release": "PreFall24",
           "isNew": false
         }
       ]
@@ -1163,7 +1163,7 @@
           "display_name": "Know Your Customer Match",
           "published": true,
           "canonical_name": "kyc-match",
-          "first_release": "Legacy",
+          "first_release": "PreFall24",
           "isNew": false
         }
       ]
@@ -1320,7 +1320,7 @@
           "display_name": "Number Verification",
           "published": true,
           "canonical_name": "number-verification",
-          "first_release": "Legacy",
+          "first_release": "PreFall24",
           "isNew": false
         }
       ]
@@ -1370,7 +1370,7 @@
           "display_name": "One Time Password SMS",
           "published": true,
           "canonical_name": "one-time-password-sms",
-          "first_release": "Legacy",
+          "first_release": "PreFall24",
           "isNew": false
         }
       ]
@@ -1486,7 +1486,7 @@
           "display_name": "QoS Profiles",
           "published": true,
           "canonical_name": "qos-profiles",
-          "first_release": "Legacy",
+          "first_release": "PreFall24",
           "isNew": false
         },
         {
@@ -1521,7 +1521,7 @@
           "display_name": "Quality-On-Demand",
           "published": true,
           "canonical_name": "quality-on-demand",
-          "first_release": "Legacy",
+          "first_release": "PreFall24",
           "isNew": false
         }
       ]
@@ -1571,7 +1571,7 @@
           "display_name": "Simple Edge Discovery",
           "published": true,
           "canonical_name": "simple-edge-discovery",
-          "first_release": "Legacy",
+          "first_release": "PreFall24",
           "isNew": false
         }
       ]
@@ -1612,7 +1612,7 @@
           "display_name": "SIM Swap",
           "published": true,
           "canonical_name": "sim-swap",
-          "first_release": "Legacy",
+          "first_release": "PreFall24",
           "isNew": false
         }
       ]
@@ -1874,7 +1874,7 @@
       "display_name": "Carrier Billing",
       "published": true,
       "canonical_name": "carrier-billing",
-      "first_release": "Legacy",
+      "first_release": "PreFall24",
       "isNew": false,
       "repository": "CarrierBillingCheckOut",
       "release_tag": "r3.2",
@@ -2189,7 +2189,7 @@
       "display_name": "Device Location Retrieval",
       "published": true,
       "canonical_name": "location-retrieval",
-      "first_release": "Legacy",
+      "first_release": "PreFall24",
       "isNew": false,
       "repository": "DeviceLocation",
       "release_tag": "r3.2",
@@ -2210,7 +2210,7 @@
       "display_name": "Device Location Verification",
       "published": true,
       "canonical_name": "location-verification",
-      "first_release": "Legacy",
+      "first_release": "PreFall24",
       "isNew": false,
       "repository": "DeviceLocation",
       "release_tag": "r3.2",
@@ -2231,7 +2231,7 @@
       "display_name": "Device Reachability Status",
       "published": true,
       "canonical_name": "device-reachability-status",
-      "first_release": "Legacy",
+      "first_release": "PreFall24",
       "isNew": false,
       "repository": "DeviceReachabilityStatus",
       "release_tag": "r1.2",
@@ -2273,7 +2273,7 @@
       "display_name": "Device Roaming Status",
       "published": true,
       "canonical_name": "device-roaming-status",
-      "first_release": "Legacy",
+      "first_release": "PreFall24",
       "isNew": false,
       "repository": "DeviceRoamingStatus",
       "release_tag": "r1.2",
@@ -2378,7 +2378,7 @@
       "display_name": "Know Your Customer Fill-in",
       "published": true,
       "canonical_name": "kyc-fill-in",
-      "first_release": "Legacy",
+      "first_release": "PreFall24",
       "isNew": false,
       "repository": "KnowYourCustomerFill-in",
       "release_tag": "r1.2",
@@ -2399,7 +2399,7 @@
       "display_name": "Know Your Customer Match",
       "published": true,
       "canonical_name": "kyc-match",
-      "first_release": "Legacy",
+      "first_release": "PreFall24",
       "isNew": false,
       "repository": "KnowYourCustomerMatch",
       "release_tag": "r1.2",
@@ -2546,7 +2546,7 @@
       "display_name": "Number Verification",
       "published": true,
       "canonical_name": "number-verification",
-      "first_release": "Legacy",
+      "first_release": "PreFall24",
       "isNew": false,
       "repository": "NumberVerification",
       "release_tag": "r3.2",
@@ -2588,7 +2588,7 @@
       "display_name": "One Time Password SMS",
       "published": true,
       "canonical_name": "one-time-password-sms",
-      "first_release": "Legacy",
+      "first_release": "PreFall24",
       "isNew": false,
       "repository": "OTPValidation",
       "release_tag": "r3.2",
@@ -2693,7 +2693,7 @@
       "display_name": "QoS Profiles",
       "published": true,
       "canonical_name": "qos-profiles",
-      "first_release": "Legacy",
+      "first_release": "PreFall24",
       "isNew": false,
       "repository": "QualityOnDemand",
       "release_tag": "r3.2",
@@ -2738,7 +2738,7 @@
       "display_name": "Quality-On-Demand",
       "published": true,
       "canonical_name": "quality-on-demand",
-      "first_release": "Legacy",
+      "first_release": "PreFall24",
       "isNew": false,
       "repository": "QualityOnDemand",
       "release_tag": "r3.2",
@@ -2780,7 +2780,7 @@
       "display_name": "Simple Edge Discovery",
       "published": true,
       "canonical_name": "simple-edge-discovery",
-      "first_release": "Legacy",
+      "first_release": "PreFall24",
       "isNew": false,
       "repository": "SimpleEdgeDiscovery",
       "release_tag": "r2.2",
@@ -2801,7 +2801,7 @@
       "display_name": "SIM Swap",
       "published": true,
       "canonical_name": "sim-swap",
-      "first_release": "Legacy",
+      "first_release": "PreFall24",
       "isNew": false,
       "repository": "SimSwap",
       "release_tag": "r3.2",

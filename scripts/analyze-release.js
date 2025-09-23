@@ -115,7 +115,7 @@ function getMetaRelease(repository, releaseTag, mappings) {
   // Extract release cycle from tag (rX.Y -> rX)
   const cycle = releaseTag.match(/^(r\d+)\./)?.[1];
   if (!cycle) {
-    return 'Legacy';  // Not in rX.Y format
+    return 'PreFall24';  // Not in rX.Y format
   }
 
   // Check each meta-release

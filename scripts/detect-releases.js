@@ -104,7 +104,7 @@ async function fetchReleases(repoName) {
 
     if (data.length === 0) break;
 
-    // Get all public releases with rX.Y format (exclude pre-releases, drafts, and legacy formats)
+    // Get all public releases with rX.Y format (exclude pre-releases, drafts, and pre-Fall24 formats)
     const publicReleases = data.filter(release =>
       !release.prerelease &&
       !release.draft &&

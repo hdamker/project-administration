@@ -107,7 +107,7 @@ exceptions:
           starts_from: "r1"
           contains_apis: ["connectivity-status", "device-reachability"]
 
-# Legacy repositories that should be excluded
+# Pre-Fall24 repositories that should be excluded
 excluded_repositories:
   - "Test-repository"
   - "Template-repository"

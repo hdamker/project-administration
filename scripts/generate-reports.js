@@ -5,7 +5,7 @@
  *
  * Generates JSON report files for each meta-release from the master metadata.
  * Applies runtime enrichment from API landscape data.
- * Creates separate files for Fall24, Spring25, Fall25, Legacy, Sandbox, etc.
+ * Creates separate files for Fall24, Spring25, Fall25, PreFall24, Sandbox, etc.
  */
 
 const fs = require('fs');

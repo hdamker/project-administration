@@ -17,7 +17,7 @@ apis:
     website_url: https://camaraproject.org/sim-swap/
     tooltip: Allows users to get information on SIM pairing changes
     published: true
-    first_release: Legacy
+    first_release: PreFall24
   sim-swap-subscriptions:
     category: Authentication and Fraud Prevention
     website_url: https://camaraproject.org/sim-swap-subscriptions/
@@ -35,13 +35,13 @@ apis:
     website_url: https://camaraproject.org/number-verification/
     tooltip: Allows users to verify the phone number of the connected device
     published: true
-    first_release: Legacy
+    first_release: PreFall24
   one-time-password-sms:
     category: Authentication and Fraud Prevention
     website_url: https://camaraproject.org/one-time-password-sms/
     tooltip: To offer secure user authentication to service providers
     published: true
-    first_release: Legacy
+    first_release: PreFall24
   kyc-age-verification:
     category: Authentication and Fraud Prevention
     website_url: https://camaraproject.org/know-your-customer-age-verification/
@@ -53,13 +53,13 @@ apis:
     website_url: https://camaraproject.org/know-your-customer-fill-in/
     tooltip: Fill in web dialogues using operator data
     published: true
-    first_release: Legacy
+    first_release: PreFall24
   kyc-match:
     category: Authentication and Fraud Prevention
     website_url: https://camaraproject.org/know-your-customer-match/
     tooltip: Allows service providers to validate user information with operators
     published: true
-    first_release: Legacy
+    first_release: PreFall24
   kyc-tenure:
     category: Authentication and Fraud Prevention
     website_url: https://camaraproject.org/know-your-customer-tenure/
@@ -95,13 +95,13 @@ apis:
     website_url: https://camaraproject.org/location-retrieval/
     tooltip: Provide the location of a device
     published: true
-    first_release: Legacy
+    first_release: PreFall24
   location-verification:
     category: Location Services
     website_url: https://camaraproject.org/location-verification/
     tooltip: Check the location of a device
     published: true
-    first_release: Legacy
+    first_release: PreFall24
   geofencing-subscriptions:
     category: Location Services
     website_url: https://camaraproject.org/geofencing-subscriptions/
@@ -161,19 +161,19 @@ apis:
     website_url: https://camaraproject.org/quality-on-demand/
     tooltip: Allows users to set mobile connection quality and get notifications
     published: true
-    first_release: Legacy
+    first_release: PreFall24
   qos-profiles:
     category: Communication Quality
     website_url: https://camaraproject.org/qos-profiles/
     tooltip: Provide the ability to set certain profile of QoS
     published: true
-    first_release: Legacy
+    first_release: PreFall24
   home-devices-qod:
     category: Communication Quality
     website_url: https://camaraproject.org/home-devices-qod/
     tooltip: Request prioritization of traffic on a specific device on the home network
     published: true
-    first_release: Legacy
+    first_release: PreFall24
   qos-provisioning:
     category: Communication Quality
     website_url: https://camaraproject.org/qod-provisioning/
@@ -265,7 +265,7 @@ apis:
     website_url: https://camaraproject.org/device-reachability-status/
     tooltip: Check the network connection status of a device
     published: true
-    first_release: Legacy
+    first_release: PreFall24
   device-reachability-status-subscriptions:
     category: Device Information
     website_url: https://camaraproject.org/device-reachability-status-subscriptions/
@@ -277,7 +277,7 @@ apis:
     website_url: https://camaraproject.org/device-roaming-status/
     tooltip: Check the roaming status of a device
     published: true
-    first_release: Legacy
+    first_release: PreFall24
   device-roaming-status-subscriptions:
     category: Device Information
     website_url: https://camaraproject.org/device-roaming-status-subscriptions/
@@ -307,7 +307,7 @@ apis:
     website_url: https://camaraproject.org/simple-edge-discovery/
     tooltip: Discover the closest edge cloud zone to a given device
     published: true
-    first_release: Legacy
+    first_release: PreFall24
   optimal-edge-discovery:
     category: Computing Services
     website_url: null
@@ -355,7 +355,7 @@ apis:
     website_url: https://camaraproject.org/carrier-billing/
     tooltip: Purchase, pay, and follow up on fulfilment of products
     published: true
-    first_release: Legacy
+    first_release: PreFall24
   carrier-billing-refund:
     category: Payments and Charging
     website_url: https://camaraproject.org/carrier-billing-refund/

@@ -131,7 +131,7 @@ Copy both workflow files to `.github/workflows/` in your repository:
 - **Spring25**: First release in major version during Feb-Mar 2025  
 - **Fall25**: First release in major version during Aug-Sep 2025
 - **Patch**: Subsequent releases in same major version
-- **Legacy**: Non-rX.Y format releases
+- **PreFall24**: Non-rX.Y format releases (before Fall24 meta-release)
 - **Pre-release**: Development releases
 
 ---

@@ -237,7 +237,7 @@ jobs:
               summary += `\n### Linting Migration Details\n`;
               summary += `**Had Prior Linting**: ${resultData.had_prior_linting ? 'Yes' : 'No'}\n`;
               if (resultData.legacy_artifacts_count > 0) {
-                summary += `**Legacy Artifacts Found**: ${resultData.legacy_artifacts_count}\n`;
+                summary += `**Pre-Fall24 Artifacts Found**: ${resultData.legacy_artifacts_count}\n`;
                 if (resultData.legacy_artifacts && resultData.legacy_artifacts.length > 0) {
                   summary += `**Removed Artifacts**:\n`;
                   resultData.legacy_artifacts.forEach(artifact => {
