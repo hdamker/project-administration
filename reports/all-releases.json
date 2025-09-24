@@ -1,18 +1,18 @@
 {
   "metadata": {
-    "generated": "2025-09-23T06:08:42.582Z",
+    "generated": "2025-09-23T18:24:47.993Z",
     "meta_release": "All",
     "source": "Meta-release Collector v3",
     "landscape_version": "1.1.0"
   },
   "statistics": {
     "repositories_count": 43,
-    "api_versions_count": 139,
+    "api_versions_count": 142,
     "unique_api_names_count": 63,
     "unique_apis_count": 62,
     "api_version_maturity": {
       "stable": 26,
-      "initial": 112,
+      "initial": 115,
       "rc": 1
     },
     "unique_api_maturity": {
@@ -28,7 +28,7 @@
       "Service Management": 1,
       "Device Information": 19,
       "Location Services": 17,
-      "Communication Services": 5
+      "Communication Services": 8
     },
     "commonalities_versions": [
       "0.4",
@@ -704,12 +704,17 @@
     "WebRTC": {
       "releases": [
         {
+          "tag": "r2.2",
+          "date": "2025-09-23T14:44:21Z",
+          "apis_count": 3
+        },
+        {
           "tag": "r1.2",
           "date": "2025-03-18T12:39:09Z",
           "apis_count": 3
         }
       ],
-      "total_apis": 3,
+      "total_apis": 6,
       "unique_apis_count": 3
     }
   },
@@ -3694,6 +3699,63 @@
           "isNew": true
         }
       ]
+    },
+    {
+      "repository": "WebRTC",
+      "release_tag": "r2.2",
+      "release_date": "2025-09-23T14:44:21Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/WebRTC/releases/tag/r2.2",
+      "apis": [
+        {
+          "api_name": "webrtc-call-handling",
+          "file_name": "webrtc-call-handling",
+          "version": "0.3.0",
+          "title": "WebRTC Call Handling",
+          "commonalities": "0.6",
+          "maturity": "initial",
+          "portfolio_category": "Communication Services",
+          "website_url": "https://camaraproject.org/webrtc-apis/",
+          "tooltip": "Create, recover, update and terminate 1-1 voice and video sessions",
+          "display_name": "WebRTC Call Handling",
+          "published": true,
+          "canonical_name": "webrtc-call-handling",
+          "first_release": "Spring25",
+          "isNew": false
+        },
+        {
+          "api_name": "webrtc-events",
+          "file_name": "webrtc-events",
+          "version": "0.2.0",
+          "title": "WebRTC Events",
+          "commonalities": "0.6",
+          "maturity": "initial",
+          "portfolio_category": "Communication Services",
+          "website_url": "https://camaraproject.org/webrtc-apis/",
+          "tooltip": "Receive events about updates of an active session or new sessions requests (incoming calls)",
+          "display_name": "WebRTC Events",
+          "published": true,
+          "canonical_name": "webrtc-events",
+          "first_release": "Spring25",
+          "isNew": false
+        },
+        {
+          "api_name": "webrtc-registration",
+          "file_name": "webrtc-registration",
+          "version": "0.3.0",
+          "title": "WebRTC Registration Service",
+          "commonalities": "0.6",
+          "maturity": "initial",
+          "portfolio_category": "Communication Services",
+          "website_url": "https://camaraproject.org/webrtc-apis/",
+          "tooltip": "Manage registration and connectivity (RACM) towards MNO's IMS Network",
+          "display_name": "WebRTC Registration Service",
+          "published": true,
+          "canonical_name": "webrtc-registration",
+          "first_release": "Spring25",
+          "isNew": false
+        }
+      ]
     }
   ],
   "apis": [
@@ -6585,6 +6647,27 @@
       "github_url": "https://github.com/camaraproject/WebRTC/releases/tag/r1.2"
     },
     {
+      "api_name": "webrtc-call-handling",
+      "file_name": "webrtc-call-handling",
+      "version": "0.3.0",
+      "title": "WebRTC Call Handling",
+      "commonalities": "0.6",
+      "maturity": "initial",
+      "portfolio_category": "Communication Services",
+      "website_url": "https://camaraproject.org/webrtc-apis/",
+      "tooltip": "Create, recover, update and terminate 1-1 voice and video sessions",
+      "display_name": "WebRTC Call Handling",
+      "published": true,
+      "canonical_name": "webrtc-call-handling",
+      "first_release": "Spring25",
+      "isNew": false,
+      "repository": "WebRTC",
+      "release_tag": "r2.2",
+      "release_date": "2025-09-23T14:44:21Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/WebRTC/releases/tag/r2.2"
+    },
+    {
       "api_name": "webrtc-events",
       "file_name": "webrtc-events-subscription",
       "version": "0.1.0",
@@ -6606,6 +6689,27 @@
       "github_url": "https://github.com/camaraproject/WebRTC/releases/tag/r1.2"
     },
     {
+      "api_name": "webrtc-events",
+      "file_name": "webrtc-events",
+      "version": "0.2.0",
+      "title": "WebRTC Events",
+      "commonalities": "0.6",
+      "maturity": "initial",
+      "portfolio_category": "Communication Services",
+      "website_url": "https://camaraproject.org/webrtc-apis/",
+      "tooltip": "Receive events about updates of an active session or new sessions requests (incoming calls)",
+      "display_name": "WebRTC Events",
+      "published": true,
+      "canonical_name": "webrtc-events",
+      "first_release": "Spring25",
+      "isNew": false,
+      "repository": "WebRTC",
+      "release_tag": "r2.2",
+      "release_date": "2025-09-23T14:44:21Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/WebRTC/releases/tag/r2.2"
+    },
+    {
       "api_name": "webrtc-registration",
       "file_name": "webrtc-registration",
       "version": "0.2.0",
@@ -6625,6 +6729,27 @@
       "release_date": "2025-03-18T12:39:09Z",
       "meta_release": "Spring25",
       "github_url": "https://github.com/camaraproject/WebRTC/releases/tag/r1.2"
+    },
+    {
+      "api_name": "webrtc-registration",
+      "file_name": "webrtc-registration",
+      "version": "0.3.0",
+      "title": "WebRTC Registration Service",
+      "commonalities": "0.6",
+      "maturity": "initial",
+      "portfolio_category": "Communication Services",
+      "website_url": "https://camaraproject.org/webrtc-apis/",
+      "tooltip": "Manage registration and connectivity (RACM) towards MNO's IMS Network",
+      "display_name": "WebRTC Registration Service",
+      "published": true,
+      "canonical_name": "webrtc-registration",
+      "first_release": "Spring25",
+      "isNew": false,
+      "repository": "WebRTC",
+      "release_tag": "r2.2",
+      "release_date": "2025-09-23T14:44:21Z",
+      "meta_release": "Fall25",
+      "github_url": "https://github.com/camaraproject/WebRTC/releases/tag/r2.2"
     }
   ]
 }

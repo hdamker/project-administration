@@ -1,6 +1,6 @@
 metadata:
-  last_updated: '2025-09-22T11:33:18.138Z'
-  last_checked: '2025-09-22T11:33:18.138Z'
+  last_updated: '2025-09-23T18:24:47.879Z'
+  last_checked: '2025-09-23T18:24:47.879Z'
   workflow_version: 3.0.0
   schema_version: 1.0.0
 releases:
@@ -1197,3 +1197,24 @@ releases:
         version: 0.2.0
         title: WebRTC Registration Service API
         commonalities: '0.5'
+  - repository: WebRTC
+    release_tag: r2.2
+    release_date: '2025-09-23T14:44:21Z'
+    meta_release: Fall25
+    github_url: https://github.com/camaraproject/WebRTC/releases/tag/r2.2
+    apis:
+      - api_name: webrtc-call-handling
+        file_name: webrtc-call-handling
+        version: 0.3.0
+        title: WebRTC Call Handling
+        commonalities: '0.6'
+      - api_name: webrtc-events
+        file_name: webrtc-events
+        version: 0.2.0
+        title: WebRTC Events
+        commonalities: '0.6'
+      - api_name: webrtc-registration
+        file_name: webrtc-registration
+        version: 0.3.0
+        title: WebRTC Registration Service
+        commonalities: '0.6'
