@@ -663,28 +663,36 @@ jobs:
               // Common next steps text
               const nextSteps = `### 👥 Next Steps for Codeowners
 
-              ⚠️ **Important**: This PR introduces linting workflows that will validate repository content. Linting errors will **block this PR from merging** until resolved.
+              ⚠️ **Important**: This PR introduces linting workflows that will validate repository content.
 
-              #### Before This PR Can Be Merged:
+              **Note on Linting Checks**: The linting workflows are currently **not blocking** - they will not prevent this PR (or future PRs) from being merged. However, it is **highly recommended** to:
+              - Fix all linting errors before merging
+              - Establish a practice of only merging PRs that pass linting checks successfully
+              - **All linting errors must be addressed before creating a release**
+
+              This approach maintains code quality while allowing flexibility during the transition period.
+
+              #### Before Merging This PR:
 
               1. **Review linting results in PR checks**:
                   - Check the "Checks" tab for workflow results
-                  - All linting errors must be resolved before merge is possible
+                  - Note any linting errors or warnings reported
 
-              2. **Fix linting errors directly in this PR**:
+              2. **Fix linting errors (strongly recommended)**:
                   - Address all OpenAPI specification issues (Spectral and yamllint errors)
                   - Address all test definitions issues (gherkin-lint errors)
                   - Push fixes to this PR branch to re-trigger validation
-                  - Repeat until all checks pass successfully
+                  - While not required for merge, fixing issues now prevents accumulation of technical debt
 
-              #### Approve and merge this PR 🚀
+              3. **Approve and merge this PR** 🚀
 
-              #### After Successful Merge:
+              #### After Merge:
 
-              1. **Monitor the new linting system**:
-                  - All future PRs will be subject to the same linting requirements
-                  - Contributors will need to fix linting issues before their PRs can merge
-                  - This ensures code quality standards are maintained going forward
+              1. **Establish linting best practices**:
+                  - Although checks are not blocking, treat linting errors as issues to fix
+                  - Aim to merge only PRs where linting checks pass successfully
+                  - This maintains code quality standards and prevents regression
+                  - **Remember: Linting errors must be fixed before any release can be created**
 
               2. **Test with additional rules** (optional):
                   - Verify OpenAPI specification with lower severity rules (warnings, hints, info)
@@ -692,11 +700,11 @@ jobs:
                   - Check workflow logs - if needed create an issue to improve your API specification
 
               3. **Monitor future PRs**:
+                  - Provide guidance to contributors on fixing linting issues
                   - First PRs after this may reveal new edge cases
-                  - Provide guidance to contributors on common linting fixes
                   - The Release Management team can assist with complex issues
 
-              💡**Pro tip**: Running the Spectral workflow manually NOW is highly recommended. This allows you to fix issues proactively rather than discovering them when submitting your next feature PR!`;
+              💡**Pro tip**: Running the Spectral workflow manually NOW is highly recommended. This allows you to identify and fix issues proactively rather than discovering them when submitting your next feature PR!`;
               
               let prBody;
               if (hasLegacyLinting) {
