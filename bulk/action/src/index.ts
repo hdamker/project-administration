@@ -4,11 +4,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import YAML from "yaml";
 import { Playbook, makeCtx } from "./sdk/context";
-import { appendCsv } from "./sdk/reporting";
+import { appendCsv, appendJsonl } from "./sdk/reporting";
+import { PlanReporter } from "./sdk/plan-reporter";
 import { makeOctokit } from "./github/client";
 import { searchRepos } from "./github/repos";
 import { createOrUpdatePR } from "./github/pr";
-import { createIssue } from "./github/issues";
+import { createOrUpdateIssue } from "./github/issues";
 import { runPythonOp } from "./runners/python";
 import { op as filePatch } from "./ops/file.patch";
 import { cloneShallow, createBranch, hasChanges, commitAll, push } from "./github/git";
@@ -20,6 +21,11 @@ const TS_OPS: Record<string, any> = { [filePatch.id]: filePatch };
 function csvEsc(s: string | undefined): string {
   const v = (s ?? "");
   return `"${v.replace(/"/g, '""')}"`;
+}
+
+async function countFailedRepos(csvPath: string): Promise<number> {
+  const content = await fs.readFile(csvPath, "utf-8");
+  return content.split("\n").filter(line => line.includes(",error,")).length;
 }
 
 async function run() {
@@ -45,6 +51,11 @@ async function run() {
   const resultsCsv = path.join(process.cwd(), "results.csv");
   await fs.writeFile(resultsCsv, "repo,op,status,pr_url,issue_url,notes\n");
 
+  const planMdPath = path.join(process.cwd(), "plan.md");
+  const planReporter = new PlanReporter(planMdPath);
+
+  const jsonlPath = path.join(process.cwd(), "results.jsonl");
+
   const reposFound = await searchRepos(octokit, playbook.selector.query || `org:${github.context.repo.owner}`);
   let repos = reposFound.map(r => ({ owner: r.owner, name: r.name, fullName: `${r.owner}/${r.name}`, defaultBranch: r.default_branch }));
 
@@ -57,7 +68,11 @@ async function run() {
     repos = repos.filter(r => !exclude.has(r.fullName));
   }
 
+  // Write plan.md header
+  await planReporter.writeHeader(playbook, repos.length, planOnly);
+
   let i = 0;
+  let totalSkipped = 0;
   async function worker() {
     while (i < repos.length) {
       const repo = repos[i++];
@@ -149,7 +164,7 @@ async function run() {
           }
           const issueBody = `${globalIssueBody || ""}${perOpIssueBodies}`.trim();
           if (issueBody) {
-            issueUrl = await createIssue(octokit, {
+            issueUrl = await createOrUpdateIssue(octokit, {
               owner: repo.owner, repo: repo.name,
               title: issueTitle, body: issueBody, labels: playbook.strategy.issue?.labels
             });
@@ -161,10 +176,40 @@ async function run() {
       }
 
       await appendCsv(resultsCsv, `${repoFull},${executedOp},${status},${csvEsc(prUrl)},${csvEsc(issueUrl)},${csvEsc(notes)}\n`);
+      await appendJsonl(jsonlPath, {
+        timestamp: new Date().toISOString(),
+        repo: repoFull,
+        op: executedOp,
+        status,
+        prUrl,
+        issueUrl,
+        notes
+      });
+      await planReporter.addRepo(repo, status, notes, prUrl, issueUrl);
+
+      if (status === "skipped") totalSkipped++;
+
+      // Fail-fast: stop processing if error and failFast enabled
+      if (status === "error" && playbook.strategy.failFast) {
+        core.setFailed(`Fail-fast triggered by error in ${repoFull}: ${notes}`);
+        process.exit(1);
+      }
     }
   }
 
   await Promise.all(Array(Math.max(1, concurrency)).fill(0).map(() => worker()));
+
+  // Check for failures and exit with error if any repos failed
+  const failedCount = await countFailedRepos(resultsCsv);
+
+  // Finalize plan.md with summary
+  await planReporter.finalize(repos.length, failedCount, totalSkipped);
+
+  if (failedCount > 0) {
+    core.setFailed(`${failedCount} repositories failed during execution`);
+    process.exit(1);
+  }
+
   core.info("Done.");
 }
 

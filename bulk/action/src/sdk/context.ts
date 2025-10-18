@@ -14,6 +14,7 @@ export type Playbook = {
     mode: "pr" | "direct";
     plan: boolean;
     concurrency: number;
+    failFast?: boolean;
     pr?: { branch: string; title: string; reviewers?: string[]; labels?: string[]; bodyTemplate?: string; bodyTemplatePath?: string; };
     issue?: { enabled?: boolean; title?: string; labels?: string[]; bodyTemplate?: string; bodyTemplatePath?: string; };
   };
@@ -37,7 +38,13 @@ export function makeCtx(octokit: Octokit, token: string, planOnly: boolean, play
     },
     async renderTemplate(source?: string, filePath?: string, view?: any) {
       let tpl = source ?? "";
-      if (!tpl && filePath) tpl = await fs.readFile(filePath, "utf-8");
+      if (!tpl && filePath) {
+        // Resolve relative paths from workspace root, not workdir
+        const resolvedPath = path.isAbsolute(filePath)
+          ? filePath
+          : path.join(process.cwd(), filePath);
+        tpl = await fs.readFile(resolvedPath, "utf-8");
+      }
       return Mustache.render(tpl, view ?? {});
     },
     report: { row: addRow },
