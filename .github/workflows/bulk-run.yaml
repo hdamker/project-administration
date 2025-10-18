@@ -41,7 +41,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: bulk-results
           path: |
             results.csv
+            results.jsonl
+            plan.md

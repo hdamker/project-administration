@@ -1,0 +1,27 @@
+version: 1
+selector:
+  # Only target the template repository for safe testing
+  include:
+    - "camaraproject/Template_API_Repository"
+  exclude: []
+strategy:
+  mode: "pr"
+  plan: true  # Dry-run by default
+  concurrency: 1
+  failFast: false
+  pr:
+    branch: "bulk/test-orchestrator-v2"
+    title: "[TEST] Bulk orchestrator v2 validation"
+    labels: ["test", "bulk-change"]
+    reviewers: []
+    bodyTemplatePath: "bulk/templates/pr-default.md"
+  issue:
+    enabled: false
+ops:
+  # Safe operation: look for a string that likely doesn't exist
+  - use: "file.patch@v1"
+    with:
+      globs: ["README.md"]
+      replace:
+        - from: "ThisStringDefinitelyDoesNotExistInTheFile_12345"
+          to: "replacement"
