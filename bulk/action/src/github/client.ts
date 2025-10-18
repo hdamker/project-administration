@@ -1,0 +1,1 @@
+import { Octokit } from '@octokit/rest'; export function makeOctokit(token:string){ return new Octokit({auth:token}); }

@@ -1,0 +1,47 @@
+name: CAMARA Bulk Runner
+on:
+  workflow_dispatch:
+    inputs:
+      playbook:
+        description: Path to playbook YAML
+        required: true
+        default: bulk/playbooks/sample.yaml
+      plan_only:
+        description: Dry-run (true/false)
+        required: true
+        default: "true"
+jobs:
+  bulk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Python deps for local ops
+        run: pip install pyyaml
+      - name: Install action deps
+        working-directory: bulk/action
+        run: npm ci && npm run build
+      - name: Run orchestrator
+        uses: ./bulk/action
+        with:
+          playbook_path: ${{ inputs.playbook }}
+          plan_only: ${{ inputs.plan_only }}
+          concurrency: 6
+        env:
+          GITHUB_TOKEN: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bulk-results
+          path: |
+            results.csv

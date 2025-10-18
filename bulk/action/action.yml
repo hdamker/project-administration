@@ -1,0 +1,17 @@
+name: 'CAMARA Bulk Orchestrator'
+description: 'Playbook-driven bulk operations (plan/apply), PR/Issue templating, TS/Python ops.'
+inputs:
+  playbook_path:
+    description: 'Path to playbook YAML'
+    required: true
+  plan_only:
+    description: 'true=dry-run, false=apply'
+    required: false
+    default: 'true'
+  concurrency:
+    description: 'Max concurrent repos (default 6)'
+    required: false
+    default: '6'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

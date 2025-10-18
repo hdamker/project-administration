@@ -1,0 +1,28 @@
+version: 1
+selector:
+  query: "org:camaraproject archived:false"
+strategy:
+  mode: "pr"
+  plan: true
+  concurrency: 6
+  pr:
+    branch: "bulk/<playbook-id>"
+    title: "[bulk] Update setup-node in workflows"
+    labels: ["bulk-change"]
+    reviewers: []
+    bodyTemplatePath: "bulk/templates/pr-default.md"
+  issue:
+    enabled: true
+    title: "Bulk change: please review the orchestrator PR"
+    labels: ["bulk-change"]
+    bodyTemplatePath: "bulk/templates/issue-default.md"
+ops:
+  - use: "file.patch@v1"
+    with:
+      globs: [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+      replace:
+        - from: "actions/setup-node@v3"
+          to: "actions/setup-node@v4"
+  - use: "bulk/ops-local/python/collect_yaml_has_wip.py"
+    with:
+      paths: ["**/*.yml", "**/*.yaml"]

@@ -1,0 +1,1 @@
+Bulk PR created by {{actor}} using {{playbook}}. Run: {{runUrl}}

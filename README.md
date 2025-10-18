@@ -43,10 +43,46 @@ Current available workflows:
   * Currently two different reporting workflows: "Repository Overview" and "API Releases"
   * Requires token `CAMARA_REPORT_TOKEN`, see [documentation](documentation/project-report-generation-workflows.md)
 
+### Bulk Orchestrator v2 (Experimental)
+
+**Status**: Under development on branch `feat-bulk-v2-dev`
+
+A next-generation playbook-driven bulk orchestration system built with TypeScript. This is a complete rewrite designed to replace the legacy workflow-based bulk administration system with a more flexible and extensible approach.
+
+**Key Features**:
+- **Playbook-based configuration**: Define bulk operations in YAML files
+- **Extensible operations**: Built-in TypeScript ops + custom Python scripts
+- **Plan/Apply workflow**: Preview changes before applying (like Terraform)
+- **Smart PR/Issue management**: Customizable templates with automatic de-duplication
+- **Multiple output formats**: CSV, JSONL, and human-readable Markdown reports
+- **Safety-first**: Dry-run by default, fail-fast option, idempotent operations
+
+**Location**: All bulk-v2 components are in the [bulk/](bulk/) directory:
+- [bulk/action/](bulk/action/) - TypeScript GitHub Action
+- [bulk/playbooks/](bulk/playbooks/) - YAML playbook configurations
+- [bulk/templates/](bulk/templates/) - PR and issue body templates
+- [bulk/docs/](bulk/docs/) - Documentation (cookbook, development, governance)
+- [bulk/ops-local/](bulk/ops-local/) - Python operation scripts
+
+**Workflow**: [.github/workflows/bulk-run.yaml](.github/workflows/bulk-run.yaml)
+
+**Documentation**:
+- [Action README](bulk/action/README.md) - How to use the orchestrator
+- [Cookbook](bulk/docs/cookbook.md) - Example playbooks and recipes
+- [Development Guide](bulk/docs/development.md) - Local setup and testing
+- [Governance](bulk/docs/governance.md) - DCO, CLA, and approval processes
+
+**Requirements**:
+- Token: `CAMARA_BULK_CHANGE_TOKEN` (same as legacy bulk workflows)
+- Node.js 20+ for the TypeScript action
+- Python 3.11+ for custom operation scripts
+
+**Note**: This system is independent of the legacy bulk administration workflows. Both systems can coexist. The plan is to deprecate the legacy workflow-based system after bulk-v2 is proven in production.
+
 ## Contributing
- 
+
 * Issues and PRs for this repositories will be discussed within the meetings of the [Release Management working group](https://github.com/camaraproject/ReleaseManagement).
 * Larger changes impacting multiple or all repositories will be discussed with issues in the Governance repository and approved by the [Technical Steering Committee (TSC)](https://lf-camaraproject.atlassian.net/wiki/x/0RDe).
-  
+
 * Mailing List (of CAMARA's admin team)
   * A message to the admin team CAMARA can be sent to <adm@lists.camaraproject.org>
