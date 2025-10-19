@@ -14,8 +14,7 @@ import { runPythonOp } from "./runners/python.js";
 import { op as filePatch } from "./ops/file.patch.js";
 import { cloneShallow, createBranch, hasChanges, commitAll, push } from "./github/git.js";
 import fg from "fast-glob";
-import AjvModule from "ajv";
-const Ajv = AjvModule.default || AjvModule;
+import { Ajv2020 } from "ajv/dist/2020.js";
 
 const TS_OPS: Record<string, any> = { [filePatch.id]: filePatch };
 
@@ -41,7 +40,7 @@ async function run() {
   const playbook = YAML.parse(pbRaw) as Playbook;
   const schemaPath = path.join(process.cwd(), "bulk/action/src/schemas/playbook.schema.json");
   const schema = JSON.parse(await fs.readFile(schemaPath, "utf-8"));
-  const ajv = new Ajv({ allErrors: true });
+  const ajv = new Ajv2020({ allErrors: true });
   const validate = ajv.compile(schema);
   if (!validate(playbook)) {
     const errs = (validate.errors || []).map((e: any) => `${e.instancePath || '<root>'} ${e.message}`).join("; ");
