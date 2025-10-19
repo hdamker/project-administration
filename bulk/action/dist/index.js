@@ -123,15 +123,17 @@ async function run() {
                     }
                 }
                 // Commit & push if meaningful changes and apply mode
+                let changesPushed = false;
                 if (!planOnly && await hasMeaningfulChanges(workdir)) {
                     const userName = process.env.GIT_USER_NAME || "camara-bot";
                     const userEmail = process.env.GIT_USER_EMAIL || "camara-bot@users.noreply.github.com";
                     const commitMsg = `[bulk] ${path.basename(playbookPath)}`;
                     await commitAll(workdir, commitMsg, { userName, userEmail });
                     await push(workdir, branch, token, repoFull);
+                    changesPushed = true;
                 }
-                // PR creation (with per-op overrides appended)
-                if (playbook.strategy.mode === "pr" && !planOnly) {
+                // PR creation (only if changes were pushed)
+                if (playbook.strategy.mode === "pr" && !planOnly && changesPushed) {
                     const prTitle = playbook.strategy.pr?.title || "[bulk] Update";
                     const globalBody = await ctx.renderTemplate(playbook.strategy.pr?.bodyTemplate, playbook.strategy.pr?.bodyTemplatePath, {
                         repo, actor: ctx.env.actor, runUrl: ctx.env.runUrl, playbook: path.basename(playbookPath)
