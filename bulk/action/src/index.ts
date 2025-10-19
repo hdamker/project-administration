@@ -3,18 +3,19 @@ import * as github from "@actions/github";
 import fs from "node:fs/promises";
 import path from "node:path";
 import YAML from "yaml";
-import { Playbook, makeCtx } from "./sdk/context";
-import { appendCsv, appendJsonl } from "./sdk/reporting";
-import { PlanReporter } from "./sdk/plan-reporter";
-import { makeOctokit } from "./github/client";
-import { searchRepos } from "./github/repos";
-import { createOrUpdatePR } from "./github/pr";
-import { createOrUpdateIssue } from "./github/issues";
-import { runPythonOp } from "./runners/python";
-import { op as filePatch } from "./ops/file.patch";
-import { cloneShallow, createBranch, hasChanges, commitAll, push } from "./github/git";
+import { Playbook, makeCtx } from "./sdk/context.js";
+import { appendCsv, appendJsonl } from "./sdk/reporting.js";
+import { PlanReporter } from "./sdk/plan-reporter.js";
+import { makeOctokit } from "./github/client.js";
+import { searchRepos } from "./github/repos.js";
+import { createOrUpdatePR } from "./github/pr.js";
+import { createOrUpdateIssue } from "./github/issues.js";
+import { runPythonOp } from "./runners/python.js";
+import { op as filePatch } from "./ops/file.patch.js";
+import { cloneShallow, createBranch, hasChanges, commitAll, push } from "./github/git.js";
 import fg from "fast-glob";
-import Ajv from "ajv";
+import AjvModule from "ajv";
+const Ajv = AjvModule.default || AjvModule;
 
 const TS_OPS: Record<string, any> = { [filePatch.id]: filePatch };
 
@@ -43,7 +44,7 @@ async function run() {
   const ajv = new Ajv({ allErrors: true });
   const validate = ajv.compile(schema);
   if (!validate(playbook)) {
-    const errs = (validate.errors || []).map(e => `${e.instancePath || '<root>'} ${e.message}`).join("; ");
+    const errs = (validate.errors || []).map((e: any) => `${e.instancePath || '<root>'} ${e.message}`).join("; ");
     throw new Error(`Playbook validation failed: ${errs}`);
   }
 

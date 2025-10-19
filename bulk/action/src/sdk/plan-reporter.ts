@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import { Playbook, Repo } from "./context";
+import { Playbook, Repo } from "./context.js";
 
 export class PlanReporter {
   constructor(private path: string) {}

@@ -1,4 +1,4 @@
-import { OpContext, Repo, PlanResult, PlanChange } from "../sdk/context";
+import { OpContext, Repo, PlanResult, PlanChange } from "../sdk/context.js";
 import fg from "fast-glob";
 
 export const op = {
