@@ -18,8 +18,6 @@ strategy:
     labels: ["test", "automation"]
     reviewers: []
     bodyTemplatePath: "bulk/templates/pr-default.md"
-  issue:
-    enabled: false
 
 ops:
   # More likely to match: add a test comment to README

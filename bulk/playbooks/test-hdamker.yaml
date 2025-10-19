@@ -20,8 +20,6 @@ strategy:
     labels: ["test", "automation"]
     reviewers: []
     bodyTemplatePath: "bulk/templates/pr-default.md"
-  issue:
-    enabled: false
 
 ops:
   # Safe test operation: No-op replacement for validation
