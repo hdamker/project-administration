@@ -1,8 +1,9 @@
 version: 1
 
 selector:
-  # Explicitly target two hdamker repositories for safe testing
-  # These are your personal forks - safe for experimentation
+  # Search user's repositories (works for public repos without auth)
+  # Then filter to only the specified repositories
+  query: "user:hdamker"
   include:
     - "hdamker/QualityOnDemand"
     - "hdamker/QoSBooking"
