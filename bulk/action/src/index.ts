@@ -137,8 +137,14 @@ async function run() {
         }
 
         // Detect and report change status
+        core.info(`🔍 Checking for changes in ${workdir}`);
         const hasAnyChanges = await hasChanges(workdir);
+        core.info(`📊 hasChanges() = ${hasAnyChanges}`);
+
         const hasMeaningful = hasAnyChanges && await hasMeaningfulChanges(workdir);
+        if (hasAnyChanges) {
+          core.info(`📊 hasMeaningfulChanges() = ${hasMeaningful}`);
+        }
 
         if (planOnly) {
           if (hasMeaningful) {
@@ -148,6 +154,7 @@ async function run() {
           } else {
             changeStatus = "no changes";
           }
+          core.info(`📊 Change status in plan mode: ${changeStatus}`);
         }
 
         // Commit & push if meaningful changes and apply mode
