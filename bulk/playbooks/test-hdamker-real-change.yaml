@@ -1,0 +1,26 @@
+version: 1
+selector:
+  query: "user:hdamker fork:only"
+  include:
+    - "hdamker/QualityOnDemand"
+  exclude: []
+strategy:
+  mode: "pr"
+  plan: false  # Apply mode
+  concurrency: 1
+  failFast: false
+  pr:
+    branch: "test/bulk-orchestrator-v2-real"
+    title: "[TEST] Bulk orchestrator v2 - Real change test"
+    labels: ["test", "automation"]
+    reviewers: []
+    bodyTemplatePath: "bulk/templates/pr-default.md"
+  issue:
+    enabled: false
+ops:
+  - use: "file.patch@v1"
+    with:
+      globs: ["README.md"]
+      replace:
+        - from: "Quality of Service"
+          to: "Quality of Service (QoS)"
