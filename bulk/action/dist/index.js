@@ -325,6 +325,18 @@ async function run() {
     const failedCount = results.filter(r => r.aggregate?.outcome === "error").length;
     // Finalize plan.md with summary
     await planReporter.finalize(repos.length, failedCount, totalSkipped);
+    // Generate HTML viewer
+    try {
+        const viewerTemplatePath = path.join(__dirname, "viewer-template.html");
+        const viewerTemplate = await fs.readFile(viewerTemplatePath, "utf-8");
+        const viewerHtml = viewerTemplate.replace("const DATA = [];", `const DATA = ${JSON.stringify(results, null, 2)};`);
+        const viewerPath = path.join(process.cwd(), "results.html");
+        await fs.writeFile(viewerPath, viewerHtml);
+        core.info(`📊 Generated HTML viewer: ${viewerPath}`);
+    }
+    catch (e) {
+        core.warning(`Failed to generate HTML viewer: ${e.message}`);
+    }
     if (failedCount > 0) {
         core.setFailed(`${failedCount} repositories failed during execution`);
         process.exit(1);

@@ -24,7 +24,6 @@ ops:
 
         **Details:**
         - Actor: {{actor}}
-        - Run: {{runUrl}}
         - Repository: {{repo.fullName}}
 
         This issue demonstrates the `issue.create@v1` operation running without

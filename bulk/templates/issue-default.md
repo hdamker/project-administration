@@ -1,1 +1,1 @@
-Heads-up: bulk change PR opened by {{actor}}. Run: {{runUrl}}
+Heads-up: bulk change PR opened by {{actor}}.

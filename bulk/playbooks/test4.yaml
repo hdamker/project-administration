@@ -1,0 +1,33 @@
+version: 1
+
+selector:
+  # Target multiple test repositories
+  query: "user:hdamker fork:only"
+  include:
+    - "hdamker/QualityOnDemand"
+    - "hdamker/QoSBooking"
+  exclude: []
+
+strategy:
+  mode: "pr"  # Not used for API-only
+  plan: true
+  concurrency: 2
+  failFast: false
+
+ops:
+  # API-only operation across multiple repositories
+  - use: issue.create@v1
+    with:
+      title: "[Test] Multi-repo API-only test"
+      bodyTemplate: |
+        This issue was created as part of a multi-repository API-only test.
+
+        **Details:**
+        - Actor: {{actor}}
+        - Repository: {{repo.fullName}}
+
+        This playbook targets multiple repositories without cloning them,
+        demonstrating pure API operations.
+      labels:
+        - "test"
+        - "api-only"
