@@ -10,6 +10,7 @@ selector:
 
 strategy:
   mode: "pr"
+  plan: true  # Dry-run by default for safety
   concurrency: 1
   failFast: false
   pr:
