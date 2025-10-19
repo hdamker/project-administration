@@ -2,12 +2,21 @@ import * as github from "@actions/github";
 import Mustache from "mustache";
 import fs from "node:fs/promises";
 import path from "node:path";
-export function makeCtx(octokit, token, planOnly, playbook, workdir, addRow) {
+export function makeCtx(octokit, token, planOnly, playbook, workdir, inputs, addRow) {
     return {
-        octokit, token, planOnly, playbook, workdir,
+        octokit, token, planOnly, playbook, workdir, inputs,
         fs: {
-            async readText(p) { return fs.readFile(path.join(workdir, p), "utf-8"); },
-            async writeText(p, content) { await fs.mkdir(path.dirname(path.join(workdir, p)), { recursive: true }); await fs.writeFile(path.join(workdir, p), content, "utf-8"); }
+            async readText(p) {
+                if (!workdir)
+                    throw new Error("fs.readText requires workdir");
+                return fs.readFile(path.join(workdir, p), "utf-8");
+            },
+            async writeText(p, content) {
+                if (!workdir)
+                    throw new Error("fs.writeText requires workdir");
+                await fs.mkdir(path.dirname(path.join(workdir, p)), { recursive: true });
+                await fs.writeFile(path.join(workdir, p), content, "utf-8");
+            }
         },
         async renderTemplate(source, filePath, view) {
             let tpl = source ?? "";

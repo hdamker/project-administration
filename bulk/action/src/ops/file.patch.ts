@@ -1,16 +1,20 @@
-import { OpContext, Repo, PlanResult, PlanChange } from "../sdk/context.js";
+import { OpContext, Repo, PlanResult, ApplyResult } from "../sdk/context.js";
+import { NeedsWorktreeError } from "../sdk/errors.js";
 import fg from "fast-glob";
 import * as core from "@actions/core";
 
 export const op = {
   id: "file.patch@v1",
-  describe: (_: any) => `Patch files`,
-  guards: { skipArchived: true },
+  describe: (inputs: any) => `Patch files with simple replace`,
+
   async plan(ctx: OpContext, repo: Repo): Promise<PlanResult> {
-    const step = ctx.playbook.ops.find(o => o.use === "file.patch@v1");
-    const globs: string[] = step?.with?.globs ?? [];
-    const replaces: {from:string, to:string}[] = step?.with?.replace ?? [];
-    const changes: PlanChange[] = [];
+    // Require worktree for file operations
+    if (!ctx.workdir) {
+      throw new NeedsWorktreeError("file.patch@v1 requires git worktree");
+    }
+
+    const globs: string[] = ctx.inputs.globs ?? [];
+    const replaces: {from: string; to: string}[] = ctx.inputs.replace ?? [];
 
     core.info(`🔍 file.patch@v1: Searching in workdir: ${ctx.workdir}`);
     core.info(`🔍 file.patch@v1: Glob patterns: ${globs.join(", ")}`);
@@ -20,6 +24,7 @@ export const op = {
     const files = await fg(globs, { cwd: ctx.workdir, dot: true, absolute: false });
     core.info(`📁 file.patch@v1: Found ${files.length} files: ${files.join(", ")}`);
 
+    let changedCount = 0;
     for (const file of files) {
       try {
         const before = await ctx.fs.readText(file);
@@ -36,7 +41,9 @@ export const op = {
 
         if (after !== before) {
           core.info(`✏️  file.patch@v1: File ${file} MODIFIED (${after.length} bytes after changes)`);
-          changes.push({ path: file, before, after });
+          // WRITE TO DISK during plan() to enable git diff
+          await ctx.fs.writeText(file, after);
+          changedCount++;
         } else {
           core.info(`⏭️  file.patch@v1: File ${file} UNCHANGED`);
         }
@@ -45,11 +52,21 @@ export const op = {
       }
     }
 
-    core.info(`✅ file.patch@v1: Total changes: ${changes.length}`);
-    ctx.report.row({ repo: repo.fullName, op: "file.patch@v1", changed: changes.length });
-    return { changes };
+    core.info(`✅ file.patch@v1: Total changes: ${changedCount}`);
+    return {
+      outcome: changedCount > 0 ? "would_apply" : "noop",
+      details: { changedFiles: changedCount }
+    };
   },
-  async apply(ctx: OpContext, _repo: Repo, plan: PlanResult) {
-    for (const c of plan.changes || []) await ctx.fs.writeText(c.path, c.after!);
+
+  async apply(ctx: OpContext, _repo: Repo, plan: PlanResult): Promise<ApplyResult> {
+    // Idempotent: changes already written to disk during plan()
+    if (plan.outcome === "noop") {
+      return { outcome: "noop" };
+    }
+    return {
+      outcome: "applied",
+      details: plan.details
+    };
   },
 };

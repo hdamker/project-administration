@@ -35,19 +35,40 @@ export async function hasChanges(cwd) {
     }
     return stdout.trim().length > 0;
 }
-export async function hasMeaningfulChanges(cwd) {
+export async function hasMeaningfulChanges(cwd, diffPolicy = "ignore-eol") {
     const { stdout } = await run("git status --porcelain", cwd);
     if (!stdout.trim())
         return false;
-    // Check if changes are more than just whitespace
-    core.info(`📊 Running git diff to check for meaningful changes...`);
-    const { stdout: diffOutput } = await run("git diff --ignore-cr-at-eol --ignore-space-at-eol --ignore-blank-lines --ignore-all-space", cwd);
-    core.info(`📊 git diff output (${diffOutput.length} chars):`);
-    if (diffOutput.trim()) {
-        core.info(diffOutput.substring(0, 500)); // Show first 500 chars
-        if (diffOutput.length > 500) {
-            core.info(`... (${diffOutput.length - 500} more chars)`);
+    // strict: any change is meaningful
+    if (diffPolicy === "strict") {
+        core.info(`📊 diffPolicy=strict: any change is meaningful`);
+        return true;
+    }
+    // ignore-eol: ignore CR/LF differences only
+    if (diffPolicy === "ignore-eol") {
+        core.info(`📊 diffPolicy=ignore-eol: checking for changes beyond EOL...`);
+        const { stdout: diffOutput } = await run("git diff --ignore-cr-at-eol", cwd);
+        core.info(`📊 git diff output (${diffOutput.length} chars)`);
+        if (diffOutput.trim() && diffOutput.length <= 500) {
+            core.info(diffOutput);
         }
+        else if (diffOutput.trim()) {
+            core.info(diffOutput.substring(0, 500) + `\n... (${diffOutput.length - 500} more chars)`);
+        }
+        else {
+            core.info("(empty - EOL-only changes)");
+        }
+        return Boolean(diffOutput.trim());
+    }
+    // ignore-whitespace: ignore indentation/blank-line changes
+    core.info(`📊 diffPolicy=ignore-whitespace: checking for non-whitespace changes...`);
+    const { stdout: diffOutput } = await run("git diff --ignore-cr-at-eol --ignore-space-at-eol --ignore-blank-lines --ignore-all-space", cwd);
+    core.info(`📊 git diff output (${diffOutput.length} chars)`);
+    if (diffOutput.trim() && diffOutput.length <= 500) {
+        core.info(diffOutput);
+    }
+    else if (diffOutput.trim()) {
+        core.info(diffOutput.substring(0, 500) + `\n... (${diffOutput.length - 500} more chars)`);
     }
     else {
         core.info("(empty - whitespace-only changes)");

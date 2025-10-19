@@ -14,6 +14,7 @@ import { createOrUpdateIssue } from "./github/issues.js";
 import { runPythonOp } from "./runners/python.js";
 import { op as filePatch } from "./ops/file.patch.js";
 import { cloneShallow, createBranch, hasChanges, hasMeaningfulChanges, commitAll, push } from "./github/git.js";
+import { NeedsWorktreeError } from "./sdk/errors.js";
 import fg from "fast-glob";
 import { Ajv2020 } from "ajv/dist/2020.js";
 
@@ -94,150 +95,184 @@ async function run() {
     while (i < repos.length) {
       const repo = repos[i++];
       const repoFull = repo.fullName;
-      let prUrl = ""; let issueUrl = ""; let status = "ok"; let notes = ""; let executedOp = "";
+      let prUrl = ""; let status = "ok"; let notes = ""; let executedOp = "";
       let changeStatus = "";
-      try {
-        // Checkout repo into workdir
-        const tmpRoot = path.join(process.cwd(), "worktree");
-        const workdir = await cloneShallow(repoFull, tmpRoot, repo.defaultBranch);
+      let workdir: string | undefined;
+      let repoFailed = false;
 
-        // Generate branch name with hash suffix to prevent collisions across waves
+      try {
+        const tmpRoot = path.join(process.cwd(), "worktree");
+
+        // Generate branch name with hash suffix
         const baseBranch = (playbook.strategy.pr?.branch || `bulk/${path.basename(playbookPath)}`).replace("<playbook-id>", path.basename(playbookPath));
         const playbookHash = crypto.createHash("sha1").update(JSON.stringify(playbook)).digest("hex").slice(0, 7);
         const branch = `${baseBranch}-${playbookHash}`;
 
-        // has_files filter (if any)
-        if (playbook.selector.has_files?.length) {
-          const found = await fg(playbook.selector.has_files, { cwd: workdir, dot: true });
-          if (!found.length) {
-            await appendCsv(resultsCsv, `${repoFull},(selector),skipped,,,"no matching has_files"\n`);
-            continue;
-          }
-        }
-
-        // Create work branch early
-        if (!playbook.strategy.plan) {
-          await createBranch(workdir, branch);
-        }
-
-        const ctx = makeCtx(octokit, token, planOnly, playbook, workdir, () => {});
-
-        // Run ops
+        // Lazy worktree: Start without cloning
+        // Run ops (will clone on first NeedsWorktreeError)
         for (const step of playbook.ops) {
           executedOp = step.use;
           let plan: any;
-          if (TS_OPS[step.use]) {
-            plan = await TS_OPS[step.use].plan(ctx, repo);
-            if (!planOnly) await TS_OPS[step.use].apply(ctx, repo, plan);
-          } else if (step.use.endsWith(".py")) {
-            plan = await runPythonOp(step.use, { repo, inputs: step.with, mode: planOnly ? "plan" : "apply" });
-          } else {
-            throw new Error(`Unknown op: ${step.use}`);
+          let ctx = makeCtx(octokit, token, planOnly, playbook, workdir, step.with || {}, () => {});
+
+          try {
+            if (TS_OPS[step.use]) {
+              plan = await TS_OPS[step.use].plan(ctx, repo);
+            } else if (step.use.endsWith(".py")) {
+              plan = await runPythonOp(step.use, { repo, inputs: step.with, mode: planOnly ? "plan" : "apply" });
+            } else {
+              throw new Error(`Unknown op: ${step.use}`);
+            }
+          } catch (e) {
+            if (e instanceof NeedsWorktreeError) {
+              // Clone on demand
+              if (!workdir) {
+                core.info(`📦 Operation ${step.use} needs worktree, cloning ${repoFull}...`);
+                workdir = await cloneShallow(repoFull, tmpRoot, repo.defaultBranch);
+
+                // has_files filter (if any)
+                if (playbook.selector.has_files?.length) {
+                  const found = await fg(playbook.selector.has_files, { cwd: workdir, dot: true });
+                  if (!found.length) {
+                    core.info(`⏭️  Skipping ${repoFull}: no matching has_files`);
+                    status = "skipped";
+                    notes = "no matching has_files";
+                    totalSkipped++;
+                    break;
+                  }
+                }
+
+                // Create work branch
+                if (!planOnly) {
+                  await createBranch(workdir, branch);
+                }
+
+                // Retry with worktree
+                ctx = makeCtx(octokit, token, planOnly, playbook, workdir, step.with || {}, () => {});
+              }
+
+              // Retry operation with worktree
+              if (TS_OPS[step.use]) {
+                plan = await TS_OPS[step.use].plan(ctx, repo);
+              } else if (step.use.endsWith(".py")) {
+                plan = await runPythonOp(step.use, { repo, inputs: step.with, mode: planOnly ? "plan" : "apply" });
+              }
+            } else {
+              throw e;
+            }
+          }
+
+          // Track plan outcome
+          if (plan?.outcome === "error") {
+            repoFailed = true;
+            status = "error";
+            notes = plan.message || "Operation failed";
+            if (playbook.strategy.failFast) break;
+            continue;
+          }
+
+          // Apply in apply mode (if not noop)
+          if (!planOnly && plan?.outcome !== "noop" && TS_OPS[step.use]) {
+            const applyResult = await TS_OPS[step.use].apply(ctx, repo, plan);
+            if (applyResult?.outcome === "error") {
+              repoFailed = true;
+              status = "error";
+              notes = applyResult.message || "Apply failed";
+              if (playbook.strategy.failFast) break;
+            }
           }
         }
 
-        // Detect and report change status
-        core.info(`🔍 Checking for changes in ${workdir}`);
-        const hasAnyChanges = await hasChanges(workdir);
-        core.info(`📊 hasChanges() = ${hasAnyChanges}`);
+        // Skip rest if repo was skipped or failed
+        if (status === "skipped" || repoFailed) {
+          await appendCsv(resultsCsv, `${repoFull},${executedOp},${status},${csvEsc(prUrl)},,${csvEsc(notes)}\n`);
+          await appendJsonl(jsonlPath, {
+            timestamp: new Date().toISOString(),
+            repo: repoFull,
+            op: executedOp,
+            status,
+            notes
+          });
+          await planReporter.addRepo(repo, status, notes, prUrl, undefined, changeStatus);
 
-        const hasMeaningful = hasAnyChanges && await hasMeaningfulChanges(workdir);
-        if (hasAnyChanges) {
-          core.info(`📊 hasMeaningfulChanges() = ${hasMeaningful}`);
-        }
-
-        if (planOnly) {
-          if (hasMeaningful) {
-            changeStatus = "would apply";
-          } else if (hasAnyChanges) {
-            changeStatus = "would skip (whitespace only)";
-          } else {
-            changeStatus = "no changes";
+          if (status === "error" && playbook.strategy.failFast) {
+            core.setFailed(`Fail-fast triggered by error in ${repoFull}: ${notes}`);
+            process.exit(1);
           }
-          core.info(`📊 Change status in plan mode: ${changeStatus}`);
+          continue;
         }
 
-        // Commit & push if meaningful changes and apply mode
-        let changesPushed = false;
-        if (!planOnly && hasMeaningful) {
-          const userName = process.env.GIT_USER_NAME || "camara-bot";
-          const userEmail = process.env.GIT_USER_EMAIL || "camara-bot@users.noreply.github.com";
-          const commitMsg = `[bulk] ${path.basename(playbookPath)}`;
-          await commitAll(workdir, commitMsg, { userName, userEmail });
-          await push(workdir, branch, token, repoFull);
-          changesPushed = true;
-          changeStatus = "applied";
-        } else if (!planOnly && hasAnyChanges) {
-          changeStatus = "skipped (whitespace only)";
-        } else if (!planOnly) {
+        // Commit/PR gate: only if workdir exists and all ops succeeded
+        if (workdir && !repoFailed) {
+          core.info(`🔍 Checking for changes in ${workdir}`);
+          const hasAnyChanges = await hasChanges(workdir);
+          core.info(`📊 hasChanges() = ${hasAnyChanges}`);
+
+          const diffPolicy = playbook.strategy.diffPolicy || "ignore-eol";
+          const hasMeaningful = hasAnyChanges && await hasMeaningfulChanges(workdir, diffPolicy);
+          if (hasAnyChanges) {
+            core.info(`📊 hasMeaningfulChanges(${diffPolicy}) = ${hasMeaningful}`);
+          }
+
+          if (planOnly) {
+            changeStatus = hasMeaningful ? "would apply" : (hasAnyChanges ? `would skip (${diffPolicy})` : "no changes");
+            core.info(`📊 Change status in plan mode: ${changeStatus}`);
+          } else if (hasMeaningful) {
+            // Apply mode: commit and push
+            const userName = process.env.GIT_USER_NAME || "camara-bot";
+            const userEmail = process.env.GIT_USER_EMAIL || "camara-bot@users.noreply.github.com";
+            const commitMsg = `[bulk] ${path.basename(playbookPath)}`;
+            await commitAll(workdir, commitMsg, { userName, userEmail });
+            await push(workdir, branch, token, repoFull);
+            changeStatus = "applied";
+
+            // Create PR if strategy is "pr"
+            if (playbook.strategy.mode === "pr") {
+              const prTitle = playbook.strategy.pr?.title || "[bulk] Update";
+              const ctx = makeCtx(octokit, token, planOnly, playbook, workdir, {}, () => {});
+              const globalBody = await ctx.renderTemplate(playbook.strategy.pr?.bodyTemplate, playbook.strategy.pr?.bodyTemplatePath, {
+                repo, actor: ctx.env.actor, runUrl: ctx.env.runUrl, playbook: path.basename(playbookPath)
+              });
+              let perOpBodies = "";
+              for (const step of playbook.ops) {
+                const stepBody = await ctx.renderTemplate(step.pr?.bodyTemplate, step.pr?.bodyTemplatePath, {
+                  repo, actor: ctx.env.actor, runUrl: ctx.env.runUrl, playbook: path.basename(playbookPath)
+                });
+                if (stepBody && stepBody.trim().length) {
+                  perOpBodies += `\n\n---\n\n${stepBody}`;
+                }
+              }
+              const prBody = `${globalBody || ""}${perOpBodies}`.trim();
+              prUrl = await createOrUpdatePR(octokit, {
+                owner: repo.owner, repo: repo.name,
+                head: branch, base: repo.defaultBranch,
+                title: prTitle, body: prBody,
+                labels: playbook.strategy.pr?.labels, reviewers: playbook.strategy.pr?.reviewers
+              });
+            }
+          } else {
+            changeStatus = hasAnyChanges ? `skipped (${diffPolicy})` : "no changes";
+          }
+        } else if (!workdir) {
+          // API-only run (no file changes)
           changeStatus = "no changes";
         }
 
-        // PR creation (only if changes were pushed)
-        if (playbook.strategy.mode === "pr" && !planOnly && changesPushed) {
-          const prTitle = playbook.strategy.pr?.title || "[bulk] Update";
-          const globalBody = await ctx.renderTemplate(playbook.strategy.pr?.bodyTemplate, playbook.strategy.pr?.bodyTemplatePath, {
-            repo, actor: ctx.env.actor, runUrl: ctx.env.runUrl, playbook: path.basename(playbookPath)
-          });
-          let perOpBodies = "";
-          for (const step of playbook.ops) {
-            const stepBody = await ctx.renderTemplate(step.pr?.bodyTemplate, step.pr?.bodyTemplatePath, {
-              repo, actor: ctx.env.actor, runUrl: ctx.env.runUrl, playbook: path.basename(playbookPath)
-            });
-            if (stepBody && stepBody.trim().length) {
-              perOpBodies += `\n\n---\n\n${stepBody}`;
-            }
-          }
-          const prBody = `${globalBody || ""}${perOpBodies}`.trim();
-          prUrl = await createOrUpdatePR(octokit, {
-            owner: repo.owner, repo: repo.name,
-            head: branch, base: repo.defaultBranch,
-            title: prTitle, body: prBody,
-            labels: playbook.strategy.pr?.labels, reviewers: playbook.strategy.pr?.reviewers
-          });
-        }
-
-        // Issue creation (with per-op overrides appended)
-        if (playbook.strategy.issue?.enabled && !planOnly) {
-          const issueTitle = playbook.strategy.issue?.title || "Bulk change";
-          const globalIssueBody = await ctx.renderTemplate(playbook.strategy.issue?.bodyTemplate, playbook.strategy.issue?.bodyTemplatePath, {
-            repo, actor: ctx.env.actor, runUrl: ctx.env.runUrl, playbook: path.basename(playbookPath)
-          });
-          let perOpIssueBodies = "";
-          for (const step of playbook.ops) {
-            const stepBody = await ctx.renderTemplate(step.issue?.bodyTemplate, step.issue?.bodyTemplatePath, {
-              repo, actor: ctx.env.actor, runUrl: ctx.env.runUrl, playbook: path.basename(playbookPath)
-            });
-            if (stepBody && stepBody.trim().length) {
-              perOpIssueBodies += `\n\n---\n\n${stepBody}`;
-            }
-          }
-          const issueBody = `${globalIssueBody || ""}${perOpIssueBodies}`.trim();
-          if (issueBody) {
-            issueUrl = await createOrUpdateIssue(octokit, {
-              owner: repo.owner, repo: repo.name,
-              title: issueTitle, body: issueBody, labels: playbook.strategy.issue?.labels
-            });
-          }
-        }
-
       } catch (e: any) {
-        status = "error"; notes = e?.message || String(e);
+        status = "error";
+        notes = e?.message || String(e);
       }
 
-      await appendCsv(resultsCsv, `${repoFull},${executedOp},${status},${csvEsc(prUrl)},${csvEsc(issueUrl)},${csvEsc(notes)}\n`);
+      await appendCsv(resultsCsv, `${repoFull},${executedOp},${status},${csvEsc(prUrl)},,${csvEsc(notes)}\n`);
       await appendJsonl(jsonlPath, {
         timestamp: new Date().toISOString(),
         repo: repoFull,
         op: executedOp,
         status,
         prUrl,
-        issueUrl,
         notes
       });
-      await planReporter.addRepo(repo, status, notes, prUrl, issueUrl, changeStatus);
-
-      if (status === "skipped") totalSkipped++;
+      await planReporter.addRepo(repo, status, notes, prUrl, undefined, changeStatus);
 
       // Fail-fast: stop processing if error and failFast enabled
       if (status === "error" && playbook.strategy.failFast) {
