@@ -1,9 +1,9 @@
 version: 1
 
 selector:
-  # Search user's repositories (works for public repos without auth)
-  # Then filter to only the specified repositories
-  query: "user:hdamker"
+  # Search only forked repositories (GitHub excludes forks by default)
+  # Then filter to only the specified CAMARA forks
+  query: "user:hdamker fork:only"
   include:
     - "hdamker/QualityOnDemand"
     - "hdamker/QoSBooking"
