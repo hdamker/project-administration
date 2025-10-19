@@ -12,11 +12,15 @@ import { searchRepos } from "./github/repos.js";
 import { createOrUpdatePR } from "./github/pr.js";
 import { runPythonOp } from "./runners/python.js";
 import { op as filePatch } from "./ops/file.patch.js";
+import { op as issueCreate } from "./ops/issue.create.js";
 import { cloneShallow, createBranch, hasChanges, hasMeaningfulChanges, commitAll, push } from "./github/git.js";
 import { NeedsWorktreeError } from "./sdk/errors.js";
 import fg from "fast-glob";
 import { Ajv2020 } from "ajv/dist/2020.js";
-const TS_OPS = { [filePatch.id]: filePatch };
+const TS_OPS = {
+    [filePatch.id]: filePatch,
+    [issueCreate.id]: issueCreate
+};
 function csvEsc(s) {
     const v = (s ?? "");
     return `"${v.replace(/"/g, '""')}"`;

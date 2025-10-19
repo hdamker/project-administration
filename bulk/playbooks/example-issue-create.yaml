@@ -1,0 +1,34 @@
+version: 1
+
+selector:
+  # Target hdamker fork repositories
+  query: "user:hdamker fork:only"
+  include:
+    - "hdamker/QoSBooking"
+  exclude: []
+
+strategy:
+  mode: "pr"  # Not used for API-only operations
+  plan: true  # Start in plan mode for safety
+  concurrency: 1
+  failFast: false
+
+ops:
+  # API-only operation: Creates or updates an issue
+  # No repository cloning needed when using inline bodyTemplate
+  - use: issue.create@v1
+    with:
+      title: "[Bulk] Test issue creation from bulk orchestrator v2"
+      bodyTemplate: |
+        This is a test issue created by the bulk orchestrator v2.
+
+        **Details:**
+        - Actor: {{actor}}
+        - Run: {{runUrl}}
+        - Repository: {{repo.fullName}}
+
+        This issue demonstrates the `issue.create@v1` operation running without
+        cloning the repository (API-only operation using inline template).
+      labels:
+        - "test"
+        - "bulk-automation"
