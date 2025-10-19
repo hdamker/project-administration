@@ -2,6 +2,7 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 import fs from "node:fs/promises";
 import path from "node:path";
+import crypto from "node:crypto";
 import YAML from "yaml";
 import { makeCtx } from "./sdk/context.js";
 import { appendCsv, appendJsonl } from "./sdk/reporting.js";
@@ -12,7 +13,7 @@ import { createOrUpdatePR } from "./github/pr.js";
 import { createOrUpdateIssue } from "./github/issues.js";
 import { runPythonOp } from "./runners/python.js";
 import { op as filePatch } from "./ops/file.patch.js";
-import { cloneShallow, createBranch, hasChanges, commitAll, push } from "./github/git.js";
+import { cloneShallow, createBranch, hasMeaningfulChanges, commitAll, push } from "./github/git.js";
 import fg from "fast-glob";
 import { Ajv2020 } from "ajv/dist/2020.js";
 const TS_OPS = { [filePatch.id]: filePatch };
@@ -88,7 +89,10 @@ async function run() {
                 // Checkout repo into workdir
                 const tmpRoot = path.join(process.cwd(), "worktree");
                 const workdir = await cloneShallow(repoFull, tmpRoot, repo.defaultBranch);
-                const branch = (playbook.strategy.pr?.branch || `bulk/${path.basename(playbookPath)}`).replace("<playbook-id>", path.basename(playbookPath));
+                // Generate branch name with hash suffix to prevent collisions across waves
+                const baseBranch = (playbook.strategy.pr?.branch || `bulk/${path.basename(playbookPath)}`).replace("<playbook-id>", path.basename(playbookPath));
+                const playbookHash = crypto.createHash("sha1").update(JSON.stringify(playbook)).digest("hex").slice(0, 7);
+                const branch = `${baseBranch}-${playbookHash}`;
                 // has_files filter (if any)
                 if (playbook.selector.has_files?.length) {
                     const found = await fg(playbook.selector.has_files, { cwd: workdir, dot: true });
@@ -118,8 +122,8 @@ async function run() {
                         throw new Error(`Unknown op: ${step.use}`);
                     }
                 }
-                // Commit & push if changes and apply mode
-                if (!planOnly && await hasChanges(workdir)) {
+                // Commit & push if meaningful changes and apply mode
+                if (!planOnly && await hasMeaningfulChanges(workdir)) {
                     const userName = process.env.GIT_USER_NAME || "camara-bot";
                     const userEmail = process.env.GIT_USER_EMAIL || "camara-bot@users.noreply.github.com";
                     const commitMsg = `[bulk] ${path.basename(playbookPath)}`;

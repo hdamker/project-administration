@@ -27,13 +27,22 @@ export async function hasChanges(cwd) {
     const { stdout } = await run(`git status --porcelain`, cwd);
     return stdout.trim().length > 0;
 }
+export async function hasMeaningfulChanges(cwd) {
+    const { stdout } = await run("git status --porcelain", cwd);
+    if (!stdout.trim())
+        return false;
+    // Check if changes are more than just whitespace
+    const { stdout: diffOutput } = await run("git diff --ignore-cr-at-eol --ignore-space-at-eol --ignore-blank-lines --ignore-all-space", cwd);
+    return Boolean(diffOutput.trim());
+}
 export async function commitAll(cwd, message, cfg) {
-    await run(`git add -A`, cwd);
-    // Signed-off-by requires -s; set identity via -c flags
-    await run(`git -c user.name="${cfg.userName}" -c user.email="${cfg.userEmail}" commit -s -m "${message.replace('"', '\"')}" || true`, cwd);
+    await run("git add -A", cwd);
+    // Use single quotes for message to avoid quote escaping issues
+    const escapedMsg = message.replace(/\\/g, '\\\\').replace(/'/g, "'\\''");
+    await run(`git -c user.name="${cfg.userName}" -c user.email="${cfg.userEmail}" commit -s -m '${escapedMsg}' || true`, cwd);
 }
 export async function push(cwd, branch, token, repoFull) {
-    // Use token for HTTPS push auth
-    const url = `https://${token}:x-oauth-basic@github.com/${repoFull}.git`;
+    // Use modern x-access-token format for HTTPS push auth
+    const url = `https://x-access-token:${token}@github.com/${repoFull}.git`;
     await run(`git push -u "${url}" ${branch}`, cwd);
 }
