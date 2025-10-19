@@ -48,15 +48,28 @@ async function run() {
     const planMdPath = path.join(process.cwd(), "plan.md");
     const planReporter = new PlanReporter(planMdPath);
     const jsonlPath = path.join(process.cwd(), "results.jsonl");
-    const reposFound = await searchRepos(octokit, playbook.selector.query || `org:${github.context.repo.owner}`);
+    const searchQuery = playbook.selector.query || `org:${github.context.repo.owner}`;
+    core.info(`🔍 Repository search query: ${searchQuery}`);
+    const reposFound = await searchRepos(octokit, searchQuery);
+    core.info(`📦 Search found ${reposFound.length} repositories`);
     let repos = reposFound.map(r => ({ owner: r.owner, name: r.name, fullName: `${r.owner}/${r.name}`, defaultBranch: r.default_branch }));
     if (playbook.selector.include?.length) {
+        core.info(`🔽 Applying include filter: ${playbook.selector.include.join(", ")}`);
         const include = new Set(playbook.selector.include);
+        const beforeCount = repos.length;
         repos = repos.filter(r => include.has(r.fullName));
+        core.info(`✅ Include filter: ${beforeCount} → ${repos.length} repositories`);
     }
     if (playbook.selector.exclude?.length) {
+        core.info(`🚫 Applying exclude filter: ${playbook.selector.exclude.join(", ")}`);
+        const beforeCount = repos.length;
         const exclude = new Set(playbook.selector.exclude);
         repos = repos.filter(r => !exclude.has(r.fullName));
+        core.info(`✅ Exclude filter: ${beforeCount} → ${repos.length} repositories`);
+    }
+    core.info(`🎯 Final repository count: ${repos.length}`);
+    if (repos.length > 0) {
+        core.info(`📋 Repositories to process: ${repos.map(r => r.fullName).join(", ")}`);
     }
     // Write plan.md header
     await planReporter.writeHeader(playbook, repos.length, planOnly);
