@@ -1,1 +1,27 @@
 .DS_Store
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript build output
+bulk/action/dist/
+
+# Bulk orchestrator runtime outputs
+results.csv
+results.jsonl
+plan.md
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.log
