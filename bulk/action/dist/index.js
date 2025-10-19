@@ -247,6 +247,10 @@ async function run() {
             catch (e) {
                 status = "error";
                 notes = e?.message || String(e);
+                core.error(`❌ Error processing ${repoFull}: ${notes}`);
+                if (e?.stack) {
+                    core.debug(`Stack trace: ${e.stack}`);
+                }
             }
             await appendCsv(resultsCsv, `${repoFull},${executedOp},${status},${csvEsc(prUrl)},,${csvEsc(notes)}\n`);
             await appendJsonl(jsonlPath, {
