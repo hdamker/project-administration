@@ -1,26 +1,31 @@
 version: 1
+
 selector:
+  # Target one repo for real change test
   query: "user:hdamker fork:only"
   include:
     - "hdamker/QualityOnDemand"
   exclude: []
+
 strategy:
   mode: "pr"
-  plan: false  # Apply mode
+  plan: true  # Start with plan mode to verify changes
   concurrency: 1
   failFast: false
   pr:
     branch: "test/bulk-orchestrator-v2-real"
-    title: "[TEST] Bulk orchestrator v2 - Real change test"
+    title: "[TEST] Bulk orchestrator v2 - Real change validation"
     labels: ["test", "automation"]
     reviewers: []
     bodyTemplatePath: "bulk/templates/pr-default.md"
   issue:
     enabled: false
+
 ops:
+  # More likely to match: add a test comment to README
   - use: "file.patch@v1"
     with:
       globs: ["README.md"]
       replace:
-        - from: "Quality of Service"
-          to: "Quality of Service (QoS)"
+        - from: "# Quality"
+          to: "# Quality [TEST]"
