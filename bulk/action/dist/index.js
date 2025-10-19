@@ -13,7 +13,7 @@ import { createOrUpdatePR } from "./github/pr.js";
 import { createOrUpdateIssue } from "./github/issues.js";
 import { runPythonOp } from "./runners/python.js";
 import { op as filePatch } from "./ops/file.patch.js";
-import { cloneShallow, createBranch, hasMeaningfulChanges, commitAll, push } from "./github/git.js";
+import { cloneShallow, createBranch, hasChanges, hasMeaningfulChanges, commitAll, push } from "./github/git.js";
 import fg from "fast-glob";
 import { Ajv2020 } from "ajv/dist/2020.js";
 const TS_OPS = { [filePatch.id]: filePatch };
@@ -73,7 +73,7 @@ async function run() {
         core.info(`📋 Repositories to process: ${repos.map(r => r.fullName).join(", ")}`);
     }
     // Write plan.md header
-    await planReporter.writeHeader(playbook, repos.length, planOnly);
+    await planReporter.writeHeader(playbookPath, playbook, repos.length, planOnly);
     let i = 0;
     let totalSkipped = 0;
     async function worker() {
@@ -85,6 +85,7 @@ async function run() {
             let status = "ok";
             let notes = "";
             let executedOp = "";
+            let changeStatus = "";
             try {
                 // Checkout repo into workdir
                 const tmpRoot = path.join(process.cwd(), "worktree");
@@ -122,15 +123,36 @@ async function run() {
                         throw new Error(`Unknown op: ${step.use}`);
                     }
                 }
+                // Detect and report change status
+                const hasAnyChanges = await hasChanges(workdir);
+                const hasMeaningful = hasAnyChanges && await hasMeaningfulChanges(workdir);
+                if (planOnly) {
+                    if (hasMeaningful) {
+                        changeStatus = "would apply";
+                    }
+                    else if (hasAnyChanges) {
+                        changeStatus = "would skip (whitespace only)";
+                    }
+                    else {
+                        changeStatus = "no changes";
+                    }
+                }
                 // Commit & push if meaningful changes and apply mode
                 let changesPushed = false;
-                if (!planOnly && await hasMeaningfulChanges(workdir)) {
+                if (!planOnly && hasMeaningful) {
                     const userName = process.env.GIT_USER_NAME || "camara-bot";
                     const userEmail = process.env.GIT_USER_EMAIL || "camara-bot@users.noreply.github.com";
                     const commitMsg = `[bulk] ${path.basename(playbookPath)}`;
                     await commitAll(workdir, commitMsg, { userName, userEmail });
                     await push(workdir, branch, token, repoFull);
                     changesPushed = true;
+                    changeStatus = "applied";
+                }
+                else if (!planOnly && hasAnyChanges) {
+                    changeStatus = "skipped (whitespace only)";
+                }
+                else if (!planOnly) {
+                    changeStatus = "no changes";
                 }
                 // PR creation (only if changes were pushed)
                 if (playbook.strategy.mode === "pr" && !planOnly && changesPushed) {
@@ -193,7 +215,7 @@ async function run() {
                 issueUrl,
                 notes
             });
-            await planReporter.addRepo(repo, status, notes, prUrl, issueUrl);
+            await planReporter.addRepo(repo, status, notes, prUrl, issueUrl, changeStatus);
             if (status === "skipped")
                 totalSkipped++;
             // Fail-fast: stop processing if error and failFast enabled

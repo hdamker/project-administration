@@ -7,9 +7,10 @@ on:
         required: true
         default: bulk/playbooks/sample.yaml
       plan_only:
-        description: Dry-run (true/false)
+        description: Run in plan mode (dry-run)
         required: true
-        default: "true"
+        type: boolean
+        default: true
 jobs:
   bulk:
     runs-on: ubuntu-latest

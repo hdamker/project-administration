@@ -4,10 +4,11 @@ import { Playbook, Repo } from "./context.js";
 export class PlanReporter {
   constructor(private path: string) {}
 
-  async writeHeader(playbook: Playbook, repoCount: number, planOnly: boolean) {
+  async writeHeader(playbookPath: string, playbook: Playbook, repoCount: number, planOnly: boolean) {
     const mode = planOnly ? "PLAN (dry-run)" : "APPLY";
     const content =
       `# Bulk Orchestrator ${mode}\n\n` +
+      `- **Playbook**: ${playbookPath}\n` +
       `- **Playbook Version**: ${playbook.version}\n` +
       `- **Repositories**: ${repoCount}\n` +
       `- **Concurrency**: ${playbook.strategy.concurrency}\n` +
@@ -24,11 +25,19 @@ export class PlanReporter {
     status: string,
     notes: string,
     prUrl?: string,
-    issueUrl?: string
+    issueUrl?: string,
+    changeStatus?: string
   ) {
     const emoji =
       status === "ok" ? "✅" : status === "skipped" ? "⏭️" : "❌";
-    let line = `${emoji} **${repo.fullName}** - ${status}`;
+
+    // Build detailed status message
+    let statusMsg = status;
+    if (status === "ok" && changeStatus) {
+      statusMsg = `ok (${changeStatus})`;
+    }
+
+    let line = `${emoji} **${repo.fullName}** - ${statusMsg}`;
     if (prUrl) line += ` | [PR](${prUrl})`;
     if (issueUrl) line += ` | [Issue](${issueUrl})`;
     if (notes) line += `\n  > ${notes}`;
