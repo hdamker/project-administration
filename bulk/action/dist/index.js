@@ -5,7 +5,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import YAML from "yaml";
 import { makeCtx } from "./sdk/context.js";
-import { appendCsv, appendJsonl } from "./sdk/reporting.js";
+import { appendJsonl } from "./sdk/reporting.js";
 import { PlanReporter } from "./sdk/plan-reporter.js";
 import { makeOctokit } from "./github/client.js";
 import { searchRepos } from "./github/repos.js";
@@ -21,13 +21,35 @@ const TS_OPS = {
     [filePatch.id]: filePatch,
     [issueCreate.id]: issueCreate
 };
-function csvEsc(s) {
-    const v = (s ?? "");
-    return `"${v.replace(/"/g, '""')}"`;
-}
-async function countFailedRepos(csvPath) {
-    const content = await fs.readFile(csvPath, "utf-8");
-    return content.split("\n").filter(line => line.includes(",error,")).length;
+function aggregateOutcome(perOpResults, planOnly, repoFailed) {
+    if (repoFailed)
+        return "error";
+    if (planOnly) {
+        // Plan mode aggregation
+        const hasWouldApply = perOpResults.some(r => r.plan.outcome === "would_apply");
+        const allNoop = perOpResults.every(r => r.plan.outcome === "noop");
+        const hasError = perOpResults.some(r => r.plan.outcome === "error");
+        if (hasError)
+            return "error";
+        if (hasWouldApply)
+            return "ok_would_apply";
+        if (allNoop)
+            return "ok_noop";
+        return "ok_noop";
+    }
+    else {
+        // Apply mode aggregation
+        const hasApplied = perOpResults.some(r => r.apply?.outcome === "applied");
+        const allNoop = perOpResults.every(r => r.apply?.outcome === "noop" || r.plan.outcome === "noop");
+        const hasError = perOpResults.some(r => r.apply?.outcome === "error");
+        if (hasError)
+            return "error";
+        if (hasApplied)
+            return "ok_applied";
+        if (allNoop)
+            return "ok_noop";
+        return "ok_noop";
+    }
 }
 async function run() {
     const playbookPath = core.getInput("playbook_path", { required: true });
@@ -48,11 +70,11 @@ async function run() {
         throw new Error(`Playbook validation failed: ${errs}`);
     }
     const octokit = makeOctokit(token);
-    const resultsCsv = path.join(process.cwd(), "results.csv");
-    await fs.writeFile(resultsCsv, "repo,op,status,pr_url,issue_url,notes\n");
     const planMdPath = path.join(process.cwd(), "plan.md");
     const planReporter = new PlanReporter(planMdPath);
     const jsonlPath = path.join(process.cwd(), "results.jsonl");
+    // Clear any existing results
+    await fs.writeFile(jsonlPath, "");
     const searchQuery = playbook.selector.query || `org:${github.context.repo.owner}`;
     core.info(`🔍 Repository search query: ${searchQuery}`);
     const reposFound = await searchRepos(octokit, searchQuery);
@@ -87,10 +109,10 @@ async function run() {
             let prUrl = "";
             let status = "ok";
             let notes = "";
-            let executedOp = "";
             let changeStatus = "";
             let workdir;
             let repoFailed = false;
+            const perOpResults = [];
             try {
                 const tmpRoot = path.join(process.cwd(), "worktree");
                 // Generate branch name with hash suffix
@@ -100,8 +122,8 @@ async function run() {
                 // Lazy worktree: Start without cloning
                 // Run ops (will clone on first NeedsWorktreeError)
                 for (const step of playbook.ops) {
-                    executedOp = step.use;
                     let plan;
+                    let applyResult;
                     let ctx = makeCtx(octokit, token, planOnly, playbook, workdir, step.with || {}, () => { });
                     try {
                         if (TS_OPS[step.use]) {
@@ -150,36 +172,50 @@ async function run() {
                             throw e;
                         }
                     }
+                    // Skip if plan wasn't assigned (shouldn't happen, but for safety)
+                    if (!plan) {
+                        continue;
+                    }
                     // Track plan outcome
-                    if (plan?.outcome === "error") {
+                    if (plan.outcome === "error") {
                         repoFailed = true;
                         status = "error";
                         notes = plan.message || "Operation failed";
+                        // Still track the result
+                        perOpResults.push({ op: step.use, plan });
                         if (playbook.strategy.failFast)
                             break;
                         continue;
                     }
                     // Apply in apply mode (if not noop)
-                    if (!planOnly && plan?.outcome !== "noop" && TS_OPS[step.use]) {
-                        const applyResult = await TS_OPS[step.use].apply(ctx, repo, plan);
+                    if (!planOnly && plan.outcome !== "noop" && TS_OPS[step.use]) {
+                        applyResult = await TS_OPS[step.use].apply(ctx, repo, plan);
                         if (applyResult?.outcome === "error") {
                             repoFailed = true;
                             status = "error";
                             notes = applyResult.message || "Apply failed";
-                            if (playbook.strategy.failFast)
-                                break;
                         }
+                    }
+                    // Track operation result
+                    perOpResults.push({ op: step.use, plan, apply: applyResult });
+                    // Break if error and failFast
+                    if (applyResult?.outcome === "error" && playbook.strategy.failFast) {
+                        break;
                     }
                 }
                 // Skip rest if repo was skipped or failed
                 if (status === "skipped" || repoFailed) {
-                    await appendCsv(resultsCsv, `${repoFull},${executedOp},${status},${csvEsc(prUrl)},,${csvEsc(notes)}\n`);
+                    const aggregated = aggregateOutcome(perOpResults, planOnly, repoFailed);
                     await appendJsonl(jsonlPath, {
                         timestamp: new Date().toISOString(),
                         repo: repoFull,
-                        op: executedOp,
-                        status,
-                        notes
+                        aggregate: {
+                            outcome: aggregated,
+                            changeStatus,
+                            prUrl,
+                            notes
+                        },
+                        operations: perOpResults
                     });
                     await planReporter.addRepo(repo, status, notes, prUrl, undefined, changeStatus);
                     if (status === "error" && playbook.strategy.failFast) {
@@ -240,8 +276,17 @@ async function run() {
                     }
                 }
                 else if (!workdir) {
-                    // API-only run (no file changes)
-                    changeStatus = "no changes";
+                    // API-only run - aggregate from operation outcomes
+                    const aggregated = aggregateOutcome(perOpResults, planOnly, repoFailed);
+                    if (aggregated === "ok_would_apply") {
+                        changeStatus = "would apply";
+                    }
+                    else if (aggregated === "ok_applied") {
+                        changeStatus = "applied";
+                    }
+                    else {
+                        changeStatus = "no changes";
+                    }
                 }
             }
             catch (e) {
@@ -252,14 +297,18 @@ async function run() {
                     core.debug(`Stack trace: ${e.stack}`);
                 }
             }
-            await appendCsv(resultsCsv, `${repoFull},${executedOp},${status},${csvEsc(prUrl)},,${csvEsc(notes)}\n`);
+            // Write enhanced JSONL with per-op details
+            const aggregated = aggregateOutcome(perOpResults, planOnly, repoFailed);
             await appendJsonl(jsonlPath, {
                 timestamp: new Date().toISOString(),
                 repo: repoFull,
-                op: executedOp,
-                status,
-                prUrl,
-                notes
+                aggregate: {
+                    outcome: aggregated,
+                    changeStatus,
+                    prUrl,
+                    notes
+                },
+                operations: perOpResults
             });
             await planReporter.addRepo(repo, status, notes, prUrl, undefined, changeStatus);
             // Fail-fast: stop processing if error and failFast enabled
@@ -270,8 +319,10 @@ async function run() {
         }
     }
     await Promise.all(Array(Math.max(1, concurrency)).fill(0).map(() => worker()));
-    // Check for failures and exit with error if any repos failed
-    const failedCount = await countFailedRepos(resultsCsv);
+    // Count failures from JSONL
+    const jsonlContent = await fs.readFile(jsonlPath, "utf-8");
+    const results = jsonlContent.split("\n").filter(Boolean).map(line => JSON.parse(line));
+    const failedCount = results.filter(r => r.aggregate?.outcome === "error").length;
     // Finalize plan.md with summary
     await planReporter.finalize(repos.length, failedCount, totalSkipped);
     if (failedCount > 0) {
