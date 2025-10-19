@@ -80,6 +80,86 @@ Add `CAMARA_BULK_CHANGE_TOKEN` with permissions:
 - `pull-requests: write`
 - `issues: write`
 
+## Testing with Personal Forks
+
+Before testing on production CAMARA repositories, validate the orchestrator on your personal forks using a Fine-Grained Personal Access Token (FGPAT) with minimal permissions.
+
+### Creating a Fine-Grained Personal Access Token
+
+**Step 1: Generate Token**
+1. Go to https://github.com/settings/tokens?type=beta
+2. Click "Generate new token" (Fine-grained)
+3. Configure:
+   - **Token name**: `CAMARA Bulk Test (hdamker)`
+   - **Expiration**: 7 days (recommended for testing)
+   - **Resource owner**: Your account (e.g., `hdamker`)
+
+**Step 2: Repository Access**
+- **Repository access**: "Only select repositories"
+- Select your test repositories:
+  - `hdamker/QualityOnDemand`
+  - `hdamker/QoSBooking`
+  - (Optionally) `hdamker/project-administration`
+
+**Step 3: Permissions**
+
+Minimal permissions required:
+
+| Permission | Access | Purpose |
+|------------|--------|---------|
+| **Contents** | Read and write | Clone, read files, create branches, commit changes |
+| **Pull requests** | Read and write | Create and update PRs |
+| **Issues** | Read and write | (Optional) Only if testing issue creation |
+
+**NOT required for testing:**
+- ❌ Workflows
+- ❌ Administration
+- ❌ Actions (Metadata is auto-granted read-only)
+
+**Step 4: Add Secret**
+1. Go to your repository Settings → Secrets and variables → Actions
+2. Create new secret:
+   - **Name**: `CAMARA_BULK_CHANGE_TOKEN`
+   - **Value**: Paste your FGPAT
+3. Save
+
+### Token Scope Comparison
+
+| Aspect | Testing (hdamker) | Production (camaraproject) |
+|--------|-------------------|---------------------------|
+| **Owner** | Personal account | Organization account |
+| **Scope** | Selected repos (2-3) | All CAMARA repos (or selected) |
+| **Permissions** | Contents + PRs | Contents + PRs + (possibly Workflows) |
+| **Risk** | ✅ Low - your repos only | ⚠️ High - affects upstream |
+| **Approval** | ✅ Self-service | ❌ Requires org admin approval |
+| **Expiration** | Short (7 days) | Longer (30-90 days) |
+| **Revocation** | Easy, no impact | Requires coordination |
+
+### Test Playbook for Personal Forks
+
+Use the provided test playbook:
+
+```bash
+gh workflow run bulk-run.yaml \
+  -f playbook=bulk/playbooks/test-hdamker.yaml \
+  -f plan_only=true
+```
+
+This playbook:
+- Targets only `hdamker/QualityOnDemand` and `hdamker/QoSBooking`
+- Performs safe no-op file replacement
+- Runs in plan mode by default
+- Creates test PRs with `test` and `automation` labels
+
+**Validation steps:**
+1. Run in plan mode (`plan_only=true`) first
+2. Check `plan.md` artifact for expected changes
+3. Run in apply mode (`plan_only=false`) to create test PRs
+4. Review PRs in your fork repositories
+5. Close/merge test PRs manually
+
+Once validated on your forks, you can transition to production with an organization-level token.
+
 ## Testing Python Operations
 
 ```bash

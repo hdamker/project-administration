@@ -1,0 +1,33 @@
+version: 1
+
+selector:
+  # Explicitly target two hdamker repositories for safe testing
+  # These are your personal forks - safe for experimentation
+  include:
+    - "hdamker/QualityOnDemand"
+    - "hdamker/QoSBooking"
+  exclude: []
+
+strategy:
+  mode: "pr"
+  concurrency: 1
+  failFast: false
+  pr:
+    branch: "test/bulk-orchestrator-v2"
+    title: "[TEST] Bulk orchestrator v2 - Initial validation"
+    labels: ["test", "automation"]
+    reviewers: []
+    bodyTemplatePath: "bulk/templates/pr-default.md"
+  issue:
+    enabled: false
+
+ops:
+  # Safe test operation: No-op replacement for validation
+  # This finds "Quality" in README.md and replaces it with the same text
+  # Validates the workflow without making actual changes
+  - use: "file.patch@v1"
+    with:
+      globs: ["README.md"]
+      replace:
+        - from: "Quality"
+          to: "Quality"
