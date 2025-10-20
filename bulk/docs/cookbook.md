@@ -98,39 +98,41 @@ ops:
 
 ---
 
-## Recipe 3: Detect WIP APIs
+## Recipe 3: Create Tracking Issues
 
-Collect statistics about repositories with WIP API versions (stats-only, no changes).
+Create or update tracking issues across repositories using API-only operations (no repository clone needed).
 
-**Playbook**: `bulk/playbooks/detect-wip-apis.yaml`
+**Playbook**: `bulk/playbooks/create-tracking-issues.yaml`
 
 ```yaml
 version: 1
 selector:
   query: "org:camaraproject archived:false topic:api"
 strategy:
-  mode: "direct"  # No PRs, just collect data
+  mode: "pr"  # Mode doesn't matter for API-only ops
   plan: false
   concurrency: 10
-  issue:
-    enabled: true
-    title: "WIP APIs detected by bulk scan"
-    labels: ["wip", "audit"]
-    bodyTemplate: |
-      Automated scan found WIP API definitions in this repository.
-
-      Please review and update to proper semantic versions.
-
-      Scan run: {{runUrl}}
+  failFast: false
 ops:
-  - use: "bulk/ops-local/python/collect_yaml_has_wip.py"
+  - use: "issue.create@v1"
     with:
-      paths:
-        - "code/API_definitions/*.yaml"
-        - "code/API_definitions/**/*.yaml"
+      title: "[Bulk] API Repository Audit"
+      bodyTemplate: |
+        This is an automated tracking issue for repository maintenance.
+
+        ## Action Items
+        - [ ] Review API versioning compliance
+        - [ ] Update CI/CD workflows
+        - [ ] Verify documentation is current
+
+        **Repository**: {{repo.fullName}}
+        **Created by**: {{actor}}
+      labels:
+        - "audit"
+        - "bulk-automation"
 ```
 
-**Note**: This creates an issue only if WIP APIs are found.
+**Note**: This operation runs without cloning repositories (API-only mode). Issues are idempotent - re-running updates existing issues instead of creating duplicates.
 
 ---
 
@@ -431,6 +433,147 @@ strategy:
 ```
 
 PRs won't auto-merge; maintainers must review and approve.
+
+---
+
+## Change Detection Policies (diffPolicy)
+
+Control what constitutes a "meaningful" change for PR creation. Use when operations might make whitespace-only or line-ending changes.
+
+### Recipe: Code Reformatting with Whitespace Ignore
+
+When running formatters (prettier, black, gofmt) that might only change indentation:
+
+```yaml
+version: 1
+selector:
+  query: "org:camaraproject archived:false"
+  has_files: ["package.json"]
+strategy:
+  mode: "pr"
+  plan: false
+  concurrency: 5
+  diffPolicy: "ignore-whitespace"  # Ignore indentation-only changes
+  pr:
+    branch: "bulk/prettier-format"
+    title: "[bulk] Run Prettier formatter"
+    labels: ["formatting", "bulk-change"]
+ops:
+  - use: "file.patch@v1"
+    with:
+      globs: ["**/*.js", "**/*.ts"]
+      replace:
+        - from: "  "  # 2 spaces
+          to: "    "  # 4 spaces (example)
+```
+
+**Why `ignore-whitespace`**: If some files already use 4-space indentation, they won't trigger unnecessary PRs.
+
+### Recipe: Cross-Platform Line Ending Fix
+
+When normalizing line endings across repositories:
+
+```yaml
+strategy:
+  diffPolicy: "ignore-eol"  # Default, ignores CRLF ↔ LF changes
+```
+
+**Use case**: Files accidentally committed with Windows line endings (CRLF) vs Unix (LF). Operations that fix line endings won't create PRs for repos already using correct endings.
+
+### Recipe: Strict Change Detection
+
+When whitespace is semantically important (Makefiles, Python, YAML):
+
+```yaml
+strategy:
+  diffPolicy: "strict"  # Any change triggers PR
+```
+
+**Use case**: Updating Makefiles where tabs vs spaces matter, or YAML where indentation is syntax.
+
+### Comparison
+
+| Policy | Detects Content Changes | Detects Whitespace | Detects Line Endings | Use Case |
+|--------|------------------------|-------------------|---------------------|----------|
+| `strict` | ✅ Yes | ✅ Yes | ✅ Yes | Syntax-sensitive files |
+| `ignore-eol` | ✅ Yes | ✅ Yes | ❌ No | Cross-platform (default) |
+| `ignore-whitespace` | ✅ Yes | ❌ No | ❌ No | Formatters, indentation fixes |
+
+---
+
+## API-Only Operation Patterns
+
+Recipes for operations that don't require repository cloning.
+
+### Recipe: Mass Issue Creation
+
+Create tracking issues without cloning repositories:
+
+```yaml
+version: 1
+selector:
+  query: "org:camaraproject archived:false"
+strategy:
+  mode: "pr"  # Ignored for API-only ops
+  plan: false
+  concurrency: 15  # Can use higher concurrency without git ops
+ops:
+  - use: "issue.create@v1"
+    with:
+      title: "[Action Required] Update to Node 20"
+      bodyTemplate: |
+        ## Node 16 End of Life
+
+        Node 16 reaches end-of-life on 2024-09-11.
+
+        **Action Required:**
+        - Update `.github/workflows/*.yml` to use `node-version: '20'`
+        - Update `package.json` engines requirement
+        - Test with Node 20 before merging
+
+        **Repository**: {{repo.fullName}}
+        **Assigned**: @{{repo.owner}}
+      labels: ["dependency-update", "action-required"]
+```
+
+**Performance**: 15 concurrent API-only operations vs 3-5 for file operations with git clones.
+
+### Recipe: Mixed File + API Operations
+
+Combine file changes with issue notifications:
+
+```yaml
+version: 1
+selector:
+  query: "org:camaraproject archived:false"
+strategy:
+  mode: "pr"
+  plan: false
+  concurrency: 5
+ops:
+  # Operation 1: File changes (triggers clone)
+  - use: "file.patch@v1"
+    with:
+      globs: [".github/workflows/*.yml"]
+      replace:
+        - from: "node-version: '16'"
+          to: "node-version: '20'"
+
+  # Operation 2: Create tracking issue (reuses worktree if needed)
+  - use: "issue.create@v1"
+    with:
+      title: "[Automated] Node 20 Migration"
+      bodyTemplate: |
+        A PR has been created to migrate to Node 20.
+
+        **PR**: Will appear in pull requests list
+        **Action**: Review and merge when CI passes
+
+        Automated by {{actor}}
+      labels: ["automation"]
+```
+
+**Note**: The issue operation reuses the worktree from the file operation (already cloned).
 
 ---
 
