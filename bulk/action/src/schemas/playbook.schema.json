@@ -47,8 +47,7 @@
         "properties": {
           "use": { "type": "string" },
           "with": { "type": "object" },
-          "pr": { "type": "object" },
-          "issue": { "type": "object" }
+          "pr": { "type": "object" }
         },
         "additionalProperties": true
       }

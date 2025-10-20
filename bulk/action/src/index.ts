@@ -113,6 +113,10 @@ async function run() {
   core.info(`🎯 Final repository count: ${repos.length}`);
   if (repos.length > 0) {
     core.info(`📋 Repositories to process: ${repos.map(r => r.fullName).join(", ")}`);
+    const nonMainRepos = repos.filter(r => r.defaultBranch !== "main");
+    if (nonMainRepos.length > 0) {
+      core.info(`ℹ️  Repositories with non-main base branch: ${nonMainRepos.map(r => `${r.fullName} (${r.defaultBranch})`).join(", ")}`);
+    }
   }
 
   // Write plan.md header
@@ -254,13 +258,9 @@ async function run() {
         if (workdir && !repoFailed) {
           core.info(`🔍 Checking for changes in ${workdir}`);
           const hasAnyChanges = await hasChanges(workdir);
-          core.info(`📊 hasChanges() = ${hasAnyChanges}`);
-
           const diffPolicy = playbook.strategy.diffPolicy || "ignore-eol";
           const hasMeaningful = hasAnyChanges && await hasMeaningfulChanges(workdir, diffPolicy);
-          if (hasAnyChanges) {
-            core.info(`📊 hasMeaningfulChanges(${diffPolicy}) = ${hasMeaningful}`);
-          }
+          core.info(`📊 Change detection: hasChanges=${hasAnyChanges}, meaningful(${diffPolicy})=${hasMeaningful}`);
 
           if (planOnly) {
             changeStatus = hasMeaningful ? "would apply" : (hasAnyChanges ? `would skip (${diffPolicy})` : "no changes");
@@ -303,6 +303,7 @@ async function run() {
           }
         } else if (!workdir) {
           // API-only run - aggregate from operation outcomes
+          core.info(`ℹ️  API-only operations for ${repoFull} - no repository clone needed`);
           const aggregated = aggregateOutcome(perOpResults, planOnly, repoFailed);
           if (aggregated === "ok_would_apply") {
             changeStatus = "would apply";

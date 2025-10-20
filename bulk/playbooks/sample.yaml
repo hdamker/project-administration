@@ -11,11 +11,6 @@ strategy:
     labels: ["bulk-change"]
     reviewers: []
     bodyTemplatePath: "bulk/templates/pr-default.md"
-  issue:
-    enabled: true
-    title: "Bulk change: please review the orchestrator PR"
-    labels: ["bulk-change"]
-    bodyTemplatePath: "bulk/templates/issue-default.md"
 ops:
   - use: "file.patch@v1"
     with:

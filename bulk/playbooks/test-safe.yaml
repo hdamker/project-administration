@@ -15,8 +15,6 @@ strategy:
     labels: ["test", "bulk-change"]
     reviewers: []
     bodyTemplatePath: "bulk/templates/pr-default.md"
-  issue:
-    enabled: false
 ops:
   # Safe operation: look for a string that likely doesn't exist
   - use: "file.patch@v1"
