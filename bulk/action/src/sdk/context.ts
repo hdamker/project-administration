@@ -36,12 +36,11 @@ export type OpContext = {
   octokit: Octokit; token: string; planOnly: boolean; playbook: Playbook; workdir: string | undefined;
   fs: { readText(p: string): Promise<string>; writeText(p: string, content: string): Promise<void>; };
   renderTemplate(source?: string, filePath?: string, view?: any): Promise<string>;
-  report: { row: (o: Record<string, any>) => void };
   env: { actor: string; runId: number; runUrl: string };
   inputs: any;
 };
 
-export function makeCtx(octokit: Octokit, token: string, planOnly: boolean, playbook: Playbook, workdir: string | undefined, inputs: any, addRow: (o: Record<string, any>) => void): OpContext {
+export function makeCtx(octokit: Octokit, token: string, planOnly: boolean, playbook: Playbook, workdir: string | undefined, inputs: any): OpContext {
   return {
     octokit, token, planOnly, playbook, workdir, inputs,
     fs: {
@@ -66,7 +65,6 @@ export function makeCtx(octokit: Octokit, token: string, planOnly: boolean, play
       }
       return Mustache.render(tpl, view ?? {});
     },
-    report: { row: addRow },
     env: { actor: github.context.actor ?? "unknown", runId: github.context.runId ?? 0, runUrl: `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}` },
   };
 }

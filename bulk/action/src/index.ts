@@ -10,7 +10,6 @@ import { PlanReporter } from "./sdk/plan-reporter.js";
 import { makeOctokit } from "./github/client.js";
 import { searchRepos } from "./github/repos.js";
 import { createOrUpdatePR } from "./github/pr.js";
-import { createOrUpdateIssue } from "./github/issues.js";
 import { runPythonOp } from "./runners/python.js";
 import { op as filePatch } from "./ops/file.patch.js";
 import { op as issueCreate } from "./ops/issue.create.js";
@@ -28,13 +27,6 @@ type OperationResult = {
   op: string;
   plan: PlanResult;
   apply?: ApplyResult;
-};
-
-type AggregateResult = {
-  outcome: string;
-  changeStatus: string;
-  prUrl?: string;
-  issueUrl?: string;
 };
 
 function aggregateOutcome(
@@ -151,7 +143,7 @@ async function run() {
         for (const step of playbook.ops) {
           let plan: PlanResult | undefined;
           let applyResult: ApplyResult | undefined;
-          let ctx = makeCtx(octokit, token, planOnly, playbook, workdir, step.with || {}, () => {});
+          let ctx = makeCtx(octokit, token, planOnly, playbook, workdir, step.with || {});
 
           try {
             if (TS_OPS[step.use]) {
@@ -186,7 +178,7 @@ async function run() {
                 }
 
                 // Retry with worktree
-                ctx = makeCtx(octokit, token, planOnly, playbook, workdir, step.with || {}, () => {});
+                ctx = makeCtx(octokit, token, planOnly, playbook, workdir, step.with || {});
               }
 
               // Retry operation with worktree
@@ -285,7 +277,7 @@ async function run() {
             // Create PR if strategy is "pr"
             if (playbook.strategy.mode === "pr") {
               const prTitle = playbook.strategy.pr?.title || "[bulk] Update";
-              const ctx = makeCtx(octokit, token, planOnly, playbook, workdir, {}, () => {});
+              const ctx = makeCtx(octokit, token, planOnly, playbook, workdir, {});
               const globalBody = await ctx.renderTemplate(playbook.strategy.pr?.bodyTemplate, playbook.strategy.pr?.bodyTemplatePath, {
                 repo, actor: ctx.env.actor, runUrl: ctx.env.runUrl, playbook: path.basename(playbookPath)
               });
