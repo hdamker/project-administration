@@ -104,19 +104,22 @@ strategy:
 
 **Commits directly to default branch** - **No PR created**.
 
+**Note:** For API-only operations (like issue creation), the `mode` setting is ignored since no commits are made.
+
 **Advantages**:
-- Faster for trivial changes
-- Useful for stats collection
+- Faster for trivial file changes
+- No PR overhead for minor fixes
 
 **Use for**:
-- Stats-only operations (no file changes)
-- Emergency hotfixes (with approval)
+- Emergency hotfixes to files (with approval)
 - Sandbox repositories
+- Automated file cleanup (e.g., removing stale files)
 
 **Never use for**:
 - Working group repositories (Governance, ReleaseManagement, etc.)
 - API repositories with active development
 - Changes requiring review
+- Anything that needs CI/CD validation
 
 ## Labels
 

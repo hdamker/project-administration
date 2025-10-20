@@ -176,16 +176,168 @@ python bulk/ops-local/python/collect_yaml_has_wip.py < /tmp/test-input.json | jq
 
 ## Adding New Operations
 
-### TypeScript Operation
+**For comprehensive guide, see [operations-guide.md](operations-guide.md)**
 
-1. Create `bulk/action/src/ops/my-operation.ts`
-2. Register in `bulk/action/src/index.ts` TS_OPS
-3. Rebuild and test
+### Quick Start: TypeScript Operation
 
-### Python Operation
+1. **Create operation file:**
+```typescript
+// bulk/action/src/ops/my.operation.ts
+import { OpContext, Repo, PlanResult, ApplyResult } from "../sdk/context.js";
+import * as core from "@actions/core";
 
-1. Create `bulk/ops-local/python/my_operation.py`
-2. Use in playbook: `use: "bulk/ops-local/python/my_operation.py"`
+export const op = {
+  id: "my.operation@v1",
+  describe: (inputs: any) => "Description of what this does",
+
+  async plan(ctx: OpContext, repo: Repo): Promise<PlanResult> {
+    core.info(`Planning for ${repo.fullName}`);
+    // Your logic here
+    return { outcome: "would_apply" };
+  },
+
+  async apply(ctx: OpContext, repo: Repo, plan: PlanResult): Promise<ApplyResult> {
+    if (plan.outcome === "noop") {
+      return { outcome: "noop" };
+    }
+    // Your logic here
+    return { outcome: "applied" };
+  }
+};
+```
+
+2. **Register in index.ts:**
+```typescript
+// bulk/action/src/index.ts
+import { op as myOperation } from "./ops/my.operation.js";
+
+const TS_OPS: Record<string, any> = {
+  [filePatch.id]: filePatch,
+  [issueCreate.id]: issueCreate,
+  [myOperation.id]: myOperation  // Add here
+};
+```
+
+3. **Rebuild and test:**
+```bash
+npm run build
+# Test with playbook
+```
+
+### Quick Start: Python Operation
+
+1. **Create Python script:**
+```python
+#!/usr/bin/env python3
+# bulk/ops-local/python/my_operation.py
+
+import sys
+import json
+
+def main():
+    payload = json.load(sys.stdin)
+    repo = payload["repo"]
+    inputs = payload.get("inputs", {})
+
+    # Your logic here
+    output = {
+        "rows": [{"result": "example"}],
+        "notes": [f"Processed {repo['fullName']}"]
+    }
+    print(json.dumps(output))
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+```
+
+2. **Make executable:**
+```bash
+chmod +x bulk/ops-local/python/my_operation.py
+```
+
+3. **Use in playbook:**
+```yaml
+ops:
+  - use: "bulk/ops-local/python/my_operation.py"
+    with:
+      custom_param: "value"
+```
+
+### Operation Types
+
+**File-based** (requires repository clone):
+- Modify files, read repository content
+- Throw `NeedsWorktreeError` if worktree not available
+- Write changes during plan() for git diff detection
+
+**API-only** (no repository clone):
+- GitHub API operations (issues, labels, settings)
+- Faster execution
+- Higher concurrency possible
+
+**Hybrid** (conditional clone):
+- Clone only if specific features used
+- Example: `issue.create@v1` with `bodyTemplatePath`
+
+### Testing Your Operation
+
+1. **Create test playbook:**
+```yaml
+# test-my-op.yaml
+version: 1
+selector:
+  include: ["your-username/test-repo"]
+strategy:
+  mode: "pr"
+  plan: true
+  concurrency: 1
+ops:
+  - use: "my.operation@v1"
+    with:
+      param: "test-value"
+```
+
+2. **Run in plan mode:**
+```bash
+gh workflow run bulk-run.yaml \
+  -f playbook=test-my-op.yaml \
+  -f plan_only=true
+```
+
+3. **Check results:**
+```bash
+gh run download <run-id>
+cat plan.md                    # Human-readable
+jq . results.jsonl            # Machine-readable
+open results.html             # Interactive viewer
+```
+
+4. **Check logs:**
+```bash
+gh run view <run-id> --log
+```
+
+### Operation Contract
+
+**PlanResult outcomes:**
+- `noop` - No changes needed
+- `would_apply` - Changes would be applied
+- `error` - Operation failed
+
+**ApplyResult outcomes:**
+- `noop` - No changes needed
+- `applied` - Changes successfully applied
+- `error` - Apply failed
+
+**Best practices:**
+- Always handle errors gracefully
+- Return details for debugging
+- Use `core.info()` for logging
+- Be idempotent (same input → same output)
 
 ## Debugging
 
@@ -200,8 +352,9 @@ env:
 
 ```bash
 gh run download <run-id>
-cat results.csv plan.md
-jq . results.jsonl
+cat plan.md                    # Human-readable summary
+jq . results.jsonl             # Machine-readable per-repo results
+open results.html              # Interactive viewer
 ```
 
 ### Common Issues

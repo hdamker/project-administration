@@ -9,6 +9,8 @@ Python operations provide an alternative to TypeScript operations, allowing you 
 - Write quick collector/auditing scripts
 - Leverage existing Python tools and libraries
 
+**Note:** Python operations **always trigger repository cloning** (lazy worktree pattern). If you need API-only operations that don't clone repositories, use TypeScript operations instead (see [operations-guide.md](../docs/operations-guide.md)).
+
 ## Contract
 
 Python operations must follow this stdin/stdout JSON contract:
@@ -208,6 +210,27 @@ python bulk/ops-local/python/your_operation.py < /tmp/test-input.json
 python bulk/ops-local/python/your_operation.py < /tmp/test-input.json | jq .
 ```
 
+## Performance Considerations
+
+**Python vs TypeScript Operations:**
+
+| Aspect | Python Operations | TypeScript Operations |
+|--------|------------------|----------------------|
+| **Repository Clone** | Always (even for API calls) | On-demand (lazy worktree) |
+| **Startup Time** | Python interpreter startup | Already running |
+| **Best For** | File analysis, data processing | API operations, performance-critical |
+| **Concurrency** | 5-10 (limited by git I/O) | 15+ for API-only ops |
+
+**When to use Python:**
+- Need Python ecosystem (PyYAML, pandas, etc.)
+- Quick prototyping
+- File-heavy operations already
+
+**When to use TypeScript:**
+- API-only operations (issues, labels)
+- Need maximum performance
+- Want to avoid repository clone overhead
+
 ## Stats-Only Operations
 
 For operations that only collect data (not modify files), omit `changes`:
@@ -223,6 +246,8 @@ print(json.dumps({
     "notes": [f"Found {counts['yaml']} YAML and {counts['json']} JSON files"]
 }))
 ```
+
+**Note:** Even stats-only Python operations clone the repository. For pure API stats (no file access), use TypeScript operations.
 
 ## Common Patterns
 
