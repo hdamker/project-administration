@@ -60,7 +60,8 @@ jobs:
       - name: Checkout project-administration repo
         uses: actions/checkout@v4
         with:
-          repository: camaraproject/project-administration
+          repository: hdamker/project-administration
+          ref: feat-bulk-campaigns
           path: campaign-tools
           token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
 
