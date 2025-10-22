@@ -122,7 +122,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            fs.mkdirSync('target-repo/.plan', { recursive: true });
+            fs.mkdirSync('.plan', { recursive: true });
             const repo = '${{ matrix.repo }}';
             const would = '${{ steps.diff.outputs.changed }}' === 'true';
             const details = JSON.parse(`${{ steps.data.outputs.summary || '{}' }}`);
@@ -132,7 +132,7 @@ jobs:
               latest_public_release: details.latest_public_release || null,
               api_count: details.api_count || null
             }) + '\n';
-            fs.appendFileSync('target-repo/.plan/plan.jsonl', line);
+            fs.appendFileSync('.plan/plan.jsonl', line);
             const md = [
               `### ${repo}`,
               would ? '- WOULD apply (PR would be created)' : '- No changes (noop)',
@@ -140,7 +140,7 @@ jobs:
               `- api_count: ${details.api_count || 'n/a'}`,
               ''
             ].join('\n');
-            fs.appendFileSync('target-repo/.plan/plan.md', md);
+            fs.appendFileSync('.plan/plan.md', md);
             const { execSync } = require('child_process');
             execSync('git reset --hard', { cwd: 'target-repo' });
             execSync('git clean -fd', { cwd: 'target-repo' });
@@ -150,7 +150,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: plan-${{ github.run_id }}-${{ strategy.job-index }}
-          path: target-repo/.plan/*
+          path: .plan/*
 
       - name: APPLY – commit to branch
         if: env.MODE == 'apply' && steps.diff.outputs.changed == 'true'
