@@ -147,7 +147,6 @@ jobs:
               ''
             ].join('\n');
             fs.appendFileSync(path.join(planDir, 'plan.md'), md);
-            console.log(`Created plan files in ${planDir}: ${fs.readdirSync(planDir).join(', ')}`);
 
             const { execSync } = require('child_process');
             execSync('git reset --hard', { cwd: path.join(process.env.GITHUB_WORKSPACE, 'target-repo') });
