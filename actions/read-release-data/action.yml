@@ -1,0 +1,15 @@
+name: read-release-data
+description: Resolve repo data (latest public release, api version) from releases-master.yaml
+inputs:
+  releases_file:
+    required: true
+  repo_slug:
+    required: true
+outputs:
+  json:
+    description: JSON string for mustache
+  summary:
+    description: Small JSON with latest_public_release and api_version
+runs:
+  using: node20
+  main: dist/index.js

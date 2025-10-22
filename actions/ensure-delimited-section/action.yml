@@ -1,0 +1,14 @@
+name: ensure-delimited-section
+description: Ensure a delimited section exists in a file (idempotent)
+inputs:
+  file:
+    required: true
+  start:
+    required: true
+  end:
+    required: true
+  placeholder:
+    required: true
+runs:
+  using: node20
+  main: dist/index.js

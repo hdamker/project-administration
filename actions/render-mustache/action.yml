@@ -1,0 +1,12 @@
+name: render-mustache
+description: Render a mustache template with JSON data
+inputs:
+  template:
+    required: true
+  data_json:
+    required: true
+  out_file:
+    required: true
+runs:
+  using: node20
+  main: dist/index.js
