@@ -153,6 +153,18 @@ jobs:
             execSync('git reset --hard', { cwd: path.join(process.env.GITHUB_WORKSPACE, 'target-repo') });
             execSync('git clean -fd', { cwd: path.join(process.env.GITHUB_WORKSPACE, 'target-repo') });
 
+      - name: Verify plan files before upload
+        if: ${{ env.MODE == 'plan' }}
+        run: |
+          echo "PWD: $PWD"
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          echo "Listing workspace root:"
+          ls -la
+          echo "Checking .plan directory:"
+          ls -la .plan/ || echo ".plan not found at current location"
+          echo "Checking absolute path:"
+          ls -la "$GITHUB_WORKSPACE/.plan/" || echo ".plan not found at GITHUB_WORKSPACE"
+
       - name: Upload plan artifacts (per-repo)
         if: ${{ env.MODE == 'plan' }}
         uses: actions/upload-artifact@v4
