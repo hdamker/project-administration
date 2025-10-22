@@ -135,7 +135,9 @@ jobs:
             const repo = '${{ matrix.repo }}';
             const would = '${{ steps.diff.outputs.changed }}' === 'true';
             const summaryStr = `${{ steps.data.outputs.summary || '{}' }}`;
+            console.log(`DEBUG: repo=${repo}, would=${would}, summaryStr=${summaryStr}`);
             const details = summaryStr ? JSON.parse(summaryStr) : {};
+            console.log(`DEBUG: details=${JSON.stringify(details)}`);
 
             const line = JSON.stringify({
               repo,
