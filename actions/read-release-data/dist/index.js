@@ -6800,7 +6800,13 @@ function getInput(name) {
     return process.env[`INPUT_${name.toUpperCase().replace(/-/g, '_')}`] || '';
 }
 function setOutput(name, value) {
-    console.log(`::set-output name=${name}::${value}`);
+    const output = process.env.GITHUB_OUTPUT;
+    if (output) {
+        fs.appendFileSync(output, `${name}=${value}\n`, 'utf8');
+    }
+    else {
+        console.log(`::set-output name=${name}::${value}`);
+    }
 }
 function setFailed(message) {
     console.error(`::error::${message}`);

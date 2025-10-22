@@ -13,7 +13,7 @@ env:
   MODE: ${{ inputs.dry_run && 'plan' || 'apply' }}
   ORG: hdamker
   RELEASES_FILE: data/releases-master.yaml
-  INCLUDE: "QualityOnDemand,DeviceRoamingStatus"
+  INCLUDE: "QualityOnDemand,QoSBooking"
   BRANCH: bulk/release-info-sync
   PR_TITLE: "[bulk] Sync Release Information section"
   PR_BODY: "Automated update of README Release Information section"
@@ -149,7 +149,7 @@ jobs:
         if: env.MODE == 'plan'
         uses: actions/upload-artifact@v4
         with:
-          name: plan-${{ matrix.repo }}
+          name: plan-${{ github.run_id }}-${{ strategy.job-index }}
           path: target-repo/.plan/*
 
       - name: APPLY – commit to branch

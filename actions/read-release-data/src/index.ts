@@ -7,7 +7,12 @@ function getInput(name: string): string {
 }
 
 function setOutput(name: string, value: string): void {
-  console.log(`::set-output name=${name}::${value}`);
+  const output = process.env.GITHUB_OUTPUT;
+  if (output) {
+    fs.appendFileSync(output, `${name}=${value}\n`, 'utf8');
+  } else {
+    console.log(`::set-output name=${name}::${value}`);
+  }
 }
 
 function setFailed(message: string): void {
