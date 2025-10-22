@@ -1,7 +1,27 @@
-import * as core from '@actions/core';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as semver from 'semver';
+
+function getInput(name: string): string {
+  return process.env[`INPUT_${name.toUpperCase().replace(/-/g, '_')}`] || '';
+}
+
+function setOutput(name: string, value: string): void {
+  console.log(`::set-output name=${name}::${value}`);
+}
+
+function setFailed(message: string): void {
+  console.error(`::error::${message}`);
+  process.exit(1);
+}
+
+function info(message: string): void {
+  console.log(message);
+}
+
+function warning(message: string): void {
+  console.log(`::warning::${message}`);
+}
 
 interface API {
   api_name: string;
@@ -27,8 +47,13 @@ interface ReleasesData {
 
 (async () => {
   try {
-    const releasesFile = core.getInput('releases_file', { required: true });
-    const repoSlug = core.getInput('repo_slug', { required: true });
+    const releasesFile = getInput('releases_file');
+    const repoSlug = getInput('repo_slug');
+
+    if (!releasesFile || !repoSlug) {
+      throw new Error('Missing required inputs: releases_file and repo_slug');
+    }
+
     const repoName = repoSlug.split('/')[1];
 
     if (!fs.existsSync(releasesFile)) {
@@ -59,7 +84,7 @@ interface ReleasesData {
     );
 
     if (publicReleases.length === 0) {
-      core.warning(`No public releases found for ${repoName}, only sandbox releases exist`);
+      warning(`No public releases found for ${repoName}, only sandbox releases exist`);
       throw new Error(`No public releases available for ${repoName}`);
     }
 
@@ -106,17 +131,17 @@ interface ReleasesData {
     };
 
     // Output full JSON for Mustache templating
-    core.setOutput('json', JSON.stringify(payload));
+    setOutput('json', JSON.stringify(payload));
 
     // Output summary for plan reporting
-    core.setOutput('summary', JSON.stringify({
+    setOutput('summary', JSON.stringify({
       latest_public_release: latest.release_tag,
       api_count: latest.apis.length
     }));
 
-    core.info(`Found latest public release: ${latest.release_tag} with ${latest.apis.length} APIs`);
+    info(`Found latest public release: ${latest.release_tag} with ${latest.apis.length} APIs`);
 
   } catch (err: any) {
-    core.setFailed(err.message);
+    setFailed(err.message);
   }
 })();

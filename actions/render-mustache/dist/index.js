@@ -1,5 +1,14 @@
-const core = require('@actions/core');
 const fs = require('fs');
+const path = require('path');
+
+function getInput(name) {
+  return process.env[`INPUT_${name.toUpperCase().replace(/-/g, '_')}`] || '';
+}
+
+function setFailed(message) {
+  console.error(`::error::${message}`);
+  process.exit(1);
+}
 
 function simpleMustache(tpl, data, parent = null) {
   // Enhanced mustache: {{key}} and array sections {{#items}}...{{/items}}
@@ -30,9 +39,13 @@ function simpleMustache(tpl, data, parent = null) {
 }
 
 try {
-  const templatePath = core.getInput('template', { required: true });
-  const outFile = core.getInput('out_file', { required: true });
-  let dataJson = core.getInput('data_json', { required: true });
+  const templatePath = getInput('template');
+  const outFile = getInput('out_file');
+  let dataJson = getInput('data_json');
+
+  if (!templatePath || !outFile || !dataJson) {
+    throw new Error('Missing required inputs');
+  }
 
   if (!(dataJson.startsWith('{') || dataJson.startsWith('['))) {
     if (fs.existsSync(dataJson)) {
@@ -44,10 +57,10 @@ try {
   const tpl = fs.readFileSync(templatePath, 'utf8');
   const out = simpleMustache(tpl, data);
 
-  fs.mkdirSync(require('path').dirname(outFile), { recursive: true });
+  fs.mkdirSync(path.dirname(outFile), { recursive: true });
   fs.writeFileSync(outFile, out);
 
-  core.info(`Rendered template to ${outFile}`);
+  console.log(`Rendered template to ${outFile}`);
 } catch (err) {
-  core.setFailed(err.message);
+  setFailed(err.message);
 }

@@ -1,11 +1,23 @@
-const core = require('@actions/core');
 const fs = require('fs');
 
+function getInput(name) {
+  return process.env[`INPUT_${name.toUpperCase()}`] || '';
+}
+
+function setFailed(message) {
+  console.error(`::error::${message}`);
+  process.exit(1);
+}
+
 try {
-  const file = core.getInput('file', { required: true });
-  const start = core.getInput('start', { required: true });
-  const end = core.getInput('end', { required: true });
-  const placeholder = core.getInput('placeholder', { required: true });
+  const file = getInput('file');
+  const start = getInput('start');
+  const end = getInput('end');
+  const placeholder = getInput('placeholder');
+
+  if (!file || !start || !end || !placeholder) {
+    throw new Error('Missing required inputs');
+  }
 
   const exists = fs.existsSync(file);
   const orig = exists ? fs.readFileSync(file, 'utf8') : '';
@@ -39,10 +51,10 @@ try {
 
   if (next !== orig) {
     fs.writeFileSync(file, next);
-    core.info('Delimited section ensured in file');
+    console.log('Delimited section ensured in file');
   } else {
-    core.info('Delimited section already present');
+    console.log('Delimited section already present');
   }
 } catch (err) {
-  core.setFailed(err.message);
+  setFailed(err.message);
 }

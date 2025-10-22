@@ -1,11 +1,27 @@
-const core = require('@actions/core');
 const fs = require('fs');
 
+function getInput(name) {
+  return process.env[`INPUT_${name.toUpperCase().replace(/-/g, '_')}`] || '';
+}
+
+function setOutput(name, value) {
+  console.log(`::set-output name=${name}::${value}`);
+}
+
+function setFailed(message) {
+  console.error(`::error::${message}`);
+  process.exit(1);
+}
+
 try {
-  const file = core.getInput('file', { required: true });
-  const start = core.getInput('start', { required: true });
-  const end = core.getInput('end', { required: true });
-  const newFile = core.getInput('new_content_file', { required: true });
+  const file = getInput('file');
+  const start = getInput('start');
+  const end = getInput('end');
+  const newFile = getInput('new_content_file');
+
+  if (!file || !start || !end || !newFile) {
+    throw new Error('Missing required inputs');
+  }
 
   const orig = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
   const newContent = fs.readFileSync(newFile, 'utf8').replace(/\r\n/g, '\n').trim() + '\n';
@@ -20,7 +36,7 @@ try {
 
   const changed = next !== orig;
   if (changed) fs.writeFileSync(file, next);
-  core.setOutput('changed', changed ? 'true' : 'false');
+  setOutput('changed', changed ? 'true' : 'false');
 } catch (err) {
-  core.setFailed(err.message);
+  setFailed(err.message);
 }
