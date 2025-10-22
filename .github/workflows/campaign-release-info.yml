@@ -129,7 +129,7 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const planDir = path.join(process.env.GITHUB_WORKSPACE, '.plan');
+            const planDir = path.join(process.env.GITHUB_WORKSPACE, 'plan-output');
             fs.mkdirSync(planDir, { recursive: true });
 
             const repo = '${{ matrix.repo }}';
@@ -157,25 +157,13 @@ jobs:
             const { execSync } = require('child_process');
             execSync('git reset --hard', { cwd: path.join(process.env.GITHUB_WORKSPACE, 'repo') });
             execSync('git clean -fd', { cwd: path.join(process.env.GITHUB_WORKSPACE, 'repo') });
-            console.log(`Plan files created. Checking: ${fs.existsSync(planDir) ? 'exists' : 'MISSING'}`);
-            if (fs.existsSync(planDir)) {
-              console.log(`Contents: ${fs.readdirSync(planDir).join(', ')}`);
-            }
-
-      - name: Verify plan directory before upload
-        if: ${{ env.MODE == 'plan' }}
-        run: |
-          echo "Working directory: $PWD"
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          ls -la .plan/ 2>&1 || echo "ERROR: .plan not found in PWD"
-          ls -la "$GITHUB_WORKSPACE/.plan/" 2>&1 || echo "ERROR: .plan not found in GITHUB_WORKSPACE"
 
       - name: Upload plan artifacts (per-repo)
         if: ${{ env.MODE == 'plan' }}
         uses: actions/upload-artifact@v4
         with:
           name: plan-${{ github.run_id }}-${{ strategy.job-index }}
-          path: .plan/
+          path: plan-output/
 
       - name: APPLY – commit to branch
         if: ${{ env.MODE == 'apply' && steps.diff.outputs.changed == 'true' }}
