@@ -180,15 +180,22 @@ jobs:
 
       - name: Create/Update PR (apply)
         if: ${{ env.MODE == 'apply' && steps.diff.outputs.changed == 'true' }}
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
-          path: repo
-          branch: ${{ env.BRANCH }}
-          title:  ${{ env.PR_TITLE }}
-          body:   ${{ env.PR_BODY }}
-          draft: true
-          signoff: true
+        working-directory: repo
+        run: |
+          PR_NUMBER=$(gh pr list --head "${{ env.BRANCH }}" --json number --jq '.[0].number' || echo "")
+
+          if [ -z "$PR_NUMBER" ]; then
+            gh pr create \
+              --title "${{ env.PR_TITLE }}" \
+              --body "${{ env.PR_BODY }}" \
+              --draft \
+              --head "${{ env.BRANCH }}" \
+              --base main
+          else
+            echo "PR #$PR_NUMBER already exists for branch ${{ env.BRANCH }}"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
 
   aggregate:
     needs: run
