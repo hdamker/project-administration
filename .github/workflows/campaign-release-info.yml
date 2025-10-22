@@ -3,7 +3,7 @@ on: { workflow_dispatch: {} }
 
 env:
   MODE: plan                        # flip to 'apply' when ready
-  ORG: camaraproject
+  ORG: camaraproject                # change to 'hdamker' for testing with forks
   RELEASES_FILE: data/releases-master.yaml
   INCLUDE: ""                       # optional: "DeviceLocation,QualityOnDemand"
   BRANCH: bulk/release-info-sync
@@ -50,6 +50,7 @@ jobs:
         with:
           repository: camaraproject/project-administration
           path: project-administration
+          token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
 
       - name: Checkout target repo
         uses: actions/checkout@v4
@@ -57,7 +58,7 @@ jobs:
           repository: ${{ matrix.repo }}
           path: target-repo
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
 
       - name: Read release data
         id: data
@@ -156,7 +157,7 @@ jobs:
         if: env.MODE == 'apply' && steps.diff.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
           branch: ${{ env.BRANCH }}
           title:  ${{ env.PR_TITLE }}
           body:   ${{ env.PR_BODY }}
