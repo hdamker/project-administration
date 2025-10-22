@@ -129,15 +129,11 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const planDir = path.join(process.env.GITHUB_WORKSPACE, 'plan-output');
-            fs.mkdirSync(planDir, { recursive: true });
 
             const repo = '${{ matrix.repo }}';
             const would = '${{ steps.diff.outputs.changed }}' === 'true';
             const summaryStr = `${{ steps.data.outputs.summary || '{}' }}`;
-            console.log(`DEBUG: repo=${repo}, would=${would}, summaryStr=${summaryStr}`);
             const details = summaryStr ? JSON.parse(summaryStr) : {};
-            console.log(`DEBUG: details=${JSON.stringify(details)}`);
 
             const line = JSON.stringify({
               repo,
@@ -145,7 +141,7 @@ jobs:
               latest_public_release: details.latest_public_release || null,
               api_count: details.api_count || null
             }) + '\n';
-            fs.appendFileSync(path.join(planDir, 'plan.jsonl'), line);
+            fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, 'plan.jsonl'), line);
 
             const md = [
               `### ${repo}`,
@@ -154,7 +150,7 @@ jobs:
               `- api_count: ${details.api_count || 'n/a'}`,
               ''
             ].join('\n');
-            fs.appendFileSync(path.join(planDir, 'plan.md'), md);
+            fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, 'plan.md'), md);
 
             const { execSync } = require('child_process');
             execSync('git reset --hard', { cwd: path.join(process.env.GITHUB_WORKSPACE, 'repo') });
@@ -165,7 +161,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: plan-${{ github.run_id }}-${{ strategy.job-index }}
-          path: plan-output/
+          path: |
+            plan.md
+            plan.jsonl
 
       - name: APPLY – commit to branch
         if: ${{ env.MODE == 'apply' && steps.diff.outputs.changed == 'true' }}
@@ -214,7 +212,6 @@ jobs:
             }
             const md = []; const lines = [];
             const dirs = fs.readdirSync(p);
-            console.log(`DEBUG: Found ${dirs.length} directories in plans/: ${dirs.join(', ')}`);
             if (dirs.length === 0) {
               console.log('Plans directory is empty, no artifacts were downloaded');
               fs.writeFileSync('plan.md', '# No plan artifacts found\n');
@@ -223,21 +220,9 @@ jobs:
             }
             for (const d of dirs) {
               const dir = `${p}/${d}`;
-              console.log(`DEBUG: Checking ${dir}...`);
-              const mdPath = `${dir}/plan.md`;
-              const jsonlPath = `${dir}/plan.jsonl`;
-              if (fs.existsSync(mdPath)) {
-                const content = fs.readFileSync(mdPath,'utf8');
-                console.log(`DEBUG: Found plan.md (${content.length} bytes)`);
-                md.push(content);
-              }
-              if (fs.existsSync(jsonlPath)) {
-                const content = fs.readFileSync(jsonlPath,'utf8');
-                console.log(`DEBUG: Found plan.jsonl (${content.length} bytes)`);
-                lines.push(content);
-              }
+              if (fs.existsSync(`${dir}/plan.md`))    md.push(fs.readFileSync(`${dir}/plan.md`,'utf8'));
+              if (fs.existsSync(`${dir}/plan.jsonl`)) lines.push(fs.readFileSync(`${dir}/plan.jsonl`,'utf8'));
             }
-            console.log(`DEBUG: Merged ${md.length} plan.md files, ${lines.length} plan.jsonl files`);
             fs.writeFileSync('plan.md', md.join('\n'));
             fs.writeFileSync('plan.jsonl', lines.join(''));
       - uses: actions/upload-artifact@v4
