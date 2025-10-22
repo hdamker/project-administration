@@ -138,8 +138,11 @@ jobs:
             const line = JSON.stringify({
               repo,
               pr_would_be_created: would,
+              reason: would ? 'content_changed' : 'noop',
               latest_public_release: details.latest_public_release || null,
-              api_count: details.api_count || null
+              api_count: details.api_count || null,
+              touched_files: ['README.md'],
+              timestamp: new Date().toISOString()
             }) + '\n';
             fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, 'plan.jsonl'), line);
 
