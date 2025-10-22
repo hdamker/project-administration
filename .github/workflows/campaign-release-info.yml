@@ -39,9 +39,9 @@ jobs:
             const fs = require('fs');
             const yaml = require('js-yaml');
             const doc = yaml.load(fs.readFileSync(process.env.RELEASES_FILE, 'utf8'));
-            let list = (doc?.releases || [])
+            let list = [...new Set((doc?.releases || [])
               .map(r => `${process.env.ORG}/${r.repository}`)
-              .filter(Boolean);
+              .filter(Boolean))];
             const include = (process.env.INCLUDE||'').split(',').map(s=>s.trim()).filter(Boolean);
             if (include.length) list = list.filter(r => include.some(x => r.endsWith(`/${x}`)));
             core.setOutput('repos', JSON.stringify(list));
@@ -61,7 +61,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: camaraproject/project-administration
-          path: project-administration
+          path: campaign-tools
           token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
 
       - name: Checkout target repo
@@ -74,14 +74,14 @@ jobs:
 
       - name: Read release data
         id: data
-        uses: ./project-administration/actions/read-release-data
+        uses: ./campaign-tools/actions/read-release-data
         with:
-          releases_file: ${{ github.workspace }}/project-administration/${{ env.RELEASES_FILE }}
+          releases_file: ${{ github.workspace }}/campaign-tools/${{ env.RELEASES_FILE }}
           repo_slug: ${{ matrix.repo }}
 
       - name: Ensure Release Info section delimiters
         id: ensure
-        uses: ./project-administration/actions/ensure-delimited-section
+        uses: ./campaign-tools/actions/ensure-delimited-section
         with:
           file: target-repo/README.md
           start: "<!-- CAMARA:RELEASE-INFO:START -->"
@@ -90,15 +90,15 @@ jobs:
 
       - name: Render Mustache → /tmp/release-info.md
         id: render
-        uses: ./project-administration/actions/render-mustache
+        uses: ./campaign-tools/actions/render-mustache
         with:
-          template: ${{ github.workspace }}/project-administration/campaigns/release-info/templates/release-info.mustache
+          template: ${{ github.workspace }}/campaign-tools/campaigns/release-info/templates/release-info.mustache
           data_json: ${{ steps.data.outputs.json }}
           out_file: /tmp/release-info.md
 
       - name: Replace delimited content (writes in-place)
         id: replace
-        uses: ./project-administration/actions/replace-delimited-content
+        uses: ./campaign-tools/actions/replace-delimited-content
         with:
           file: target-repo/README.md
           start: "<!-- CAMARA:RELEASE-INFO:START -->"
