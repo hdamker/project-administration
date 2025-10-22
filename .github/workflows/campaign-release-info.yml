@@ -9,6 +9,10 @@ on:
         type: boolean
         default: true
 
+concurrency:
+  group: campaign-release-info-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   MODE: ${{ inputs.dry_run && 'plan' || 'apply' }}
   ORG: hdamker
@@ -28,9 +32,14 @@ jobs:
     outputs:
       repos: ${{ steps.sel.outputs.repos }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout admin repo (self)
+        uses: actions/checkout@v4
+        with:
+          path: admin
+
       - name: Install js-yaml
         run: npm install js-yaml
+
       - id: sel
         name: Build repo list (from releases-master.yaml + include filter)
         uses: actions/github-script@v7
@@ -38,7 +47,7 @@ jobs:
           script: |
             const fs = require('fs');
             const yaml = require('js-yaml');
-            const doc = yaml.load(fs.readFileSync(process.env.RELEASES_FILE, 'utf8'));
+            const doc = yaml.load(fs.readFileSync('admin/data/releases-master.yaml', 'utf8'));
             let list = [...new Set((doc?.releases || [])
               .map(r => `${process.env.ORG}/${r.repository}`)
               .filter(Boolean))];
@@ -57,51 +66,48 @@ jobs:
         repo: ${{ fromJson(needs.select.outputs.repos) }}
 
     steps:
-      - name: Checkout project-administration repo
+      - name: Checkout admin repo (self)
         uses: actions/checkout@v4
         with:
-          repository: hdamker/project-administration
-          ref: feat-bulk-campaigns
-          path: campaign-tools
-          token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
+          path: admin
 
       - name: Checkout target repo
         uses: actions/checkout@v4
         with:
           repository: ${{ matrix.repo }}
-          path: target-repo
+          path: repo
           fetch-depth: 0
           token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
 
       - name: Read release data
         id: data
-        uses: ./campaign-tools/actions/read-release-data
+        uses: ./admin/actions/read-release-data
         with:
-          releases_file: ${{ github.workspace }}/campaign-tools/${{ env.RELEASES_FILE }}
+          releases_file: ${{ github.workspace }}/admin/${{ env.RELEASES_FILE }}
           repo_slug: ${{ matrix.repo }}
 
       - name: Ensure Release Info section delimiters
         id: ensure
-        uses: ./campaign-tools/actions/ensure-delimited-section
+        uses: ./admin/actions/ensure-delimited-section
         with:
-          file: target-repo/README.md
+          file: repo/README.md
           start: "<!-- CAMARA:RELEASE-INFO:START -->"
           end:   "<!-- CAMARA:RELEASE-INFO:END -->"
           placeholder: "_This section is managed by project-administration_"
 
       - name: Render Mustache → /tmp/release-info.md
         id: render
-        uses: ./campaign-tools/actions/render-mustache
+        uses: ./admin/actions/render-mustache
         with:
-          template: ${{ github.workspace }}/campaign-tools/campaigns/release-info/templates/release-info.mustache
+          template: ${{ github.workspace }}/admin/campaigns/release-info/templates/release-info.mustache
           data_json: ${{ steps.data.outputs.json }}
           out_file: /tmp/release-info.md
 
       - name: Replace delimited content (writes in-place)
         id: replace
-        uses: ./campaign-tools/actions/replace-delimited-content
+        uses: ./admin/actions/replace-delimited-content
         with:
-          file: target-repo/README.md
+          file: repo/README.md
           start: "<!-- CAMARA:RELEASE-INFO:START -->"
           end:   "<!-- CAMARA:RELEASE-INFO:END -->"
           new_content_file: /tmp/release-info.md
@@ -113,7 +119,7 @@ jobs:
           script: |
             const { execSync } = require('child_process');
             let changed = 'false';
-            try { execSync('git diff --quiet', { cwd: 'target-repo' }); } catch { changed = 'true'; }
+            try { execSync('git diff --quiet', { cwd: 'repo' }); } catch { changed = 'true'; }
             core.setOutput('changed', changed);
 
       - name: PLAN – record plan.md + plan.jsonl and reset
@@ -149,20 +155,8 @@ jobs:
             fs.appendFileSync(path.join(planDir, 'plan.md'), md);
 
             const { execSync } = require('child_process');
-            execSync('git reset --hard', { cwd: path.join(process.env.GITHUB_WORKSPACE, 'target-repo') });
-            execSync('git clean -fd', { cwd: path.join(process.env.GITHUB_WORKSPACE, 'target-repo') });
-
-      - name: Verify plan files before upload
-        if: ${{ env.MODE == 'plan' }}
-        run: |
-          echo "PWD: $PWD"
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          echo "Listing workspace root:"
-          ls -la
-          echo "Checking .plan directory:"
-          ls -la .plan/ || echo ".plan not found at current location"
-          echo "Checking absolute path:"
-          ls -la "$GITHUB_WORKSPACE/.plan/" || echo ".plan not found at GITHUB_WORKSPACE"
+            execSync('git reset --hard', { cwd: path.join(process.env.GITHUB_WORKSPACE, 'repo') });
+            execSync('git clean -fd', { cwd: path.join(process.env.GITHUB_WORKSPACE, 'repo') });
 
       - name: Upload plan artifacts (per-repo)
         if: ${{ env.MODE == 'plan' }}
@@ -177,18 +171,19 @@ jobs:
         with:
           script: |
             const { execSync } = require('child_process');
-            execSync('git config user.name "github-actions[bot]"', { cwd: 'target-repo' });
-            execSync('git config user.email "github-actions[bot]@users.noreply.github.com"', { cwd: 'target-repo' });
-            execSync('git checkout -B "${{ env.BRANCH }}"', { cwd: 'target-repo' });
-            execSync('git add README.md', { cwd: 'target-repo' });
-            try { execSync('git commit -m "${{ env.PR_TITLE }}"', { cwd: 'target-repo' }); } catch {}
-            execSync('git push -f origin "${{ env.BRANCH }}"', { cwd: 'target-repo' });
+            execSync('git config user.name "github-actions[bot]"', { cwd: 'repo' });
+            execSync('git config user.email "github-actions[bot]@users.noreply.github.com"', { cwd: 'repo' });
+            execSync('git checkout -B "${{ env.BRANCH }}"', { cwd: 'repo' });
+            execSync('git add README.md', { cwd: 'repo' });
+            try { execSync('git commit -m "${{ env.PR_TITLE }}"', { cwd: 'repo' }); } catch {}
+            execSync('git push -f origin "${{ env.BRANCH }}"', { cwd: 'repo' });
 
       - name: Create/Update PR (apply)
         if: ${{ env.MODE == 'apply' && steps.diff.outputs.changed == 'true' }}
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
+          path: repo
           branch: ${{ env.BRANCH }}
           title:  ${{ env.PR_TITLE }}
           body:   ${{ env.PR_BODY }}
@@ -201,7 +196,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
-        with: { path: plans }
+        with:
+          pattern: plan-*
+          path: plans
+          merge-multiple: true
       - name: Merge plan artifacts
         uses: actions/github-script@v7
         with:
