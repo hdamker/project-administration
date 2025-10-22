@@ -117,22 +117,28 @@ jobs:
             core.setOutput('changed', changed);
 
       - name: PLAN – record plan.md + plan.jsonl and reset
-        if: env.MODE == 'plan'
+        if: ${{ env.MODE == 'plan' }}
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            fs.mkdirSync('.plan', { recursive: true });
+            const path = require('path');
+            const planDir = path.join(process.env.GITHUB_WORKSPACE, '.plan');
+            fs.mkdirSync(planDir, { recursive: true });
+
             const repo = '${{ matrix.repo }}';
             const would = '${{ steps.diff.outputs.changed }}' === 'true';
-            const details = JSON.parse(`${{ steps.data.outputs.summary || '{}' }}`);
+            const summaryStr = `${{ steps.data.outputs.summary || '{}' }}`;
+            const details = summaryStr ? JSON.parse(summaryStr) : {};
+
             const line = JSON.stringify({
               repo,
               pr_would_be_created: would,
               latest_public_release: details.latest_public_release || null,
               api_count: details.api_count || null
             }) + '\n';
-            fs.appendFileSync('.plan/plan.jsonl', line);
+            fs.appendFileSync(path.join(planDir, 'plan.jsonl'), line);
+
             const md = [
               `### ${repo}`,
               would ? '- WOULD apply (PR would be created)' : '- No changes (noop)',
@@ -140,20 +146,22 @@ jobs:
               `- api_count: ${details.api_count || 'n/a'}`,
               ''
             ].join('\n');
-            fs.appendFileSync('.plan/plan.md', md);
+            fs.appendFileSync(path.join(planDir, 'plan.md'), md);
+            console.log(`Created plan files in ${planDir}: ${fs.readdirSync(planDir).join(', ')}`);
+
             const { execSync } = require('child_process');
-            execSync('git reset --hard', { cwd: 'target-repo' });
-            execSync('git clean -fd', { cwd: 'target-repo' });
+            execSync('git reset --hard', { cwd: path.join(process.env.GITHUB_WORKSPACE, 'target-repo') });
+            execSync('git clean -fd', { cwd: path.join(process.env.GITHUB_WORKSPACE, 'target-repo') });
 
       - name: Upload plan artifacts (per-repo)
-        if: env.MODE == 'plan'
+        if: ${{ env.MODE == 'plan' }}
         uses: actions/upload-artifact@v4
         with:
           name: plan-${{ github.run_id }}-${{ strategy.job-index }}
           path: .plan/*
 
       - name: APPLY – commit to branch
-        if: env.MODE == 'apply' && steps.diff.outputs.changed == 'true'
+        if: ${{ env.MODE == 'apply' && steps.diff.outputs.changed == 'true' }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -166,7 +174,7 @@ jobs:
             execSync('git push -f origin "${{ env.BRANCH }}"', { cwd: 'target-repo' });
 
       - name: Create/Update PR (apply)
-        if: env.MODE == 'apply' && steps.diff.outputs.changed == 'true'
+        if: ${{ env.MODE == 'apply' && steps.diff.outputs.changed == 'true' }}
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
