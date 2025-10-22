@@ -1,11 +1,19 @@
 name: campaign-release-info
-on: { workflow_dispatch: {} }
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run mode (plan only, no PRs created)'
+        required: true
+        type: boolean
+        default: true
 
 env:
-  MODE: plan                        # flip to 'apply' when ready
-  ORG: camaraproject                # change to 'hdamker' for testing with forks
+  MODE: ${{ inputs.dry_run && 'plan' || 'apply' }}
+  ORG: hdamker
   RELEASES_FILE: data/releases-master.yaml
-  INCLUDE: ""                       # optional: "DeviceLocation,QualityOnDemand"
+  INCLUDE: "QualityOnDemand,DeviceRoamingStatus"
   BRANCH: bulk/release-info-sync
   PR_TITLE: "[bulk] Sync Release Information section"
   PR_BODY: "Automated update of README Release Information section"
