@@ -47,6 +47,8 @@ jobs:
   run:
     needs: select
     runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ env.MODE }}
     strategy:
       fail-fast: false
       matrix:
@@ -173,7 +175,7 @@ jobs:
 
   aggregate:
     needs: run
-    if: env.MODE == 'plan'
+    if: needs.run.outputs.mode == 'plan'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
