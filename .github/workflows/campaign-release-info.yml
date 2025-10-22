@@ -207,8 +207,21 @@ jobs:
         with:
           script: |
             const fs = require('fs'); const p = 'plans';
+            if (!fs.existsSync(p)) {
+              console.log('No plans directory found, no artifacts were downloaded');
+              fs.writeFileSync('plan.md', '# No plan artifacts found\n');
+              fs.writeFileSync('plan.jsonl', '');
+              return;
+            }
             const md = []; const lines = [];
-            for (const d of fs.readdirSync(p)) {
+            const dirs = fs.readdirSync(p);
+            if (dirs.length === 0) {
+              console.log('Plans directory is empty, no artifacts were downloaded');
+              fs.writeFileSync('plan.md', '# No plan artifacts found\n');
+              fs.writeFileSync('plan.jsonl', '');
+              return;
+            }
+            for (const d of dirs) {
               const dir = `${p}/${d}`;
               if (fs.existsSync(`${dir}/plan.md`))    md.push(fs.readFileSync(`${dir}/plan.md`,'utf8'));
               if (fs.existsSync(`${dir}/plan.jsonl`)) lines.push(fs.readFileSync(`${dir}/plan.jsonl`,'utf8'));
