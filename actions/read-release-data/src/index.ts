@@ -77,7 +77,22 @@ interface ReleasesData {
     );
 
     if (repoReleases.length === 0) {
-      throw new Error(`No releases found for repository: ${repoName}`);
+      warning(`No releases found for repository: ${repoName}`);
+      const nullPayload = {
+        repo_name: repoName,
+        latest_public_release: null,
+        release_date: null,
+        meta_release: null,
+        github_url: null,
+        apis: []
+      };
+      setOutput('json', JSON.stringify(nullPayload));
+      setOutput('summary', JSON.stringify({
+        latest_public_release: null,
+        api_count: 0
+      }));
+      info(`No releases found for ${repoName} - outputting null values`);
+      return;
     }
 
     // Filter out sandbox releases (meta_release contains "Sandbox" or "None")
