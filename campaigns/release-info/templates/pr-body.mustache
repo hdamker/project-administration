@@ -1,0 +1,41 @@
+## Release Information Sync
+
+This PR updates the Release Information section in README.md to reflect the latest public release information from the CAMARA project administration data.
+
+### What Changed
+
+- Latest public release: **[{{latest_public_release}}]({{github_url}})**
+- Release date: {{release_date}}
+- API count: {{api_count}}
+
+The Release Information section has been automatically updated with current release details, API versions, and links to documentation viewers.
+
+### Instructions for Code Owners
+
+**IMPORTANT:** This PR modifies content within automated delimiters in your README.md file:
+```
+<!-- CAMARA:RELEASE-INFO:START -->
+...content managed automatically...
+<!-- CAMARA:RELEASE-INFO:END -->
+```
+
+#### Content Preservation
+
+**If you have custom content** in the Release Information section that should be preserved:
+1. **Before merging this PR:** Move your custom content OUTSIDE the delimiter markers
+2. Place it either before `<!-- CAMARA:RELEASE-INFO:START -->` or after `<!-- CAMARA:RELEASE-INFO:END -->`
+3. Content inside the delimiters will be replaced on every campaign run
+
+#### Review Checklist
+
+- [ ] Verify the release information is accurate
+- [ ] Check that API names and versions are correct
+- [ ] Confirm all documentation links work
+- [ ] Move any custom content outside delimiters (if needed)
+- [ ] Verify the section heading remains "## Release Information"
+
+### Automation
+
+This PR was created by the CAMARA project-administration [release information campaign](https://github.com/camaraproject/project-administration/tree/main/campaigns/release-info).
+
+For questions or issues, please contact the CAMARA project administration team.

@@ -98,11 +98,11 @@ jobs:
               data.formatted_apis = '';
             } else {
               const apiLines = data.apis.map(api => {
-                return '\n  * **' + api.file_name + ' v' + api.version + '**\n' +
+                return '  * **' + api.file_name + ' v' + api.version + '**\n' +
                   '  [[YAML]](https://github.com/camaraproject/' + data.repo_name + '/blob/' + data.latest_public_release + '/code/API_definitions/' + api.file_name + '.yaml)\n' +
-                  '  [[View it on ReDoc]](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/' + data.repo_name + '/' + data.latest_public_release + '/code/API_definitions/' + api.file_name + '.yaml&nocors)\n' +
-                  '  [[View it on Swagger UI]](https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/' + data.repo_name + '/' + data.latest_public_release + '/code/API_definitions/' + api.file_name + '.yaml)\n';
-              }).join('\n');
+                  '  [[ReDoc]](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/' + data.repo_name + '/' + data.latest_public_release + '/code/API_definitions/' + api.file_name + '.yaml&nocors)\n' +
+                  '  [[Swagger]](https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/' + data.repo_name + '/' + data.latest_public_release + '/code/API_definitions/' + api.file_name + '.yaml)';
+              }).join('\n\n');
               data.formatted_apis = apiLines;
             }
 
@@ -117,13 +117,21 @@ jobs:
           end:   "<!-- CAMARA:RELEASE-INFO:END -->"
           placeholder: "_This section is managed by project-administration_"
 
-      - name: Render Mustache → /tmp/release-info.md
+      - name: Render content template → /tmp/release-info.md
         id: render
         uses: ./admin/actions/render-mustache
         with:
           template: ${{ github.workspace }}/admin/campaigns/release-info/templates/release-info.mustache
           data_json: ${{ steps.format.outputs.enhanced_json }}
           out_file: /tmp/release-info.md
+
+      - name: Render PR body template → /tmp/pr-body.md
+        id: render_pr_body
+        uses: ./admin/actions/render-mustache
+        with:
+          template: ${{ github.workspace }}/admin/campaigns/release-info/templates/pr-body.mustache
+          data_json: ${{ steps.format.outputs.enhanced_json }}
+          out_file: /tmp/pr-body.md
 
       - name: Replace delimited content (writes in-place)
         id: replace
@@ -212,7 +220,7 @@ jobs:
           if [ -z "$PR_NUMBER" ]; then
             gh pr create \
               --title "${{ env.PR_TITLE }}" \
-              --body "${{ env.PR_BODY }}" \
+              --body-file /tmp/pr-body.md \
               --draft \
               --head "${{ env.BRANCH }}" \
               --base main
