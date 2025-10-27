@@ -230,48 +230,107 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
 
-  aggregate:
-    needs: run
-    if: needs.run.outputs.mode == 'plan'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: plan-*
-          path: plans
-      - name: Merge plan artifacts
+      - name: APPLY – record results.md + results.jsonl
+        if: ${{ env.MODE == 'apply' }}
         uses: actions/github-script@v7
         with:
           script: |
-            const fs = require('fs'); const p = 'plans';
+            const fs = require('fs');
+            const path = require('path');
+
+            const repo = '${{ matrix.repo }}';
+            const would = '${{ steps.diff.outputs.changed }}' === 'true';
+            const summaryStr = `${{ steps.data.outputs.summary || '{}' }}`;
+            const details = summaryStr ? JSON.parse(summaryStr) : {};
+
+            const line = JSON.stringify({
+              repo,
+              pr_would_be_created: would,
+              reason: would ? 'content_changed' : 'noop',
+              latest_public_release: details.latest_public_release || null,
+              api_count: details.api_count || null,
+              touched_files: ['README.md'],
+              timestamp: new Date().toISOString()
+            }) + '\n';
+            fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, 'results.jsonl'), line);
+
+            const md = `### ${repo}
+- ${would ? 'WOULD apply (PR would be created)' : 'skip (no changes)'}
+- latest_public_release: ${details.latest_public_release || 'N/A'}
+- api_count: ${details.api_count || 0}`;
+            fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, 'results.md'), md);
+
+      - name: Upload apply results
+        if: ${{ env.MODE == 'apply' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-${{ github.run_id }}-${{ strategy.job-index }}
+          path: |
+            results.md
+            results.jsonl
+
+  aggregate:
+    needs: run
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine artifact pattern
+        id: pattern
+        run: |
+          MODE="${{ needs.run.outputs.mode }}"
+          if [ "$MODE" = "plan" ]; then
+            echo "pattern=plan-*" >> $GITHUB_OUTPUT
+            echo "output_name=plan" >> $GITHUB_OUTPUT
+            echo "dir_name=plans" >> $GITHUB_OUTPUT
+          else
+            echo "pattern=results-*" >> $GITHUB_OUTPUT
+            echo "output_name=results" >> $GITHUB_OUTPUT
+            echo "dir_name=results" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ steps.pattern.outputs.pattern }}
+          path: ${{ steps.pattern.outputs.dir_name }}
+
+      - name: Merge artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const p = '${{ steps.pattern.outputs.dir_name }}';
+            const outputName = '${{ steps.pattern.outputs.output_name }}';
+
             if (!fs.existsSync(p)) {
-              console.log('No plans directory found, no artifacts were downloaded');
-              fs.writeFileSync('plan.md', '# No plan artifacts found\n');
-              fs.writeFileSync('plan.jsonl', '');
+              console.log(`No ${p} directory found, no artifacts were downloaded`);
+              fs.writeFileSync(`${outputName}.md`, `# No ${outputName} artifacts found\n`);
+              fs.writeFileSync(`${outputName}.jsonl`, '');
               return;
             }
             const md = []; const lines = [];
             const dirs = fs.readdirSync(p);
             if (dirs.length === 0) {
-              console.log('Plans directory is empty, no artifacts were downloaded');
-              fs.writeFileSync('plan.md', '# No plan artifacts found\n');
-              fs.writeFileSync('plan.jsonl', '');
+              console.log(`${p} directory is empty, no artifacts were downloaded`);
+              fs.writeFileSync(`${outputName}.md`, `# No ${outputName} artifacts found\n`);
+              fs.writeFileSync(`${outputName}.jsonl`, '');
               return;
             }
             for (const d of dirs) {
               const dir = `${p}/${d}`;
-              if (fs.existsSync(`${dir}/plan.md`))    md.push(fs.readFileSync(`${dir}/plan.md`,'utf8'));
-              if (fs.existsSync(`${dir}/plan.jsonl`)) lines.push(fs.readFileSync(`${dir}/plan.jsonl`,'utf8'));
+              if (fs.existsSync(`${dir}/${outputName}.md`))    md.push(fs.readFileSync(`${dir}/${outputName}.md`,'utf8'));
+              if (fs.existsSync(`${dir}/${outputName}.jsonl`)) lines.push(fs.readFileSync(`${dir}/${outputName}.jsonl`,'utf8'));
             }
-            fs.writeFileSync('plan.md', md.join('\n'));
-            fs.writeFileSync('plan.jsonl', lines.join(''));
+            fs.writeFileSync(`${outputName}.md`, md.join('\n'));
+            fs.writeFileSync(`${outputName}.jsonl`, lines.join(''));
       - uses: actions/upload-artifact@v4
         with:
-          name: plan
+          name: ${{ steps.pattern.outputs.output_name }}
           path: |
-            plan.md
-            plan.jsonl
+            ${{ steps.pattern.outputs.output_name }}.md
+            ${{ steps.pattern.outputs.output_name }}.jsonl
       - name: Summary
         run: |
-          echo "## Plan overview" >> $GITHUB_STEP_SUMMARY
-          echo "- JSONL lines: $(wc -l < plan.jsonl)" >> $GITHUB_STEP_SUMMARY
+          OUTPUT_NAME="${{ steps.pattern.outputs.output_name }}"
+          MODE_TITLE=$(echo "$OUTPUT_NAME" | sed 's/.*/\u&/')
+          echo "## ${MODE_TITLE} overview" >> $GITHUB_STEP_SUMMARY
+          echo "- JSONL lines: $(wc -l < ${OUTPUT_NAME}.jsonl)" >> $GITHUB_STEP_SUMMARY
