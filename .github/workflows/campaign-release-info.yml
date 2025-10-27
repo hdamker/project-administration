@@ -86,6 +86,30 @@ jobs:
           releases_file: ${{ github.workspace }}/admin/${{ env.RELEASES_FILE }}
           repo_slug: ${{ matrix.repo }}
 
+      - name: Format API lines
+        id: format
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const data = JSON.parse(`${{ steps.data.outputs.json }}`);
+
+            if (!data.apis || data.apis.length === 0) {
+              core.info('No APIs found, using empty formatted_apis');
+              data.formatted_apis = '';
+            } else {
+              const apiLines = data.apis.map(api => {
+                return `
+  * **${api.file_name} v${api.version}**
+  [[YAML]](https://github.com/camaraproject/${data.repo_name}/blob/${data.latest_public_release}/code/API_definitions/${api.file_name}.yaml)
+  [[View it on ReDoc]](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/${data.repo_name}/${data.latest_public_release}/code/API_definitions/${api.file_name}.yaml&nocors)
+  [[View it on Swagger UI]](https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/${data.repo_name}/${data.latest_public_release}/code/API_definitions/${api.file_name}.yaml)
+`;
+              }).join('\n');
+              data.formatted_apis = apiLines;
+            }
+
+            core.setOutput('enhanced_json', JSON.stringify(data));
+
       - name: Ensure Release Info section delimiters
         id: ensure
         uses: ./admin/actions/ensure-delimited-section
@@ -100,7 +124,7 @@ jobs:
         uses: ./admin/actions/render-mustache
         with:
           template: ${{ github.workspace }}/admin/campaigns/release-info/templates/release-info.mustache
-          data_json: ${{ steps.data.outputs.json }}
+          data_json: ${{ steps.format.outputs.enhanced_json }}
           out_file: /tmp/release-info.md
 
       - name: Replace delimited content (writes in-place)
