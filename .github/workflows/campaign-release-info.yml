@@ -98,12 +98,10 @@ jobs:
               data.formatted_apis = '';
             } else {
               const apiLines = data.apis.map(api => {
-                return `
-  * **${api.file_name} v${api.version}**
-  [[YAML]](https://github.com/camaraproject/${data.repo_name}/blob/${data.latest_public_release}/code/API_definitions/${api.file_name}.yaml)
-  [[View it on ReDoc]](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/${data.repo_name}/${data.latest_public_release}/code/API_definitions/${api.file_name}.yaml&nocors)
-  [[View it on Swagger UI]](https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/${data.repo_name}/${data.latest_public_release}/code/API_definitions/${api.file_name}.yaml)
-`;
+                return '\n  * **' + api.file_name + ' v' + api.version + '**\n' +
+                  '  [[YAML]](https://github.com/camaraproject/' + data.repo_name + '/blob/' + data.latest_public_release + '/code/API_definitions/' + api.file_name + '.yaml)\n' +
+                  '  [[View it on ReDoc]](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/' + data.repo_name + '/' + data.latest_public_release + '/code/API_definitions/' + api.file_name + '.yaml&nocors)\n' +
+                  '  [[View it on Swagger UI]](https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/' + data.repo_name + '/' + data.latest_public_release + '/code/API_definitions/' + api.file_name + '.yaml)\n';
               }).join('\n');
               data.formatted_apis = apiLines;
             }
