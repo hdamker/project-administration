@@ -102,7 +102,7 @@ jobs:
                   '  [[YAML]](https://github.com/camaraproject/' + data.repo_name + '/blob/' + data.latest_public_release + '/code/API_definitions/' + api.file_name + '.yaml)\n' +
                   '  [[ReDoc]](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/' + data.repo_name + '/' + data.latest_public_release + '/code/API_definitions/' + api.file_name + '.yaml&nocors)\n' +
                   '  [[Swagger]](https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/' + data.repo_name + '/' + data.latest_public_release + '/code/API_definitions/' + api.file_name + '.yaml)';
-              }).join('\n\n');
+              }).join('\n');
               data.formatted_apis = apiLines;
             }
 
