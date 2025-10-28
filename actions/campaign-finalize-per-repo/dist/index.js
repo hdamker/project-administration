@@ -12,6 +12,7 @@ try {
   const campaignDataStr = getInput('campaign_data') || '{}';
   const prStatus = getInput('pr_status');
   const prNumber = getInput('pr_number');
+  const prUrl = getInput('pr_url');
 
   const campaignData = JSON.parse(campaignDataStr);
 
@@ -32,9 +33,13 @@ try {
     record.pr_status = prStatus;
     record.pr_would_be_updated = prStatus === 'will_update';
     record.pr_modified_skip = prStatus === 'modified_skip';
+    record.pr_push_failed = prStatus === 'push_failed';
   }
   if (prNumber) {
     record.pr_number = parseInt(prNumber, 10);
+  }
+  if (prUrl) {
+    record.pr_url = prUrl;
   }
 
   const jsonlLine = JSON.stringify(record) + '\n';
@@ -48,14 +53,20 @@ try {
     const statusMessages = {
       'will_create': 'PR would be created',
       'will_update': `Existing PR would be updated (PR #${prNumber})`,
-      'no_change': 'Existing PR wouldn\'t be changed',
-      'modified_skip': `Existing PR can\'t be updated - modified by codeowner (PR #${prNumber})`
+      'no_change': 'Existing PR, no changes needed',
+      'modified_skip': `Existing PR can't be updated - modified by codeowner (PR #${prNumber})`,
+      'push_failed': 'Push failed - remote branch updated concurrently'
     };
-    const action = changed ? 'WOULD apply' : 'skip (no changes)';
+    const action = changed && prStatus !== 'modified_skip' && prStatus !== 'push_failed' ? 'WOULD apply' : 'skip';
     lines.push(`- ${action}`);
     lines.push(`- PR status: ${statusMessages[prStatus]}`);
   } else {
     lines.push(changed ? '- WOULD apply (PR would be created)' : '- skip (no changes)');
+  }
+
+  // Add PR URL if available
+  if (prUrl) {
+    lines.push(`- PR URL: ${prUrl}`);
   }
 
   // Add campaign-specific fields

@@ -30,20 +30,81 @@ inputs:
     description: 'GitHub token for PR creation (apply mode only)'
     required: false
     default: ''
-  pr_status:
-    description: 'PR status (will_create, will_update, no_change, modified_skip) - for future use'
-    required: false
-    default: ''
-  pr_number:
-    description: 'PR number if exists - for future use'
-    required: false
-    default: ''
 
 runs:
   using: 'composite'
   steps:
+    - name: Detect existing PR
+      id: detect
+      shell: bash
+      working-directory: repo
+      run: |
+        PR_NUMBER=$(gh pr list --head "${{ inputs.branch }}" --json number --jq '.[0].number' 2>/dev/null || echo "")
+        PR_URL=$(gh pr list --head "${{ inputs.branch }}" --json url --jq '.[0].url' 2>/dev/null || echo "")
+
+        if [ -n "$PR_NUMBER" ]; then
+          echo "pr_exists=true" >> $GITHUB_OUTPUT
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "Detected existing PR #$PR_NUMBER: $PR_URL"
+        else
+          echo "pr_exists=false" >> $GITHUB_OUTPUT
+          echo "pr_number=" >> $GITHUB_OUTPUT
+          echo "pr_url=" >> $GITHUB_OUTPUT
+          echo "No existing PR found"
+        fi
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+
+    - name: Check PR branch modifications
+      id: check_mods
+      if: ${{ steps.detect.outputs.pr_exists == 'true' }}
+      shell: bash
+      working-directory: repo
+      run: |
+        git fetch origin "${{ inputs.branch }}" 2>/dev/null || true
+
+        if git rev-parse --verify origin/${{ inputs.branch }} >/dev/null 2>&1; then
+          AUTHORS=$(git log origin/${{ inputs.branch }} --not origin/main --format="%an %ae" 2>/dev/null || echo "")
+
+          if echo "$AUTHORS" | grep -v "github-actions\[bot\]" | grep -q .; then
+            echo "has_codeowner_commits=true" >> $GITHUB_OUTPUT
+            echo "Found commits from codeowners on PR branch"
+          else
+            echo "has_codeowner_commits=false" >> $GITHUB_OUTPUT
+            echo "Only bot commits on PR branch"
+          fi
+        else
+          echo "has_codeowner_commits=false" >> $GITHUB_OUTPUT
+          echo "Remote branch not found"
+        fi
+
+    - name: Determine PR status
+      id: pr_status
+      shell: bash
+      run: |
+        PR_EXISTS="${{ steps.detect.outputs.pr_exists }}"
+        HAS_CODEOWNER_COMMITS="${{ steps.check_mods.outputs.has_codeowner_commits }}"
+        CHANGED="${{ inputs.changed }}"
+
+        if [ "$PR_EXISTS" = "true" ] && [ "$HAS_CODEOWNER_COMMITS" = "true" ]; then
+          STATUS="modified_skip"
+        elif [ "$PR_EXISTS" = "true" ] && [ "$CHANGED" = "false" ]; then
+          STATUS="no_change"
+        elif [ "$PR_EXISTS" = "true" ] && [ "$CHANGED" = "true" ]; then
+          STATUS="will_update"
+        elif [ "$PR_EXISTS" = "false" ] && [ "$CHANGED" = "true" ]; then
+          STATUS="will_create"
+        else
+          STATUS="no_change"
+        fi
+
+        echo "pr_status=$STATUS" >> $GITHUB_OUTPUT
+        echo "Determined PR status: $STATUS"
+
     - name: APPLY - Commit to branch
-      if: ${{ inputs.mode == 'apply' && inputs.changed == 'true' }}
+      id: commit
+      if: ${{ inputs.mode == 'apply' && inputs.changed == 'true' && steps.pr_status.outputs.pr_status != 'modified_skip' }}
       shell: bash
       working-directory: repo
       run: |
@@ -52,24 +113,50 @@ runs:
         git checkout -B "${{ inputs.branch }}"
         git add README.md
         git commit -m "${{ inputs.pr_title }}" || echo "No changes to commit"
-        git push -f origin "${{ inputs.branch }}"
+
+        if git push --force-with-lease origin "${{ inputs.branch }}"; then
+          echo "push_succeeded=true" >> $GITHUB_OUTPUT
+          echo "Push succeeded"
+        else
+          echo "push_succeeded=false" >> $GITHUB_OUTPUT
+          echo "::error::Push failed - remote branch was updated concurrently"
+          echo "PUSH_FAILED" > /tmp/push_status
+        fi
+
+    - name: Update PR status if push failed
+      id: push_check
+      if: ${{ always() }}
+      shell: bash
+      run: |
+        if [ -f /tmp/push_status ] && grep -q "PUSH_FAILED" /tmp/push_status; then
+          echo "final_pr_status=push_failed" >> $GITHUB_OUTPUT
+          echo "Push failed, marking as push_failed"
+        else
+          echo "final_pr_status=${{ steps.pr_status.outputs.pr_status }}" >> $GITHUB_OUTPUT
+        fi
+        rm -f /tmp/push_status
 
     - name: APPLY - Create/Update PR
-      if: ${{ inputs.mode == 'apply' && inputs.changed == 'true' && inputs.pr_title != '' }}
+      id: pr_create
+      if: ${{ inputs.mode == 'apply' && steps.commit.outputs.push_succeeded == 'true' && (steps.pr_status.outputs.pr_status == 'will_create' || steps.pr_status.outputs.pr_status == 'will_update') }}
       shell: bash
       working-directory: repo
       run: |
-        PR_NUMBER=$(gh pr list --head "${{ inputs.branch }}" --json number --jq '.[0].number' || echo "")
+        STATUS="${{ steps.pr_status.outputs.pr_status }}"
 
-        if [ -z "$PR_NUMBER" ]; then
-          gh pr create \
+        if [ "$STATUS" = "will_create" ]; then
+          echo "Creating new PR..."
+          PR_URL=$(gh pr create \
             --title "${{ inputs.pr_title }}" \
             --body-file "${{ inputs.pr_body_file }}" \
             --draft \
             --head "${{ inputs.branch }}" \
-            --base main
-        else
-          echo "PR #$PR_NUMBER already exists for branch ${{ inputs.branch }}"
+            --base main)
+          echo "created_pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "Created PR: $PR_URL"
+        elif [ "$STATUS" = "will_update" ]; then
+          echo "Updated existing PR #${{ steps.detect.outputs.pr_number }}"
+          echo "created_pr_url=" >> $GITHUB_OUTPUT
         fi
       env:
         GH_TOKEN: ${{ inputs.github_token }}
@@ -83,8 +170,9 @@ runs:
         INPUT_CHANGED: ${{ inputs.changed }}
         INPUT_MODE: ${{ inputs.mode }}
         INPUT_CAMPAIGN_DATA: ${{ inputs.campaign_data }}
-        INPUT_PR_STATUS: ${{ inputs.pr_status }}
-        INPUT_PR_NUMBER: ${{ inputs.pr_number }}
+        INPUT_PR_STATUS: ${{ steps.push_check.outputs.final_pr_status }}
+        INPUT_PR_NUMBER: ${{ steps.detect.outputs.pr_number }}
+        INPUT_PR_URL: ${{ steps.pr_create.outputs.created_pr_url || steps.detect.outputs.pr_url }}
 
     - name: Reset repo (plan mode)
       if: ${{ inputs.mode == 'plan' }}
