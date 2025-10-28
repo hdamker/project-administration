@@ -80,20 +80,6 @@ runs:
         echo "pr_status=$STATUS" >> $GITHUB_OUTPUT
         echo "Determined PR status: $STATUS"
 
-    - name: APPLY - Commit to branch
-      id: commit
-      if: ${{ inputs.mode == 'apply' && inputs.changed == 'true' }}
-      shell: bash
-      working-directory: repo
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git checkout -B "${{ inputs.branch }}"
-        git add README.md
-        git commit -m "${{ inputs.pr_title }}" || echo "No changes to commit"
-        git push origin "${{ inputs.branch }}"
-        echo "push_succeeded=true" >> $GITHUB_OUTPUT
-
     - name: APPLY - Ensure automated label exists
       if: ${{ inputs.mode == 'apply' && inputs.changed == 'true' }}
       shell: bash
@@ -111,6 +97,20 @@ runs:
         fi
       env:
         GH_TOKEN: ${{ inputs.github_token }}
+
+    - name: APPLY - Commit to branch
+      id: commit
+      if: ${{ inputs.mode == 'apply' && inputs.changed == 'true' }}
+      shell: bash
+      working-directory: repo
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git checkout -B "${{ inputs.branch }}"
+        git add README.md
+        git commit -m "${{ inputs.pr_title }}" || echo "No changes to commit"
+        git push origin "${{ inputs.branch }}"
+        echo "push_succeeded=true" >> $GITHUB_OUTPUT
 
     - name: APPLY - Create/Update PR
       id: pr_create
