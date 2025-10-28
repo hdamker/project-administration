@@ -152,53 +152,17 @@ jobs:
             try { execSync('git diff --quiet', { cwd: 'repo' }); } catch { changed = 'true'; }
             core.setOutput('changed', changed);
 
-      - name: APPLY – commit to branch
-        if: ${{ env.MODE == 'apply' && steps.diff.outputs.changed == 'true' }}
-        uses: actions/github-script@v7
+      - name: Finalize campaign per repo
+        uses: ./admin/actions/campaign-finalize-per-repo
         with:
-          script: |
-            const { execSync } = require('child_process');
-            execSync('git config user.name "github-actions[bot]"', { cwd: 'repo' });
-            execSync('git config user.email "github-actions[bot]@users.noreply.github.com"', { cwd: 'repo' });
-            execSync('git checkout -B "${{ env.BRANCH }}"', { cwd: 'repo' });
-            execSync('git add README.md', { cwd: 'repo' });
-            try { execSync('git commit -m "${{ env.PR_TITLE }}"', { cwd: 'repo' }); } catch {}
-            execSync('git push -f origin "${{ env.BRANCH }}"', { cwd: 'repo' });
-
-      - name: Create/Update PR (apply)
-        if: ${{ env.MODE == 'apply' && steps.diff.outputs.changed == 'true' }}
-        working-directory: repo
-        run: |
-          PR_NUMBER=$(gh pr list --head "${{ env.BRANCH }}" --json number --jq '.[0].number' || echo "")
-
-          if [ -z "$PR_NUMBER" ]; then
-            gh pr create \
-              --title "${{ env.PR_TITLE }}" \
-              --body-file /tmp/pr-body.md \
-              --draft \
-              --head "${{ env.BRANCH }}" \
-              --base main
-          else
-            echo "PR #$PR_NUMBER already exists for branch ${{ env.BRANCH }}"
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
-
-      - name: Record outcome
-        uses: ./admin/actions/record-outcome
-        with:
-          repo: ${{ matrix.repo }}
-          changed: ${{ steps.diff.outputs.changed }}
           mode: ${{ env.MODE }}
+          changed: ${{ steps.diff.outputs.changed }}
+          repo: ${{ matrix.repo }}
           campaign_data: ${{ steps.data.outputs.summary }}
-
-      - name: Upload outcome artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.MODE == 'plan' && format('plan-{0}-{1}', github.run_id, strategy.job-index) || format('results-{0}-{1}', github.run_id, strategy.job-index) }}
-          path: |
-            ${{ env.MODE == 'plan' && 'plan' || 'results' }}.md
-            ${{ env.MODE == 'plan' && 'plan' || 'results' }}.jsonl
+          pr_title: ${{ env.PR_TITLE }}
+          pr_body_file: /tmp/pr-body.md
+          branch: ${{ env.BRANCH }}
+          github_token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
 
   aggregate:
     needs: run

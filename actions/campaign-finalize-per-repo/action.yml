@@ -1,0 +1,103 @@
+name: 'Campaign Finalize Per Repo'
+description: 'Generic finalization for campaign workflows: commit, PR, record, upload'
+inputs:
+  mode:
+    description: 'Workflow mode (plan or apply)'
+    required: true
+  changed:
+    description: 'Whether changes were detected'
+    required: true
+  repo:
+    description: 'Repository name (org/repo)'
+    required: true
+  campaign_data:
+    description: 'JSON with campaign-specific data'
+    required: false
+    default: '{}'
+  pr_title:
+    description: 'PR title (apply mode only)'
+    required: false
+    default: ''
+  pr_body_file:
+    description: 'Path to rendered PR body file (apply mode only)'
+    required: false
+    default: ''
+  branch:
+    description: 'Branch name for PR'
+    required: false
+    default: ''
+  github_token:
+    description: 'GitHub token for PR creation (apply mode only)'
+    required: false
+    default: ''
+  pr_status:
+    description: 'PR status (will_create, will_update, no_change, modified_skip) - for future use'
+    required: false
+    default: ''
+  pr_number:
+    description: 'PR number if exists - for future use'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: APPLY - Commit to branch
+      if: ${{ inputs.mode == 'apply' && inputs.changed == 'true' }}
+      shell: bash
+      working-directory: repo
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git checkout -B "${{ inputs.branch }}"
+        git add README.md
+        git commit -m "${{ inputs.pr_title }}" || echo "No changes to commit"
+        git push -f origin "${{ inputs.branch }}"
+
+    - name: APPLY - Create/Update PR
+      if: ${{ inputs.mode == 'apply' && inputs.changed == 'true' && inputs.pr_title != '' }}
+      shell: bash
+      working-directory: repo
+      run: |
+        PR_NUMBER=$(gh pr list --head "${{ inputs.branch }}" --json number --jq '.[0].number' || echo "")
+
+        if [ -z "$PR_NUMBER" ]; then
+          gh pr create \
+            --title "${{ inputs.pr_title }}" \
+            --body-file "${{ inputs.pr_body_file }}" \
+            --draft \
+            --head "${{ inputs.branch }}" \
+            --base main
+        else
+          echo "PR #$PR_NUMBER already exists for branch ${{ inputs.branch }}"
+        fi
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+
+    - name: Record outcome
+      shell: bash
+      run: |
+        node ${{ github.action_path }}/dist/index.js
+      env:
+        INPUT_REPO: ${{ inputs.repo }}
+        INPUT_CHANGED: ${{ inputs.changed }}
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_CAMPAIGN_DATA: ${{ inputs.campaign_data }}
+        INPUT_PR_STATUS: ${{ inputs.pr_status }}
+        INPUT_PR_NUMBER: ${{ inputs.pr_number }}
+
+    - name: Reset repo (plan mode)
+      if: ${{ inputs.mode == 'plan' }}
+      shell: bash
+      working-directory: repo
+      run: |
+        git reset --hard
+        git clean -fd
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.mode == 'plan' && format('plan-{0}-{1}', github.run_id, strategy.job-index) || format('results-{0}-{1}', github.run_id, strategy.job-index) }}
+        path: |
+          ${{ inputs.mode == 'plan' && 'plan' || 'results' }}.md
+          ${{ inputs.mode == 'plan' && 'plan' || 'results' }}.jsonl
