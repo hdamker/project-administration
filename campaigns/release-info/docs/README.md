@@ -25,8 +25,9 @@ Test the campaign without making any changes:
 
 **Plan mode behavior:**
 - Writes changes to target repo clones
-- Detects diffs with `git diff`
-- Creates plan artifacts (`plan.md` + `plan.jsonl`)
+- Detects existing PRs and their status
+- Compares changes against PR branch (or main if no PR)
+- Creates plan artifacts (`plan.md` + `plan.jsonl`) with PR status
 - Resets working tree (`git reset --hard && git clean -fd`)
 - **Does NOT create any PRs**
 
@@ -41,9 +42,13 @@ Apply changes and create pull requests:
 5. Verify PRs in target repositories
 
 **Apply mode behavior:**
+- Detects existing PRs and analyzes commit history
+- Compares changes against PR branch (not main)
+- Skips repos where codeowners have modified the PR
 - Commits changes to stable branch `bulk/release-info-sync`
-- Creates/updates PR via `peter-evans/create-pull-request`
-- Idempotent: reruns are no-ops if content is already correct
+- Uses `--force-with-lease` for safe updates
+- Creates/updates PR via `gh` CLI
+- Generates `results.md` and `results.jsonl` artifacts with PR URLs
 
 ## Configuration
 
@@ -59,6 +64,52 @@ env:
   PR_TITLE: "[bulk] Sync Release Information section"
   PR_BODY: "Automated update of README Release Information section"
 ```
+
+## PR Status Values
+
+The campaign tracks PR status for each repository in both plan and apply modes:
+
+- **`will_create`** - No existing PR; new PR would be/was created
+- **`will_update`** - Existing PR with bot-only commits; would be/was updated safely
+- **`no_change`** - Existing PR with identical content; no update needed (idempotent)
+- **`modified_skip`** - Existing PR has codeowner commits; skipped to protect manual changes
+- **`push_failed`** - Push rejected by `--force-with-lease`; concurrent changes detected
+
+**Example plan.md output:**
+```
+### camaraproject/QualityOnDemand
+- WOULD apply
+- PR status: Existing PR would be updated (PR #42)
+- PR URL: https://github.com/camaraproject/QualityOnDemand/pull/42
+- latest_public_release: r3.2
+- api_count: 3
+```
+
+**Example results.jsonl:**
+```json
+{"repo":"camaraproject/QualityOnDemand","pr_status":"will_update","pr_number":42,"pr_url":"https://github.com/camaraproject/QualityOnDemand/pull/42","latest_public_release":"r3.2","api_count":3,"timestamp":"2025-10-28T19:33:51.262Z"}
+```
+
+## PR Detection and Safety
+
+The campaign protects existing work and prevents conflicts:
+
+### Codeowner Protection
+- Before updating a PR, analyzes commit authors on the PR branch
+- Skips update if any commits are from users (not `github-actions[bot]`)
+- Status set to `modified_skip` with clear explanation
+- Preserves manual changes made by codeowners
+
+### Safe Force Push
+- Uses `--force-with-lease` instead of `--force`
+- Prevents overwriting concurrent changes
+- If push fails, status set to `push_failed`
+
+### Idempotency
+- Compares working directory against existing PR branch (not main)
+- Skips push if content is identical
+- Status set to `no_change`
+- No unnecessary force pushes
 
 ## Template
 
@@ -121,7 +172,7 @@ The `read-release-data` action:
 
 ## Actions Used
 
-This campaign uses 4 reusable Node20 actions (located in `actions/`):
+This campaign uses 5 reusable actions (located in `actions/`):
 
 ### 1. [read-release-data](../../actions/read-release-data/)
 - Parses `releases-master.yaml`
@@ -168,6 +219,41 @@ This campaign uses 4 reusable Node20 actions (located in `actions/`):
 - `end`: End delimiter
 - `new_content_file`: File with new content
 
+### 5. [campaign-finalize-per-repo](../../actions/campaign-finalize-per-repo/)
+- Generic finalization action for all campaigns (composite action)
+- Handles PR detection, commit, push, PR creation, outcome recording, artifacts
+- Self-contained: all generic logic separated from campaign-specific workflow
+
+**Key Features:**
+- Detects existing PRs and captures number/URL
+- Analyzes commit authors to detect codeowner modifications
+- Determines PR status (will_create, will_update, no_change, modified_skip, push_failed)
+- Uses `--force-with-lease` for safe updates
+- Skips repos with codeowner changes
+- Records outcome to plan.jsonl/results.jsonl with PR metadata
+- Generates plan.md/results.md with PR status
+- Uploads artifacts (plan/results)
+
+**Inputs:**
+- `mode`: plan or apply
+- `changed`: Whether changes detected
+- `repo`: Repository name
+- `campaign_data`: Campaign-specific JSON data
+- `pr_title`: PR title (apply mode)
+- `pr_body_file`: Path to rendered PR body (apply mode)
+- `branch`: PR branch name
+- `github_token`: Token for PR operations
+
+**Internal Steps:**
+1. Detect existing PR (gh pr list)
+2. Check PR branch for codeowner commits
+3. Determine PR status based on PR existence, changes, codeowner commits
+4. Commit and push (apply mode, if not modified_skip)
+5. Create/update PR (apply mode, if will_create or will_update)
+6. Record outcome with PR metadata
+7. Reset repo (plan mode)
+8. Upload artifacts
+
 ## Adapting for New Campaigns
 
 The actions in `actions/` are reusable for other campaigns:
@@ -200,8 +286,22 @@ The actions in `actions/` are reusable for other campaigns:
 **Solution:** Test template with sample data, check action logs
 
 ### PRs not created in apply mode
-**Cause:** No changes detected (content already up-to-date)
-**Solution:** This is expected (idempotency). Check plan.md to confirm "noop"
+**Cause:** No changes detected (content already up-to-date) or PR already exists
+**Solution:** Check results.md for PR status:
+- `no_change` - Content identical to PR branch (expected, idempotent)
+- `modified_skip` - PR has codeowner commits (protected from overwrite)
+- `will_update` - PR was updated (check PR link in results)
+
+### PR was skipped with modified_skip status
+**Cause:** PR branch has commits from codeowners (not bot)
+**Solution:** This is protection against overwriting manual changes. Options:
+1. Review codeowner changes in the PR
+2. Manually merge or update the PR
+3. Close PR and delete branch to allow fresh PR creation
+
+### Push failed with push_failed status
+**Cause:** Remote branch changed between detection and push
+**Solution:** Rare race condition. Rerun workflow - will detect new state
 
 ## References
 
