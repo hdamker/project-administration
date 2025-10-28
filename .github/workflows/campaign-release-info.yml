@@ -148,8 +148,44 @@ jobs:
         with:
           script: |
             const { execSync } = require('child_process');
+            const branch = process.env.BRANCH;
             let changed = 'false';
-            try { execSync('git diff --quiet', { cwd: 'repo' }); } catch { changed = 'true'; }
+
+            try {
+              // Check if remote branch exists
+              execSync(`git fetch origin ${branch}`, { cwd: 'repo', stdio: 'pipe' });
+              const remoteBranchExists = execSync(`git rev-parse --verify origin/${branch}`, { cwd: 'repo', stdio: 'pipe' }).toString().trim();
+
+              if (remoteBranchExists) {
+                // Compare against remote PR branch
+                console.log(`Comparing against existing remote branch origin/${branch}`);
+                try {
+                  execSync(`git diff --quiet origin/${branch} -- README.md`, { cwd: 'repo' });
+                  console.log('No changes detected compared to PR branch');
+                } catch {
+                  changed = 'true';
+                  console.log('Changes detected compared to PR branch');
+                }
+              } else {
+                // Compare against main (no PR branch exists)
+                console.log('No remote branch exists, comparing against main');
+                try {
+                  execSync('git diff --quiet', { cwd: 'repo' });
+                } catch {
+                  changed = 'true';
+                  console.log('Changes detected compared to main');
+                }
+              }
+            } catch (err) {
+              // Remote branch doesn't exist or fetch failed, compare against main
+              console.log('Remote branch not found, comparing against main');
+              try {
+                execSync('git diff --quiet', { cwd: 'repo' });
+              } catch {
+                changed = 'true';
+              }
+            }
+
             core.setOutput('changed', changed);
 
       - name: Finalize campaign per repo
