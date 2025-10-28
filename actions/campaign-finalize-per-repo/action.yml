@@ -68,6 +68,38 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.github_token }}
 
+    - name: Two-stage change detection
+      id: change_check
+      shell: bash
+      working-directory: repo
+      run: |
+        # Stage 1: Compare against main
+        echo "Stage 1: Comparing against main..."
+        if git diff --quiet -- README.md; then
+          echo "No changes vs main → noop"
+          echo "changed=false" >> $GITHUB_OUTPUT
+          echo "reason=main_up_to_date" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+        echo "Changes detected vs main"
+
+        # Stage 2: If PR exists, compare against PR branch
+        PR_BRANCH="${{ steps.detect.outputs.pr_branch }}"
+        if [ -n "$PR_BRANCH" ]; then
+          echo "Stage 2: Comparing against PR branch $PR_BRANCH..."
+          git fetch origin "$PR_BRANCH" 2>/dev/null || true
+          if git diff --quiet origin/"$PR_BRANCH" -- README.md 2>/dev/null; then
+            echo "Identical to existing PR → noop"
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "reason=duplicate_of_pr" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "Different from existing PR"
+        fi
+
+        echo "changed=true" >> $GITHUB_OUTPUT
+        echo "reason=new_changes" >> $GITHUB_OUTPUT
+
     - name: Generate PR title with date
       id: pr_title
       shell: bash
@@ -111,7 +143,7 @@ runs:
       id: pr_status
       shell: bash
       run: |
-        CHANGED="${{ inputs.changed }}"
+        CHANGED="${{ steps.change_check.outputs.changed }}"
 
         if [ "$CHANGED" = "true" ]; then
           STATUS="will_create"
@@ -120,10 +152,10 @@ runs:
         fi
 
         echo "pr_status=$STATUS" >> $GITHUB_OUTPUT
-        echo "Determined PR status: $STATUS"
+        echo "Determined PR status: $STATUS (reason: ${{ steps.change_check.outputs.reason }})"
 
     - name: APPLY - Ensure automated label exists
-      if: ${{ inputs.mode == 'apply' && inputs.changed == 'true' }}
+      if: ${{ inputs.mode == 'apply' && steps.change_check.outputs.changed == 'true' }}
       shell: bash
       working-directory: repo
       run: |
@@ -142,7 +174,7 @@ runs:
 
     - name: APPLY - Commit to branch
       id: commit
-      if: ${{ inputs.mode == 'apply' && inputs.changed == 'true' }}
+      if: ${{ inputs.mode == 'apply' && steps.change_check.outputs.changed == 'true' }}
       shell: bash
       working-directory: repo
       run: |
@@ -156,7 +188,7 @@ runs:
 
     - name: APPLY - Create PR
       id: pr_create
-      if: ${{ inputs.mode == 'apply' && inputs.changed == 'true' }}
+      if: ${{ inputs.mode == 'apply' && steps.change_check.outputs.changed == 'true' }}
       shell: bash
       working-directory: repo
       run: |
@@ -185,6 +217,7 @@ runs:
         INPUT_PR_STATUS: ${{ steps.pr_status.outputs.pr_status }}
         INPUT_PR_NUMBER: ${{ steps.detect.outputs.pr_number }}
         INPUT_PR_URL: ${{ steps.pr_create.outputs.created_pr_url || steps.detect.outputs.pr_url }}
+        INPUT_CHANGE_REASON: ${{ steps.change_check.outputs.reason }}
 
     - name: Reset repo (plan mode)
       if: ${{ inputs.mode == 'plan' }}

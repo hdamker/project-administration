@@ -13,6 +13,7 @@ try {
   const prStatus = getInput('pr_status');
   const prNumber = getInput('pr_number');
   const prUrl = getInput('pr_url');
+  const changeReason = getInput('change_reason');
 
   const campaignData = JSON.parse(campaignDataStr);
 
@@ -23,7 +24,7 @@ try {
   const record = {
     repo,
     pr_would_be_created: changed && prStatus === 'will_create',
-    reason: changed ? 'content_changed' : 'noop',
+    reason: changeReason || (changed ? 'content_changed' : 'noop'),
     ...campaignData,
     timestamp: new Date().toISOString()
   };
@@ -51,9 +52,17 @@ try {
       'will_create': 'New PR would be created',
       'no_change': prNumber ? `No changes needed (latest PR #${prNumber})` : 'No changes needed'
     };
+    const reasonMessages = {
+      'main_up_to_date': 'main already up-to-date',
+      'duplicate_of_pr': 'identical to existing PR',
+      'new_changes': 'new changes detected'
+    };
     const action = changed ? 'WOULD apply' : 'skip';
     lines.push(`- ${action}`);
     lines.push(`- PR status: ${statusMessages[prStatus]}`);
+    if (changeReason) {
+      lines.push(`- Reason: ${reasonMessages[changeReason] || changeReason}`);
+    }
   } else {
     lines.push(changed ? '- WOULD apply (PR would be created)' : '- skip (no changes)');
   }
