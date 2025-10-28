@@ -31,9 +31,7 @@ try {
   // Add PR fields if provided
   if (prStatus) {
     record.pr_status = prStatus;
-    record.pr_would_be_updated = prStatus === 'will_update';
-    record.pr_modified_skip = prStatus === 'modified_skip';
-    record.pr_push_failed = prStatus === 'push_failed';
+    record.pr_would_be_updated = prStatus === 'will_update_existing_pr';
   }
   if (prNumber) {
     record.pr_number = parseInt(prNumber, 10);
@@ -52,12 +50,10 @@ try {
   if (prStatus) {
     const statusMessages = {
       'will_create': 'PR would be created',
-      'will_update': `Existing PR would be updated (PR #${prNumber})`,
-      'no_change': prNumber ? `Existing PR, no changes needed (PR #${prNumber})` : 'No changes needed',
-      'modified_skip': `Existing PR can't be updated - modified by codeowner (PR #${prNumber})`,
-      'push_failed': 'Push failed - remote branch updated concurrently'
+      'will_update_existing_pr': prNumber ? `Existing PR would be updated to new branch (PR #${prNumber})` : 'PR would be updated to new branch',
+      'no_change': prNumber ? `No changes needed (PR #${prNumber})` : 'No changes needed'
     };
-    const action = changed && prStatus !== 'modified_skip' && prStatus !== 'push_failed' ? 'WOULD apply' : 'skip';
+    const action = changed ? 'WOULD apply' : 'skip';
     lines.push(`- ${action}`);
     lines.push(`- PR status: ${statusMessages[prStatus]}`);
   } else {

@@ -18,7 +18,7 @@ env:
   ORG: hdamker
   RELEASES_FILE: data/releases-master.yaml
   INCLUDE: "QualityOnDemand,QoSBooking"
-  BRANCH: bulk/release-info-sync
+  BRANCH: bulk/release-info-sync-${{ github.run_id }}
   PR_TITLE: "[bulk] Sync Release Information section"
   PR_BODY: "Automated update of README Release Information section"
 
