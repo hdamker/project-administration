@@ -254,10 +254,10 @@ jobs:
             }) + '\n';
             fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, 'results.jsonl'), line);
 
-            const md = `### ${repo}
-- ${would ? 'WOULD apply (PR would be created)' : 'skip (no changes)'}
-- latest_public_release: ${details.latest_public_release || 'N/A'}
-- api_count: ${details.api_count || 0}`;
+            const md = '### ' + repo + '\n' +
+              '- ' + (would ? 'WOULD apply (PR would be created)' : 'skip (no changes)') + '\n' +
+              '- latest_public_release: ' + (details.latest_public_release || 'N/A') + '\n' +
+              '- api_count: ' + (details.api_count || 0);
             fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, 'results.md'), md);
 
       - name: Upload apply results
