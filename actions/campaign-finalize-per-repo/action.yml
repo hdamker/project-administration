@@ -135,8 +135,17 @@ runs:
           PR_NUMBER="${{ steps.detect.outputs.pr_number }}"
           echo "Updating existing PR #$PR_NUMBER to new branch ${{ inputs.branch }}..."
 
-          gh pr edit "$PR_NUMBER" --head "${{ inputs.branch }}"
+          # Extract org/repo from inputs.repo
+          REPO="${{ inputs.repo }}"
 
+          # Use GitHub API to update PR head reference
+          gh api \
+            --method PATCH \
+            "/repos/$REPO/pulls/$PR_NUMBER" \
+            -f head="${{ inputs.branch }}" \
+            > /dev/null
+
+          # Add comment about the update
           gh pr comment "$PR_NUMBER" --body "Updated to branch \`${{ inputs.branch }}\` from [workflow run ${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
 
           echo "created_pr_url=${{ steps.detect.outputs.pr_url }}" >> $GITHUB_OUTPUT
