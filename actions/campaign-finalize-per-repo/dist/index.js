@@ -53,7 +53,7 @@ try {
     const statusMessages = {
       'will_create': 'PR would be created',
       'will_update': `Existing PR would be updated (PR #${prNumber})`,
-      'no_change': 'Existing PR, no changes needed',
+      'no_change': prNumber ? `Existing PR, no changes needed (PR #${prNumber})` : 'No changes needed',
       'modified_skip': `Existing PR can't be updated - modified by codeowner (PR #${prNumber})`,
       'push_failed': 'Push failed - remote branch updated concurrently'
     };
