@@ -38,16 +38,15 @@ Apply changes and create pull requests:
 1. Test with a small set of repos first using `INCLUDE`
 2. Change `MODE` to `apply` in the workflow
 3. Run the workflow
-4. PRs will be created on branch `bulk/release-info-sync`
+4. PRs will be created with dated titles (e.g., `[bulk] Sync Release Information section (2025-10-28-001)`)
 5. Verify PRs in target repositories
 
 **Apply mode behavior:**
-- Detects existing PRs and analyzes commit history
-- Compares changes against PR branch (not main)
-- Skips repos where codeowners have modified the PR
-- Commits changes to stable branch `bulk/release-info-sync`
-- Uses `--force-with-lease` for safe updates
-- Creates/updates PR via `gh` CLI
+- Detects newest existing PR by base title for comparison
+- Compares changes against newest PR branch (or main if no PR)
+- Commits changes to unique branch with run ID
+- Always creates new PR when changes are detected
+- Multiple PRs may exist; codeowners close old ones after review
 - Generates `results.md` and `results.jsonl` artifacts with PR URLs
 
 ## Configuration
@@ -60,8 +59,8 @@ env:
   ORG: camaraproject
   RELEASES_FILE: data/releases-master.yaml
   INCLUDE: ""                       # Filter: "DeviceLocation,QualityOnDemand"
-  BRANCH: bulk/release-info-sync    # Target branch name
-  PR_TITLE: "[bulk] Sync Release Information section"
+  BRANCH: bulk/release-info-sync-${{ github.run_id }}  # Unique branch per run
+  PR_TITLE: "[bulk] Sync Release Information section"  # Date added automatically
   PR_BODY: "Automated update of README Release Information section"
 ```
 
@@ -69,47 +68,53 @@ env:
 
 The campaign tracks PR status for each repository in both plan and apply modes:
 
-- **`will_create`** - No existing PR; new PR would be/was created
-- **`will_update`** - Existing PR with bot-only commits; would be/was updated safely
-- **`no_change`** - Existing PR with identical content; no update needed (idempotent)
-- **`modified_skip`** - Existing PR has codeowner commits; skipped to protect manual changes
-- **`push_failed`** - Push rejected by `--force-with-lease`; concurrent changes detected
+- **`will_create`** - Changes detected; new PR would be/was created
+- **`no_change`** - Content identical to newest PR (or main); no update needed (idempotent)
 
 **Example plan.md output:**
 ```
-### camaraproject/QualityOnDemand
+### hdamker/QualityOnDemand
 - WOULD apply
-- PR status: Existing PR would be updated (PR #42)
-- PR URL: https://github.com/camaraproject/QualityOnDemand/pull/42
+- PR status: New PR would be created
+- latest_public_release: r3.2
+- api_count: 3
+```
+
+**Example results.md output:**
+```
+### hdamker/QualityOnDemand
+- apply
+- PR status: New PR would be created
+- PR URL: https://github.com/hdamker/QualityOnDemand/pull/11
 - latest_public_release: r3.2
 - api_count: 3
 ```
 
 **Example results.jsonl:**
 ```json
-{"repo":"camaraproject/QualityOnDemand","pr_status":"will_update","pr_number":42,"pr_url":"https://github.com/camaraproject/QualityOnDemand/pull/42","latest_public_release":"r3.2","api_count":3,"timestamp":"2025-10-28T19:33:51.262Z"}
+{"repo":"hdamker/QualityOnDemand","pr_would_be_created":true,"reason":"content_changed","latest_public_release":"r3.2","api_count":3,"timestamp":"2025-10-28T19:33:51.262Z","pr_status":"will_create","pr_url":"https://github.com/hdamker/QualityOnDemand/pull/11"}
 ```
 
-## PR Detection and Safety
+## PR Handling
 
-The campaign protects existing work and prevents conflicts:
+The campaign creates new PRs when changes are detected:
 
-### Codeowner Protection
-- Before updating a PR, analyzes commit authors on the PR branch
-- Skips update if any commits are from users (not `github-actions[bot]`)
-- Status set to `modified_skip` with clear explanation
-- Preserves manual changes made by codeowners
+### Multiple PRs
+- Always creates a new PR when changes exist
+- PR title includes date and sequence: `[bulk] Sync Release Information section (2025-10-28-001)`
+- Sequence number increments for multiple runs on same day (001, 002, 003, ...)
+- Multiple open PRs possible; codeowners should close old PRs after reviewing new ones
 
-### Safe Force Push
-- Uses `--force-with-lease` instead of `--force`
-- Prevents overwriting concurrent changes
-- If push fails, status set to `push_failed`
+### PR Detection
+- Searches for PRs by base title `[bulk] Sync Release Information section`
+- Finds newest PR by creation date for comparison
+- Compares working directory against newest PR branch (or main if no PR)
 
 ### Idempotency
-- Compares working directory against existing PR branch (not main)
-- Skips push if content is identical
+- Compares content against newest PR branch
+- Skips PR creation if content is identical
 - Status set to `no_change`
-- No unnecessary force pushes
+- No duplicate PRs for identical content
 
 ## Template
 

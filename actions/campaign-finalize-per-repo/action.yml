@@ -14,8 +14,8 @@ inputs:
     description: 'JSON with campaign-specific data'
     required: false
     default: '{}'
-  pr_title:
-    description: 'PR title (apply mode only)'
+  pr_base_title:
+    description: 'Base PR title (date suffix added automatically)'
     required: false
     default: ''
   pr_body_file:
@@ -39,26 +39,71 @@ runs:
       shell: bash
       working-directory: repo
       run: |
-        # Search for PR by exact title and automated label
+        # Search for PRs by base title (partial match) and automated label, sort by created_at DESC
         PR_DATA=$(gh pr list \
-          --search "in:title \"${{ inputs.pr_title }}\" label:automated" \
-          --json number,url \
-          --jq '.[0]' 2>/dev/null || echo "{}")
+          --search "in:title \"${{ inputs.pr_base_title }}\" label:automated" \
+          --json number,url,title,createdAt,headRefName \
+          --jq 'sort_by(.createdAt) | reverse | .[0]' 2>/dev/null || echo "{}")
 
         PR_NUMBER=$(echo "$PR_DATA" | jq -r '.number // empty')
         PR_URL=$(echo "$PR_DATA" | jq -r '.url // empty')
+        PR_BRANCH=$(echo "$PR_DATA" | jq -r '.headRefName // empty')
+        PR_TITLE=$(echo "$PR_DATA" | jq -r '.title // empty')
 
         if [ -n "$PR_NUMBER" ]; then
           echo "pr_exists=true" >> $GITHUB_OUTPUT
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
-          echo "Detected existing PR #$PR_NUMBER: $PR_URL (matched by title and label)"
+          echo "pr_branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+          echo "Detected newest PR #$PR_NUMBER: $PR_URL"
+          echo "  Title: $PR_TITLE"
+          echo "  Branch: $PR_BRANCH"
         else
           echo "pr_exists=false" >> $GITHUB_OUTPUT
           echo "pr_number=" >> $GITHUB_OUTPUT
           echo "pr_url=" >> $GITHUB_OUTPUT
-          echo "No existing PR found (searched by title and label)"
+          echo "pr_branch=" >> $GITHUB_OUTPUT
+          echo "No existing PR found (searched by base title and label)"
         fi
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+
+    - name: Generate PR title with date
+      id: pr_title
+      shell: bash
+      working-directory: repo
+      run: |
+        DATE=$(date -u +%Y-%m-%d)
+        BASE_TITLE="${{ inputs.pr_base_title }}"
+
+        # Search for PRs with same date in title
+        EXISTING_TITLES=$(gh pr list \
+          --search "in:title \"$BASE_TITLE ($DATE\" label:automated" \
+          --json title \
+          --jq '.[].title' 2>/dev/null || echo "")
+
+        # Find highest number for today (format: YYYY-MM-DD-NNN)
+        MAX_NUM=0
+        if [ -n "$EXISTING_TITLES" ]; then
+          while IFS= read -r title; do
+            # Extract number from format like "[bulk] Title (2025-10-28-002)"
+            if [[ "$title" =~ \($DATE-([0-9]+)\) ]]; then
+              NUM="${BASH_REMATCH[1]}"
+              NUM=$((10#$NUM))  # Remove leading zeros
+              if [ "$NUM" -gt "$MAX_NUM" ]; then
+                MAX_NUM=$NUM
+              fi
+            fi
+          done <<< "$EXISTING_TITLES"
+        fi
+
+        # Increment and format
+        NEXT_NUM=$((MAX_NUM + 1))
+        NUM_STR=$(printf "%03d" $NEXT_NUM)
+        PR_TITLE="$BASE_TITLE ($DATE-$NUM_STR)"
+
+        echo "pr_title=$PR_TITLE" >> $GITHUB_OUTPUT
+        echo "Generated PR title: $PR_TITLE"
       env:
         GH_TOKEN: ${{ inputs.github_token }}
 
@@ -66,12 +111,9 @@ runs:
       id: pr_status
       shell: bash
       run: |
-        PR_EXISTS="${{ steps.detect.outputs.pr_exists }}"
         CHANGED="${{ inputs.changed }}"
 
-        if [ "$PR_EXISTS" = "true" ] && [ "$CHANGED" = "true" ]; then
-          STATUS="will_update_existing_pr"
-        elif [ "$PR_EXISTS" = "false" ] && [ "$CHANGED" = "true" ]; then
+        if [ "$CHANGED" = "true" ]; then
           STATUS="will_create"
         else
           STATUS="no_change"
@@ -108,49 +150,26 @@ runs:
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git checkout -B "${{ inputs.branch }}"
         git add README.md
-        git commit -m "${{ inputs.pr_title }}" || echo "No changes to commit"
+        git commit -m "${{ steps.pr_title.outputs.pr_title }}" || echo "No changes to commit"
         git push origin "${{ inputs.branch }}"
         echo "push_succeeded=true" >> $GITHUB_OUTPUT
 
-    - name: APPLY - Create/Update PR
+    - name: APPLY - Create PR
       id: pr_create
       if: ${{ inputs.mode == 'apply' && inputs.changed == 'true' }}
       shell: bash
       working-directory: repo
       run: |
-        STATUS="${{ steps.pr_status.outputs.pr_status }}"
-
-        if [ "$STATUS" = "will_create" ]; then
-          echo "Creating new PR..."
-          PR_URL=$(gh pr create \
-            --title "${{ inputs.pr_title }}" \
-            --body-file "${{ inputs.pr_body_file }}" \
-            --draft \
-            --head "${{ inputs.branch }}" \
-            --base main \
-            --label automated)
-          echo "created_pr_url=$PR_URL" >> $GITHUB_OUTPUT
-          echo "Created PR: $PR_URL"
-        elif [ "$STATUS" = "will_update_existing_pr" ]; then
-          PR_NUMBER="${{ steps.detect.outputs.pr_number }}"
-          echo "Updating existing PR #$PR_NUMBER to new branch ${{ inputs.branch }}..."
-
-          # Extract org/repo from inputs.repo
-          REPO="${{ inputs.repo }}"
-
-          # Use GitHub API to update PR head reference
-          gh api \
-            --method PATCH \
-            "/repos/$REPO/pulls/$PR_NUMBER" \
-            -f head="${{ inputs.branch }}" \
-            > /dev/null
-
-          # Add comment about the update
-          gh pr comment "$PR_NUMBER" --body "Updated to branch \`${{ inputs.branch }}\` from [workflow run ${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-
-          echo "created_pr_url=${{ steps.detect.outputs.pr_url }}" >> $GITHUB_OUTPUT
-          echo "Updated PR #$PR_NUMBER to point to new branch"
-        fi
+        echo "Creating new PR..."
+        PR_URL=$(gh pr create \
+          --title "${{ steps.pr_title.outputs.pr_title }}" \
+          --body-file "${{ inputs.pr_body_file }}" \
+          --draft \
+          --head "${{ inputs.branch }}" \
+          --base main \
+          --label automated)
+        echo "created_pr_url=$PR_URL" >> $GITHUB_OUTPUT
+        echo "Created PR: $PR_URL"
       env:
         GH_TOKEN: ${{ inputs.github_token }}
 

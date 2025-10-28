@@ -22,7 +22,7 @@ try {
   // Build JSONL record
   const record = {
     repo,
-    pr_would_be_created: changed && (!prStatus || prStatus === 'will_create'),
+    pr_would_be_created: changed && prStatus === 'will_create',
     reason: changed ? 'content_changed' : 'noop',
     ...campaignData,
     timestamp: new Date().toISOString()
@@ -31,7 +31,6 @@ try {
   // Add PR fields if provided
   if (prStatus) {
     record.pr_status = prStatus;
-    record.pr_would_be_updated = prStatus === 'will_update_existing_pr';
   }
   if (prNumber) {
     record.pr_number = parseInt(prNumber, 10);
@@ -49,9 +48,8 @@ try {
   // Status line
   if (prStatus) {
     const statusMessages = {
-      'will_create': 'PR would be created',
-      'will_update_existing_pr': prNumber ? `Existing PR would be updated to new branch (PR #${prNumber})` : 'PR would be updated to new branch',
-      'no_change': prNumber ? `No changes needed (PR #${prNumber})` : 'No changes needed'
+      'will_create': 'New PR would be created',
+      'no_change': prNumber ? `No changes needed (latest PR #${prNumber})` : 'No changes needed'
     };
     const action = changed ? 'WOULD apply' : 'skip';
     lines.push(`- ${action}`);

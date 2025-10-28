@@ -195,7 +195,7 @@ jobs:
           changed: ${{ steps.diff.outputs.changed }}
           repo: ${{ matrix.repo }}
           campaign_data: ${{ steps.data.outputs.summary }}
-          pr_title: ${{ env.PR_TITLE }}
+          pr_base_title: ${{ env.PR_TITLE }}
           pr_body_file: /tmp/pr-body.md
           branch: ${{ env.BRANCH }}
           github_token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}

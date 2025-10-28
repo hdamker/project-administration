@@ -34,33 +34,32 @@ These actions are intentionally tiny and composable. Extend inside TS and rebuil
     - `changed` – "true" or "false" (from git diff)
     - `repo` – Repository slug (e.g., "camaraproject/DeviceLocation")
     - `campaign_data` – JSON with campaign-specific fields (e.g., `{"latest_public_release":"r3.2","api_count":3}`)
-    - `pr_title` – PR title (apply mode)
+    - `pr_base_title` – Base title (e.g., "[bulk] Sync Release Information section"); date+sequence added automatically
     - `pr_body_file` – Path to rendered PR body (apply mode)
-    - `branch` – Target branch name
+    - `branch` – Target branch name (unique per run)
     - `github_token` – GitHub token for PR operations
 
   **Behavior**:
-  1. **Detect existing PR**: Calls `gh pr list` to check if PR exists for branch, captures number and URL
-  2. **Check codeowner commits**: Fetches PR branch, analyzes commit authors (`git log`), detects non-bot commits
-  3. **Determine status**:
-     - `will_create` – No PR, changes detected
-     - `will_update` – PR exists, bot-only commits, changes detected
-     - `no_change` – PR exists, no changes (idempotent)
-     - `modified_skip` – PR exists, has codeowner commits (protected)
-     - `push_failed` – Push rejected by --force-with-lease
-  4. **Commit and push** (apply mode, if not modified_skip):
-     - Creates/checks out branch
-     - Commits with PR title as message
-     - Pushes with `--force-with-lease` (safe force push)
-  5. **Create/update PR** (apply mode, if will_create or will_update):
-     - Calls `gh pr create` with title, body, draft status
+  1. **Detect existing PR**: Searches for PRs by base title + automated label, finds newest by created_at
+  2. **Generate PR title**: Adds date and sequence number (e.g., "2025-10-28-001"); increments for same-day runs
+  3. **Ensure automated label**: Creates label if it doesn't exist in repository
+  4. **Determine status**:
+     - `will_create` – Changes detected (always creates new PR)
+     - `no_change` – Content identical to newest PR (or main if no PR)
+  5. **Commit and push** (apply mode, if changed):
+     - Creates unique branch with run ID
+     - Commits with generated PR title as message
+     - Pushes to origin
+  6. **Create PR** (apply mode, if changed):
+     - Calls `gh pr create` with generated title, body, draft status, automated label
      - Captures PR URL from output
-  6. **Record outcome**:
+     - Multiple PRs may exist; codeowners close old ones
+  7. **Record outcome**:
      - Runs Node script to generate plan.jsonl/results.jsonl (machine-readable)
      - Generates plan.md/results.md (human-readable) with PR status and URL
      - Includes all campaign_data fields in both formats
-  7. **Reset** (plan mode): `git reset --hard && git clean -fd`
-  8. **Upload artifacts**: Uploads plan/results with run-specific names
+  8. **Reset** (plan mode): `git reset --hard && git clean -fd`
+  9. **Upload artifacts**: Uploads plan/results with run-specific names
 
   **Why Composite**:
   - Encapsulates all generic campaign infrastructure
