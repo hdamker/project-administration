@@ -42,6 +42,10 @@ try {
   const changed = next !== orig;
   if (changed) fs.writeFileSync(file, next);
   setOutput('changed', changed ? 'true' : 'false');
+
+  // Output touched files for audit trail
+  const fileName = file.split('/').pop();
+  setOutput('touched_files', JSON.stringify([fileName]));
 } catch (err) {
   setFailed(err.message);
 }

@@ -152,52 +152,6 @@ jobs:
             try { execSync('git diff --quiet', { cwd: 'repo' }); } catch { changed = 'true'; }
             core.setOutput('changed', changed);
 
-      - name: PLAN – record plan.md + plan.jsonl and reset
-        if: ${{ env.MODE == 'plan' }}
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-
-            const repo = '${{ matrix.repo }}';
-            const would = '${{ steps.diff.outputs.changed }}' === 'true';
-            const summaryStr = `${{ steps.data.outputs.summary || '{}' }}`;
-            const details = summaryStr ? JSON.parse(summaryStr) : {};
-
-            const line = JSON.stringify({
-              repo,
-              pr_would_be_created: would,
-              reason: would ? 'content_changed' : 'noop',
-              latest_public_release: details.latest_public_release || null,
-              api_count: details.api_count || null,
-              touched_files: ['README.md'],
-              timestamp: new Date().toISOString()
-            }) + '\n';
-            fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, 'plan.jsonl'), line);
-
-            const md = [
-              `### ${repo}`,
-              would ? '- WOULD apply (PR would be created)' : '- No changes (noop)',
-              `- latest_public_release: ${details.latest_public_release || 'n/a'}`,
-              `- api_count: ${details.api_count || 'n/a'}`,
-              ''
-            ].join('\n');
-            fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, 'plan.md'), md);
-
-            const { execSync } = require('child_process');
-            execSync('git reset --hard', { cwd: path.join(process.env.GITHUB_WORKSPACE, 'repo') });
-            execSync('git clean -fd', { cwd: path.join(process.env.GITHUB_WORKSPACE, 'repo') });
-
-      - name: Upload plan artifacts (per-repo)
-        if: ${{ env.MODE == 'plan' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: plan-${{ github.run_id }}-${{ strategy.job-index }}
-          path: |
-            plan.md
-            plan.jsonl
-
       - name: APPLY – commit to branch
         if: ${{ env.MODE == 'apply' && steps.diff.outputs.changed == 'true' }}
         uses: actions/github-script@v7
@@ -230,44 +184,21 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
 
-      - name: APPLY – record results.md + results.jsonl
-        if: ${{ env.MODE == 'apply' }}
-        uses: actions/github-script@v7
+      - name: Record outcome
+        uses: ./admin/actions/record-outcome
         with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
+          repo: ${{ matrix.repo }}
+          changed: ${{ steps.diff.outputs.changed }}
+          mode: ${{ env.MODE }}
+          campaign_data: ${{ steps.data.outputs.summary }}
 
-            const repo = '${{ matrix.repo }}';
-            const would = '${{ steps.diff.outputs.changed }}' === 'true';
-            const summaryStr = `${{ steps.data.outputs.summary || '{}' }}`;
-            const details = summaryStr ? JSON.parse(summaryStr) : {};
-
-            const line = JSON.stringify({
-              repo,
-              pr_would_be_created: would,
-              reason: would ? 'content_changed' : 'noop',
-              latest_public_release: details.latest_public_release || null,
-              api_count: details.api_count || null,
-              touched_files: ['README.md'],
-              timestamp: new Date().toISOString()
-            }) + '\n';
-            fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, 'results.jsonl'), line);
-
-            const md = '### ' + repo + '\n' +
-              '- ' + (would ? 'WOULD apply (PR would be created)' : 'skip (no changes)') + '\n' +
-              '- latest_public_release: ' + (details.latest_public_release || 'N/A') + '\n' +
-              '- api_count: ' + (details.api_count || 0);
-            fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, 'results.md'), md);
-
-      - name: Upload apply results
-        if: ${{ env.MODE == 'apply' }}
+      - name: Upload outcome artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: results-${{ github.run_id }}-${{ strategy.job-index }}
+          name: ${{ env.MODE == 'plan' && format('plan-{0}-{1}', github.run_id, strategy.job-index) || format('results-{0}-{1}', github.run_id, strategy.job-index) }}
           path: |
-            results.md
-            results.jsonl
+            ${{ env.MODE == 'plan' && 'plan' || 'results' }}.md
+            ${{ env.MODE == 'plan' && 'plan' || 'results' }}.jsonl
 
   aggregate:
     needs: run
