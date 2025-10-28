@@ -94,6 +94,24 @@ runs:
         git push origin "${{ inputs.branch }}"
         echo "push_succeeded=true" >> $GITHUB_OUTPUT
 
+    - name: APPLY - Ensure automated label exists
+      if: ${{ inputs.mode == 'apply' && inputs.changed == 'true' }}
+      shell: bash
+      working-directory: repo
+      run: |
+        # Check if automated label exists, create if not
+        if ! gh label list --json name --jq '.[].name' | grep -q "^automated$"; then
+          echo "Creating 'automated' label..."
+          gh label create automated \
+            --description "Automated bulk operations from project-administration" \
+            --color d1d5db
+          echo "Label created"
+        else
+          echo "Label 'automated' already exists"
+        fi
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+
     - name: APPLY - Create/Update PR
       id: pr_create
       if: ${{ inputs.mode == 'apply' && inputs.changed == 'true' }}
