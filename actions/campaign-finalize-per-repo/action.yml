@@ -215,12 +215,37 @@ runs:
         PR_URL=$(gh pr create \
           --title "${{ steps.pr_title.outputs.pr_title }}" \
           --body-file "${{ inputs.pr_body_file }}" \
-          --draft \
           --head "${{ inputs.branch }}" \
           --base main \
           --label automated)
         echo "created_pr_url=$PR_URL" >> $GITHUB_OUTPUT
         echo "Created PR: $PR_URL"
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+
+    - name: APPLY - Mark old PR as superseded
+      if: ${{ inputs.mode == 'apply' && steps.change_check.outputs.changed == 'true' && steps.detect.outputs.pr_number != '' }}
+      shell: bash
+      working-directory: repo
+      run: |
+        OLD_PR="${{ steps.detect.outputs.pr_number }}"
+        NEW_PR_URL="${{ steps.pr_create.outputs.created_pr_url }}"
+        NEW_PR=$(echo "$NEW_PR_URL" | grep -oE '[0-9]+$')
+
+        echo "New PR #$NEW_PR created, marking old PR #$OLD_PR as superseded and converting to draft"
+
+        # Add warning comment
+        gh pr comment "$OLD_PR" --body "$(cat <<EOF
+        ⚠️ **This PR has been superseded by #${NEW_PR}**
+
+        Please review and merge the newer PR instead. This PR has been converted to draft status.
+        EOF
+        )"
+
+        # Convert to draft to prevent accidental merge
+        gh pr ready "$OLD_PR" --undo
+
+        echo "Old PR #$OLD_PR marked as draft"
       env:
         GH_TOKEN: ${{ inputs.github_token }}
 
