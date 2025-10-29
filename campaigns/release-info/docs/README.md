@@ -10,6 +10,51 @@ Maintains consistent and up-to-date release information across all CAMARA API re
 - Links to YAML definitions and API viewers (ReDoc, Swagger UI)
 - References to CHANGELOG and other releases
 
+## Setup and Prerequisites
+
+### Required: GitHub Token Configuration
+
+This campaign requires a Fine-Grained Personal Access Token (FGPAT) with permissions to create branches and pull requests across multiple repositories.
+
+**Token Requirements:**
+- **Token type:** Fine-grained personal access token (not classic PAT)
+- **Repository permissions needed:**
+  - Contents: Read and write
+  - Pull requests: Read and write
+- **Why needed:** The workflow needs to create branches and PRs in target repositories (not just the project-administration repository where it runs)
+
+**Installation Steps:**
+
+1. **Create a Fine-Grained Personal Access Token (FGPAT):**
+   - Go to GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens
+   - Click "Generate new token"
+   - Configure:
+     - Token name: `CAMARA Bulk Campaigns`
+     - Expiration: Choose appropriate duration (recommend 1 year)
+     - Resource owner: Select the organization (e.g., `camaraproject`)
+     - Repository access: Choose "All repositories" or select specific repos
+     - Permissions:
+       - Repository permissions → Contents: Read and write
+       - Repository permissions → Pull requests: Read and write
+
+2. **Add Token as Repository Secret:**
+   - Navigate to the project-administration repository
+   - Go to Settings → Secrets and variables → Actions
+   - Click "New repository secret"
+   - Name: `BULK_CAMPAIGN_TOKEN`
+   - Value: Paste your generated token
+   - Click "Add secret"
+
+3. **Verify Token Configuration:**
+   - The workflow file references this secret as `secrets.BULK_CAMPAIGN_TOKEN`
+   - No code changes needed if the secret is named correctly
+
+**Troubleshooting Token Issues:**
+
+- **"Resource not accessible by integration":** Token lacks required permissions. Regenerate with correct scopes.
+- **"Bad credentials":** Token may be expired or incorrect. Verify secret value in repository settings.
+- **403 errors:** Token may not have access to target repositories. Check repository access configuration.
+
 ## Usage
 
 ### Plan Mode (Dry Run)

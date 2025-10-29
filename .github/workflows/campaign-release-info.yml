@@ -15,7 +15,7 @@ concurrency:
 
 env:
   MODE: ${{ inputs.dry_run && 'plan' || 'apply' }}
-  ORG: hdamker
+  ORG: camaraproject
   RELEASES_FILE: data/releases-master.yaml
   INCLUDE: "QualityOnDemand,QoSBooking"
   BRANCH: bulk/release-info-sync-${{ github.run_id }}
@@ -77,7 +77,7 @@ jobs:
           repository: ${{ matrix.repo }}
           path: repo
           fetch-depth: 0
-          token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
+          token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
 
       - name: Read release data
         id: data
@@ -198,7 +198,7 @@ jobs:
           pr_base_title: ${{ env.PR_TITLE }}
           pr_body_file: /tmp/pr-body.md
           branch: ${{ env.BRANCH }}
-          github_token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
+          github_token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
 
   aggregate:
     needs: run
