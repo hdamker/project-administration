@@ -161,11 +161,14 @@ runs:
       run: |
         PR_NUMBER="${{ steps.detect.outputs.pr_number }}"
         echo "Main is up-to-date but old PR #$PR_NUMBER exists - adding warning comment"
-        gh pr comment "$PR_NUMBER" --body "⚠️ **This PR appears outdated**
+        gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
+        ⚠️ **This PR appears outdated**
 
-Main branch already contains up-to-date content. Consider closing this PR.
+        Main branch already contains up-to-date content. Consider closing this PR.
 
-Detected by [workflow run ${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+        Detected by [workflow run ${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        EOF
+        )"
         echo "Warning comment added to PR #$PR_NUMBER"
       env:
         GH_TOKEN: ${{ inputs.github_token }}
