@@ -67,8 +67,8 @@ try {
     lines.push(changed ? '- WOULD apply (PR would be created)' : '- skip (no changes)');
   }
 
-  // Add PR URL if available
-  if (prUrl) {
+  // Add PR URL if available (but not for main_up_to_date - old PR is misleading)
+  if (prUrl && changeReason !== 'main_up_to_date') {
     lines.push(`- PR URL: ${prUrl}`);
   }
 

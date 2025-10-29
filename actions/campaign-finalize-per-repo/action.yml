@@ -154,6 +154,22 @@ runs:
         echo "pr_status=$STATUS" >> $GITHUB_OUTPUT
         echo "Determined PR status: $STATUS (reason: ${{ steps.change_check.outputs.reason }})"
 
+    - name: APPLY - Warn about outdated PR
+      if: ${{ inputs.mode == 'apply' && steps.change_check.outputs.reason == 'main_up_to_date' && steps.detect.outputs.pr_number != '' }}
+      shell: bash
+      working-directory: repo
+      run: |
+        PR_NUMBER="${{ steps.detect.outputs.pr_number }}"
+        echo "Main is up-to-date but old PR #$PR_NUMBER exists - adding warning comment"
+        gh pr comment "$PR_NUMBER" --body "⚠️ **This PR appears outdated**
+
+Main branch already contains up-to-date content. Consider closing this PR.
+
+Detected by [workflow run ${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+        echo "Warning comment added to PR #$PR_NUMBER"
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+
     - name: APPLY - Ensure automated label exists
       if: ${{ inputs.mode == 'apply' && steps.change_check.outputs.changed == 'true' }}
       shell: bash
