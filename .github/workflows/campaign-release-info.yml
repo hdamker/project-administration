@@ -17,7 +17,7 @@ env:
   MODE: ${{ inputs.dry_run && 'plan' || 'apply' }}
   ORG: camaraproject
   RELEASES_FILE: data/releases-master.yaml
-  # INCLUDE: "QualityOnDemand,QoSBooking"  # Commented for testing - restore before upstream
+  INCLUDE: "QualityOnDemand,QoSBooking,SimSwap"
   BRANCH: bulk/release-info-sync-${{ github.run_id }}
   PR_TITLE: "[bulk] Sync Release Information section"
   PR_BODY: "Automated update of README Release Information section"
