@@ -29,14 +29,14 @@ try {
     timestamp: new Date().toISOString()
   };
 
-  // Add PR fields if provided
+  // Add PR fields if provided (but not for main_up_to_date - old PR is misleading)
   if (prStatus) {
     record.pr_status = prStatus;
   }
-  if (prNumber) {
+  if (prNumber && changeReason !== 'main_up_to_date') {
     record.pr_number = parseInt(prNumber, 10);
   }
-  if (prUrl) {
+  if (prUrl && changeReason !== 'main_up_to_date') {
     record.pr_url = prUrl;
   }
 
@@ -50,7 +50,11 @@ try {
   if (prStatus) {
     const statusMessages = {
       'will_create': 'New PR would be created',
-      'no_change': prNumber ? `No changes needed (latest PR #${prNumber})` : 'No changes needed'
+      'no_change': changeReason === 'main_up_to_date' && prNumber
+        ? `No changes needed (outdated PR #${prNumber})`
+        : prNumber
+          ? `No changes needed (latest PR #${prNumber})`
+          : 'No changes needed'
     };
     const reasonMessages = {
       'main_up_to_date': 'main already up-to-date',
