@@ -30,12 +30,25 @@ inputs:
     description: 'GitHub token for PR creation (apply mode only)'
     required: false
     default: ''
+  error_occurred:
+    description: 'Whether an error occurred during workflow execution'
+    required: false
+    default: 'false'
+  error_message:
+    description: 'Error message if error occurred'
+    required: false
+    default: ''
+  error_step:
+    description: 'Step where error occurred'
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
   steps:
     - name: Detect existing PR
       id: detect
+      if: ${{ inputs.error_occurred != 'true' }}
       shell: bash
       working-directory: repo
       run: |
@@ -70,6 +83,7 @@ runs:
 
     - name: Two-stage change detection
       id: change_check
+      if: ${{ inputs.error_occurred != 'true' }}
       shell: bash
       working-directory: repo
       run: |
@@ -102,6 +116,7 @@ runs:
 
     - name: Generate PR title with date
       id: pr_title
+      if: ${{ inputs.error_occurred != 'true' }}
       shell: bash
       working-directory: repo
       run: |
@@ -141,6 +156,7 @@ runs:
 
     - name: Determine PR status
       id: pr_status
+      if: ${{ inputs.error_occurred != 'true' }}
       shell: bash
       run: |
         CHANGED="${{ steps.change_check.outputs.changed }}"
@@ -250,6 +266,7 @@ runs:
         GH_TOKEN: ${{ inputs.github_token }}
 
     - name: Record outcome
+      if: always()
       shell: bash
       run: |
         node ${{ github.action_path }}/dist/index.js
@@ -262,6 +279,9 @@ runs:
         INPUT_PR_NUMBER: ${{ steps.detect.outputs.pr_number }}
         INPUT_PR_URL: ${{ steps.pr_create.outputs.created_pr_url || steps.detect.outputs.pr_url }}
         INPUT_CHANGE_REASON: ${{ steps.change_check.outputs.reason }}
+        INPUT_ERROR_OCCURRED: ${{ inputs.error_occurred }}
+        INPUT_ERROR_MESSAGE: ${{ inputs.error_message }}
+        INPUT_ERROR_STEP: ${{ inputs.error_step }}
 
     - name: Reset repo (plan mode)
       if: ${{ inputs.mode == 'plan' }}

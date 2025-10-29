@@ -17,7 +17,7 @@ env:
   MODE: ${{ inputs.dry_run && 'plan' || 'apply' }}
   ORG: camaraproject
   RELEASES_FILE: data/releases-master.yaml
-  # INCLUDE: "QualityOnDemand,QoSBooking"  # Commented for all-repos test
+  # INCLUDE: "QualityOnDemand,QoSBooking"  # Commented for testing - restore before upstream
   BRANCH: bulk/release-info-sync-${{ github.run_id }}
   PR_TITLE: "[bulk] Sync Release Information section"
   PR_BODY: "Automated update of README Release Information section"
@@ -110,6 +110,7 @@ jobs:
 
       - name: Ensure Release Info section delimiters
         id: ensure
+        continue-on-error: true
         uses: ./admin/actions/ensure-delimited-section
         with:
           file: repo/README.md
@@ -119,6 +120,7 @@ jobs:
 
       - name: Render content template → /tmp/release-info.md
         id: render
+        if: steps.ensure.outcome == 'success'
         uses: ./admin/actions/render-mustache
         with:
           template: ${{ github.workspace }}/admin/campaigns/release-info/templates/release-info.mustache
@@ -127,6 +129,7 @@ jobs:
 
       - name: Render PR body template → /tmp/pr-body.md
         id: render_pr_body
+        if: steps.ensure.outcome == 'success'
         uses: ./admin/actions/render-mustache
         with:
           template: ${{ github.workspace }}/admin/campaigns/release-info/templates/pr-body.mustache
@@ -135,6 +138,7 @@ jobs:
 
       - name: Replace delimited content (writes in-place)
         id: replace
+        if: steps.ensure.outcome == 'success'
         uses: ./admin/actions/replace-delimited-content
         with:
           file: repo/README.md
@@ -144,6 +148,7 @@ jobs:
 
       - name: Detect changes with git diff
         id: diff
+        if: steps.ensure.outcome == 'success'
         uses: actions/github-script@v7
         with:
           script: |
@@ -188,17 +193,39 @@ jobs:
 
             core.setOutput('changed', changed);
 
+      - name: Capture error state
+        id: error
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ensureOutcome = '${{ steps.ensure.outcome }}';
+
+            if (ensureOutcome === 'failure') {
+              core.setOutput('error_occurred', 'true');
+              core.setOutput('error_message', 'Release Information section markers not found in README.md');
+              core.setOutput('error_step', 'ensure-delimiters');
+            } else {
+              core.setOutput('error_occurred', 'false');
+              core.setOutput('error_message', '');
+              core.setOutput('error_step', '');
+            }
+
       - name: Finalize campaign per repo
+        if: always()
         uses: ./admin/actions/campaign-finalize-per-repo
         with:
           mode: ${{ env.MODE }}
-          changed: ${{ steps.diff.outputs.changed }}
+          changed: ${{ steps.diff.outputs.changed || 'false' }}
           repo: ${{ matrix.repo }}
           campaign_data: ${{ steps.data.outputs.summary }}
           pr_base_title: ${{ env.PR_TITLE }}
           pr_body_file: /tmp/pr-body.md
           branch: ${{ env.BRANCH }}
           github_token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+          error_occurred: ${{ steps.error.outputs.error_occurred }}
+          error_message: ${{ steps.error.outputs.error_message }}
+          error_step: ${{ steps.error.outputs.error_step }}
 
   aggregate:
     needs: run

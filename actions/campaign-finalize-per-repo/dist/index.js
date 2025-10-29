@@ -14,6 +14,9 @@ try {
   const prNumber = getInput('pr_number');
   const prUrl = getInput('pr_url');
   const changeReason = getInput('change_reason');
+  const errorOccurred = getInput('error_occurred') === 'true';
+  const errorMessage = getInput('error_message');
+  const errorStep = getInput('error_step');
 
   const campaignData = JSON.parse(campaignDataStr);
 
@@ -23,21 +26,30 @@ try {
   // Build JSONL record
   const record = {
     repo,
-    pr_would_be_created: changed && prStatus === 'will_create',
-    reason: changeReason || (changed ? 'content_changed' : 'noop'),
     ...campaignData,
     timestamp: new Date().toISOString()
   };
 
-  // Add PR fields if provided (but not for main_up_to_date - old PR is misleading)
-  if (prStatus) {
-    record.pr_status = prStatus;
-  }
-  if (prNumber && changeReason !== 'main_up_to_date') {
-    record.pr_number = parseInt(prNumber, 10);
-  }
-  if (prUrl && changeReason !== 'main_up_to_date') {
-    record.pr_url = prUrl;
+  // Add error fields if error occurred
+  if (errorOccurred) {
+    record.error = true;
+    record.error_message = errorMessage;
+    record.error_step = errorStep;
+    record.status = 'error';
+  } else {
+    record.pr_would_be_created = changed && prStatus === 'will_create';
+    record.reason = changeReason || (changed ? 'content_changed' : 'noop');
+
+    // Add PR fields if provided (but not for main_up_to_date - old PR is misleading)
+    if (prStatus) {
+      record.pr_status = prStatus;
+    }
+    if (prNumber && changeReason !== 'main_up_to_date') {
+      record.pr_number = parseInt(prNumber, 10);
+    }
+    if (prUrl && changeReason !== 'main_up_to_date') {
+      record.pr_url = prUrl;
+    }
   }
 
   const jsonlLine = JSON.stringify(record) + '\n';
@@ -46,34 +58,41 @@ try {
   // Build markdown summary
   const lines = [`### ${repo}`];
 
-  // Status line
-  if (prStatus) {
-    const statusMessages = {
-      'will_create': 'New PR would be created',
-      'no_change': changeReason === 'main_up_to_date' && prNumber
-        ? `No changes needed (outdated PR #${prNumber})`
-        : prNumber
-          ? `No changes needed (latest PR #${prNumber})`
-          : 'No changes needed'
-    };
-    const reasonMessages = {
-      'main_up_to_date': 'main already up-to-date',
-      'duplicate_of_pr': 'identical to existing PR',
-      'new_changes': 'new changes detected'
-    };
-    const action = changed ? 'WOULD apply' : 'skip';
-    lines.push(`- ${action}`);
-    lines.push(`- PR status: ${statusMessages[prStatus]}`);
-    if (changeReason) {
-      lines.push(`- Reason: ${reasonMessages[changeReason] || changeReason}`);
-    }
+  // Handle error case
+  if (errorOccurred) {
+    lines.push(`- ERROR: ${errorMessage}`);
+    lines.push(`- Failed at step: ${errorStep}`);
+    lines.push(`- Status: Skipped`);
   } else {
-    lines.push(changed ? '- WOULD apply (PR would be created)' : '- skip (no changes)');
-  }
+    // Status line
+    if (prStatus) {
+      const statusMessages = {
+        'will_create': 'New PR would be created',
+        'no_change': changeReason === 'main_up_to_date' && prNumber
+          ? `No changes needed (outdated PR #${prNumber})`
+          : prNumber
+            ? `No changes needed (latest PR #${prNumber})`
+            : 'No changes needed'
+      };
+      const reasonMessages = {
+        'main_up_to_date': 'main already up-to-date',
+        'duplicate_of_pr': 'identical to existing PR',
+        'new_changes': 'new changes detected'
+      };
+      const action = changed ? 'WOULD apply' : 'skip';
+      lines.push(`- ${action}`);
+      lines.push(`- PR status: ${statusMessages[prStatus]}`);
+      if (changeReason) {
+        lines.push(`- Reason: ${reasonMessages[changeReason] || changeReason}`);
+      }
+    } else {
+      lines.push(changed ? '- WOULD apply (PR would be created)' : '- skip (no changes)');
+    }
 
-  // Add PR URL if available (but not for main_up_to_date - old PR is misleading)
-  if (prUrl && changeReason !== 'main_up_to_date') {
-    lines.push(`- PR URL: ${prUrl}`);
+    // Add PR URL if available (but not for main_up_to_date - old PR is misleading)
+    if (prUrl && changeReason !== 'main_up_to_date') {
+      lines.push(`- PR URL: ${prUrl}`);
+    }
   }
 
   // Add campaign-specific fields
