@@ -10,6 +10,51 @@ Maintains consistent and up-to-date release information across all CAMARA API re
 - Links to YAML definitions and API viewers (ReDoc, Swagger UI)
 - References to CHANGELOG and other releases
 
+## Setup and Prerequisites
+
+### Required: GitHub Token Configuration
+
+This campaign requires a Fine-Grained Personal Access Token (FGPAT) with permissions to create branches and pull requests across multiple repositories.
+
+**Token Requirements:**
+- **Token type:** Fine-grained personal access token (not classic PAT)
+- **Repository permissions needed:**
+  - Contents: Read and write
+  - Pull requests: Read and write
+- **Why needed:** The workflow needs to create branches and PRs in target repositories (not just the project-administration repository where it runs)
+
+**Installation Steps:**
+
+1. **Create a Fine-Grained Personal Access Token (FGPAT):**
+   - Go to GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens
+   - Click "Generate new token"
+   - Configure:
+     - Token name: `CAMARA Bulk Campaigns`
+     - Expiration: Choose appropriate duration (recommend 1 year)
+     - Resource owner: Select the organization (e.g., `camaraproject`)
+     - Repository access: Choose "All repositories" or select specific repos
+     - Permissions:
+       - Repository permissions → Contents: Read and write
+       - Repository permissions → Pull requests: Read and write
+
+2. **Add Token as Repository Secret:**
+   - Navigate to the project-administration repository
+   - Go to Settings → Secrets and variables → Actions
+   - Click "New repository secret"
+   - Name: `BULK_CAMPAIGN_TOKEN`
+   - Value: Paste your generated token
+   - Click "Add secret"
+
+3. **Verify Token Configuration:**
+   - The workflow file references this secret as `secrets.BULK_CAMPAIGN_TOKEN`
+   - No code changes needed if the secret is named correctly
+
+**Troubleshooting Token Issues:**
+
+- **"Resource not accessible by integration":** Token lacks required permissions. Regenerate with correct scopes.
+- **"Bad credentials":** Token may be expired or incorrect. Verify secret value in repository settings.
+- **403 errors:** Token may not have access to target repositories. Check repository access configuration.
+
 ## Usage
 
 ### Plan Mode (Dry Run)
@@ -18,32 +63,33 @@ Test the campaign without making any changes:
 
 1. Navigate to [Actions → campaign-release-info](../../.github/workflows/campaign-release-info.yml)
 2. Click "Run workflow"
-3. Ensure `MODE` is set to `plan` (default)
-4. Optionally set `INCLUDE` to test specific repos (e.g., `"DeviceLocation,QualityOnDemand"`)
-5. Run the workflow
-6. Review the generated `plan.md` and `plan.jsonl` artifacts
+3. Leave `dry_run` checked (default)
+4. Run the workflow
+5. Review the generated `plan.md` and `plan.jsonl` artifacts
 
 **Plan mode behavior:**
 - Writes changes to target repo clones
-- Detects diffs with `git diff`
-- Creates plan artifacts (`plan.md` + `plan.jsonl`)
-- Resets working tree (`git reset --hard && git clean -fd`)
+- Detects existing PRs and compares against them
+- Creates plan artifacts showing which PRs would be created
+- Resets working tree (no changes persist)
 - **Does NOT create any PRs**
 
 ### Apply Mode (Create PRs)
 
 Apply changes and create pull requests:
 
-1. Test with a small set of repos first using `INCLUDE`
-2. Change `MODE` to `apply` in the workflow
+1. Test with plan mode first
+2. Uncheck `dry_run` option when running workflow
 3. Run the workflow
-4. PRs will be created on branch `bulk/release-info-sync`
+4. PRs will be created with dated titles (e.g., `[bulk] Sync Release Information section (2025-10-29-001)`)
 5. Verify PRs in target repositories
 
 **Apply mode behavior:**
-- Commits changes to stable branch `bulk/release-info-sync`
-- Creates/updates PR via `peter-evans/create-pull-request`
-- Idempotent: reruns are no-ops if content is already correct
+- Detects newest existing PR for comparison
+- Commits changes to unique branch with run ID
+- Creates new PR when changes are detected
+- Multiple PRs may exist; codeowners close old ones after review
+- Generates `results.md` and `results.jsonl` artifacts with PR URLs
 
 ## Configuration
 
@@ -51,161 +97,97 @@ Edit [.github/workflows/campaign-release-info.yml](../../.github/workflows/campa
 
 ```yaml
 env:
-  MODE: plan                        # Switch to 'apply' when ready
-  ORG: camaraproject
+  ORG: camaraproject                # Target organization
   RELEASES_FILE: data/releases-master.yaml
-  INCLUDE: ""                       # Filter: "DeviceLocation,QualityOnDemand"
-  BRANCH: bulk/release-info-sync    # Target branch name
-  PR_TITLE: "[bulk] Sync Release Information section"
+  INCLUDE: "DeviceLocation,QualityOnDemand"  # Optional: filter specific repos
+  BRANCH: bulk/release-info-sync-${{ github.run_id }}  # Unique branch per run
+  PR_TITLE: "[bulk] Sync Release Information section"  # Date added automatically
   PR_BODY: "Automated update of README Release Information section"
 ```
 
-## Template
+**Key Configuration Options:**
+- `INCLUDE`: Comma-separated list of repository names to target (leave empty for all)
+- `BRANCH`: Branch name pattern (run_id makes each run unique)
+- `PR_TITLE`: Base PR title (date and sequence number added automatically)
 
-Located at [campaigns/release-info/templates/release-info.mustache](../templates/release-info.mustache)
+## Understanding Results
 
-### Template Variables
+### Plan Output Example
 
-- `repo_name`: Repository name (e.g., "DeviceLocation")
-- `latest_public_release`: Latest public release tag (e.g., "r3.2")
-- `release_date`: Release date (ISO 8601)
-- `meta_release`: Meta-release name (e.g., "Fall25")
-- `github_url`: Full GitHub release URL
-- `apis[]`: Array of APIs in the release
-  - `api_name`: API name
-  - `file_name`: YAML filename (without .yaml extension)
-  - `version`: API version
-  - `title`: API title
-  - `commonalities`: Commonalities version
-
-### Multi-API Support
-
-The template uses Mustache array iteration to list all APIs:
-
-```mustache
-{{#apis}}
-  * **{{file_name}} v{{version}}**
-  [[YAML]](https://github.com/camaraproject/{{repo_name}}/blob/{{latest_public_release}}/code/API_definitions/{{file_name}}.yaml)
-  ...
-{{/apis}}
+```markdown
+### camaraproject/QualityOnDemand
+- WOULD apply
+- PR status: New PR would be created
+- Reason: new changes detected
+- latest_public_release: r3.2
+- api_count: 3
 ```
 
-## Data Source
+### Apply Output Example
 
-The campaign reads from `data/releases-master.yaml`, which contains:
-
-```yaml
-releases:
-  - repository: DeviceLocation
-    release_tag: r3.2
-    release_date: '2025-09-16T11:41:00Z'
-    meta_release: Fall25
-    github_url: https://github.com/camaraproject/DeviceLocation/releases/tag/r3.2
-    apis:
-      - api_name: geofencing-subscriptions
-        file_name: geofencing-subscriptions
-        version: 0.5.0
-        title: Device Geofencing Subscriptions
-        commonalities: '0.6'
-      [... more APIs ...]
+```markdown
+### camaraproject/QualityOnDemand
+- WOULD apply
+- PR status: New PR would be created
+- Reason: new changes detected
+- PR URL: https://github.com/camaraproject/QualityOnDemand/pull/508
+- latest_public_release: r3.2
+- api_count: 3
 ```
 
-### Latest Public Release Logic
+### PR Status Values
 
-The `read-release-data` action:
-1. Filters releases by repository name
-2. **Excludes sandbox releases**: `meta_release` containing "Sandbox" or "None (Sandbox)"
-3. Sorts by semver (release_tag like "r3.2" → "3.2")
-4. Selects the latest (highest version)
-5. Outputs all APIs from that release
+- **`will_create`** - Changes detected; new PR created
+- **`no_change`** - Content identical to newest PR or main; no update needed (idempotent)
 
-## Actions Used
+### Reason Values
 
-This campaign uses 4 reusable Node20 actions (located in `actions/`):
+- **`new_changes`** - Content differs from both main and existing PR
+- **`duplicate_of_pr`** - Content identical to existing PR
+- **`main_up_to_date`** - Main already has current content
 
-### 1. [read-release-data](../../actions/read-release-data/)
-- Parses `releases-master.yaml`
-- Filters by repository and public status
-- Sorts by semver to find latest
-- Outputs JSON for templating
+## Error Handling
 
-**Inputs:**
-- `releases_file`: Path to releases-master.yaml
-- `repo_slug`: Full repository slug (e.g., "camaraproject/DeviceLocation")
+Repositories without Release Information section markers will be reported as errors:
 
-**Outputs:**
-- `json`: Full data object for Mustache (includes all APIs)
-- `summary`: Minimal JSON for plan reporting (latest_public_release, api_count)
+```markdown
+### camaraproject/SimSwap
+- ERROR: Release Information section markers not found in README.md
+- Failed at step: ensure-delimiters
+- Status: Skipped
+- latest_public_release: r3.2
+- api_count: 2
+```
 
-### 2. [ensure-delimited-section](../../actions/ensure-delimited-section/)
-- Ensures delimited section exists in README.md
-- Inserts after first `## ` heading if missing
-- Idempotent (no changes if already present)
-
-**Inputs:**
-- `file`: Target file (e.g., "README.md")
-- `start`: Start delimiter comment
-- `end`: End delimiter comment
-- `placeholder`: Placeholder text
-
-### 3. [render-mustache](../../actions/render-mustache/)
-- Renders Mustache template with JSON data
-- Supports array iteration (`{{#apis}}...{{/apis}}`)
-- Parent context access for nested data
-
-**Inputs:**
-- `template`: Mustache template path
-- `data_json`: JSON string or file path
-- `out_file`: Output file path
-
-### 4. [replace-delimited-content](../../actions/replace-delimited-content/)
-- Replaces content between delimiters
-- Outputs `changed` flag (true/false)
-
-**Inputs:**
-- `file`: Target file
-- `start`: Start delimiter
-- `end`: End delimiter
-- `new_content_file`: File with new content
-
-## Adapting for New Campaigns
-
-The actions in `actions/` are reusable for other campaigns:
-
-**Example: Update Contributing Sections**
-1. Copy workflow: `campaign-release-info.yml` → `campaign-contributing.yml`
-2. Create template: `campaigns/contributing/templates/contributing.mustache`
-3. Update workflow to use new template path
-4. Reuse existing actions (ensure-delimited-section, render-mustache, replace-delimited-content)
-5. Optionally create custom action if different data source needed
-
-**Key Principles:**
-- Actions are generic and parameterized
-- Campaign-specific logic goes in templates
-- Data sources can be YAML, JSON, or API calls
-- Keep diff/PR/aggregation logic unchanged in workflow
+These repos need manual addition of section markers before the campaign can update them.
 
 ## Troubleshooting
 
-### No public releases found
-**Cause:** Repository only has sandbox releases (meta_release = "None (Sandbox)")
+### No changes detected (all repos show no_change)
+**Cause:** Content already up-to-date
+**Solution:** Expected behavior - campaign is idempotent
+
+### ERROR: Release Information section markers not found
+**Cause:** README.md missing delimited section markers
+**Solution:** Manually add markers to README.md:
+```markdown
+<!-- CAMARA:RELEASE-INFO:START -->
+_This section is managed by project-administration_
+<!-- CAMARA:RELEASE-INFO:END -->
+```
+
+### No public releases found for repository
+**Cause:** Repository only has sandbox releases
 **Solution:** Wait for public release or exclude repo from campaign
 
-### Delimiters not found
-**Cause:** `ensure-delimited-section` didn't run or failed
-**Solution:** Check action logs, verify README.md exists
-
-### Template rendering errors
-**Cause:** Invalid Mustache syntax or missing data fields
-**Solution:** Test template with sample data, check action logs
-
 ### PRs not created in apply mode
-**Cause:** No changes detected (content already up-to-date)
-**Solution:** This is expected (idempotency). Check plan.md to confirm "noop"
+**Cause:** Check results.md for status:
+- `no_change` - Content identical (expected, idempotent)
+- Error status - See error message
 
-## References
+## Further Documentation
 
-- [ADR 0001: Campaign Architecture](ADR/0001-campaign-architecture.md)
-- [Workflow Overview](00-overview.md)
-- [Plan vs Apply](02-plan-apply.md)
-- [Actions Documentation](04-actions.md)
+- [Architecture Overview](01-architecture.md) - System design and workflow
+- [Plan vs Apply Modes](02-plan-apply.md) - Detailed mode comparison and PR management
+- [Actions Reference](04-actions.md) - Reusable actions documentation
+- [ADR-0001: Campaign Architecture](ADR/0001-campaign-architecture.md) - Architecture decisions

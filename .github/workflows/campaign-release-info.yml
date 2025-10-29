@@ -1,12 +1,24 @@
 name: campaign-release-info
-on: { workflow_dispatch: {} }
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run mode (plan only, no PRs created)'
+        required: true
+        type: boolean
+        default: true
+
+concurrency:
+  group: campaign-release-info-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
-  MODE: plan                        # flip to 'apply' when ready
-  ORG: camaraproject                # change to 'hdamker' for testing with forks
+  MODE: ${{ inputs.dry_run && 'plan' || 'apply' }}
+  ORG: camaraproject
   RELEASES_FILE: data/releases-master.yaml
-  INCLUDE: ""                       # optional: "DeviceLocation,QualityOnDemand"
-  BRANCH: bulk/release-info-sync
+  INCLUDE: "QualityOnDemand,QoSBooking,SimSwap"
+  BRANCH: bulk/release-info-sync-${{ github.run_id }}
   PR_TITLE: "[bulk] Sync Release Information section"
   PR_BODY: "Automated update of README Release Information section"
 
@@ -20,7 +32,14 @@ jobs:
     outputs:
       repos: ${{ steps.sel.outputs.repos }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout admin repo (self)
+        uses: actions/checkout@v4
+        with:
+          path: admin
+
+      - name: Install js-yaml
+        run: npm install js-yaml
+
       - id: sel
         name: Build repo list (from releases-master.yaml + include filter)
         uses: actions/github-script@v7
@@ -28,10 +47,10 @@ jobs:
           script: |
             const fs = require('fs');
             const yaml = require('js-yaml');
-            const doc = yaml.load(fs.readFileSync(process.env.RELEASES_FILE, 'utf8'));
-            let list = (doc?.releases || [])
+            const doc = yaml.load(fs.readFileSync('admin/data/releases-master.yaml', 'utf8'));
+            let list = [...new Set((doc?.releases || [])
               .map(r => `${process.env.ORG}/${r.repository}`)
-              .filter(Boolean);
+              .filter(Boolean))];
             const include = (process.env.INCLUDE||'').split(',').map(s=>s.trim()).filter(Boolean);
             if (include.length) list = list.filter(r => include.some(x => r.endsWith(`/${x}`)));
             core.setOutput('repos', JSON.stringify(list));
@@ -39,158 +58,237 @@ jobs:
   run:
     needs: select
     runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ env.MODE }}
     strategy:
       fail-fast: false
       matrix:
         repo: ${{ fromJson(needs.select.outputs.repos) }}
 
     steps:
-      - name: Checkout project-administration repo
+      - name: Checkout admin repo (self)
         uses: actions/checkout@v4
         with:
-          repository: camaraproject/project-administration
-          path: project-administration
-          token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
+          path: admin
 
       - name: Checkout target repo
         uses: actions/checkout@v4
         with:
           repository: ${{ matrix.repo }}
-          path: target-repo
+          path: repo
           fetch-depth: 0
-          token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
+          token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
 
       - name: Read release data
         id: data
-        uses: ./project-administration/actions/read-release-data
+        uses: ./admin/actions/read-release-data
         with:
-          releases_file: ${{ github.workspace }}/project-administration/${{ env.RELEASES_FILE }}
+          releases_file: ${{ github.workspace }}/admin/${{ env.RELEASES_FILE }}
           repo_slug: ${{ matrix.repo }}
+
+      - name: Format API lines
+        id: format
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const data = JSON.parse(`${{ steps.data.outputs.json }}`);
+
+            if (!data.apis || data.apis.length === 0) {
+              core.info('No APIs found, using empty formatted_apis');
+              data.formatted_apis = '';
+            } else {
+              const apiLines = data.apis.map(api => {
+                return '  * **' + api.file_name + ' v' + api.version + '**\n' +
+                  '  [[YAML]](https://github.com/camaraproject/' + data.repo_name + '/blob/' + data.latest_public_release + '/code/API_definitions/' + api.file_name + '.yaml)\n' +
+                  '  [[ReDoc]](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/' + data.repo_name + '/' + data.latest_public_release + '/code/API_definitions/' + api.file_name + '.yaml&nocors)\n' +
+                  '  [[Swagger]](https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/' + data.repo_name + '/' + data.latest_public_release + '/code/API_definitions/' + api.file_name + '.yaml)';
+              }).join('\n');
+              data.formatted_apis = apiLines;
+            }
+
+            core.setOutput('enhanced_json', JSON.stringify(data));
 
       - name: Ensure Release Info section delimiters
         id: ensure
-        uses: ./project-administration/actions/ensure-delimited-section
+        continue-on-error: true
+        uses: ./admin/actions/ensure-delimited-section
         with:
-          file: target-repo/README.md
+          file: repo/README.md
           start: "<!-- CAMARA:RELEASE-INFO:START -->"
           end:   "<!-- CAMARA:RELEASE-INFO:END -->"
           placeholder: "_This section is managed by project-administration_"
 
-      - name: Render Mustache → /tmp/release-info.md
+      - name: Render content template → /tmp/release-info.md
         id: render
-        uses: ./project-administration/actions/render-mustache
+        if: steps.ensure.outcome == 'success'
+        uses: ./admin/actions/render-mustache
         with:
-          template: ${{ github.workspace }}/project-administration/campaigns/release-info/templates/release-info.mustache
-          data_json: ${{ steps.data.outputs.json }}
+          template: ${{ github.workspace }}/admin/campaigns/release-info/templates/release-info.mustache
+          data_json: ${{ steps.format.outputs.enhanced_json }}
           out_file: /tmp/release-info.md
+
+      - name: Render PR body template → /tmp/pr-body.md
+        id: render_pr_body
+        if: steps.ensure.outcome == 'success'
+        uses: ./admin/actions/render-mustache
+        with:
+          template: ${{ github.workspace }}/admin/campaigns/release-info/templates/pr-body.mustache
+          data_json: ${{ steps.format.outputs.enhanced_json }}
+          out_file: /tmp/pr-body.md
 
       - name: Replace delimited content (writes in-place)
         id: replace
-        uses: ./project-administration/actions/replace-delimited-content
+        if: steps.ensure.outcome == 'success'
+        uses: ./admin/actions/replace-delimited-content
         with:
-          file: target-repo/README.md
+          file: repo/README.md
           start: "<!-- CAMARA:RELEASE-INFO:START -->"
           end:   "<!-- CAMARA:RELEASE-INFO:END -->"
           new_content_file: /tmp/release-info.md
 
       - name: Detect changes with git diff
         id: diff
+        if: steps.ensure.outcome == 'success'
         uses: actions/github-script@v7
         with:
           script: |
             const { execSync } = require('child_process');
+            const branch = process.env.BRANCH;
             let changed = 'false';
-            try { execSync('git diff --quiet', { cwd: 'target-repo' }); } catch { changed = 'true'; }
+
+            try {
+              // Check if remote branch exists
+              execSync(`git fetch origin ${branch}`, { cwd: 'repo', stdio: 'pipe' });
+              const remoteBranchExists = execSync(`git rev-parse --verify origin/${branch}`, { cwd: 'repo', stdio: 'pipe' }).toString().trim();
+
+              if (remoteBranchExists) {
+                // Compare against remote PR branch
+                console.log(`Comparing against existing remote branch origin/${branch}`);
+                try {
+                  execSync(`git diff --quiet origin/${branch} -- README.md`, { cwd: 'repo' });
+                  console.log('No changes detected compared to PR branch');
+                } catch {
+                  changed = 'true';
+                  console.log('Changes detected compared to PR branch');
+                }
+              } else {
+                // Compare against main (no PR branch exists)
+                console.log('No remote branch exists, comparing against main');
+                try {
+                  execSync('git diff --quiet', { cwd: 'repo' });
+                } catch {
+                  changed = 'true';
+                  console.log('Changes detected compared to main');
+                }
+              }
+            } catch (err) {
+              // Remote branch doesn't exist or fetch failed, compare against main
+              console.log('Remote branch not found, comparing against main');
+              try {
+                execSync('git diff --quiet', { cwd: 'repo' });
+              } catch {
+                changed = 'true';
+              }
+            }
+
             core.setOutput('changed', changed);
 
-      - name: PLAN – record plan.md + plan.jsonl and reset
-        if: env.MODE == 'plan'
+      - name: Capture error state
+        id: error
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ensureOutcome = '${{ steps.ensure.outcome }}';
+
+            if (ensureOutcome === 'failure') {
+              core.setOutput('error_occurred', 'true');
+              core.setOutput('error_message', 'Release Information section markers not found in README.md');
+              core.setOutput('error_step', 'ensure-delimiters');
+            } else {
+              core.setOutput('error_occurred', 'false');
+              core.setOutput('error_message', '');
+              core.setOutput('error_step', '');
+            }
+
+      - name: Finalize campaign per repo
+        if: always()
+        uses: ./admin/actions/campaign-finalize-per-repo
+        with:
+          mode: ${{ env.MODE }}
+          changed: ${{ steps.diff.outputs.changed || 'false' }}
+          repo: ${{ matrix.repo }}
+          campaign_data: ${{ steps.data.outputs.summary }}
+          pr_base_title: ${{ env.PR_TITLE }}
+          pr_body_file: /tmp/pr-body.md
+          branch: ${{ env.BRANCH }}
+          github_token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+          error_occurred: ${{ steps.error.outputs.error_occurred }}
+          error_message: ${{ steps.error.outputs.error_message }}
+          error_step: ${{ steps.error.outputs.error_step }}
+
+  aggregate:
+    needs: run
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine artifact pattern
+        id: pattern
+        run: |
+          MODE="${{ needs.run.outputs.mode }}"
+          if [ "$MODE" = "plan" ]; then
+            echo "pattern=plan-*" >> $GITHUB_OUTPUT
+            echo "output_name=plan" >> $GITHUB_OUTPUT
+            echo "dir_name=plans" >> $GITHUB_OUTPUT
+          else
+            echo "pattern=results-*" >> $GITHUB_OUTPUT
+            echo "output_name=results" >> $GITHUB_OUTPUT
+            echo "dir_name=results" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ steps.pattern.outputs.pattern }}
+          path: ${{ steps.pattern.outputs.dir_name }}
+
+      - name: Merge artifacts
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            fs.mkdirSync('target-repo/.plan', { recursive: true });
-            const repo = '${{ matrix.repo }}';
-            const would = '${{ steps.diff.outputs.changed }}' === 'true';
-            const details = JSON.parse(`${{ steps.data.outputs.summary || '{}' }}`);
-            const line = JSON.stringify({
-              repo,
-              pr_would_be_created: would,
-              latest_public_release: details.latest_public_release || null,
-              api_count: details.api_count || null
-            }) + '\n';
-            fs.appendFileSync('target-repo/.plan/plan.jsonl', line);
-            const md = [
-              `### ${repo}`,
-              would ? '- WOULD apply (PR would be created)' : '- No changes (noop)',
-              `- latest_public_release: ${details.latest_public_release || 'n/a'}`,
-              `- api_count: ${details.api_count || 'n/a'}`,
-              ''
-            ].join('\n');
-            fs.appendFileSync('target-repo/.plan/plan.md', md);
-            const { execSync } = require('child_process');
-            execSync('git reset --hard', { cwd: 'target-repo' });
-            execSync('git clean -fd', { cwd: 'target-repo' });
+            const p = '${{ steps.pattern.outputs.dir_name }}';
+            const outputName = '${{ steps.pattern.outputs.output_name }}';
 
-      - name: Upload plan artifacts (per-repo)
-        if: env.MODE == 'plan'
-        uses: actions/upload-artifact@v4
-        with:
-          name: plan-${{ matrix.repo }}
-          path: target-repo/.plan/*
-
-      - name: APPLY – commit to branch
-        if: env.MODE == 'apply' && steps.diff.outputs.changed == 'true'
-        working-directory: target-repo
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { execSync } = require('child_process');
-            execSync('git config user.name "github-actions[bot]"');
-            execSync('git config user.email "github-actions[bot]@users.noreply.github.com"');
-            execSync('git checkout -B "${{ env.BRANCH }}"');
-            execSync('git add README.md');
-            try { execSync('git commit -m "${{ env.PR_TITLE }}"'); } catch {}
-            execSync('git push -f origin "${{ env.BRANCH }}"');
-
-      - name: Create/Update PR (apply)
-        if: env.MODE == 'apply' && steps.diff.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.CAMARA_BULK_CHANGE_TOKEN }}
-          branch: ${{ env.BRANCH }}
-          title:  ${{ env.PR_TITLE }}
-          body:   ${{ env.PR_BODY }}
-          draft: true
-          signoff: true
-
-  aggregate:
-    needs: run
-    if: env.MODE == 'plan'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with: { path: plans }
-      - name: Merge plan artifacts
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs'); const p = 'plans';
-            const md = []; const lines = [];
-            for (const d of fs.readdirSync(p)) {
-              const dir = `${p}/${d}`;
-              if (fs.existsSync(`${dir}/plan.md`))    md.push(fs.readFileSync(`${dir}/plan.md`,'utf8'));
-              if (fs.existsSync(`${dir}/plan.jsonl`)) lines.push(fs.readFileSync(`${dir}/plan.jsonl`,'utf8'));
+            if (!fs.existsSync(p)) {
+              console.log(`No ${p} directory found, no artifacts were downloaded`);
+              fs.writeFileSync(`${outputName}.md`, `# No ${outputName} artifacts found\n`);
+              fs.writeFileSync(`${outputName}.jsonl`, '');
+              return;
             }
-            fs.writeFileSync('plan.md', md.join('\n'));
-            fs.writeFileSync('plan.jsonl', lines.join(''));
+            const md = []; const lines = [];
+            const dirs = fs.readdirSync(p);
+            if (dirs.length === 0) {
+              console.log(`${p} directory is empty, no artifacts were downloaded`);
+              fs.writeFileSync(`${outputName}.md`, `# No ${outputName} artifacts found\n`);
+              fs.writeFileSync(`${outputName}.jsonl`, '');
+              return;
+            }
+            for (const d of dirs) {
+              const dir = `${p}/${d}`;
+              if (fs.existsSync(`${dir}/${outputName}.md`))    md.push(fs.readFileSync(`${dir}/${outputName}.md`,'utf8'));
+              if (fs.existsSync(`${dir}/${outputName}.jsonl`)) lines.push(fs.readFileSync(`${dir}/${outputName}.jsonl`,'utf8'));
+            }
+            fs.writeFileSync(`${outputName}.md`, md.join('\n'));
+            fs.writeFileSync(`${outputName}.jsonl`, lines.join(''));
       - uses: actions/upload-artifact@v4
         with:
-          name: plan
+          name: ${{ steps.pattern.outputs.output_name }}
           path: |
-            plan.md
-            plan.jsonl
+            ${{ steps.pattern.outputs.output_name }}.md
+            ${{ steps.pattern.outputs.output_name }}.jsonl
       - name: Summary
         run: |
-          echo "## Plan overview" >> $GITHUB_STEP_SUMMARY
-          echo "- JSONL lines: $(wc -l < plan.jsonl)" >> $GITHUB_STEP_SUMMARY
+          OUTPUT_NAME="${{ steps.pattern.outputs.output_name }}"
+          MODE_TITLE=$(echo "$OUTPUT_NAME" | sed 's/.*/\u&/')
+          echo "## ${MODE_TITLE} overview" >> $GITHUB_STEP_SUMMARY
+          echo "- JSONL lines: $(wc -l < ${OUTPUT_NAME}.jsonl)" >> $GITHUB_STEP_SUMMARY
