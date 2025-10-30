@@ -171,7 +171,7 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
 
         // Exclude known invalid RC release
         if (apiData.api_name === 'region-device-count' && apiData.version === '0.1.0-rc.1') {
-          console.log(`Excluding invalid RC release: ${apiData.api_name} ${apiData.version}`);
+          console.error(`Excluding invalid RC release: ${apiData.api_name} ${apiData.version}`);
           continue;
         }
 
@@ -266,7 +266,7 @@ async function analyzeGitHubRelease(repository, releaseTag) {
 
         // Exclude known invalid RC release
         if (apiData.api_name === 'region-device-count' && apiData.version === '0.1.0-rc.1') {
-          console.log(`Excluding invalid RC release: ${apiData.api_name} ${apiData.version}`);
+          console.error(`Excluding invalid RC release: ${apiData.api_name} ${apiData.version}`);
           continue;
         }
 
