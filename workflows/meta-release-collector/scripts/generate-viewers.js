@@ -11,8 +11,10 @@ const fs = require('fs');
 const path = require('path');
 
 // Paths
-const REPORTS_PATH = path.join(__dirname, '..', 'reports');
-const VIEWERS_PATH = path.join(__dirname, '..', 'viewers');
+// Paths (relative to repository root)
+const REPO_ROOT = path.join(__dirname, '..', '..', '..');
+const REPORTS_PATH = path.join(REPO_ROOT, 'reports');
+const VIEWERS_PATH = path.join(REPO_ROOT, 'viewers');
 const TEMPLATE_FILE = path.join(VIEWERS_PATH, 'release-dashboard-template.html');
 
 /**

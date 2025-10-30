@@ -22,9 +22,10 @@ const {
   createRepositorySummary
 } = require('./lib/enrichment');
 
-// Paths
-const DATA_PATH = path.join(__dirname, '..', 'data');
-const REPORTS_PATH = path.join(__dirname, '..', 'reports');
+// Paths (relative to repository root)
+const REPO_ROOT = path.join(__dirname, '..', '..', '..');
+const DATA_PATH = path.join(REPO_ROOT, 'data');
+const REPORTS_PATH = path.join(REPO_ROOT, 'reports');
 const MASTER_FILE = path.join(DATA_PATH, 'releases-master.yaml');
 
 /**

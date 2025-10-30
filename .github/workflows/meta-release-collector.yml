@@ -57,7 +57,7 @@ env:
 
   # Data Locations
   MASTER_METADATA_PATH: 'data/releases-master.yaml'
-  CONFIG_PATH: 'config'
+  CONFIG_PATH: 'workflows/meta-release-collector/config'
   REPORTS_PATH: 'reports'
   VIEWERS_PATH: 'viewers'
 
@@ -97,7 +97,7 @@ jobs:
           mkdir -p temp
 
           # Run detection script
-          node scripts/detect-releases.js --mode ${{ github.event.inputs.analysis_scope }} > temp/detection-output.json
+          node workflows/meta-release-collector/scripts/detect-releases.js --mode ${{ github.event.inputs.analysis_scope }} > temp/detection-output.json
 
           # Parse output
           HAS_UPDATES=$(jq -r '.has_updates' temp/detection-output.json)
@@ -168,7 +168,7 @@ jobs:
             echo "Analyzing ${REPO} @ ${TAG}..."
 
             # Run analysis script
-            node scripts/analyze-release.js --github "${REPO}" "${TAG}" > temp/single-analysis.json
+            node workflows/meta-release-collector/scripts/analyze-release.js --github "${REPO}" "${TAG}" > temp/single-analysis.json
 
             # Append to results
             jq -s '.[0] + [.[1]]' temp/analysis-results.json temp/single-analysis.json > temp/analysis-updated.json
@@ -227,7 +227,7 @@ jobs:
           done
 
           # Update master metadata (format corrections already applied by analyze-release.js)
-          node scripts/update-master.js --mode ${{ github.event.inputs.analysis_scope }} --input temp/combined-analysis.json
+          node workflows/meta-release-collector/scripts/update-master.js --mode ${{ github.event.inputs.analysis_scope }} --input temp/combined-analysis.json
 
           echo "Master metadata updated with $(jq '. | length' temp/combined-analysis.json) releases"
 
@@ -235,7 +235,7 @@ jobs:
         run: |
           echo "📝 Generating reports..."
           # Generate JSON files for each meta-release
-          node scripts/generate-reports.js
+          node workflows/meta-release-collector/scripts/generate-reports.js
 
       - name: Upload processed data
         uses: actions/upload-artifact@v4
@@ -276,7 +276,7 @@ jobs:
         run: |
           echo "🎨 Generating HTML viewers..."
           # Build viewers with embedded JSON
-          node scripts/generate-viewers.js
+          node workflows/meta-release-collector/scripts/generate-viewers.js
 
       - name: Upload final outputs as artifacts
         uses: actions/upload-artifact@v4
