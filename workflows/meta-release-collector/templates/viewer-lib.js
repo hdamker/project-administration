@@ -1,0 +1,304 @@
+/**
+ * CAMARA Viewer Library v3
+ * Shared utilities for meta-release viewers
+ *
+ * This library is embedded in all generated viewer HTML files
+ */
+
+const ViewerLib = {
+  /**
+   * Compare two semantic version strings
+   * @param {string} a - First version
+   * @param {string} b - Second version
+   * @returns {number} -1 if a < b, 0 if equal, 1 if a > b
+   */
+  compareVersions: function(a, b) {
+    if (!a && !b) return 0;
+    if (!a) return -1;
+    if (!b) return 1;
+
+    const partsA = a.split(/[.-]/);
+    const partsB = b.split(/[.-]/);
+    const maxLen = Math.max(partsA.length, partsB.length);
+
+    for (let i = 0; i < maxLen; i++) {
+      const partA = parseInt(partsA[i]) || 0;
+      const partB = parseInt(partsB[i]) || 0;
+
+      if (partA < partB) return -1;
+      if (partA > partB) return 1;
+    }
+
+    return 0;
+  },
+
+  /**
+   * Filter APIs based on criteria
+   * @param {Array} apis - Array of API objects
+   * @param {Object} criteria - Filter criteria
+   * @returns {Array} Filtered APIs
+   */
+  filterAPIs: function(apis, criteria) {
+    return apis.filter(api => {
+      // Published filter
+      if (criteria.publishedOnly && !api.published) {
+        return false;
+      }
+
+      // Category filter
+      if (criteria.category && api.portfolio_category !== criteria.category) {
+        return false;
+      }
+
+      // Maturity filter
+      if (criteria.maturity && api.maturity !== criteria.maturity) {
+        return false;
+      }
+
+      // New filter
+      if (criteria.isNew !== undefined && api.isNew !== criteria.isNew) {
+        return false;
+      }
+
+      // Repository filter
+      if (criteria.repository && !api.repository.toLowerCase().includes(criteria.repository.toLowerCase())) {
+        return false;
+      }
+
+      // API name filter
+      if (criteria.apiName && !api.api_name.toLowerCase().includes(criteria.apiName.toLowerCase())) {
+        return false;
+      }
+
+      // Version range filters
+      if (criteria.versionMin && this.compareVersions(api.version, criteria.versionMin) < 0) {
+        return false;
+      }
+      if (criteria.versionMax && this.compareVersions(api.version, criteria.versionMax) > 0) {
+        return false;
+      }
+
+      return true;
+    });
+  },
+
+  /**
+   * Search APIs by text query
+   * @param {Array} apis - Array of API objects
+   * @param {string} query - Search query
+   * @returns {Array} Matching APIs
+   */
+  searchAPIs: function(apis, query) {
+    if (!query) return apis;
+
+    const lowerQuery = query.toLowerCase();
+    return apis.filter(api =>
+      api.api_name.toLowerCase().includes(lowerQuery) ||
+      (api.title && api.title.toLowerCase().includes(lowerQuery)) ||
+      (api.portfolio_category && api.portfolio_category.toLowerCase().includes(lowerQuery)) ||
+      (api.repository && api.repository.toLowerCase().includes(lowerQuery))
+    );
+  },
+
+  /**
+   * Sort APIs by field
+   * @param {Array} apis - Array of API objects
+   * @param {string} field - Field to sort by
+   * @param {boolean} ascending - Sort direction
+   * @returns {Array} Sorted APIs
+   */
+  sortAPIs: function(apis, field, ascending = true) {
+    const sorted = [...apis].sort((a, b) => {
+      let aVal = a[field];
+      let bVal = b[field];
+
+      // Handle version fields specially
+      if (field === 'version') {
+        return this.compareVersions(aVal, bVal);
+      }
+
+      // Handle boolean fields
+      if (typeof aVal === 'boolean') {
+        return (aVal ? 1 : 0) - (bVal ? 1 : 0);
+      }
+
+      // Handle string fields
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return aVal.localeCompare(bVal);
+      }
+
+      // Handle null/undefined
+      if (aVal == null && bVal == null) return 0;
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+
+      return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+    });
+
+    return ascending ? sorted : sorted.reverse();
+  },
+
+  /**
+   * Render category pill HTML
+   * @param {string} category - Category name
+   * @returns {string} HTML string
+   */
+  renderCategoryPill: function(category) {
+    if (!category) {
+      return '<span class="category-pill category-other">Other</span>';
+    }
+
+    const className = category.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    return `<span class="category-pill category-${className}">${category}</span>`;
+  },
+
+  /**
+   * Render maturity badge HTML
+   * @param {string} maturity - Maturity level
+   * @returns {string} HTML string
+   */
+  renderMaturityBadge: function(maturity) {
+    const badges = {
+      'stable': '<span class="badge badge-stable">Stable</span>',
+      'initial': '<span class="badge badge-initial">Initial</span>',
+      'rc': '<span class="badge badge-rc">RC</span>',
+      'alpha': '<span class="badge badge-alpha">Alpha</span>',
+      'beta': '<span class="badge badge-beta">Beta</span>'
+    };
+    return badges[maturity] || `<span class="badge badge-unknown">${maturity}</span>`;
+  },
+
+  /**
+   * Render "New" indicator HTML
+   * @param {boolean} isNew - Whether API is new
+   * @returns {string} HTML string
+   */
+  renderNewIndicator: function(isNew) {
+    return isNew ? '<span class="badge badge-new">New</span>' : '-';
+  },
+
+  /**
+   * Export APIs to CSV format
+   * @param {Array} apis - APIs to export
+   * @param {string} filename - Output filename
+   */
+  exportToCSV: function(apis, filename = 'camara-apis.csv') {
+    const headers = ['API Name', 'Version', 'Category', 'Maturity', 'Repository', 'New', 'Release Tag'];
+    const rows = apis.map(api => [
+      api.title || api.api_name,
+      api.version || '',
+      api.portfolio_category || '',
+      api.maturity || '',
+      api.repository || '',
+      api.isNew ? 'Yes' : 'No',
+      api.release_tag || ''
+    ]);
+
+    const csv = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    this.downloadFile(csv, filename, 'text/csv');
+  },
+
+  /**
+   * Export APIs to JSON format
+   * @param {Array} apis - APIs to export
+   * @param {string} filename - Output filename
+   */
+  exportToJSON: function(apis, filename = 'camara-apis.json') {
+    const json = JSON.stringify(apis, null, 2);
+    this.downloadFile(json, filename, 'application/json');
+  },
+
+  /**
+   * Trigger file download in browser
+   * @param {string} content - File content
+   * @param {string} filename - Filename
+   * @param {string} mimeType - MIME type
+   */
+  downloadFile: function(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  /**
+   * Detect if page is running in iframe
+   * @returns {boolean} True if in iframe
+   */
+  isInIframe: function() {
+    try {
+      return window.self !== window.top;
+    } catch (e) {
+      return true;
+    }
+  },
+
+  /**
+   * Count APIs by category
+   * @param {Array} apis - Array of APIs
+   * @returns {Object} Category counts
+   */
+  getCategoryCounts: function(apis) {
+    const counts = {};
+    apis.forEach(api => {
+      const category = api.portfolio_category || 'Other';
+      counts[category] = (counts[category] || 0) + 1;
+    });
+    return counts;
+  },
+
+  /**
+   * Get unique values for a field
+   * @param {Array} apis - Array of APIs
+   * @param {string} field - Field name
+   * @returns {Array} Sorted unique values
+   */
+  getUniqueValues: function(apis, field) {
+    const values = new Set();
+    apis.forEach(api => {
+      const value = api[field];
+      if (value != null && value !== '') {
+        values.add(value);
+      }
+    });
+    return Array.from(values).sort();
+  },
+
+  /**
+   * Format date string for display
+   * @param {string} dateString - ISO date string
+   * @returns {string} Formatted date
+   */
+  formatDate: function(dateString) {
+    if (!dateString) return '';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (e) {
+      return dateString;
+    }
+  },
+
+  /**
+   * Escape HTML special characters
+   * @param {string} text - Text to escape
+   * @returns {string} Escaped text
+   */
+  escapeHtml: function(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+};

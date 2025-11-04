@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAMARA API Portfolio Overview (Alpha)</title>
+  <style>
+{{VIEWER_STYLES}}
+    /* View toggle specific styles */
+    .view-toggle {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: linear-gradient(135deg, #f8fbff 0%, #f0f7ff 100%);
+      border-radius: 8px;
+      border: 1px solid rgba(0, 146, 245, 0.1);
+    }
+
+    .view-toggle-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+      background: white;
+      color: #32373c;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .view-toggle-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(0, 146, 245, 0.2);
+    }
+
+    .view-toggle-btn.active {
+      background: #0092f5;
+      color: white;
+      border-color: #0092f5;
+    }
+
+    /* Meta-release table specific styles */
+    .meta-release-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .meta-release-table th,
+    .meta-release-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e1e4e8;
+    }
+
+    .meta-release-table th {
+      background: linear-gradient(135deg, #f8fbff 0%, #f0f7ff 100%);
+      font-weight: 600;
+      color: #32373c;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .meta-release-table td.release-cell {
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .version-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      background: #e8f4fd;
+      color: #0366d6;
+    }
+
+    .empty-cell {
+      color: #a0a0a0;
+      text-align: center;
+    }
+
+    /* API Evolution view styles */
+    .api-evolution-section {
+      margin-bottom: 30px;
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      padding: 15px;
+      background: #fafbfc;
+    }
+
+    .api-evolution-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .api-evolution-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0092f5;
+    }
+
+    .api-evolution-category {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .release-timeline {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .timeline-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: white;
+      border: 2px solid #e1e4e8;
+    }
+
+    .timeline-item.meta-release {
+      border-color: #0092f5;
+    }
+
+    .timeline-item.sandbox {
+      border-color: #f5a742;
+      background: #fff8ed;
+    }
+
+    .timeline-arrow {
+      color: #a0a0a0;
+      font-weight: bold;
+    }
+
+    .release-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
+    }
+
+    .release-version {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* Repository view styles */
+    .repo-section {
+      margin-bottom: 30px;
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      padding: 15px;
+      background: #fafbfc;
+    }
+
+    .repo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e1e4e8;
+    }
+
+    .repo-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #0092f5;
+    }
+
+    .repo-stats {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .repo-apis {
+      margin-top: 10px;
+    }
+
+    .repo-api-item {
+      padding: 8px;
+      margin: 5px 0;
+      background: white;
+      border-left: 3px solid #0092f5;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .hidden-view {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>CAMARA API Portfolio Overview (Alpha)</h1>
+      <div class="metadata" id="header-metadata"></div>
+    </div>
+
+    <div class="content" id="content">
+      <!-- View Toggle -->
+      <div class="view-toggle">
+        <button class="view-toggle-btn active" onclick="switchView('meta-release')">Meta-Release Table</button>
+        <button class="view-toggle-btn" onclick="switchView('api-evolution')">API Evolution</button>
+        <button class="view-toggle-btn" onclick="switchView('repository')">Repository View</button>
+      </div>
+
+      <!-- Category Pills (shared across all views) -->
+      <div class="category-pills" id="categoryPills">
+        <div class="category-pill all-categories active" onclick="filterByCategory('')">
+          All<span class="category-count" id="allCount">(0)</span>
+        </div>
+      </div>
+
+      <!-- Search/Filter Section -->
+      <div class="filters">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="filterApiName">Search:</label>
+            <input type="text" id="filterApiName" placeholder="Search APIs or repositories..." onkeyup="applyFilters()">
+          </div>
+          <div class="filter-group">
+            <label for="filterMaturity">Maturity:</label>
+            <select id="filterMaturity" onchange="applyFilters()">
+              <option value="">All</option>
+              <option value="initial">Initial</option>
+              <option value="stable">Stable</option>
+            </select>
+          </div>
+          <button class="clear-filters-btn" onclick="clearAllFilters()">Clear Filters</button>
+        </div>
+      </div>
+
+      <!-- Results Counter -->
+      <div id="resultsCounter" class="results-counter hidden">
+        <div class="results-text"></div>
+        <div class="export-buttons">
+          <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+          <button class="export-btn" onclick="exportJSON()">Export JSON</button>
+        </div>
+      </div>
+
+      <!-- View 1: Meta-Release Table (Default) -->
+      <div id="view-meta-release" class="view-container">
+        <table class="meta-release-table" id="metaReleaseTable">
+          <thead>
+            <tr>
+              <th onclick="sortMetaReleaseTable(0)">API Name <span class="sort-arrow"></span></th>
+              <th onclick="sortMetaReleaseTable(1)">Category <span class="sort-arrow"></span></th>
+              <th onclick="sortMetaReleaseTable(2)">Fall24 <span class="sort-arrow"></span></th>
+              <th onclick="sortMetaReleaseTable(3)">Spring25 <span class="sort-arrow"></span></th>
+              <th onclick="sortMetaReleaseTable(4)">Fall25 <span class="sort-arrow"></span></th>
+              <th onclick="sortMetaReleaseTable(5)">First Release <span class="sort-arrow"></span></th>
+            </tr>
+          </thead>
+          <tbody id="metaReleaseTableBody">
+          </tbody>
+        </table>
+        <div class="footer-note" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 13px; color: #666;">
+          Note: This table shows only meta-releases (Fall24, Spring25, Fall25). Sandbox releases are shown in API Evolution and Repository views.
+        </div>
+      </div>
+
+      <!-- View 2: API Evolution -->
+      <div id="view-api-evolution" class="view-container hidden-view">
+        <div id="apiEvolutionContainer"></div>
+      </div>
+
+      <!-- View 3: Repository View -->
+      <div id="view-repository" class="view-container hidden-view">
+        <div id="repositoryContainer"></div>
+      </div>
+
+      <div id="footer-metadata" class="footer-metadata"></div>
+    </div>
+  </div>
+
+  <script>
+    // Embedded shared library
+{{VIEWER_LIBRARY}}
+
+    // Embedded release data (fully enriched from workflow)
+    const RELEASE_DATA = {{RELEASE_DATA}};
+
+    // Global state
+    let currentData = null;
+    let filteredData = [];
+    let currentCategoryFilter = '';
+    let currentView = 'meta-release';
+    let currentSort = { column: -1, ascending: true };
+
+    // Meta-release constants
+    const META_RELEASES = ['Fall24', 'Spring25', 'Fall25'];
+    const SANDBOX_RELEASE = 'None (Sandbox)';
+
+    /**
+     * Initialize iframe detection
+     */
+    function detectIframe() {
+      if (ViewerLib.isInIframe()) {
+        document.body.classList.add('in-iframe');
+      }
+    }
+
+    /**
+     * Flatten v3 nested structure to flat array
+     */
+    function flattenAPIData(data) {
+      const flatApis = [];
+
+      if (data.releases && Array.isArray(data.releases)) {
+        data.releases.forEach(release => {
+          if (release.apis && Array.isArray(release.apis)) {
+            release.apis.forEach(api => {
+              flatApis.push({
+                // API info
+                api_name: api.api_name,
+                title: api.title || api.display_name || api.api_name,
+                version: api.version,
+                maturity: api.maturity,
+
+                // Repository info from release
+                repository: release.repository,
+                release_tag: release.release_tag,
+                release_date: release.release_date,
+                meta_release: release.meta_release,
+                github_url: release.github_url,
+
+                // Enrichment fields
+                portfolio_category: api.portfolio_category,
+                website_url: api.website_url,
+                tooltip: api.tooltip,
+                published: api.published,
+                first_release: api.first_release,
+                isNew: api.isNew,
+
+                // Additional metadata
+                commonalities: api.commonalities,
+                display_name: api.display_name,
+                canonical_name: api.canonical_name
+              });
+            });
+          }
+        });
+      }
+
+      return flatApis;
+    }
+
+    /**
+     * Group APIs by canonical name for evolution tracking
+     */
+    function groupAPIsByName(apis) {
+      const grouped = {};
+
+      apis.forEach(api => {
+        const key = api.canonical_name || api.api_name;
+        if (!grouped[key]) {
+          grouped[key] = [];
+        }
+        grouped[key].push(api);
+      });
+
+      // Sort each group by date
+      Object.keys(grouped).forEach(key => {
+        grouped[key].sort((a, b) =>
+          new Date(a.release_date) - new Date(b.release_date)
+        );
+      });
+
+      return grouped;
+    }
+
+    /**
+     * Group APIs by repository
+     */
+    function groupAPIsByRepository(apis) {
+      const grouped = {};
+
+      apis.forEach(api => {
+        const key = api.repository;
+        if (!grouped[key]) {
+          grouped[key] = {
+            repository: api.repository,
+            apis: [],
+            releases: new Set()
+          };
+        }
+        grouped[key].apis.push(api);
+        grouped[key].releases.add(`${api.release_tag} (${api.meta_release})`);
+      });
+
+      return grouped;
+    }
+
+    /**
+     * Create meta-release evolution table data structure
+     */
+    function createMetaReleaseTableData(apis) {
+      const grouped = groupAPIsByName(apis);
+      const tableData = [];
+
+      Object.keys(grouped).forEach(apiName => {
+        const versions = grouped[apiName];
+        const firstAPI = versions[0];
+
+        // Only include meta-releases (exclude Sandbox)
+        const metaVersions = versions.filter(v =>
+          META_RELEASES.includes(v.meta_release)
+        );
+
+        // Create row data with version for each meta-release
+        const row = {
+          api_name: apiName,
+          title: firstAPI.title,
+          category: firstAPI.portfolio_category || '-',
+          website_url: firstAPI.website_url,
+          first_release: firstAPI.first_release,
+          fall24: null,
+          spring25: null,
+          fall25: null
+        };
+
+        metaVersions.forEach(v => {
+          if (v.meta_release === 'Fall24') {
+            row.fall24 = { version: v.version, maturity: v.maturity, isNew: v.isNew };
+          } else if (v.meta_release === 'Spring25') {
+            row.spring25 = { version: v.version, maturity: v.maturity, isNew: v.isNew };
+          } else if (v.meta_release === 'Fall25') {
+            row.fall25 = { version: v.version, maturity: v.maturity, isNew: v.isNew };
+          }
+        });
+
+        tableData.push(row);
+      });
+
+      return tableData;
+    }
+
+    /**
+     * Initialize data and render
+     */
+    function initializeData() {
+      const flatApis = flattenAPIData(RELEASE_DATA);
+
+      currentData = {
+        metadata: RELEASE_DATA.metadata,
+        statistics: RELEASE_DATA.statistics,
+        apis: flatApis
+      };
+
+      filteredData = currentData.apis;
+
+      displayData(currentData);
+    }
+
+    /**
+     * Display data in UI
+     */
+    function displayData(data) {
+      const metadata = data.metadata;
+      const footerDiv = document.getElementById('footer-metadata');
+      const generated = ViewerLib.formatDate(metadata.generated);
+
+      // Count unique APIs
+      const uniqueAPIs = new Set(data.apis.map(a => a.canonical_name || a.api_name)).size;
+      const totalReleases = RELEASE_DATA.releases ? RELEASE_DATA.releases.length : 0;
+
+      footerDiv.innerHTML = `
+        Report generated: ${generated} |
+        Total APIs: ${uniqueAPIs} |
+        Total Releases: ${totalReleases}
+      `;
+
+      const headerDiv = document.getElementById('header-metadata');
+      headerDiv.innerHTML = `API Portfolio across all meta-releases`;
+
+      buildCategoryPills();
+      renderCurrentView();
+    }
+
+    /**
+     * Build category filter pills
+     */
+    function buildCategoryPills() {
+      // Group by unique API names first
+      const uniqueAPIsMap = new Map();
+      currentData.apis.forEach(api => {
+        const key = api.canonical_name || api.api_name;
+        if (!uniqueAPIsMap.has(key)) {
+          // Store first occurrence (has category info)
+          uniqueAPIsMap.set(key, api);
+        }
+      });
+
+      // Count unique APIs per category
+      const categoryCounts = {};
+      uniqueAPIsMap.forEach(api => {
+        const category = api.portfolio_category || 'Other';
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      });
+
+      const pillsContainer = document.getElementById('categoryPills');
+
+      // Update "All" count (unique APIs)
+      const uniqueAPIs = uniqueAPIsMap.size;
+      const allCount = document.getElementById('allCount');
+      allCount.textContent = `(${uniqueAPIs})`;
+
+      // Remove existing category pills (keep All pill)
+      const existingPills = pillsContainer.querySelectorAll('.category-pill:not(.all-categories)');
+      existingPills.forEach(pill => pill.remove());
+
+      // Define category order
+      const categoryOrder = [
+        'Authentication and Fraud Prevention',
+        'Communication Quality',
+        'Communication Services',
+        'Computing Services',
+        'Device Information',
+        'Location Services',
+        'Payments and Charging',
+        'Service Management'
+      ];
+
+      // Create pills in order with correct counts (unique APIs)
+      categoryOrder.forEach(category => {
+        const count = categoryCounts[category];
+        if (count) {
+          const pill = document.createElement('div');
+          pill.className = 'category-pill';
+          pill.onclick = () => filterByCategory(category);
+          pill.innerHTML = `${category}<span class="category-count">(${count})</span>`;
+          pillsContainer.appendChild(pill);
+        }
+      });
+    }
+
+    /**
+     * Filter by category
+     */
+    function filterByCategory(category) {
+      currentCategoryFilter = category;
+
+      // Update active state
+      const pills = document.querySelectorAll('.category-pill');
+      pills.forEach(pill => pill.classList.remove('active'));
+
+      if (category === '') {
+        document.querySelector('.all-categories').classList.add('active');
+      } else {
+        pills.forEach(pill => {
+          if (pill.textContent.includes(category)) {
+            pill.classList.add('active');
+          }
+        });
+      }
+
+      applyFilters();
+    }
+
+    /**
+     * Apply all filters
+     */
+    function applyFilters() {
+      if (!currentData) return;
+
+      const searchFilter = document.getElementById('filterApiName').value.toLowerCase();
+      const maturityFilter = document.getElementById('filterMaturity').value.toLowerCase();
+
+      filteredData = currentData.apis.filter(api => {
+        // Category filter
+        if (currentCategoryFilter && api.portfolio_category !== currentCategoryFilter) {
+          return false;
+        }
+
+        // Search filter (API name or repository)
+        if (searchFilter &&
+            !api.api_name.toLowerCase().includes(searchFilter) &&
+            !api.title.toLowerCase().includes(searchFilter) &&
+            !api.repository.toLowerCase().includes(searchFilter)) {
+          return false;
+        }
+
+        // Maturity filter
+        if (maturityFilter && api.maturity.toLowerCase() !== maturityFilter) {
+          return false;
+        }
+
+        return true;
+      });
+
+      renderCurrentView();
+    }
+
+    /**
+     * Clear all filters
+     */
+    function clearAllFilters() {
+      document.getElementById('filterApiName').value = '';
+      document.getElementById('filterMaturity').value = '';
+      filterByCategory('');
+    }
+
+    /**
+     * Switch between views
+     */
+    function switchView(viewName) {
+      currentView = viewName;
+
+      // Update button states
+      const buttons = document.querySelectorAll('.view-toggle-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      // Hide all views
+      document.querySelectorAll('.view-container').forEach(v => v.classList.add('hidden-view'));
+
+      // Show selected view
+      document.getElementById(`view-${viewName}`).classList.remove('hidden-view');
+
+      renderCurrentView();
+    }
+
+    /**
+     * Render current view
+     */
+    function renderCurrentView() {
+      if (currentView === 'meta-release') {
+        renderMetaReleaseTable();
+      } else if (currentView === 'api-evolution') {
+        renderAPIEvolution();
+      } else if (currentView === 'repository') {
+        renderRepositoryView();
+      }
+
+      updateResultsCounter();
+    }
+
+    /**
+     * Render meta-release table (excludes Sandbox)
+     */
+    function renderMetaReleaseTable() {
+      const tableData = createMetaReleaseTableData(filteredData);
+      const tbody = document.getElementById('metaReleaseTableBody');
+      tbody.innerHTML = '';
+
+      tableData.forEach(row => {
+        const tr = document.createElement('tr');
+
+        // API Name
+        const nameCell = document.createElement('td');
+        if (row.website_url) {
+          nameCell.innerHTML = `<a href="${row.website_url}" target="_blank" rel="noopener">${row.title}</a>`;
+        } else {
+          nameCell.textContent = row.title;
+        }
+        tr.appendChild(nameCell);
+
+        // Category
+        const categoryCell = document.createElement('td');
+        categoryCell.innerHTML = row.category !== '-' ?
+          `<span class="category-badge">${row.category}</span>` : '-';
+        tr.appendChild(categoryCell);
+
+        // Fall24
+        const fall24Cell = document.createElement('td');
+        fall24Cell.className = 'release-cell';
+        if (row.fall24) {
+          fall24Cell.innerHTML = `
+            <div class="version-badge">${row.fall24.version}</div>
+            ${ViewerLib.renderMaturityBadge(row.fall24.maturity)}
+          `;
+        } else {
+          fall24Cell.innerHTML = '<span class="empty-cell">-</span>';
+        }
+        tr.appendChild(fall24Cell);
+
+        // Spring25
+        const spring25Cell = document.createElement('td');
+        spring25Cell.className = 'release-cell';
+        if (row.spring25) {
+          spring25Cell.innerHTML = `
+            <div class="version-badge">${row.spring25.version}</div>
+            ${ViewerLib.renderMaturityBadge(row.spring25.maturity)}
+          `;
+        } else {
+          spring25Cell.innerHTML = '<span class="empty-cell">-</span>';
+        }
+        tr.appendChild(spring25Cell);
+
+        // Fall25
+        const fall25Cell = document.createElement('td');
+        fall25Cell.className = 'release-cell';
+        if (row.fall25) {
+          fall25Cell.innerHTML = `
+            <div class="version-badge">${row.fall25.version}</div>
+            ${ViewerLib.renderMaturityBadge(row.fall25.maturity)}
+          `;
+        } else {
+          fall25Cell.innerHTML = '<span class="empty-cell">-</span>';
+        }
+        tr.appendChild(fall25Cell);
+
+        // First Release
+        const firstReleaseCell = document.createElement('td');
+        firstReleaseCell.textContent = row.first_release || '-';
+        tr.appendChild(firstReleaseCell);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    /**
+     * Render API evolution view (includes Sandbox)
+     */
+    function renderAPIEvolution() {
+      const grouped = groupAPIsByName(filteredData);
+      const container = document.getElementById('apiEvolutionContainer');
+      container.innerHTML = '';
+
+      Object.keys(grouped).sort().forEach(apiName => {
+        const versions = grouped[apiName];
+        const firstAPI = versions[0];
+
+        const section = document.createElement('div');
+        section.className = 'api-evolution-section';
+
+        // Header
+        const header = document.createElement('div');
+        header.className = 'api-evolution-header';
+        header.innerHTML = `
+          <div>
+            <div class="api-evolution-name">${firstAPI.title}</div>
+            <div class="api-evolution-category">${firstAPI.portfolio_category || 'Uncategorized'}</div>
+          </div>
+          <div>
+            ${firstAPI.website_url ? `<a href="${firstAPI.website_url}" target="_blank" rel="noopener">Documentation</a>` : ''}
+          </div>
+        `;
+        section.appendChild(header);
+
+        // Timeline
+        const timeline = document.createElement('div');
+        timeline.className = 'release-timeline';
+
+        versions.forEach((version, index) => {
+          if (index > 0) {
+            const arrow = document.createElement('span');
+            arrow.className = 'timeline-arrow';
+            arrow.textContent = '→';
+            timeline.appendChild(arrow);
+          }
+
+          const item = document.createElement('div');
+          const isSandbox = version.meta_release === SANDBOX_RELEASE;
+          item.className = `timeline-item ${isSandbox ? 'sandbox' : 'meta-release'}`;
+
+          item.innerHTML = `
+            <div>
+              <div class="release-label">${isSandbox ? 'Sandbox' : version.meta_release}</div>
+              <div class="release-version">${version.version}</div>
+              ${ViewerLib.renderMaturityBadge(version.maturity)}
+            </div>
+          `;
+          timeline.appendChild(item);
+        });
+
+        section.appendChild(timeline);
+        container.appendChild(section);
+      });
+
+      if (Object.keys(grouped).length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No APIs match the current filters</p>';
+      }
+    }
+
+    /**
+     * Render repository view (includes Sandbox)
+     */
+    function renderRepositoryView() {
+      const grouped = groupAPIsByRepository(filteredData);
+      const container = document.getElementById('repositoryContainer');
+      container.innerHTML = '';
+
+      Object.keys(grouped).sort().forEach(repoName => {
+        const repo = grouped[repoName];
+        const apisByName = groupAPIsByName(repo.apis);
+
+        const section = document.createElement('div');
+        section.className = 'repo-section';
+
+        // Header
+        const header = document.createElement('div');
+        header.className = 'repo-header';
+        const uniqueAPIs = Object.keys(apisByName).length;
+        const githubUrl = repo.apis[0].github_url.replace(/\/releases\/tag\/.*$/, '');
+
+        header.innerHTML = `
+          <div>
+            <div class="repo-name">
+              <a href="${githubUrl}" target="_blank" rel="noopener">${repoName}</a>
+            </div>
+            <div class="repo-stats">${Array.from(repo.releases).length} releases | ${uniqueAPIs} APIs</div>
+          </div>
+        `;
+        section.appendChild(header);
+
+        // APIs
+        const apisDiv = document.createElement('div');
+        apisDiv.className = 'repo-apis';
+
+        Object.keys(apisByName).sort().forEach(apiName => {
+          const versions = apisByName[apiName];
+          const latestVersion = versions[versions.length - 1];
+
+          const apiItem = document.createElement('div');
+          apiItem.className = 'repo-api-item';
+
+          const releaseInfo = versions.map(v => {
+            const isSandbox = v.meta_release === SANDBOX_RELEASE;
+            const label = isSandbox ? 'Sandbox' : v.meta_release;
+            return `${label}: ${v.version}`;
+          }).join(' → ');
+
+          apiItem.innerHTML = `
+            <div>
+              <strong>${latestVersion.title}</strong><br>
+              <span style="font-size: 12px; color: #666;">${releaseInfo}</span>
+            </div>
+            <div>
+              ${ViewerLib.renderMaturityBadge(latestVersion.maturity)}
+              ${ViewerLib.renderCategoryPill(latestVersion.portfolio_category)}
+            </div>
+          `;
+          apisDiv.appendChild(apiItem);
+        });
+
+        section.appendChild(apisDiv);
+        container.appendChild(section);
+      });
+
+      if (Object.keys(grouped).length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No repositories match the current filters</p>';
+      }
+    }
+
+    /**
+     * Sort meta-release table
+     */
+    function sortMetaReleaseTable(columnIndex) {
+      // Implement sorting logic similar to meta-release template
+      // Store sort state and re-render
+      currentSort.column = columnIndex;
+      currentSort.ascending = !currentSort.ascending;
+      renderMetaReleaseTable();
+    }
+
+    /**
+     * Update results counter
+     */
+    function updateResultsCounter() {
+      const counter = document.getElementById('resultsCounter');
+      const resultsText = counter.querySelector('.results-text');
+
+      const uniqueFiltered = new Set(filteredData.map(a => a.canonical_name || a.api_name)).size;
+      const uniqueTotal = new Set(currentData.apis.map(a => a.canonical_name || a.api_name)).size;
+
+      if (uniqueFiltered === 0) {
+        resultsText.textContent = 'No APIs match the current filters';
+        counter.classList.add('no-results');
+      } else if (uniqueFiltered === uniqueTotal) {
+        resultsText.textContent = `Showing all ${uniqueTotal} APIs`;
+        counter.classList.remove('no-results');
+      } else {
+        resultsText.textContent = `Showing ${uniqueFiltered} of ${uniqueTotal} APIs`;
+        counter.classList.remove('no-results');
+      }
+
+      counter.classList.remove('hidden');
+    }
+
+    /**
+     * Export filtered data to CSV
+     */
+    function exportCSV() {
+      ViewerLib.exportToCSV(filteredData, 'camara-portfolio-apis.csv');
+    }
+
+    /**
+     * Export filtered data to JSON
+     */
+    function exportJSON() {
+      ViewerLib.exportToJSON(filteredData, 'camara-portfolio-apis.json');
+    }
+
+    // Initialize on page load
+    detectIframe();
+    initializeData();
+  </script>
+</body>
+</html>

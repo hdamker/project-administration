@@ -1,0 +1,491 @@
+# =========================================================================================
+# CAMARA Project - Meta-release Collector Workflow v3
+#
+# Interim solution for collecting and reporting release metadata across all CAMARA API
+# repositories until Spring 2026 when native release-metadata.yaml files become standard.
+#
+# Key Features:
+# - Incremental updates (detect and analyze only new releases)
+# - Full re-analysis capability for workflow updates
+# - Focus on public releases with API-name centric viewing
+# - Enhanced HTML viewers with sorting, filtering, and statistics
+#
+# =========================================================================================
+
+name: Meta-release Collector v3
+
+on:
+  workflow_dispatch:
+    inputs:
+      analysis_scope:
+        description: 'What to analyze'
+        required: true
+        type: choice
+        options:
+          - incremental    # Detect and analyze new releases only
+          - full          # Re-analyze all releases
+        default: incremental
+
+      execution_mode:
+        description: 'How to handle results'
+        required: true
+        type: choice
+        options:
+          - dry-run       # Test mode - no commits, artifacts only
+          - pr            # Create pull request for review
+        default: dry-run
+
+      debug_mode:
+        description: 'Enable debug logging'
+        required: false
+        type: boolean
+        default: false
+
+      force_viewers:
+        description: 'Force viewer regeneration even if no data updates'
+        required: false
+        type: boolean
+        default: false
+
+  # schedule:
+    # Weekly run on Mondays at 04:35 UTC
+    # - cron: '35 4 * * 1'
+
+env:
+  # GitHub API Configuration
+  GITHUB_ORG: 'camaraproject'
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Processing Configuration
+  MAX_PARALLEL_JOBS: 6
+  RELEASES_PER_PAGE: 100
+
+  # Data Locations
+  MASTER_METADATA_PATH: 'data/releases-master.yaml'
+  CONFIG_PATH: 'workflows/meta-release-collector/config'
+  REPORTS_PATH: 'reports'
+  VIEWERS_PATH: 'viewers'
+
+jobs:
+  # =========================================================================================
+  # Phase 1: Release Detection
+  # Compare current releases with stored master metadata
+  # =========================================================================================
+  detect-releases:
+    name: Detect New Releases
+    runs-on: ubuntu-latest
+    outputs:
+      has_updates: ${{ steps.detect.outputs.has_updates }}
+      templates_changed: ${{ steps.check_templates.outputs.templates_changed }}
+      new_releases: ${{ steps.detect.outputs.new_releases }}
+      all_repos: ${{ steps.detect.outputs.all_repos }}
+      release_groups: ${{ steps.detect.outputs.release_groups }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check for template changes
+        id: check_templates
+        run: |
+          # Check if template files changed in recent commits
+          CHANGED=$(git diff HEAD~1 --name-only -- \
+            'workflows/meta-release-collector/templates/*.html' \
+            'workflows/meta-release-collector/templates/*.css' \
+            'workflows/meta-release-collector/templates/*.js' \
+            2>/dev/null || echo "")
+
+          if [ -n "$CHANGED" ]; then
+            echo "templates_changed=true" >> $GITHUB_OUTPUT
+            echo "✓ Template files changed:"
+            echo "$CHANGED"
+          else
+            echo "templates_changed=false" >> $GITHUB_OUTPUT
+            echo "✓ No template changes detected"
+          fi
+
+      - name: Install dependencies
+        run: |
+          npm install js-yaml axios @octokit/rest
+
+      - name: Detect releases
+        id: detect
+        run: |
+          echo "🔍 Detecting releases in analysis scope: ${{ github.event.inputs.analysis_scope }}"
+
+          # Create temp directory
+          mkdir -p temp
+
+          # Run detection script
+          node workflows/meta-release-collector/scripts/detect-releases.js --mode ${{ github.event.inputs.analysis_scope }} > temp/detection-output.json
+
+          # Parse output
+          HAS_UPDATES=$(jq -r '.has_updates' temp/detection-output.json)
+          RELEASES_TO_ANALYZE=$(jq -c '.releases_to_analyze' temp/detection-output.json)
+          RELEASES_COUNT=$(jq -r '.releases_count' temp/detection-output.json)
+
+          echo "has_updates=${HAS_UPDATES}" >> $GITHUB_OUTPUT
+          echo "releases_to_analyze=${RELEASES_TO_ANALYZE}" >> $GITHUB_OUTPUT
+
+          # Create release groups for parallel processing
+          # Split into groups of 20 releases
+          node -e "
+            const releases = ${RELEASES_TO_ANALYZE};
+            const groupSize = 20;
+            const groups = [];
+            for (let i = 0; i < releases.length; i += groupSize) {
+              groups.push(releases.slice(i, i + groupSize));
+            }
+            console.log(JSON.stringify(groups));
+          " > temp/release-groups.json
+
+          echo "release_groups=$(cat temp/release-groups.json)" >> $GITHUB_OUTPUT
+          echo "Found ${RELEASES_COUNT} releases to analyze"
+
+  # =========================================================================================
+  # Phase 2: Release Analysis (Parallel)
+  # Fetch and analyze releases, extract API specifications
+  # =========================================================================================
+  analyze-releases:
+    name: Analyze Releases
+    needs: detect-releases
+    if: needs.detect-releases.outputs.has_updates == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        releases: ${{ fromJSON(needs.detect-releases.outputs.release_groups) }}
+      max-parallel: 6
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm install js-yaml axios @octokit/rest
+
+      - name: Analyze release group
+        run: |
+          echo "📊 Analyzing release group"
+
+          # Create temp directory
+          mkdir -p temp
+
+          # Create output file for this group
+          echo '[]' > temp/analysis-results.json
+
+          # Process each release in the group
+          RELEASES='${{ toJSON(matrix.releases) }}'
+          echo "${RELEASES}" | jq -c '.[]' | while read -r release; do
+            REPO=$(echo "${release}" | jq -r '.repository')
+            TAG=$(echo "${release}" | jq -r '.release_tag')
+
+            echo "Analyzing ${REPO} @ ${TAG}..."
+
+            # Run analysis script
+            node workflows/meta-release-collector/scripts/analyze-release.js --github "${REPO}" "${TAG}" > temp/single-analysis.json
+
+            # Append to results
+            jq -s '.[0] + [.[1]]' temp/analysis-results.json temp/single-analysis.json > temp/analysis-updated.json
+            mv temp/analysis-updated.json temp/analysis-results.json
+          done
+
+          echo "Analysis complete for group"
+
+      - name: Upload analysis results
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-group-${{ strategy.job-index }}
+          path: temp/analysis-results.json
+
+  # =========================================================================================
+  # Phase 3: Data Processing
+  # Combine results, apply corrections, update master metadata
+  # =========================================================================================
+  update-metadata:
+    name: Update Master Metadata
+    needs: analyze-releases
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm install js-yaml axios
+
+      - name: Download all analysis results
+        uses: actions/download-artifact@v4
+        with:
+          path: temp/
+
+      - name: Combine and process data
+        run: |
+          echo "🔄 Processing release data..."
+
+          # Ensure temp directory exists
+          mkdir -p temp
+
+          # Combine all analysis results
+          echo '[]' > temp/combined-analysis.json
+          for file in temp/analysis-group-*/analysis-results.json; do
+            if [[ -f "$file" ]]; then
+              jq -s '.[0] + .[1]' temp/combined-analysis.json "$file" > temp/combined-updated.json
+              mv temp/combined-updated.json temp/combined-analysis.json
+            fi
+          done
+
+          # Update master metadata (format corrections already applied by analyze-release.js)
+          node workflows/meta-release-collector/scripts/update-master.js --mode ${{ github.event.inputs.analysis_scope }} --input temp/combined-analysis.json
+
+          echo "Master metadata updated with $(jq '. | length' temp/combined-analysis.json) releases"
+
+      - name: Generate meta-release reports
+        run: |
+          echo "📝 Generating reports..."
+          # Generate JSON files for each meta-release
+          node workflows/meta-release-collector/scripts/generate-reports.js
+
+      - name: Upload processed data
+        uses: actions/upload-artifact@v4
+        with:
+          name: processed-data
+          path: |
+            data/releases-master.yaml
+            reports/*.json
+
+  # =========================================================================================
+  # Phase 4: Generate Viewers
+  # Generate HTML viewers with embedded data
+  # =========================================================================================
+  generate-viewers:
+    name: Generate HTML Viewers
+    needs: [detect-releases, update-metadata]
+    if: |
+      always() &&
+      (needs.update-metadata.result == 'success' ||
+       needs.detect-releases.outputs.templates_changed == 'true' ||
+       github.event.inputs.force_viewers == 'true')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download processed data
+        if: needs.update-metadata.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: processed-data
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm install js-yaml
+
+      - name: Generate HTML viewers
+        env:
+          FORCE_REGENERATE: ${{ github.event.inputs.force_viewers }}
+        run: |
+          echo "🎨 Generating HTML viewers..."
+          # Build viewers with embedded JSON
+          node workflows/meta-release-collector/scripts/generate-viewers.js
+
+      - name: Upload final outputs as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-reports-${{ github.run_number }}
+          path: |
+            data/releases-master.yaml
+            reports/*.json
+            viewers/*.html
+          retention-days: 30
+
+  # =========================================================================================
+  # Phase 5: Commit/PR (only if not dry-run)
+  # =========================================================================================
+  publish-changes:
+    name: Publish Changes
+    needs: generate-viewers
+    if: github.event.inputs.execution_mode != 'dry-run'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download final artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-reports-${{ github.run_number }}
+
+      - name: Validate generated files
+        if: github.event.inputs.execution_mode == 'pr'
+        run: |
+          echo "Validating generated files..."
+
+          # Check master YAML exists and is valid
+          if [ ! -f data/releases-master.yaml ]; then
+            echo "ERROR: Master YAML not found"
+            exit 1
+          fi
+
+          # Validate YAML syntax
+          python3 -c "import yaml; yaml.safe_load(open('data/releases-master.yaml'))"
+          echo "✓ Master YAML is valid"
+
+          # Check JSON reports exist and are valid
+          for report in reports/*.json; do
+            if [ -f "$report" ]; then
+              jq empty "$report" || exit 1
+              echo "✓ $(basename $report) is valid"
+            fi
+          done
+
+          # Check HTML viewers exist
+          for viewer in fall24 spring25 fall25 portfolio internal; do
+            if [ ! -f "viewers/${viewer}.html" ]; then
+              echo "WARNING: Viewer ${viewer}.html not found"
+            else
+              echo "✓ ${viewer}.html exists"
+            fi
+          done
+
+          echo "All files validated successfully"
+
+      - name: Check for changes
+        id: diff
+        if: github.event.inputs.execution_mode == 'pr'
+        run: |
+          # Only commit data and reports (viewers are deployed separately in Phase 4)
+          git add data/releases-master.yaml
+          git add reports/*.json 2>/dev/null || true
+          # Note: viewers/*.html are gitignored and deployed to camaraproject.github.io
+
+          if git diff --cached --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected:"
+            git diff --cached --stat
+            echo "change_summary<<EOF" >> $GITHUB_OUTPUT
+            git diff --cached --stat >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: No changes summary
+        if: github.event.inputs.execution_mode == 'pr' && steps.diff.outputs.has_changes == 'false'
+        run: |
+          echo "## No Changes Detected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The workflow completed successfully but no changes were detected." >> $GITHUB_STEP_SUMMARY
+          echo "This typically means:" >> $GITHUB_STEP_SUMMARY
+          echo "- No new releases since last run (incremental mode)" >> $GITHUB_STEP_SUMMARY
+          echo "- Generated files are identical to existing data (full mode)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create pull request
+        if: github.event.inputs.execution_mode == 'pr' && steps.diff.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          branch: meta-release-update-${{ github.run_number }}
+          title: 'chore: Update CAMARA release metadata'
+          labels: automated
+          body: |
+            ## CAMARA Release Metadata Update
+
+            **Analysis scope**: ${{ github.event.inputs.analysis_scope }}
+            **Workflow run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            **Generated**: ${{ github.event.repository.updated_at }}
+
+            ### Changes
+
+            This PR updates the CAMARA release tracking data:
+
+            - 📊 `data/releases-master.yaml` - Master release metadata
+            - 📈 `reports/*.json` - Meta-release reports (Fall24, Spring25, Fall25, All)
+
+            **Note**: Viewers are generated in workflow artifacts for testing. Production deployment to camaraproject.github.io will be implemented in Phase 4.
+
+            ### File Changes
+
+            ```
+            ${{ steps.diff.outputs.change_summary }}
+            ```
+
+            ### Review Checklist
+
+            - [ ] Master YAML contains expected releases
+            - [ ] JSON reports are valid and complete
+            - [ ] No sensitive data exposed
+            - [ ] Data changes are accurate and complete
+
+            ### Merge Instructions
+
+            **Use squash and merge** to keep main history clean. Each workflow run creates a single logical change.
+
+            ### Viewer Deployment
+
+            Viewers are generated and available in workflow artifacts for manual testing.
+            Automated deployment to camaraproject.github.io will be implemented in Phase 4.
+
+            ---
+
+            *This PR was generated automatically by the Meta-Release Collector v3 workflow.*
+          commit-message: |
+            chore: Update CAMARA release metadata
+
+            Analysis scope: ${{ github.event.inputs.analysis_scope }}
+            Workflow run: ${{ github.run_number }}
+
+      # TODO: Deploy to GitHub Pages when ready
+
+  # =========================================================================================
+  # Summary Job
+  # =========================================================================================
+  summary:
+    name: Workflow Summary
+    needs: [detect-releases, generate-viewers]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## Meta-release Collector Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Analysis Scope**: ${{ github.event.inputs.analysis_scope }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Execution Mode**: ${{ github.event.inputs.execution_mode }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Updates Found**: ${{ needs.detect-releases.outputs.has_updates }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Workflow Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts Available" >> $GITHUB_STEP_SUMMARY
+          echo "- **release-reports-${{ github.run_number }}**: Contains all generated files" >> $GITHUB_STEP_SUMMARY
+          echo "  - Master metadata (YAML)" >> $GITHUB_STEP_SUMMARY
+          echo "  - JSON reports for each meta-release" >> $GITHUB_STEP_SUMMARY
+          echo "  - HTML viewers with embedded data" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Download artifacts from the workflow run page" >> $GITHUB_STEP_SUMMARY
+          echo "- Review the generated reports in the viewers" >> $GITHUB_STEP_SUMMARY
+          echo "- Check for any inconsistencies in the logs" >> $GITHUB_STEP_SUMMARY
