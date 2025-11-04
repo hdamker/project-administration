@@ -377,9 +377,10 @@ jobs:
         id: diff
         if: github.event.inputs.execution_mode == 'pr'
         run: |
+          # Only commit data and reports (viewers are deployed separately in Phase 4)
           git add data/releases-master.yaml
           git add reports/*.json 2>/dev/null || true
-          git add viewers/*.html 2>/dev/null || true
+          # Note: viewers/*.html are gitignored and deployed to camaraproject.github.io
 
           if git diff --cached --quiet; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
@@ -423,7 +424,8 @@ jobs:
 
             - 📊 `data/releases-master.yaml` - Master release metadata
             - 📈 `reports/*.json` - Meta-release reports (Fall24, Spring25, Fall25, All)
-            - 🎨 `viewers/*.html` - Interactive HTML viewers
+
+            **Note**: Viewers are generated in workflow artifacts for testing. Production deployment to camaraproject.github.io will be implemented in Phase 4.
 
             ### File Changes
 
@@ -435,16 +437,17 @@ jobs:
 
             - [ ] Master YAML contains expected releases
             - [ ] JSON reports are valid and complete
-            - [ ] HTML viewers render correctly
             - [ ] No sensitive data exposed
+            - [ ] Data changes are accurate and complete
 
             ### Merge Instructions
 
             **Use squash and merge** to keep main history clean. Each workflow run creates a single logical change.
 
-            ### Next Steps
+            ### Viewer Deployment
 
-            After merging, the updated viewers will be available via GitHub Pages.
+            Viewers are generated and available in workflow artifacts for manual testing.
+            Automated deployment to camaraproject.github.io will be implemented in Phase 4.
 
             ---
 

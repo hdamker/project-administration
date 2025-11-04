@@ -105,6 +105,8 @@ Debug mode: true
 
 **Merge instructions**: Use **squash and merge** to keep main history clean. Each workflow run creates a single logical change.
 
+**Viewer deployment**: Viewers are generated in workflow artifacts for testing and manual deployment. Automated deployment to camaraproject.github.io will be implemented in Phase 4. See [Phase 4 Deployment Architecture](../../../private-dev-docs/project-administration/workflow-v3-planning/phase-4-deployment-architecture.md) for details.
+
 ### Debug Mode
 
 **When to use**: Troubleshooting, detailed analysis
@@ -119,6 +121,8 @@ Debug mode: true
 
 ### Generated Files
 
+#### Committed to Repository (PR Mode)
+
 ```
 data/
 └── releases-master.yaml          # Master metadata (GitHub facts only)
@@ -128,13 +132,25 @@ reports/
 ├── fall24.json                   # Fall 2024 meta-release
 ├── spring25.json                 # Spring 2025 meta-release
 └── fall25.json                   # Fall 2025 meta-release
+```
 
+#### Available in Workflow Artifacts (Not Committed)
+
+```
 viewers/
-├── all-releases.html             # Interactive viewer (all releases)
 ├── fall24.html                   # Fall 2024 viewer
 ├── spring25.html                 # Spring 2025 viewer
-└── fall25.html                   # Fall 2025 viewer
+├── fall25.html                   # Fall 2025 viewer
+├── portfolio.html                # Portfolio overview viewer
+└── internal.html                 # Internal admin viewer
 ```
+
+**Note**: Viewers are generated but not committed to the repository (gitignored). They are available:
+- In workflow artifacts for download and testing
+- For manual deployment to camaraproject.github.io (Phase 3)
+- For automated deployment (Phase 4 - planned)
+
+See [Phase 4 Deployment Architecture](../../../private-dev-docs/project-administration/workflow-v3-planning/phase-4-deployment-architecture.md) for deployment strategy.
 
 ### Data Flow
 
