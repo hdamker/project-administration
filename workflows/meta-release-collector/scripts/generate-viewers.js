@@ -18,6 +18,56 @@ const REPORTS_DIR = path.join(ROOT_DIR, 'reports');
 const VIEWERS_DIR = path.join(ROOT_DIR, 'viewers');
 
 /**
+ * Check if viewer needs regeneration based on source file timestamps
+ * @param {string} release - Release name (e.g., 'fall25')
+ * @returns {Promise<boolean>} True if regeneration needed
+ */
+async function shouldRegenerateViewer(release) {
+  const reportPath = path.join(REPORTS_DIR, `${release}.json`);
+  const viewerPath = path.join(VIEWERS_DIR, `${release}.html`);
+
+  // Template files that affect viewer output
+  const templateFiles = [
+    path.join(TEMPLATES_DIR, 'viewer-lib.js'),
+    path.join(TEMPLATES_DIR, 'viewer-styles.css'),
+    path.join(TEMPLATES_DIR, 'meta-release-template.html')
+  ];
+
+  try {
+    // Check if viewer exists
+    const viewerStat = await fs.stat(viewerPath);
+    const viewerTime = viewerStat.mtime.getTime();
+
+    // Check if report is newer
+    const reportStat = await fs.stat(reportPath);
+    if (reportStat.mtime.getTime() > viewerTime) {
+      console.log(`  ↻ Report data updated (${release})`);
+      return true;
+    }
+
+    // Check if any template is newer
+    for (const templateFile of templateFiles) {
+      const templateStat = await fs.stat(templateFile);
+      if (templateStat.mtime.getTime() > viewerTime) {
+        const templateName = path.basename(templateFile);
+        console.log(`  ↻ Template ${templateName} updated (${release})`);
+        return true;
+      }
+    }
+
+    console.log(`  ✓ Viewer up-to-date (${release})`);
+    return false;
+
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      console.log(`  + Viewer missing (${release})`);
+      return true; // Viewer doesn't exist, needs generation
+    }
+    throw err;
+  }
+}
+
+/**
  * Generate meta-release viewer for a specific release
  */
 async function generateMetaReleaseViewer(release, options = {}) {
@@ -129,21 +179,35 @@ async function generateAllViewers() {
       process.exit(1);
     }
 
-    // Generate meta-release viewers (external audience - published only)
+    // Generate meta-release viewers with timestamp checking
+    let regenerated = 0;
+    let skipped = 0;
+
     for (const release of existingReleases) {
-      const result = await generateMetaReleaseViewer(release, {
-        publishedOnly: true
-      });
-      results.push(result);
+      if (await shouldRegenerateViewer(release)) {
+        const result = await generateMetaReleaseViewer(release, {
+          publishedOnly: true
+        });
+        results.push(result);
+        regenerated++;
+      } else {
+        console.log(`  ⊘ Skipping ${release} (unchanged)`);
+        skipped++;
+      }
     }
 
     // Summary
     console.log('\n=== Generation Summary ===');
-    console.log(`Total viewers generated: ${results.length}`);
-    results.forEach(result => {
-      console.log(`  - ${result.filename}: ${result.apiCount} APIs, ${result.releaseCount} releases`);
-    });
-    console.log(`\nViewers saved to: ${VIEWERS_DIR}`);
+    console.log(`Regenerated: ${regenerated} viewers`);
+    console.log(`Skipped: ${skipped} viewers`);
+    console.log(`Total available: ${existingReleases.length} releases`);
+    if (results.length > 0) {
+      console.log('\nRegenerated viewers:');
+      results.forEach(result => {
+        console.log(`  - ${result.filename}: ${result.apiCount} APIs, ${result.releaseCount} releases`);
+      });
+    }
+    console.log(`\nViewers directory: ${VIEWERS_DIR}`);
 
   } catch (error) {
     console.error('\n✗ Error during viewer generation:', error.message);
