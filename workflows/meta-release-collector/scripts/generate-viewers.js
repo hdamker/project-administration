@@ -17,6 +17,9 @@ const TEMPLATES_DIR = path.join(SCRIPT_DIR, '../templates');
 const REPORTS_DIR = path.join(ROOT_DIR, 'reports');
 const VIEWERS_DIR = path.join(ROOT_DIR, 'viewers');
 
+// Check for force regeneration flag from workflow
+const FORCE_REGENERATE = process.env.FORCE_REGENERATE === 'true';
+
 /**
  * Check if viewer needs regeneration based on source file timestamps
  * @param {string} release - Release name (e.g., 'fall25')
@@ -183,8 +186,15 @@ async function generateAllViewers() {
     let regenerated = 0;
     let skipped = 0;
 
+    if (FORCE_REGENERATE) {
+      console.log('⚡ Force regeneration enabled - bypassing timestamp checks\n');
+    }
+
     for (const release of existingReleases) {
-      if (await shouldRegenerateViewer(release)) {
+      if (FORCE_REGENERATE || await shouldRegenerateViewer(release)) {
+        if (FORCE_REGENERATE) {
+          console.log(`  ⚡ Force regeneration (${release})`);
+        }
         const result = await generateMetaReleaseViewer(release, {
           publishedOnly: true
         });

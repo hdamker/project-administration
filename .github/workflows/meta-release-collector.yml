@@ -305,6 +305,8 @@ jobs:
           npm install js-yaml
 
       - name: Generate HTML viewers
+        env:
+          FORCE_REGENERATE: ${{ github.event.inputs.force_viewers }}
         run: |
           echo "🎨 Generating HTML viewers..."
           # Build viewers with embedded JSON
