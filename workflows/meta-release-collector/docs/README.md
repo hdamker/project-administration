@@ -1,18 +1,24 @@
 # Meta-Release Collector v3 - User Guide
 
-**Status**: Production Ready (Phase 1 Complete)
-**Last Updated**: 2025-10-31
+**Status**: Production Ready (Phase 3 Complete - Staging Deployment Active)
+**Last Updated**: 2025-11-05
+
+## What This Workflow Does
+
+Automatically tracks all CAMARA API releases across repositories, categorizes them by meta-release (Fall24, Spring25, Fall25), and generates browsable HTML reports showing API versions, maturity levels, and portfolio information.
+
+**For Maintainers**: See [QUICKSTART.md](../QUICKSTART.md) for a 2-minute guide and [MAINTAINER-FAQ.md](../MAINTAINER-FAQ.md) for common questions.
 
 ## Overview
 
-The Meta-Release Collector is a GitHub Actions workflow that automatically tracks and reports on CAMARA API releases across all repositories. It provides comprehensive release metadata, categorization by meta-releases (Fall24, Spring25, Fall25), and generates interactive HTML viewers.
+The Meta-Release Collector is a GitHub Actions workflow that provides comprehensive release tracking and reporting for the CAMARA project.
 
 **Key Features**:
 - Incremental updates (analyze only new releases)
 - Full re-analysis capability (reprocess all releases)
 - Runtime enrichment with portfolio metadata
-- Self-contained HTML viewers for GitHub Pages
-- Multiple execution modes (dry-run, commit, PR)
+- Self-contained HTML viewers deployed to GitHub Pages
+- Multiple execution modes (dry-run, PR)
 
 ## Quick Start
 
@@ -23,16 +29,18 @@ The Meta-Release Collector is a GitHub Actions workflow that automatically track
 3. Click **Run workflow**
 4. Configure options:
    - **Analysis scope**: `incremental` or `full`
-   - **Execution mode**: `dry-run`, `commit`, or `pr`
+   - **Execution mode**: `dry-run` or `pr`
    - **Debug mode**: Enable for detailed logs (optional)
+   - **Force viewers**: Force regeneration of HTML viewers (optional)
 
 ### Recommended Settings
 
-**For weekly updates (default)**:
+**For weekly updates (recommended)**:
 ```
 Analysis scope: incremental
-Execution mode: commit
+Execution mode: pr
 Debug mode: false
+Force viewers: false
 ```
 
 **For testing or workflow changes**:
@@ -40,7 +48,57 @@ Debug mode: false
 Analysis scope: full
 Execution mode: dry-run
 Debug mode: true
+Force viewers: true
 ```
+
+**After configuration changes** (api-landscape.yaml, mappings):
+```
+Analysis scope: full
+Execution mode: pr
+Force viewers: true
+```
+
+## What to Do After Workflow Runs
+
+### If PR is Created
+
+1. **Navigate to the PR**
+   - Look for "chore: Update CAMARA release metadata" PR
+   - Check the PR description for staging viewer links
+
+2. **Review Changes** (checklist):
+   - [ ] Check file diff - do the data changes make sense?
+   - [ ] Review master YAML: releases look accurate, no duplicates
+   - [ ] Preview viewers using staging links in PR description
+   - [ ] Verify no sensitive data (API keys, internal URLs) exposed
+   - [ ] JSON reports are valid (workflow validates automatically)
+
+3. **Test Staging Viewers**
+   - Click staging URLs in PR description
+   - Verify data displays correctly
+   - Test filtering and search features
+   - Check for any obvious data quality issues
+
+4. **Merge the PR**
+   - Use **squash and merge** to keep history clean
+   - Delete the branch after merge
+
+### If No PR is Created
+
+This is normal when:
+- No new releases detected (incremental mode)
+- Generated data identical to existing data (full mode)
+- No changes after analysis
+
+**Action**: Review workflow logs to confirm expected behavior
+
+### Downloading Artifacts
+
+For testing or manual review:
+1. Go to workflow run page
+2. Scroll to "Artifacts" section
+3. Download `release-reports-{run-number}`
+4. Extract ZIP to view HTML viewers locally
 
 ## Configuration Options
 
@@ -74,8 +132,8 @@ Debug mode: true
 
 ### Execution Mode
 
-#### Dry-run Mode (Default)
-**When to use**: Testing, validation, preview changes
+#### Dry-run Mode
+**When to use**: Testing, validation, preview changes before creating PR
 
 **What it does**:
 - Runs complete workflow pipeline
@@ -85,8 +143,8 @@ Debug mode: true
 
 **Output**: Download `release-reports-*` artifact from workflow run
 
-#### PR Mode
-**When to use**: All production updates (required)
+#### PR Mode (Recommended for Production)
+**When to use**: All production updates, weekly monitoring
 
 **What it does**:
 - Runs complete workflow pipeline
@@ -105,7 +163,7 @@ Debug mode: true
 
 **Merge instructions**: Use **squash and merge** to keep main history clean. Each workflow run creates a single logical change.
 
-**Viewer deployment**: Viewers are generated in workflow artifacts for testing and manual deployment. Automated deployment to camaraproject.github.io will be implemented in Phase 4. See [Phase 4 Deployment Architecture](../../../private-dev-docs/project-administration/workflow-v3-planning/phase-4-deployment-architecture.md) for details.
+**Viewer deployment** (Phase 3 - Active): Viewers are automatically deployed to GitHub Pages staging for preview. Staging URLs are included in the PR description. Viewers are also available in workflow artifacts for download. Automated production deployment to camaraproject.github.io will be implemented in Phase 4.
 
 ### Debug Mode
 
@@ -134,25 +192,42 @@ reports/
 └── fall25.json                   # Fall 2025 meta-release
 ```
 
-#### Available in Workflow Artifacts (Not Committed)
+#### Deployed to Staging / Available in Artifacts (Not Committed)
 
 ```
 viewers/
 ├── fall24.html                   # Fall 2024 viewer
 ├── spring25.html                 # Spring 2025 viewer
 ├── fall25.html                   # Fall 2025 viewer
-├── portfolio.html                # Portfolio overview viewer
-└── internal.html                 # Internal admin viewer
+├── portfolio.html                # Portfolio overview viewer (Alpha)
+└── internal.html                 # Internal admin viewer (Alpha)
 ```
 
 **Note**: Viewers are generated but not committed to the repository (gitignored). They are available:
-- In workflow artifacts for download and testing
-- For manual deployment to camaraproject.github.io (Phase 3)
-- For automated deployment (Phase 4 - planned)
-
-See [Phase 4 Deployment Architecture](../../../private-dev-docs/project-administration/workflow-v3-planning/phase-4-deployment-architecture.md) for deployment strategy.
+- **Staging deployment** (Phase 3 - Active): Automatically deployed to GitHub Pages for preview, URLs in PR description
+- **Workflow artifacts**: Download `release-reports-*` for local testing
+- **Production deployment** (Phase 4 - Planned): Automated deployment to camaraproject.github.io
 
 ### Data Flow
+
+#### Workflow Phases (Visual)
+
+When you run the workflow, you'll see these phases execute in GitHub Actions:
+
+![Workflow Visualization](images/workflow-visualization.png)
+
+*Screenshot showing the 5-phase workflow execution with staging deployment*
+
+The workflow executes in this order:
+1. **Detect New Releases** (28s) - Discovers releases to analyze
+2. **Analyze Releases** (parallel matrix) - Processes releases in parallel (up to 6 jobs)
+3. **Update Master Metadata** (12s) - Updates master YAML with analyzed data
+4. **Generate HTML Viewers** (8s) - Creates self-contained HTML viewers
+5. **Publish Changes** (8s) - Creates PR with data/reports
+6. **Deploy to Staging** (13s) - Deploys viewers to GitHub Pages for preview
+7. **Workflow Summary** (3s) - Generates execution summary
+
+#### Data Pipeline (Technical)
 
 ```
 GitHub API
@@ -217,19 +292,68 @@ Result: Artifact download for testing
 
 ### No new releases detected (incremental mode)
 **Cause**: No releases published since last run
-**Solution**: Normal behavior, no action needed
+
+**Solution**: Normal behavior, no action needed. Workflow completes successfully without creating PR.
+
+### No PR created even though I expected changes
+**Cause**: Generated data matches existing files exactly (no diff detected)
+
+**Solution**:
+- Check workflow logs for "No changes detected" message
+- Verify format corrections aren't the only changes (already applied)
+- Run in dry-run mode and examine artifacts to confirm data
+
+### Workflow failed with "Enrichment not found for API X"
+**Cause**: An API exists in releases but not in api-landscape.yaml
+
+**Solution**:
+1. Note the exact API name from error logs
+2. Add it to config/api-landscape.yaml (see Maintenance section)
+3. Run full re-analysis to enrich all reports
+
+**Note**: This is a warning, workflow continues but API won't have category/tooltip
 
 ### Analysis errors for specific repository
-**Cause**: Missing or invalid API definition
-**Solution**: Check repository release assets for OpenAPI files
+**Cause**: Missing or invalid API definition in release assets
 
-### Enrichment failures
-**Cause**: API not in api-landscape.yaml
-**Solution**: Add API to config/api-landscape.yaml, run full re-analysis
+**Solution**:
+- Check repository release page for OpenAPI files
+- Verify file names match expected patterns
+- Check if release is in excluded list (data-corrections.yaml)
 
-### Workflow timeout
-**Cause**: Too many releases to process
-**Solution**: Reduce MAX_PARALLEL_JOBS or split into batches
+### Viewers show outdated data
+**Cause**: Viewers only regenerate when data changes or templates change
+
+**Solution**: Run workflow with `force_viewers: true` to regenerate all viewers
+
+### Workflow timeout or very slow
+**Cause**: Too many releases to process or API rate limits
+
+**Solution**:
+- Check GitHub API rate limit status
+- Verify parallel jobs are running (max 6)
+- Network issues may slow API calls
+- Full re-analysis of 80+ releases takes 5-15 minutes (normal)
+
+### PR merge conflicts
+**Cause**: Multiple workflow runs or manual edits to master YAML
+
+**Solution**:
+- Close conflicting PRs
+- Run fresh workflow with full re-analysis
+- Do not manually edit releases-master.yaml
+
+### How to read workflow logs
+**Enable debug mode** for detailed diagnostics:
+1. Run workflow with Debug mode: true
+2. Check each phase in workflow logs:
+   - Detect: Shows release count and what will be analyzed
+   - Analyze: Shows per-repository analysis progress
+   - Update: Shows master metadata changes
+   - Reports: Shows enrichment statistics
+   - Viewers: Shows generation and deployment
+
+**For more troubleshooting**: See [MAINTAINER-FAQ.md](../MAINTAINER-FAQ.md)
 
 ## Configuration Files
 
@@ -265,15 +389,19 @@ Format corrections are applied automatically during analysis in `scripts/analyze
 
 These corrections are hardcoded and applied to all releases automatically. No configuration file needed.
 
-## Architecture
+## Architecture Overview
 
-See [ADR-0002-runtime-enrichment-architecture.md](ADR/0002-runtime-enrichment-architecture.md) for detailed architecture documentation.
+**For Maintainers**: You don't need to understand the architecture to run the workflow. This section is for context only.
 
 **Key principles**:
-- Clean separation: GitHub facts vs portfolio metadata
-- Runtime enrichment: Apply metadata during report generation
-- Self-contained viewers: Embed all data and libraries
-- Static hosting: No backend required (GitHub Pages compatible)
+- Clean separation: GitHub facts (master YAML) vs portfolio metadata (landscape YAML)
+- Runtime enrichment: Metadata applied during report generation, not stored in master
+- Self-contained viewers: Embed all data and libraries (no backend required)
+- Static hosting: GitHub Pages compatible
+
+**For Developers**: See [architecture/](architecture/) for detailed architectural decision records (ADRs) including:
+- [ADR-0001: Feature-Grouped Organization](architecture/0001-feature-grouped-organization.md)
+- [ADR-0002: Runtime Enrichment Architecture](architecture/0002-runtime-enrichment-architecture.md)
 
 ## Maintenance
 
@@ -307,7 +435,7 @@ For issues or questions:
 - Check workflow logs for error messages
 - Enable debug mode for detailed diagnostics
 - Review [troubleshooting section](#troubleshooting) above
-- Consult architecture documentation in [ADR/](ADR/)
+- Consult architecture documentation in [architecture/](architecture/)
 
 ---
 
