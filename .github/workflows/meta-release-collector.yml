@@ -404,6 +404,10 @@ jobs:
           echo "- No new releases since last run (incremental mode)" >> $GITHUB_STEP_SUMMARY
           echo "- Generated files are identical to existing data (full mode)" >> $GITHUB_STEP_SUMMARY
 
+      - name: Get current timestamp
+        id: timestamp
+        run: echo "current=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
+
       - name: Create pull request
         if: github.event.inputs.execution_mode == 'pr' && steps.diff.outputs.has_changes == 'true'
         uses: peter-evans/create-pull-request@v5
@@ -416,7 +420,7 @@ jobs:
 
             **Analysis scope**: ${{ github.event.inputs.analysis_scope }}
             **Workflow run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            **Generated**: ${{ github.event.repository.updated_at }}
+            **Generated**: ${{ steps.timestamp.outputs.current }}
 
             ### Changes
 
