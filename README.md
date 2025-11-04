@@ -42,6 +42,11 @@ Current available workflows:
 * **[Project Reporting workflows](documentation/project-report-generation-workflows.md)**
   * Currently two different reporting workflows: "Repository Overview" and "API Releases"
   * Requires token `CAMARA_REPORT_TOKEN`, see [documentation](documentation/project-report-generation-workflows.md)
+* **[Meta-Release Collector](workflows/meta-release-collector/docs/README.md)**
+  * Automated collection and tracking of CAMARA API releases
+  * Generates meta-release reports (Fall24, Spring25, Fall25) and interactive HTML viewers
+  * Runs weekly to detect new releases and update metadata
+  * Please read the [documentation](workflows/meta-release-collector/docs/README.md) first
 
 ## Contributing
  
