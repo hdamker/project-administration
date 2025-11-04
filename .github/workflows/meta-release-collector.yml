@@ -448,10 +448,16 @@ jobs:
 
             **Use squash and merge** to keep main history clean. Each workflow run creates a single logical change.
 
-            ### Viewer Deployment
+            ### Preview Viewers (Staging)
 
-            Viewers are generated and available in workflow artifacts for manual testing.
-            Automated deployment to camaraproject.github.io will be implemented in Phase 4.
+            Viewers have been deployed to GitHub Pages for preview:
+            - [Fall24 Viewer](https://${{ github.repository_owner }}.github.io/project-administration/fall24.html)
+            - [Spring25 Viewer](https://${{ github.repository_owner }}.github.io/project-administration/spring25.html)
+            - [Fall25 Viewer](https://${{ github.repository_owner }}.github.io/project-administration/fall25.html)
+            - [All Releases](https://${{ github.repository_owner }}.github.io/project-administration/all-releases.html)
+            - [Internal Admin View](https://${{ github.repository_owner }}.github.io/project-administration/internal.html)
+
+            **Note**: Staging viewers are also available in workflow artifacts for download.
 
             ---
 
@@ -462,7 +468,46 @@ jobs:
             Analysis scope: ${{ github.event.inputs.analysis_scope }}
             Workflow run: ${{ github.run_number }}
 
-      # TODO: Deploy to GitHub Pages when ready
+  # =========================================================================================
+  # Phase 4: Deploy to GitHub Pages (Staging)
+  # =========================================================================================
+  deploy-staging:
+    name: Deploy to Staging (GitHub Pages)
+    needs: [publish-changes, generate-viewers]
+    if: github.event.inputs.execution_mode == 'pr'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download viewers
+        uses: actions/download-artifact@v4
+        with:
+          name: release-reports-${{ github.run_number }}
+          path: staging
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'staging/viewers'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
   # =========================================================================================
   # Summary Job
