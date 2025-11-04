@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAMARA {{META_RELEASE}} Meta-release</title>
+  <style>
+{{VIEWER_STYLES}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>CAMARA API Overview</h1>
+      <div class="metadata" id="header-metadata"></div>
+    </div>
+
+    <div class="content" id="content">
+      <div class="category-pills" id="categoryPills">
+        <div class="category-pill all-categories active" onclick="filterByCategory('')">
+          All<span class="category-count" id="allCount">(0)</span>
+        </div>
+      </div>
+
+      <div class="filters">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="filterApiName">API Name:</label>
+            <input type="text" id="filterApiName" placeholder="Search APIs..." onkeyup="applyFilters()">
+          </div>
+          <div class="filter-group">
+            <label for="filterMaturity">Maturity:</label>
+            <select id="filterMaturity" onchange="applyFilters()">
+              <option value="">All</option>
+              <option value="initial">Initial</option>
+              <option value="stable">Stable</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filterNew">New:</label>
+            <select id="filterNew" onchange="applyFilters()">
+              <option value="">All</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filterRepository">Repository:</label>
+            <input type="text" id="filterRepository" list="repositoryList" placeholder="Search or select repo..." onkeyup="applyFilters()" onchange="applyFilters()">
+            <datalist id="repositoryList"></datalist>
+          </div>
+        </div>
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="filterVersion">Version:</label>
+            <select id="filterVersion" onchange="applyFilters()">
+              <option value="">All</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filterVersionMin">Version Min:</label>
+            <input type="text" id="filterVersionMin" placeholder="e.g., 1.0.0" onkeyup="applyFilters()">
+          </div>
+          <div class="filter-group">
+            <label for="filterVersionMax">Version Max:</label>
+            <input type="text" id="filterVersionMax" placeholder="e.g., 2.0.0" onkeyup="applyFilters()">
+          </div>
+          <button class="clear-filters-btn" onclick="clearAllFilters()">Clear Filters</button>
+        </div>
+      </div>
+
+      <div id="resultsCounter" class="results-counter hidden">
+        <div class="results-text"></div>
+        <div class="export-buttons">
+          <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+          <button class="export-btn" onclick="exportJSON()">Export JSON</button>
+        </div>
+      </div>
+
+      <table id="apiTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)">Released API <span class="sort-arrow"></span></th>
+            <th onclick="sortTable(1)">Maturity <span class="sort-arrow"></span></th>
+            <th onclick="sortTable(2)">API version <span class="sort-arrow"></span></th>
+            <th onclick="sortTable(3)">Public release <span class="sort-arrow"></span></th>
+            <th onclick="sortTable(4)">Category <span class="sort-arrow"></span></th>
+            <th onclick="sortTable(5)">Repository <span class="sort-arrow"></span></th>
+            <th onclick="sortTable(6)">New <span class="sort-arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+        </tbody>
+      </table>
+
+      <div id="footer-metadata" class="footer-metadata"></div>
+    </div>
+  </div>
+
+  <script>
+    // Embedded shared library
+{{VIEWER_LIBRARY}}
+
+    // Embedded release data (fully enriched from workflow)
+    const RELEASE_DATA = {{RELEASE_DATA}};
+
+    // Global state
+    let currentData = null;
+    let filteredData = [];
+    let currentCategoryFilter = '';
+    let currentSort = { column: -1, ascending: true };
+
+    /**
+     * Flatten v3 nested structure to flat array
+     * Converts releases[].apis[] structure to flat array with repository info
+     */
+    function flattenAPIData(data) {
+      const flatApis = [];
+
+      if (data.releases && Array.isArray(data.releases)) {
+        data.releases.forEach(release => {
+          if (release.apis && Array.isArray(release.apis)) {
+            release.apis.forEach(api => {
+              flatApis.push({
+                // API info
+                api_name: api.api_name,
+                title: api.title || api.display_name || api.api_name,
+                version: api.version,
+                maturity: api.maturity,
+
+                // Repository info from release
+                repository: release.repository,
+                release_tag: release.release_tag,
+                release_date: release.release_date,
+                github_url: release.github_url,
+
+                // Enrichment fields
+                portfolio_category: api.portfolio_category,
+                website_url: api.website_url,
+                tooltip: api.tooltip,
+                published: api.published,
+                first_release: api.first_release,
+                isNew: api.isNew,
+
+                // Additional metadata
+                commonalities: api.commonalities,
+                display_name: api.display_name,
+                canonical_name: api.canonical_name
+              });
+            });
+          }
+        });
+      }
+
+      return flatApis;
+    }
+
+    /**
+     * Initialize iframe detection and data
+     */
+    function detectIframe() {
+      if (ViewerLib.isInIframe()) {
+        document.body.classList.add('in-iframe');
+      }
+    }
+
+    /**
+     * Initialize data and render
+     */
+    function initializeData() {
+      // Flatten v3 structure
+      const flatApis = flattenAPIData(RELEASE_DATA);
+
+      currentData = {
+        metadata: RELEASE_DATA.metadata,
+        statistics: RELEASE_DATA.statistics,
+        apis: flatApis
+      };
+
+      filteredData = currentData.apis;
+
+      displayData(currentData);
+    }
+
+    /**
+     * Display data in UI
+     */
+    function displayData(data) {
+      const metadata = data.metadata;
+      const footerDiv = document.getElementById('footer-metadata');
+      const generated = ViewerLib.formatDate(metadata.generated);
+      footerDiv.innerHTML = `
+        Report generated: ${generated} |
+        Meta-release: ${metadata.meta_release} |
+        Total APIs: ${data.statistics.unique_apis_count}
+      `;
+
+      const headerDiv = document.getElementById('header-metadata');
+      headerDiv.innerHTML = `API Status for ${metadata.meta_release} meta-release`;
+
+      populateRepositoryDropdown();
+      populateVersionDropdown();
+      buildCategoryPills();
+      renderTable(filteredData);
+    }
+
+    /**
+     * Populate repository dropdown with datalist
+     */
+    function populateRepositoryDropdown() {
+      const repositories = ViewerLib.getUniqueValues(currentData.apis, 'repository');
+      const datalist = document.getElementById('repositoryList');
+      datalist.innerHTML = '';
+
+      repositories.forEach(repo => {
+        const option = document.createElement('option');
+        option.value = repo;
+        datalist.appendChild(option);
+      });
+    }
+
+    /**
+     * Populate version dropdown
+     */
+    function populateVersionDropdown() {
+      const versions = ViewerLib.getUniqueValues(currentData.apis, 'version');
+      const dropdown = document.getElementById('filterVersion');
+
+      // Keep "All" option and add versions
+      dropdown.innerHTML = '<option value="">All</option>';
+
+      versions.forEach(version => {
+        const option = document.createElement('option');
+        option.value = version;
+        option.textContent = version;
+        dropdown.appendChild(option);
+      });
+    }
+
+    /**
+     * Build category filter pills
+     */
+    function buildCategoryPills() {
+      const categoryCounts = ViewerLib.getCategoryCounts(currentData.apis);
+      const pillsContainer = document.getElementById('categoryPills');
+
+      // Update "All" count
+      const allPill = pillsContainer.querySelector('.all-categories');
+      const allCount = document.getElementById('allCount');
+      allCount.textContent = `(${currentData.apis.length})`;
+
+      // Remove existing category pills (keep All pill)
+      const existingPills = pillsContainer.querySelectorAll('.category-pill:not(.all-categories)');
+      existingPills.forEach(pill => pill.remove());
+
+      // Define category order
+      const categoryOrder = [
+        'Authentication and Fraud Prevention',
+        'Communication Quality',
+        'Communication Services',
+        'Computing Services',
+        'Device Information',
+        'Location Services',
+        'Payments and Charging',
+        'Service Management'
+      ];
+
+      // Create pills in order
+      categoryOrder.forEach(category => {
+        const count = categoryCounts[category];
+        if (count) {
+          const pill = document.createElement('div');
+          pill.className = 'category-pill';
+          pill.onclick = () => filterByCategory(category);
+          pill.innerHTML = `${category}<span class="category-count">(${count})</span>`;
+          pillsContainer.appendChild(pill);
+        }
+      });
+    }
+
+    /**
+     * Filter by category
+     */
+    function filterByCategory(category) {
+      currentCategoryFilter = category;
+
+      // Update active state
+      const pills = document.querySelectorAll('.category-pill');
+      pills.forEach(pill => pill.classList.remove('active'));
+
+      if (category === '') {
+        document.querySelector('.all-categories').classList.add('active');
+      } else {
+        pills.forEach(pill => {
+          if (pill.textContent.includes(category)) {
+            pill.classList.add('active');
+          }
+        });
+      }
+
+      applyFilters();
+    }
+
+    /**
+     * Render table with APIs
+     */
+    function renderTable(apis) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+
+      apis.forEach(api => {
+        const row = document.createElement('tr');
+
+        // API Name cell with tooltip and link
+        const tooltipAttr = api.tooltip ? `data-tooltip="${ViewerLib.escapeHtml(api.tooltip)}"` : '';
+        const apiNameCell = api.website_url ?
+          `<span class="api-tooltip" ${tooltipAttr}><a href="${api.website_url}" target="_blank" rel="noopener">${api.title}</a></span>` :
+          `<span class="api-name-plain api-tooltip" ${tooltipAttr}>${api.title}</span>`;
+
+        // Maturity cell
+        const maturityCell = `<span class="badge badge-${api.maturity}">${api.maturity.charAt(0).toUpperCase() + api.maturity.slice(1)}</span>`;
+
+        // Version cell
+        const versionCell = api.version || '-';
+
+        // Release cell with link
+        const releaseCell = `<a href="${api.github_url}" target="_blank" rel="noopener">${api.release_tag}</a>`;
+
+        // Category cell
+        const categoryCell = api.portfolio_category ?
+          `<span class="category-badge">${api.portfolio_category}</span>` :
+          '-';
+
+        // Repository cell with link
+        const repoUrl = api.github_url.replace(/\/releases\/tag\/.*$/, '');
+        const repoCell = `<a href="${repoUrl}" target="_blank" rel="noopener">${api.repository}</a>`;
+
+        // New cell
+        const newCell = api.isNew ? 'Yes' : 'No';
+
+        row.innerHTML = `
+          <td>${apiNameCell}</td>
+          <td>${maturityCell}</td>
+          <td>${versionCell}</td>
+          <td>${releaseCell}</td>
+          <td>${categoryCell}</td>
+          <td>${repoCell}</td>
+          <td>${newCell}</td>
+        `;
+
+        tbody.appendChild(row);
+      });
+
+      // Update counter
+      updateResultsCounter(apis.length);
+    }
+
+    /**
+     * Apply all filters
+     */
+    function applyFilters() {
+      if (!currentData) return;
+
+      // Get filter values
+      const apiNameFilter = document.getElementById('filterApiName').value.toLowerCase();
+      const maturityFilter = document.getElementById('filterMaturity').value.toLowerCase();
+      const newFilter = document.getElementById('filterNew').value.toLowerCase();
+      const repositoryFilter = document.getElementById('filterRepository').value.toLowerCase();
+      const versionFilter = document.getElementById('filterVersion').value;
+      const versionMinFilter = document.getElementById('filterVersionMin').value;
+      const versionMaxFilter = document.getElementById('filterVersionMax').value;
+
+      // Filter data
+      filteredData = currentData.apis.filter(api => {
+        // Category filter
+        if (currentCategoryFilter && api.portfolio_category !== currentCategoryFilter) {
+          return false;
+        }
+
+        // API Name filter
+        if (apiNameFilter && !api.api_name.toLowerCase().includes(apiNameFilter)) {
+          return false;
+        }
+
+        // Maturity filter
+        if (maturityFilter && api.maturity.toLowerCase() !== maturityFilter) {
+          return false;
+        }
+
+        // New filter
+        if (newFilter) {
+          const isNew = api.isNew ? 'yes' : 'no';
+          if (isNew !== newFilter) {
+            return false;
+          }
+        }
+
+        // Repository filter
+        if (repositoryFilter && !api.repository.toLowerCase().includes(repositoryFilter)) {
+          return false;
+        }
+
+        // Exact version filter (from dropdown)
+        if (versionFilter && api.version !== versionFilter) {
+          return false;
+        }
+
+        // Version range filters
+        if (versionMinFilter && api.version) {
+          if (ViewerLib.compareVersions(api.version, versionMinFilter) < 0) {
+            return false;
+          }
+        }
+        if (versionMaxFilter && api.version) {
+          if (ViewerLib.compareVersions(api.version, versionMaxFilter) > 0) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      // Render filtered data
+      renderTable(filteredData);
+    }
+
+    /**
+     * Clear all filters
+     */
+    function clearAllFilters() {
+      document.getElementById('filterApiName').value = '';
+      document.getElementById('filterMaturity').value = '';
+      document.getElementById('filterNew').value = '';
+      document.getElementById('filterRepository').value = '';
+      document.getElementById('filterVersion').value = '';
+      document.getElementById('filterVersionMin').value = '';
+      document.getElementById('filterVersionMax').value = '';
+      filterByCategory(''); // Clear category filter
+
+      applyFilters();
+    }
+
+    /**
+     * Update results counter
+     */
+    function updateResultsCounter(count) {
+      const counter = document.getElementById('resultsCounter');
+      const resultsText = counter.querySelector('.results-text');
+      const total = currentData ? currentData.apis.length : 0;
+
+      if (count === 0) {
+        resultsText.textContent = 'No APIs match the current filters';
+        counter.classList.add('no-results');
+      } else if (count === total) {
+        resultsText.textContent = `Showing all ${total} APIs`;
+        counter.classList.remove('no-results');
+      } else {
+        resultsText.textContent = `Showing ${count} of ${total} APIs`;
+        counter.classList.remove('no-results');
+      }
+
+      counter.classList.remove('hidden');
+    }
+
+    /**
+     * Sort table by column
+     */
+    function sortTable(columnIndex) {
+      if (!filteredData || filteredData.length === 0) return;
+
+      const table = document.getElementById('apiTable');
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+
+      // Toggle sort direction if same column
+      if (currentSort.column === columnIndex) {
+        currentSort.ascending = !currentSort.ascending;
+      } else {
+        currentSort.column = columnIndex;
+        currentSort.ascending = true;
+      }
+
+      rows.sort((a, b) => {
+        let aValue = a.cells[columnIndex].textContent.trim();
+        let bValue = b.cells[columnIndex].textContent.trim();
+
+        // Handle special values
+        if (aValue === '-') aValue = '';
+        if (bValue === '-') bValue = '';
+
+        let result = 0;
+
+        if (columnIndex === 2) {
+          // API version column
+          result = ViewerLib.compareVersions(aValue, bValue);
+        } else if (columnIndex === 6) {
+          // New column (Yes/No)
+          result = (aValue === 'Yes' ? 1 : 0) - (bValue === 'Yes' ? 1 : 0);
+        } else {
+          // String comparison
+          result = aValue.localeCompare(bValue);
+        }
+
+        return currentSort.ascending ? result : -result;
+      });
+
+      // Re-append sorted rows
+      rows.forEach(row => tbody.appendChild(row));
+
+      // Update sort indicators
+      updateSortIndicators(columnIndex);
+    }
+
+    /**
+     * Update sort indicators in headers
+     */
+    function updateSortIndicators(activeColumn) {
+      const headers = document.querySelectorAll('#apiTable th');
+      headers.forEach((header, index) => {
+        const arrow = header.querySelector('.sort-arrow');
+        if (!arrow) return;
+
+        arrow.classList.remove('active-asc', 'active-desc');
+
+        if (index === activeColumn) {
+          if (currentSort.ascending) {
+            arrow.classList.add('active-asc');
+          } else {
+            arrow.classList.add('active-desc');
+          }
+        }
+      });
+    }
+
+    /**
+     * Export filtered data to CSV
+     */
+    function exportCSV() {
+      const metaRelease = RELEASE_DATA.metadata.meta_release || 'release';
+      const filename = `camara-${metaRelease.toLowerCase()}-apis.csv`;
+      ViewerLib.exportToCSV(filteredData, filename);
+    }
+
+    /**
+     * Export filtered data to JSON
+     */
+    function exportJSON() {
+      const metaRelease = RELEASE_DATA.metadata.meta_release || 'release';
+      const filename = `camara-${metaRelease.toLowerCase()}-apis.json`;
+      ViewerLib.exportToJSON(filteredData, filename);
+    }
+
+    // Initialize on page load
+    detectIframe();
+    initializeData();
+  </script>
+</body>
+</html>

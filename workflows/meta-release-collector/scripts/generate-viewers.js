@@ -1,165 +1,205 @@
 #!/usr/bin/env node
 
 /**
- * Generate Viewers Script
+ * Generate self-contained HTML viewers for CAMARA meta-releases
  *
- * Generates HTML viewers with embedded JSON data for each report.
- * Uses the viewer template and embeds the JSON data directly.
+ * This script embeds shared library, styles, and data into HTML templates
+ * to create fully self-contained viewer files for GitHub Pages deployment.
  */
 
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 
-// Paths
-// Paths (relative to repository root)
-const REPO_ROOT = path.join(__dirname, '..', '..', '..');
-const REPORTS_PATH = path.join(REPO_ROOT, 'reports');
-const VIEWERS_PATH = path.join(REPO_ROOT, 'viewers');
-const TEMPLATE_FILE = path.join(VIEWERS_PATH, 'release-dashboard-template.html');
+// Paths relative to this script's location
+const SCRIPT_DIR = __dirname;
+const ROOT_DIR = path.join(SCRIPT_DIR, '../../..');
+const TEMPLATES_DIR = path.join(SCRIPT_DIR, '../templates');
+const REPORTS_DIR = path.join(ROOT_DIR, 'reports');
+const VIEWERS_DIR = path.join(ROOT_DIR, 'viewers');
 
 /**
- * Generate viewer HTML with embedded data
+ * Generate meta-release viewer for a specific release
  */
-function generateViewer(reportFile, title) {
-  // Load the report JSON
-  const reportPath = path.join(REPORTS_PATH, reportFile);
-  if (!fs.existsSync(reportPath)) {
-    console.error(`Report file not found: ${reportFile}`);
-    return false;
+async function generateMetaReleaseViewer(release, options = {}) {
+  try {
+    console.log(`\nGenerating ${release} viewer...`);
+
+    // Load shared library and styles
+    const libraryPath = path.join(TEMPLATES_DIR, 'viewer-lib.js');
+    const stylesPath = path.join(TEMPLATES_DIR, 'viewer-styles.css');
+    const templatePath = path.join(TEMPLATES_DIR, 'meta-release-template.html');
+
+    console.log(`  Loading shared library from: ${libraryPath}`);
+    const library = await fs.readFile(libraryPath, 'utf8');
+
+    console.log(`  Loading shared styles from: ${stylesPath}`);
+    const styles = await fs.readFile(stylesPath, 'utf8');
+
+    console.log(`  Loading template from: ${templatePath}`);
+    const template = await fs.readFile(templatePath, 'utf8');
+
+    // Load enriched report data
+    const reportPath = path.join(REPORTS_DIR, `${release}.json`);
+    console.log(`  Loading report data from: ${reportPath}`);
+    const reportData = JSON.parse(await fs.readFile(reportPath, 'utf8'));
+
+    // Apply data filters based on options
+    let filteredData = { ...reportData };
+    if (options.publishedOnly) {
+      console.log(`  Filtering for published APIs only...`);
+      // Filter at the release level - keep releases but filter their APIs
+      if (filteredData.releases) {
+        filteredData.releases = filteredData.releases.map(release => ({
+          ...release,
+          apis: release.apis.filter(api => api.published)
+        })).filter(release => release.apis.length > 0); // Remove releases with no published APIs
+      }
+    }
+
+    // Count APIs for logging
+    let apiCount = 0;
+    if (filteredData.releases) {
+      filteredData.releases.forEach(release => {
+        apiCount += release.apis.length;
+      });
+    }
+    console.log(`  Data contains ${apiCount} APIs in ${filteredData.releases?.length || 0} releases`);
+
+    // Embed everything into template
+    console.log(`  Embedding library, styles, and data...`);
+    let html = template;
+
+    // Replace placeholders
+    html = html.replace('{{VIEWER_LIBRARY}}', library);
+    html = html.replace('{{VIEWER_STYLES}}', styles);
+    html = html.replace('{{RELEASE_DATA}}', JSON.stringify(filteredData, null, 2));
+    html = html.replace(/{{META_RELEASE}}/g, filteredData.metadata.meta_release);
+
+    // Write self-contained HTML file
+    const outputFilename = options.outputFilename || `${release}.html`;
+    const outputPath = path.join(VIEWERS_DIR, outputFilename);
+
+    console.log(`  Writing viewer to: ${outputPath}`);
+    await fs.writeFile(outputPath, html, 'utf8');
+
+    console.log(`✓ Generated ${outputFilename} (${apiCount} APIs)`);
+
+    return {
+      filename: outputFilename,
+      path: outputPath,
+      apiCount: apiCount,
+      releaseCount: filteredData.releases?.length || 0
+    };
+  } catch (error) {
+    console.error(`✗ Error generating ${release} viewer:`, error.message);
+    throw error;
   }
-
-  const reportData = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
-
-  // Load the template
-  if (!fs.existsSync(TEMPLATE_FILE)) {
-    console.error('Template file not found');
-    return false;
-  }
-
-  let template = fs.readFileSync(TEMPLATE_FILE, 'utf8');
-
-  // Replace the title in multiple places
-  template = template.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
-  template = template.replace(/CAMARA API Release Dashboard - Template/, title);
-
-  // Replace the heading
-  template = template.replace(
-    /<h1>.*?CAMARA API Release Dashboard<\/h1>/,
-    `<h1>🚀 ${title}</h1>`
-  );
-
-  // Remove sample data warning if it exists
-  template = template.replace(/<!--\s*Sample data.*?-->/gs, '');
-
-  // Replace the sample data structure with actual data
-  // Find and replace the entire releaseData declaration
-  const sampleDataRegex = /let releaseData = \{[\s\S]*?\n    \};/;
-
-  // Transform our report structure to match what the template expects
-  // The template expects api.name not api.api_name
-  const transformedReleases = reportData.releases.map(release => ({
-    ...release,
-    apis: release.apis.map(api => ({
-      name: api.api_name,  // Template expects 'name'
-      version: api.version,
-      title: api.title,
-      commonalities: api.commonalities
-    }))
-  }));
-
-  const actualData = {
-    metadata: {
-      ...reportData.metadata,
-      last_updated: reportData.metadata.generated  // Template expects last_updated
-    },
-    releases: transformedReleases
-  };
-
-  const dataReplacement = `let releaseData = ${JSON.stringify(actualData, null, 6)};`;
-  template = template.replace(sampleDataRegex, dataReplacement);
-
-  return template;
 }
 
 /**
- * Main execution
+ * Generate all meta-release viewers
  */
-async function main() {
-  console.log('🎨 Generating HTML Viewers');
-  console.log('=' .repeat(50));
+async function generateAllViewers() {
+  console.log('=== CAMARA Viewer Generation v3 ===\n');
 
-  // Ensure viewers directory exists
-  if (!fs.existsSync(VIEWERS_PATH)) {
-    fs.mkdirSync(VIEWERS_PATH, { recursive: true });
-  }
+  try {
+    // Ensure output directory exists
+    console.log(`Creating output directory: ${VIEWERS_DIR}`);
+    await fs.mkdir(VIEWERS_DIR, { recursive: true });
 
-  // Check for template
-  if (!fs.existsSync(TEMPLATE_FILE)) {
-    console.error('\n❌ Template file not found!');
-    console.error(`Expected at: ${TEMPLATE_FILE}`);
+    const results = [];
+
+    // Determine which releases to generate
+    const releases = ['fall24', 'spring25', 'fall25'];
+
+    // Check which reports exist
+    const existingReleases = [];
+    for (const release of releases) {
+      const reportPath = path.join(REPORTS_DIR, `${release}.json`);
+      try {
+        await fs.access(reportPath);
+        existingReleases.push(release);
+      } catch (err) {
+        console.log(`⚠ Report not found: ${release}.json - skipping`);
+      }
+    }
+
+    if (existingReleases.length === 0) {
+      console.error('\n✗ No report files found. Run the meta-release collector first.');
+      process.exit(1);
+    }
+
+    // Generate meta-release viewers (external audience - published only)
+    for (const release of existingReleases) {
+      const result = await generateMetaReleaseViewer(release, {
+        publishedOnly: true
+      });
+      results.push(result);
+    }
+
+    // Summary
+    console.log('\n=== Generation Summary ===');
+    console.log(`Total viewers generated: ${results.length}`);
+    results.forEach(result => {
+      console.log(`  - ${result.filename}: ${result.apiCount} APIs, ${result.releaseCount} releases`);
+    });
+    console.log(`\nViewers saved to: ${VIEWERS_DIR}`);
+
+  } catch (error) {
+    console.error('\n✗ Error during viewer generation:', error.message);
+    if (error.stack) {
+      console.error('\nStack trace:');
+      console.error(error.stack);
+    }
     process.exit(1);
   }
-
-  // Define viewers to generate
-  const viewers = [
-    {
-      report: 'all-releases.json',
-      output: 'all-releases.html',
-      title: 'CAMARA All Releases Dashboard'
-    },
-    {
-      report: 'fall24.json',
-      output: 'fall24.html',
-      title: 'CAMARA Fall 2024 Release Dashboard'
-    },
-    {
-      report: 'spring25.json',
-      output: 'spring25.html',
-      title: 'CAMARA Spring 2025 Release Dashboard'
-    },
-    {
-      report: 'fall25.json',
-      output: 'fall25.html',
-      title: 'CAMARA Fall 2025 Release Dashboard'
-    }
-  ];
-
-  console.log('\nGenerating viewers...');
-
-  for (const viewer of viewers) {
-    // Check if report exists
-    const reportPath = path.join(REPORTS_PATH, viewer.report);
-    if (!fs.existsSync(reportPath)) {
-      console.log(`  - Skipping ${viewer.output} (report not found)`);
-      continue;
-    }
-
-    // Generate viewer HTML
-    const html = generateViewer(viewer.report, viewer.title);
-    if (html) {
-      const outputPath = path.join(VIEWERS_PATH, viewer.output);
-      fs.writeFileSync(outputPath, html);
-
-      // Get file size for display
-      const stats = fs.statSync(outputPath);
-      const size = (stats.size / 1024).toFixed(1);
-      console.log(`  ✓ ${viewer.output} (${size} KB)`);
-    }
-  }
-
-  console.log('\n✅ Viewers generated successfully');
-  console.log(`\nViewers can be opened directly in a browser:`);
-  console.log(`  file://${path.join(VIEWERS_PATH, 'all-releases.html')}`);
 }
 
-// Run if executed directly
+/**
+ * Main entry point
+ */
+async function main() {
+  const args = process.argv.slice(2);
+
+  // Check for help flag
+  if (args.includes('-h') || args.includes('--help')) {
+    console.log(`
+CAMARA Viewer Generator v3
+
+Usage:
+  node generate-viewers.js [release]
+
+Options:
+  release    Optional release name (fall24, spring25, fall25)
+             If omitted, generates all available releases
+
+Examples:
+  node generate-viewers.js              # Generate all releases
+  node generate-viewers.js fall25       # Generate only Fall25 viewer
+`);
+    process.exit(0);
+  }
+
+  // Check if specific release requested
+  if (args.length > 0) {
+    const release = args[0];
+    console.log(`Generating single release: ${release}`);
+    await generateMetaReleaseViewer(release, { publishedOnly: true });
+  } else {
+    await generateAllViewers();
+  }
+}
+
+// Run if called directly
 if (require.main === module) {
   main().catch(error => {
-    console.error('Error:', error.message);
+    console.error('Fatal error:', error);
     process.exit(1);
   });
 }
 
+// Export for potential use as module
 module.exports = {
-  generateViewer
+  generateMetaReleaseViewer,
+  generateAllViewers
 };
