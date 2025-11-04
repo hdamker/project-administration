@@ -3,122 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CAMARA Release Administration</title>
+  <title>CAMARA Release Administration (Alpha)</title>
   <style>
 {{VIEWER_STYLES}}
-    /* Internal admin specific styles */
+    /* CSS Variables */
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f6f8fa;
+      --bg-tertiary: #ffffff;
+      --text-primary: #24292f;
+      --text-secondary: #57606a;
+      --text-tertiary: #6e7681;
+      --border-color: #d0d7de;
+      --border-subtle: #eaeef2;
+      --accent-color: #0969da;
+      --accent-hover: #0550ae;
+      --success-color: #1a7f37;
+      --warning-color: #9a6700;
+      --danger-color: #cf222e;
+      --shadow-sm: 0 1px 0 rgba(27, 31, 36, 0.04);
+      --shadow-md: 0 3px 6px rgba(140, 149, 159, 0.15);
+      --shadow-lg: 0 8px 24px rgba(140, 149, 159, 0.2);
+    }
+
+    /* Global styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: 'Courier New', 'Monaco', monospace;
-      font-size: 13px;
-      transition: background-color 0.3s, color 0.3s;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      background-color: var(--bg-primary);
+      transition: background-color 0.2s, color 0.2s;
     }
 
-    /* Dark mode styles */
-    body.dark-mode {
-      background: #1e1e1e;
-      color: #d4d4d4;
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
     }
 
-    body.dark-mode .container {
-      background: #252526;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    /* Header */
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 24px;
+      margin-bottom: 24px;
+      border-radius: 6px;
     }
 
-    body.dark-mode .header {
-      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-      color: #d4d4d4;
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-primary);
     }
 
-    body.dark-mode .content {
-      background: #252526;
-    }
-
-    body.dark-mode table {
-      color: #d4d4d4;
-    }
-
-    body.dark-mode th {
-      background: #2d2d2d;
-      color: #d4d4d4;
-      border-color: #3e3e42;
-    }
-
-    body.dark-mode td {
-      border-color: #3e3e42;
-    }
-
-    body.dark-mode tr:hover {
-      background: #2d2d2d;
-    }
-
-    body.dark-mode .admin-controls {
-      background: #2d2d2d;
-      border-color: #3e3e42;
-    }
-
-    body.dark-mode .filters {
-      background: #2d2d2d;
-      border-color: #3e3e42;
-    }
-
-    body.dark-mode input,
-    body.dark-mode select {
-      background: #1e1e1e;
-      color: #d4d4d4;
-      border-color: #3e3e42;
-    }
-
-    body.dark-mode button {
-      background: #0e639c;
-      color: #ffffff;
-      border-color: #0e639c;
-    }
-
-    body.dark-mode button:hover {
-      background: #1177bb;
-    }
-
-    body.dark-mode .category-pill {
-      background: #2d2d2d;
-      color: #d4d4d4;
-      border-color: #3e3e42;
-    }
-
-    body.dark-mode .category-pill.active {
-      background: #0e639c;
-      color: #ffffff;
-    }
-
-    body.dark-mode .badge {
-      border: 1px solid #3e3e42;
-    }
-
-    body.dark-mode .unpublished-row {
-      background: #2a2a2a;
-      opacity: 0.7;
-    }
-
-    body.dark-mode .repo-section {
-      background: #2d2d2d;
-      border-color: #3e3e42;
-    }
-
-    body.dark-mode .debug-modal {
-      background: #1e1e1e;
-      color: #d4d4d4;
-      border-color: #3e3e42;
+    .header-subtitle {
+      color: var(--text-secondary);
+      font-size: 14px;
     }
 
     /* Admin control bar */
     .admin-controls {
       display: flex;
-      gap: 15px;
+      gap: 16px;
       align-items: center;
-      padding: 15px;
-      margin-bottom: 20px;
-      background: #f8f9fa;
-      border: 1px solid #e1e4e8;
-      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
       flex-wrap: wrap;
     }
 
@@ -128,109 +88,228 @@
       gap: 8px;
       cursor: pointer;
       font-weight: 500;
+      color: var(--text-primary);
     }
 
     .admin-controls input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       cursor: pointer;
     }
 
     .admin-controls button {
-      padding: 8px 16px;
+      padding: 6px 16px;
       border-radius: 6px;
-      border: 1px solid #0092f5;
-      background: #0092f5;
-      color: white;
+      border: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
       cursor: pointer;
+      font-size: 14px;
       font-weight: 500;
-      transition: all 0.2s;
+      transition: background-color 0.2s;
     }
 
     .admin-controls button:hover {
-      background: #0073c4;
-    }
-
-    .admin-controls .dark-mode-toggle {
-      margin-left: auto;
+      background: var(--bg-secondary);
     }
 
     /* Perspective toggle */
     .perspective-toggle {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
 
     .perspective-toggle button {
-      padding: 8px 16px;
+      padding: 6px 16px;
       border-radius: 6px;
-      border: 2px solid #e1e4e8;
-      background: white;
-      color: #32373c;
+      border: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
       cursor: pointer;
       font-weight: 500;
+      font-size: 14px;
       transition: all 0.2s;
     }
 
     .perspective-toggle button.active {
-      background: #0092f5;
+      background: var(--accent-color);
       color: white;
-      border-color: #0092f5;
+      border-color: var(--accent-color);
     }
 
-    /* Table styles */
-    .admin-table {
+    .perspective-toggle button:hover:not(.active) {
+      background: var(--bg-secondary);
+    }
+
+    /* Filters */
+    .filters {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .filter-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .filter-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input[type="text"],
+    select {
+      padding: 6px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    input[type="text"]:focus,
+    select:focus {
+      outline: 2px solid var(--accent-color);
+      outline-offset: 0;
+    }
+
+    /* Table */
+    .table-container {
+      background-color: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 12px;
+      font-size: 14px;
     }
 
-    .admin-table th,
-    .admin-table td {
-      padding: 8px;
+    thead {
+      background-color: var(--bg-secondary);
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    th {
+      padding: 12px 16px;
       text-align: left;
-      border-bottom: 1px solid #e1e4e8;
-    }
-
-    .admin-table th {
-      background: #f6f8fa;
       font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
       position: sticky;
       top: 0;
       z-index: 10;
-      cursor: pointer;
-      user-select: none;
+      background: var(--bg-secondary);
     }
 
-    .admin-table th:hover {
-      background: #e8eaed;
+    th:hover {
+      background-color: var(--bg-primary);
     }
 
-    .admin-table tr:hover {
-      background: #f6f8fa;
+    tbody tr {
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background-color 0.15s;
     }
 
+    tbody tr:hover {
+      background-color: var(--bg-secondary);
+    }
+
+    td {
+      padding: 12px 16px;
+      color: var(--text-primary);
+    }
+
+    /* Repository grouping */
+    tr.repo-header {
+      background-color: var(--bg-secondary);
+      font-weight: 600;
+      border-top: 2px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    tr.repo-header td {
+      padding: 10px 16px;
+      font-size: 15px;
+      color: var(--text-primary);
+    }
+
+    tr.repo-row td:first-child {
+      padding-left: 32px;
+    }
+
+    /* Special row types */
     .unpublished-row {
-      background: #fff8e1;
-      opacity: 0.8;
+      background-color: rgba(212, 167, 44, 0.1);
     }
 
     .sandbox-row {
-      background: #fff3e0;
+      background-color: rgba(251, 146, 60, 0.1);
     }
 
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid var(--border-color);
+    }
+
+    .badge-stable {
+      background-color: #dafbe1;
+      color: #0f5323;
+      border-color: #0f5323;
+    }
+
+    .badge-initial {
+      background-color: #fff4e5;
+      color: #7d4e00;
+      border-color: #7d4e00;
+    }
+
+    /* Debug button */
     .debug-btn {
-      padding: 4px 8px;
-      border-radius: 4px;
-      border: 1px solid #0092f5;
-      background: white;
-      color: #0092f5;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--accent-color);
+      background: var(--bg-tertiary);
+      color: var(--accent-color);
       cursor: pointer;
-      font-size: 11px;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s;
     }
 
     .debug-btn:hover {
-      background: #0092f5;
+      background: var(--accent-color);
       color: white;
     }
 
@@ -240,16 +319,21 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 80%;
+      width: 90%;
       max-width: 800px;
       max-height: 80vh;
-      background: white;
-      border: 1px solid #e1e4e8;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+      overflow-y: auto;
       z-index: 1000;
-      overflow: auto;
+    }
+
+    .debug-modal h3 {
+      margin-bottom: 16px;
+      color: var(--text-primary);
     }
 
     .debug-modal-overlay {
@@ -264,51 +348,34 @@
 
     .debug-modal-close {
       float: right;
-      padding: 8px 16px;
-      border-radius: 4px;
-      border: 1px solid #e1e4e8;
-      background: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
       cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .debug-modal-close:hover {
+      background: var(--bg-secondary);
     }
 
     .debug-modal pre {
-      background: #f6f8fa;
-      padding: 15px;
-      border-radius: 4px;
+      background: var(--bg-secondary);
+      padding: 16px;
+      border-radius: 6px;
       overflow: auto;
-      font-size: 11px;
-      max-height: 60vh;
-    }
-
-    /* Repository view styles */
-    .repo-section {
-      margin-bottom: 30px;
-      border: 1px solid #e1e4e8;
-      border-radius: 8px;
-      padding: 15px;
-      background: #fafbfc;
-    }
-
-    .repo-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #e1e4e8;
-    }
-
-    .repo-name {
-      font-size: 16px;
-      font-weight: 600;
-      color: #0092f5;
-    }
-
-    .repo-stats {
+      font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
       font-size: 12px;
-      color: #666;
+      line-height: 1.5;
+      max-height: 60vh;
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
     }
 
+    /* View visibility */
     .hidden-view {
       display: none;
     }
@@ -319,27 +386,154 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      margin-right: 4px;
+      margin-right: 6px;
     }
 
     .status-published {
-      background: #28a745;
+      background: var(--success-color);
     }
 
     .status-unpublished {
-      background: #dc3545;
+      background: var(--danger-color);
     }
 
     .status-sandbox {
-      background: #f5a742;
+      background: var(--warning-color);
+    }
+
+    /* Category pills */
+    .category-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      padding: 8px 0;
+    }
+
+    .category-pill {
+      padding: 6px 12px;
+      border-radius: 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+      color: var(--text-primary);
+    }
+
+    .category-pill:hover {
+      background: var(--bg-tertiary);
+      transform: translateY(-1px);
+    }
+
+    .category-pill.active {
+      background: var(--accent-color);
+      color: white;
+      border-color: var(--accent-color);
+    }
+
+    .category-count {
+      margin-left: 4px;
+      opacity: 0.7;
+      font-size: 12px;
+    }
+
+    /* Links */
+    a {
+      color: var(--accent-color);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Override shared styles for better readability */
+    body,
+    body:not(.in-iframe) {
+      background: var(--bg-primary) !important;
+      background-color: var(--bg-primary) !important;
+      color: var(--text-primary) !important;
+    }
+
+    .container,
+    body:not(.in-iframe) .container {
+      background: var(--bg-primary) !important;
+      background-color: var(--bg-primary) !important;
+    }
+
+    .header,
+    body.in-iframe .header {
+      background: var(--bg-secondary) !important;
+      background-color: var(--bg-secondary) !important;
+      background-image: none !important;
+      border-color: var(--border-color) !important;
+      display: block !important;
+    }
+
+    .header::before {
+      display: none !important;
+    }
+
+    .header h1,
+    h1 {
+      color: var(--text-primary) !important;
+    }
+
+    .metadata,
+    .header-subtitle {
+      color: var(--text-secondary) !important;
+    }
+
+    .content,
+    body.in-iframe .content {
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+
+    .category-pills {
+      background: var(--bg-secondary) !important;
+      background-color: var(--bg-secondary) !important;
+      background-image: none !important;
+      border-color: var(--border-color) !important;
+    }
+
+    table {
+      background: transparent !important;
+      color: var(--text-primary) !important;
+    }
+
+    th {
+      background: var(--bg-secondary) !important;
+      color: var(--text-primary) !important;
+      border-color: var(--border-color) !important;
+    }
+
+    td {
+      border-color: var(--border-subtle) !important;
+      color: var(--text-primary) !important;
+    }
+
+    .badge-stable {
+      background-color: #dafbe1 !important;
+      color: #0f5323 !important;
+      border-color: #0f5323 !important;
+    }
+
+    .badge-initial {
+      background-color: #fff4e5 !important;
+      color: #7d4e00 !important;
+      border-color: #7d4e00 !important;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>CAMARA Release Administration</h1>
-      <div class="metadata" id="header-metadata">Internal View - All Data</div>
+      <h1>CAMARA Release Administration (Alpha)</h1>
+      <div class="header-subtitle" id="header-metadata">Internal View - All Data</div>
     </div>
 
     <div class="content" id="content">
@@ -355,11 +549,6 @@
         <label>
           <input type="checkbox" id="show-unpublished" checked onchange="applyFilters()">
           Show Unpublished
-        </label>
-
-        <label class="dark-mode-toggle">
-          <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()">
-          Dark Mode
         </label>
       </div>
 
@@ -470,31 +659,6 @@
     let currentSort = { column: -1, ascending: true };
 
     /**
-     * Initialize dark mode from localStorage
-     */
-    function initDarkMode() {
-      const isDark = localStorage.getItem('camaraInternalDarkMode') === 'true';
-      if (isDark) {
-        document.body.classList.add('dark-mode');
-        document.getElementById('dark-mode-toggle').checked = true;
-      }
-    }
-
-    /**
-     * Toggle dark mode
-     */
-    function toggleDarkMode() {
-      const enabled = document.getElementById('dark-mode-toggle').checked;
-      if (enabled) {
-        document.body.classList.add('dark-mode');
-        localStorage.setItem('camaraInternalDarkMode', 'true');
-      } else {
-        document.body.classList.remove('dark-mode');
-        localStorage.setItem('camaraInternalDarkMode', 'false');
-      }
-    }
-
-    /**
      * Flatten v3 nested structure to flat array
      */
     function flattenAPIData(data) {
@@ -522,9 +686,7 @@
                 isNew: api.isNew,
                 commonalities: api.commonalities,
                 display_name: api.display_name,
-                canonical_name: api.canonical_name,
-                // Full API object for debug
-                _full: api
+                canonical_name: api.canonical_name
               });
             });
           }
@@ -827,24 +989,20 @@
     function renderRepositoryView() {
       const grouped = groupAPIsByRepository(filteredData);
       const container = document.getElementById('repositoryContainer');
-      container.innerHTML = '';
 
-      Object.keys(grouped).sort().forEach(repoName => {
-        const repo = grouped[repoName];
-
-        const section = document.createElement('div');
-        section.className = 'repo-section';
-
-        const githubUrl = repo.apis[0].github_url.replace(/\/releases\/tag\/.*$/, '');
-
-        section.innerHTML = `
-          <div class="repo-header">
-            <div>
-              <div class="repo-name"><a href="${githubUrl}" target="_blank">${repoName}</a></div>
-              <div class="repo-stats">${repo.releases.length} releases | ${repo.apis.length} API versions</div>
-            </div>
+      if (Object.keys(grouped).length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 48px; color: var(--text-secondary);">
+            No repositories match the current filters
           </div>
-          <table class="admin-table">
+        `;
+        return;
+      }
+
+      // Build single unified table with repository grouping
+      let tableHtml = `
+        <div class="table-container">
+          <table>
             <thead>
               <tr>
                 <th>API Name</th>
@@ -857,27 +1015,55 @@
               </tr>
             </thead>
             <tbody>
-              ${repo.apis.map(api => `
-                <tr class="${!api.published ? 'unpublished-row' : ''} ${api.meta_release === 'None (Sandbox)' ? 'sandbox-row' : ''}">
-                  <td>${api.title}</td>
-                  <td>${api.version}</td>
-                  <td><a href="${api.github_url}" target="_blank">${api.release_tag}</a></td>
-                  <td>${api.meta_release === 'None (Sandbox)' ? 'Sandbox' : api.meta_release}</td>
-                  <td>${ViewerLib.renderMaturityBadge(api.maturity)}</td>
-                  <td>${api.published ? '✓' : '✗'}</td>
-                  <td>${api.portfolio_category || '-'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+      `;
+
+      // Add rows grouped by repository
+      Object.keys(grouped).sort().forEach(repoName => {
+        const repo = grouped[repoName];
+        const githubUrl = repo.apis[0].github_url.replace(/\/releases\/tag\/.*$/, '');
+
+        // Repository header row
+        tableHtml += `
+          <tr class="repo-header">
+            <td colspan="7">
+              <a href="${githubUrl}" target="_blank" style="text-decoration: none; color: inherit;">
+                ${repoName}
+              </a>
+              <span style="margin-left: 12px; font-weight: 400; font-size: 13px; color: var(--text-secondary);">
+                ${repo.releases.length} releases • ${repo.apis.length} API versions
+              </span>
+            </td>
+          </tr>
         `;
 
-        container.appendChild(section);
+        // API rows for this repository
+        repo.apis.forEach(api => {
+          const rowClasses = [];
+          if (!api.published) rowClasses.push('unpublished-row');
+          if (api.meta_release === 'None (Sandbox)') rowClasses.push('sandbox-row');
+          rowClasses.push('repo-row');
+
+          tableHtml += `
+            <tr class="${rowClasses.join(' ')}">
+              <td>${api.title}</td>
+              <td>${api.version}</td>
+              <td><a href="${api.github_url}" target="_blank">${api.release_tag}</a></td>
+              <td>${api.meta_release === 'None (Sandbox)' ? 'Sandbox' : api.meta_release}</td>
+              <td>${ViewerLib.renderMaturityBadge(api.maturity)}</td>
+              <td>${api.published ? '✓' : '✗'}</td>
+              <td>${api.portfolio_category || '-'}</td>
+            </tr>
+          `;
+        });
       });
 
-      if (Object.keys(grouped).length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No repositories match the current filters</p>';
-      }
+      tableHtml += `
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      container.innerHTML = tableHtml;
     }
 
     /**
@@ -1008,7 +1194,6 @@
     }
 
     // Initialize on page load
-    initDarkMode();
     initializeData();
   </script>
 </body>
