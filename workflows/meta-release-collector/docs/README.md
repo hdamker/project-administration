@@ -85,27 +85,25 @@ Debug mode: true
 
 **Output**: Download `release-reports-*` artifact from workflow run
 
-#### Commit Mode
-**When to use**: Production updates, scheduled runs
-
-**What it does**:
-- Runs complete workflow pipeline
-- Commits changes directly to current branch
-- Updates data/, reports/, viewers/
-- Immediate deployment (if on main branch)
-
-**Commit message**: `chore: update release metadata [meta-release-collector]`
-
 #### PR Mode
-**When to use**: Controlled updates, review required
+**When to use**: All production updates (required)
 
 **What it does**:
 - Runs complete workflow pipeline
-- Creates pull request with changes
-- Allows review before merge
-- PR includes summary of changes
+- Validates generated files (YAML, JSON, HTML)
+- Checks for changes (skips PR if no changes)
+- Creates pull request for review
+- Requires approval before deployment
 
-**PR title**: `chore: update release metadata`
+**PR title**: `chore: Update CAMARA release metadata`
+
+**Safety features**:
+- Diff detection prevents empty PRs
+- Validation ensures file integrity
+- Review required before merge
+- No direct pushes allowed
+
+**Merge instructions**: Use **squash and merge** to keep main history clean. Each workflow run creates a single logical change.
 
 ### Debug Mode
 
@@ -175,19 +173,19 @@ generate-viewers.js → Embeds data in HTML templates, creates self-contained vi
 
 ## Typical Workflows
 
-### Weekly Monitoring
+### Weekly Monitoring (Recommended)
 ```yaml
 Schedule: Mondays 04:35 UTC (when enabled)
 Analysis: incremental
-Execution: commit
-Result: Automatic updates to main branch
+Execution: pr
+Result: Pull request created if changes detected
 ```
 
 ### After Configuration Changes
 ```yaml
 Trigger: Manual workflow dispatch
 Analysis: full
-Execution: dry-run (first), then commit
+Execution: dry-run (first), then pr
 Result: Regenerated reports with new configuration
 ```
 

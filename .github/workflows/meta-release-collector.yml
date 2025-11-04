@@ -32,7 +32,6 @@ on:
         type: choice
         options:
           - dry-run       # Test mode - no commits, artifacts only
-          - commit        # Direct commit to branch
           - pr            # Create pull request for review
         default: dry-run
 
@@ -340,42 +339,121 @@ jobs:
         with:
           name: release-reports-${{ github.run_number }}
 
-      - name: Commit changes (direct)
-        if: github.event.inputs.execution_mode == 'commit'
+      - name: Validate generated files
+        if: github.event.inputs.execution_mode == 'pr'
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          echo "Validating generated files..."
 
+          # Check master YAML exists and is valid
+          if [ ! -f data/releases-master.yaml ]; then
+            echo "ERROR: Master YAML not found"
+            exit 1
+          fi
+
+          # Validate YAML syntax
+          python3 -c "import yaml; yaml.safe_load(open('data/releases-master.yaml'))"
+          echo "✓ Master YAML is valid"
+
+          # Check JSON reports exist and are valid
+          for report in reports/*.json; do
+            if [ -f "$report" ]; then
+              jq empty "$report" || exit 1
+              echo "✓ $(basename $report) is valid"
+            fi
+          done
+
+          # Check HTML viewers exist
+          for viewer in fall24 spring25 fall25 portfolio internal; do
+            if [ ! -f "viewers/${viewer}.html" ]; then
+              echo "WARNING: Viewer ${viewer}.html not found"
+            else
+              echo "✓ ${viewer}.html exists"
+            fi
+          done
+
+          echo "All files validated successfully"
+
+      - name: Check for changes
+        id: diff
+        if: github.event.inputs.execution_mode == 'pr'
+        run: |
           git add data/releases-master.yaml
-          git add reports/*.json
-          git add viewers/*.html
+          git add reports/*.json 2>/dev/null || true
+          git add viewers/*.html 2>/dev/null || true
 
-          git commit -m "chore: Update release metadata and reports
+          if git diff --cached --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected:"
+            git diff --cached --stat
+            echo "change_summary<<EOF" >> $GITHUB_OUTPUT
+            git diff --cached --stat >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
 
-          Analysis scope: ${{ github.event.inputs.analysis_scope }}
-          Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-
-          git push origin feat/meta-release-collector-v3
+      - name: No changes summary
+        if: github.event.inputs.execution_mode == 'pr' && steps.diff.outputs.has_changes == 'false'
+        run: |
+          echo "## No Changes Detected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The workflow completed successfully but no changes were detected." >> $GITHUB_STEP_SUMMARY
+          echo "This typically means:" >> $GITHUB_STEP_SUMMARY
+          echo "- No new releases since last run (incremental mode)" >> $GITHUB_STEP_SUMMARY
+          echo "- Generated files are identical to existing data (full mode)" >> $GITHUB_STEP_SUMMARY
 
       - name: Create pull request
-        if: github.event.inputs.execution_mode == 'pr'
+        if: github.event.inputs.execution_mode == 'pr' && steps.diff.outputs.has_changes == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
-          branch: update-release-metadata-${{ github.run_number }}
-          title: 'chore: Update release metadata'
+          branch: meta-release-update-${{ github.run_number }}
+          title: 'chore: Update CAMARA release metadata'
+          labels: automated
           body: |
-            ## Release Metadata Update
+            ## CAMARA Release Metadata Update
 
             **Analysis scope**: ${{ github.event.inputs.analysis_scope }}
             **Workflow run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            **Generated**: ${{ github.event.repository.updated_at }}
 
             ### Changes
-            - Updated master metadata
-            - Regenerated meta-release reports
-            - Updated HTML viewers
 
-            Please review the changes before merging.
-          commit-message: 'chore: Update release metadata'
+            This PR updates the CAMARA release tracking data:
+
+            - 📊 `data/releases-master.yaml` - Master release metadata
+            - 📈 `reports/*.json` - Meta-release reports (Fall24, Spring25, Fall25, All)
+            - 🎨 `viewers/*.html` - Interactive HTML viewers
+
+            ### File Changes
+
+            ```
+            ${{ steps.diff.outputs.change_summary }}
+            ```
+
+            ### Review Checklist
+
+            - [ ] Master YAML contains expected releases
+            - [ ] JSON reports are valid and complete
+            - [ ] HTML viewers render correctly
+            - [ ] No sensitive data exposed
+
+            ### Merge Instructions
+
+            **Use squash and merge** to keep main history clean. Each workflow run creates a single logical change.
+
+            ### Next Steps
+
+            After merging, the updated viewers will be available via GitHub Pages.
+
+            ---
+
+            *This PR was generated automatically by the Meta-Release Collector v3 workflow.*
+          commit-message: |
+            chore: Update CAMARA release metadata
+
+            Analysis scope: ${{ github.event.inputs.analysis_scope }}
+            Workflow run: ${{ github.run_number }}
 
       # TODO: Deploy to GitHub Pages when ready
 
