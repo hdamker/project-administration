@@ -454,7 +454,7 @@ jobs:
             - [Fall24 Viewer](https://${{ github.repository_owner }}.github.io/project-administration/fall24.html)
             - [Spring25 Viewer](https://${{ github.repository_owner }}.github.io/project-administration/spring25.html)
             - [Fall25 Viewer](https://${{ github.repository_owner }}.github.io/project-administration/fall25.html)
-            - [All Releases](https://${{ github.repository_owner }}.github.io/project-administration/all-releases.html)
+            - [Portfolio Viewer](https://${{ github.repository_owner }}.github.io/project-administration/portfolio.html)
             - [Internal Admin View](https://${{ github.repository_owner }}.github.io/project-administration/internal.html)
 
             **Note**: Staging viewers are also available in workflow artifacts for download.
@@ -496,6 +496,11 @@ jobs:
         with:
           name: release-reports-${{ github.run_number }}
           path: staging
+
+      - name: Show deployment contents
+        run: |
+          echo "About to publish:"
+          ls -al staging/viewers
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
