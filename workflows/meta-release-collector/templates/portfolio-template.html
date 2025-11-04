@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CAMARA API Portfolio Overview</title>
+  <title>CAMARA API Portfolio Overview (Alpha)</title>
   <style>
 {{VIEWER_STYLES}}
     /* View toggle specific styles */
@@ -206,7 +206,7 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>CAMARA API Portfolio Overview</h1>
+      <h1>CAMARA API Portfolio Overview (Alpha)</h1>
       <div class="metadata" id="header-metadata"></div>
     </div>
 
@@ -496,11 +496,27 @@
      * Build category filter pills
      */
     function buildCategoryPills() {
-      const categoryCounts = ViewerLib.getCategoryCounts(currentData.apis);
+      // Group by unique API names first
+      const uniqueAPIsMap = new Map();
+      currentData.apis.forEach(api => {
+        const key = api.canonical_name || api.api_name;
+        if (!uniqueAPIsMap.has(key)) {
+          // Store first occurrence (has category info)
+          uniqueAPIsMap.set(key, api);
+        }
+      });
+
+      // Count unique APIs per category
+      const categoryCounts = {};
+      uniqueAPIsMap.forEach(api => {
+        const category = api.portfolio_category || 'Other';
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      });
+
       const pillsContainer = document.getElementById('categoryPills');
 
-      // Update "All" count
-      const uniqueAPIs = new Set(currentData.apis.map(a => a.canonical_name || a.api_name)).size;
+      // Update "All" count (unique APIs)
+      const uniqueAPIs = uniqueAPIsMap.size;
       const allCount = document.getElementById('allCount');
       allCount.textContent = `(${uniqueAPIs})`;
 
@@ -520,7 +536,7 @@
         'Service Management'
       ];
 
-      // Create pills in order
+      // Create pills in order with correct counts (unique APIs)
       categoryOrder.forEach(category => {
         const count = categoryCounts[category];
         if (count) {
@@ -667,7 +683,6 @@
           fall24Cell.innerHTML = `
             <div class="version-badge">${row.fall24.version}</div>
             ${ViewerLib.renderMaturityBadge(row.fall24.maturity)}
-            ${row.fall24.isNew ? '<span class="badge badge-new">New</span>' : ''}
           `;
         } else {
           fall24Cell.innerHTML = '<span class="empty-cell">-</span>';
@@ -681,7 +696,6 @@
           spring25Cell.innerHTML = `
             <div class="version-badge">${row.spring25.version}</div>
             ${ViewerLib.renderMaturityBadge(row.spring25.maturity)}
-            ${row.spring25.isNew ? '<span class="badge badge-new">New</span>' : ''}
           `;
         } else {
           spring25Cell.innerHTML = '<span class="empty-cell">-</span>';
@@ -695,7 +709,6 @@
           fall25Cell.innerHTML = `
             <div class="version-badge">${row.fall25.version}</div>
             ${ViewerLib.renderMaturityBadge(row.fall25.maturity)}
-            ${row.fall25.isNew ? '<span class="badge badge-new">New</span>' : ''}
           `;
         } else {
           fall25Cell.innerHTML = '<span class="empty-cell">-</span>';
