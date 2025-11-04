@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAMARA Release Administration</title>
+  <style>
+{{VIEWER_STYLES}}
+    /* Internal admin specific styles */
+    body {
+      font-family: 'Courier New', 'Monaco', monospace;
+      font-size: 13px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Dark mode styles */
+    body.dark-mode {
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+
+    body.dark-mode .container {
+      background: #252526;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    body.dark-mode .header {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      color: #d4d4d4;
+    }
+
+    body.dark-mode .content {
+      background: #252526;
+    }
+
+    body.dark-mode table {
+      color: #d4d4d4;
+    }
+
+    body.dark-mode th {
+      background: #2d2d2d;
+      color: #d4d4d4;
+      border-color: #3e3e42;
+    }
+
+    body.dark-mode td {
+      border-color: #3e3e42;
+    }
+
+    body.dark-mode tr:hover {
+      background: #2d2d2d;
+    }
+
+    body.dark-mode .admin-controls {
+      background: #2d2d2d;
+      border-color: #3e3e42;
+    }
+
+    body.dark-mode .filters {
+      background: #2d2d2d;
+      border-color: #3e3e42;
+    }
+
+    body.dark-mode input,
+    body.dark-mode select {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border-color: #3e3e42;
+    }
+
+    body.dark-mode button {
+      background: #0e639c;
+      color: #ffffff;
+      border-color: #0e639c;
+    }
+
+    body.dark-mode button:hover {
+      background: #1177bb;
+    }
+
+    body.dark-mode .category-pill {
+      background: #2d2d2d;
+      color: #d4d4d4;
+      border-color: #3e3e42;
+    }
+
+    body.dark-mode .category-pill.active {
+      background: #0e639c;
+      color: #ffffff;
+    }
+
+    body.dark-mode .badge {
+      border: 1px solid #3e3e42;
+    }
+
+    body.dark-mode .unpublished-row {
+      background: #2a2a2a;
+      opacity: 0.7;
+    }
+
+    body.dark-mode .repo-section {
+      background: #2d2d2d;
+      border-color: #3e3e42;
+    }
+
+    body.dark-mode .debug-modal {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border-color: #3e3e42;
+    }
+
+    /* Admin control bar */
+    .admin-controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      padding: 15px;
+      margin-bottom: 20px;
+      background: #f8f9fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      flex-wrap: wrap;
+    }
+
+    .admin-controls label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .admin-controls input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .admin-controls button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid #0092f5;
+      background: #0092f5;
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .admin-controls button:hover {
+      background: #0073c4;
+    }
+
+    .admin-controls .dark-mode-toggle {
+      margin-left: auto;
+    }
+
+    /* Perspective toggle */
+    .perspective-toggle {
+      display: flex;
+      gap: 10px;
+    }
+
+    .perspective-toggle button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 2px solid #e1e4e8;
+      background: white;
+      color: #32373c;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .perspective-toggle button.active {
+      background: #0092f5;
+      color: white;
+      border-color: #0092f5;
+    }
+
+    /* Table styles */
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .admin-table th,
+    .admin-table td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #e1e4e8;
+    }
+
+    .admin-table th {
+      background: #f6f8fa;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .admin-table th:hover {
+      background: #e8eaed;
+    }
+
+    .admin-table tr:hover {
+      background: #f6f8fa;
+    }
+
+    .unpublished-row {
+      background: #fff8e1;
+      opacity: 0.8;
+    }
+
+    .sandbox-row {
+      background: #fff3e0;
+    }
+
+    .debug-btn {
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #0092f5;
+      background: white;
+      color: #0092f5;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .debug-btn:hover {
+      background: #0092f5;
+      color: white;
+    }
+
+    /* Debug modal */
+    .debug-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      max-width: 800px;
+      max-height: 80vh;
+      background: white;
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      overflow: auto;
+    }
+
+    .debug-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    .debug-modal-close {
+      float: right;
+      padding: 8px 16px;
+      border-radius: 4px;
+      border: 1px solid #e1e4e8;
+      background: white;
+      cursor: pointer;
+    }
+
+    .debug-modal pre {
+      background: #f6f8fa;
+      padding: 15px;
+      border-radius: 4px;
+      overflow: auto;
+      font-size: 11px;
+      max-height: 60vh;
+    }
+
+    /* Repository view styles */
+    .repo-section {
+      margin-bottom: 30px;
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      padding: 15px;
+      background: #fafbfc;
+    }
+
+    .repo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e1e4e8;
+    }
+
+    .repo-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0092f5;
+    }
+
+    .repo-stats {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .hidden-view {
+      display: none;
+    }
+
+    /* Status indicators */
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+
+    .status-published {
+      background: #28a745;
+    }
+
+    .status-unpublished {
+      background: #dc3545;
+    }
+
+    .status-sandbox {
+      background: #f5a742;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>CAMARA Release Administration</h1>
+      <div class="metadata" id="header-metadata">Internal View - All Data</div>
+    </div>
+
+    <div class="content" id="content">
+      <!-- Admin Controls -->
+      <div class="admin-controls">
+        <div class="perspective-toggle">
+          <button class="active" onclick="switchPerspective('api')">API-Centric</button>
+          <button onclick="switchPerspective('repository')">Repository-Centric</button>
+        </div>
+
+        <button onclick="exportDebugData()">Export Debug Data</button>
+
+        <label>
+          <input type="checkbox" id="show-unpublished" checked onchange="applyFilters()">
+          Show Unpublished
+        </label>
+
+        <label class="dark-mode-toggle">
+          <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()">
+          Dark Mode
+        </label>
+      </div>
+
+      <!-- Category Pills -->
+      <div class="category-pills" id="categoryPills">
+        <div class="category-pill all-categories active" onclick="filterByCategory('')">
+          All<span class="category-count" id="allCount">(0)</span>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="filterApiName">Search:</label>
+            <input type="text" id="filterApiName" placeholder="API or repository..." onkeyup="applyFilters()">
+          </div>
+          <div class="filter-group">
+            <label for="filterMaturity">Maturity:</label>
+            <select id="filterMaturity" onchange="applyFilters()">
+              <option value="">All</option>
+              <option value="initial">Initial</option>
+              <option value="stable">Stable</option>
+              <option value="rc">RC</option>
+              <option value="alpha">Alpha</option>
+              <option value="beta">Beta</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filterMetaRelease">Meta-Release:</label>
+            <select id="filterMetaRelease" onchange="applyFilters()">
+              <option value="">All</option>
+              <option value="Fall24">Fall24</option>
+              <option value="Spring25">Spring25</option>
+              <option value="Fall25">Fall25</option>
+              <option value="None (Sandbox)">Sandbox</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filterPublished">Published:</label>
+            <select id="filterPublished" onchange="applyFilters()">
+              <option value="">All</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+          <button class="clear-filters-btn" onclick="clearAllFilters()">Clear Filters</button>
+        </div>
+      </div>
+
+      <!-- Results Counter -->
+      <div id="resultsCounter" class="results-counter hidden">
+        <div class="results-text"></div>
+      </div>
+
+      <!-- View 1: API-Centric -->
+      <div id="view-api-centric" class="view-container">
+        <table class="admin-table" id="apiTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable(0)">API Name <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(1)">Version <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(2)">Repository <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(3)">Release Tag <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(4)">Meta-Release <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(5)">Maturity <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(6)">Published <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(7)">Category <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(8)">First Release <span class="sort-arrow"></span></th>
+              <th>Debug</th>
+            </tr>
+          </thead>
+          <tbody id="apiTableBody">
+          </tbody>
+        </table>
+      </div>
+
+      <!-- View 2: Repository-Centric -->
+      <div id="view-repository-centric" class="view-container hidden-view">
+        <div id="repositoryContainer"></div>
+      </div>
+
+      <!-- Summary -->
+      <div id="footer-metadata" class="footer-metadata"></div>
+    </div>
+  </div>
+
+  <!-- Debug Modal (hidden by default) -->
+  <div id="debug-modal-overlay" class="debug-modal-overlay hidden-view" onclick="closeDebugModal()"></div>
+  <div id="debug-modal" class="debug-modal hidden-view">
+    <button class="debug-modal-close" onclick="closeDebugModal()">Close</button>
+    <h3>API Debug Information</h3>
+    <pre id="debug-content"></pre>
+  </div>
+
+  <script>
+    // Embedded shared library
+{{VIEWER_LIBRARY}}
+
+    // Embedded release data (all data including unpublished)
+    const RELEASE_DATA = {{RELEASE_DATA}};
+
+    // Global state
+    let currentData = null;
+    let filteredData = [];
+    let currentCategoryFilter = '';
+    let currentPerspective = 'api';
+    let currentSort = { column: -1, ascending: true };
+
+    /**
+     * Initialize dark mode from localStorage
+     */
+    function initDarkMode() {
+      const isDark = localStorage.getItem('camaraInternalDarkMode') === 'true';
+      if (isDark) {
+        document.body.classList.add('dark-mode');
+        document.getElementById('dark-mode-toggle').checked = true;
+      }
+    }
+
+    /**
+     * Toggle dark mode
+     */
+    function toggleDarkMode() {
+      const enabled = document.getElementById('dark-mode-toggle').checked;
+      if (enabled) {
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('camaraInternalDarkMode', 'true');
+      } else {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('camaraInternalDarkMode', 'false');
+      }
+    }
+
+    /**
+     * Flatten v3 nested structure to flat array
+     */
+    function flattenAPIData(data) {
+      const flatApis = [];
+
+      if (data.releases && Array.isArray(data.releases)) {
+        data.releases.forEach(release => {
+          if (release.apis && Array.isArray(release.apis)) {
+            release.apis.forEach(api => {
+              flatApis.push({
+                api_name: api.api_name,
+                title: api.title || api.display_name || api.api_name,
+                version: api.version,
+                maturity: api.maturity,
+                repository: release.repository,
+                release_tag: release.release_tag,
+                release_date: release.release_date,
+                meta_release: release.meta_release,
+                github_url: release.github_url,
+                portfolio_category: api.portfolio_category,
+                website_url: api.website_url,
+                tooltip: api.tooltip,
+                published: api.published,
+                first_release: api.first_release,
+                isNew: api.isNew,
+                commonalities: api.commonalities,
+                display_name: api.display_name,
+                canonical_name: api.canonical_name,
+                // Full API object for debug
+                _full: api
+              });
+            });
+          }
+        });
+      }
+
+      return flatApis;
+    }
+
+    /**
+     * Group APIs by repository
+     */
+    function groupAPIsByRepository(apis) {
+      const grouped = {};
+
+      apis.forEach(api => {
+        const key = api.repository;
+        if (!grouped[key]) {
+          grouped[key] = {
+            repository: api.repository,
+            apis: [],
+            releases: []
+          };
+        }
+        grouped[key].apis.push(api);
+      });
+
+      // Get unique releases per repo
+      Object.keys(grouped).forEach(repo => {
+        const releases = {};
+        grouped[repo].apis.forEach(api => {
+          const key = `${api.release_tag}|${api.meta_release}`;
+          if (!releases[key]) {
+            releases[key] = {
+              tag: api.release_tag,
+              meta_release: api.meta_release,
+              date: api.release_date,
+              github_url: api.github_url
+            };
+          }
+        });
+        grouped[repo].releases = Object.values(releases).sort((a, b) =>
+          new Date(a.date) - new Date(b.date)
+        );
+      });
+
+      return grouped;
+    }
+
+    /**
+     * Initialize data
+     */
+    function initializeData() {
+      const flatApis = flattenAPIData(RELEASE_DATA);
+
+      currentData = {
+        metadata: RELEASE_DATA.metadata,
+        statistics: RELEASE_DATA.statistics,
+        apis: flatApis
+      };
+
+      filteredData = currentData.apis;
+
+      displayData(currentData);
+    }
+
+    /**
+     * Display data
+     */
+    function displayData(data) {
+      const metadata = data.metadata;
+      const footerDiv = document.getElementById('footer-metadata');
+      const generated = ViewerLib.formatDate(metadata.generated);
+
+      const totalAPIs = data.apis.length;
+      const publishedCount = data.apis.filter(a => a.published).length;
+      const unpublishedCount = totalAPIs - publishedCount;
+      const sandboxCount = data.apis.filter(a => a.meta_release === 'None (Sandbox)').length;
+
+      footerDiv.innerHTML = `
+        Report generated: ${generated} |
+        Total API versions: ${totalAPIs} |
+        Published: ${publishedCount} |
+        Unpublished: ${unpublishedCount} |
+        Sandbox: ${sandboxCount}
+      `;
+
+      buildCategoryPills();
+      renderCurrentView();
+    }
+
+    /**
+     * Build category pills
+     */
+    function buildCategoryPills() {
+      const categoryCounts = ViewerLib.getCategoryCounts(currentData.apis);
+      const pillsContainer = document.getElementById('categoryPills');
+
+      const allCount = document.getElementById('allCount');
+      allCount.textContent = `(${currentData.apis.length})`;
+
+      const existingPills = pillsContainer.querySelectorAll('.category-pill:not(.all-categories)');
+      existingPills.forEach(pill => pill.remove());
+
+      const categoryOrder = [
+        'Authentication and Fraud Prevention',
+        'Communication Quality',
+        'Communication Services',
+        'Computing Services',
+        'Device Information',
+        'Location Services',
+        'Payments and Charging',
+        'Service Management'
+      ];
+
+      categoryOrder.forEach(category => {
+        const count = categoryCounts[category];
+        if (count) {
+          const pill = document.createElement('div');
+          pill.className = 'category-pill';
+          pill.onclick = () => filterByCategory(category);
+          pill.innerHTML = `${category}<span class="category-count">(${count})</span>`;
+          pillsContainer.appendChild(pill);
+        }
+      });
+    }
+
+    /**
+     * Filter by category
+     */
+    function filterByCategory(category) {
+      currentCategoryFilter = category;
+
+      const pills = document.querySelectorAll('.category-pill');
+      pills.forEach(pill => pill.classList.remove('active'));
+
+      if (category === '') {
+        document.querySelector('.all-categories').classList.add('active');
+      } else {
+        pills.forEach(pill => {
+          if (pill.textContent.includes(category)) {
+            pill.classList.add('active');
+          }
+        });
+      }
+
+      applyFilters();
+    }
+
+    /**
+     * Apply filters
+     */
+    function applyFilters() {
+      if (!currentData) return;
+
+      const searchFilter = document.getElementById('filterApiName').value.toLowerCase();
+      const maturityFilter = document.getElementById('filterMaturity').value.toLowerCase();
+      const metaReleaseFilter = document.getElementById('filterMetaRelease').value;
+      const publishedFilter = document.getElementById('filterPublished').value;
+      const showUnpublished = document.getElementById('show-unpublished').checked;
+
+      filteredData = currentData.apis.filter(api => {
+        // Category filter
+        if (currentCategoryFilter && api.portfolio_category !== currentCategoryFilter) {
+          return false;
+        }
+
+        // Search filter
+        if (searchFilter &&
+            !api.api_name.toLowerCase().includes(searchFilter) &&
+            !api.title.toLowerCase().includes(searchFilter) &&
+            !api.repository.toLowerCase().includes(searchFilter)) {
+          return false;
+        }
+
+        // Maturity filter
+        if (maturityFilter && api.maturity.toLowerCase() !== maturityFilter) {
+          return false;
+        }
+
+        // Meta-release filter
+        if (metaReleaseFilter && api.meta_release !== metaReleaseFilter) {
+          return false;
+        }
+
+        // Published filter
+        if (publishedFilter) {
+          const isPublished = api.published;
+          if (publishedFilter === 'yes' && !isPublished) return false;
+          if (publishedFilter === 'no' && isPublished) return false;
+        }
+
+        // Show unpublished checkbox
+        if (!showUnpublished && !api.published) {
+          return false;
+        }
+
+        return true;
+      });
+
+      renderCurrentView();
+    }
+
+    /**
+     * Clear all filters
+     */
+    function clearAllFilters() {
+      document.getElementById('filterApiName').value = '';
+      document.getElementById('filterMaturity').value = '';
+      document.getElementById('filterMetaRelease').value = '';
+      document.getElementById('filterPublished').value = '';
+      document.getElementById('show-unpublished').checked = true;
+      filterByCategory('');
+    }
+
+    /**
+     * Switch perspective
+     */
+    function switchPerspective(perspective) {
+      currentPerspective = perspective;
+
+      // Update button states
+      const buttons = document.querySelectorAll('.perspective-toggle button');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      // Hide all views
+      document.querySelectorAll('.view-container').forEach(v => v.classList.add('hidden-view'));
+
+      // Show selected view
+      if (perspective === 'api') {
+        document.getElementById('view-api-centric').classList.remove('hidden-view');
+      } else {
+        document.getElementById('view-repository-centric').classList.remove('hidden-view');
+      }
+
+      renderCurrentView();
+    }
+
+    /**
+     * Render current view
+     */
+    function renderCurrentView() {
+      if (currentPerspective === 'api') {
+        renderAPICentricView();
+      } else {
+        renderRepositoryView();
+      }
+
+      updateResultsCounter();
+    }
+
+    /**
+     * Render API-centric view
+     */
+    function renderAPICentricView() {
+      const tbody = document.getElementById('apiTableBody');
+      tbody.innerHTML = '';
+
+      filteredData.forEach(api => {
+        const row = document.createElement('tr');
+
+        // Add row classes for visual indicators
+        if (!api.published) {
+          row.classList.add('unpublished-row');
+        }
+        if (api.meta_release === 'None (Sandbox)') {
+          row.classList.add('sandbox-row');
+        }
+
+        // Status indicator
+        const statusClass = !api.published ? 'status-unpublished' :
+                           api.meta_release === 'None (Sandbox)' ? 'status-sandbox' :
+                           'status-published';
+
+        row.innerHTML = `
+          <td><span class="status-indicator ${statusClass}"></span>${api.title}</td>
+          <td>${api.version}</td>
+          <td><a href="${api.github_url.replace(/\/releases\/tag\/.*$/, '')}" target="_blank">${api.repository}</a></td>
+          <td><a href="${api.github_url}" target="_blank">${api.release_tag}</a></td>
+          <td>${api.meta_release === 'None (Sandbox)' ? 'Sandbox' : api.meta_release}</td>
+          <td>${ViewerLib.renderMaturityBadge(api.maturity)}</td>
+          <td>${api.published ? '✓' : '✗'}</td>
+          <td>${api.portfolio_category || '<em>Missing</em>'}</td>
+          <td>${api.first_release || '-'}</td>
+          <td><button class="debug-btn" onclick='showDebug(${JSON.stringify(api.api_name)})'>🔍</button></td>
+        `;
+
+        tbody.appendChild(row);
+      });
+
+      if (filteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px; color: #666;">No APIs match the current filters</td></tr>';
+      }
+    }
+
+    /**
+     * Render repository view
+     */
+    function renderRepositoryView() {
+      const grouped = groupAPIsByRepository(filteredData);
+      const container = document.getElementById('repositoryContainer');
+      container.innerHTML = '';
+
+      Object.keys(grouped).sort().forEach(repoName => {
+        const repo = grouped[repoName];
+
+        const section = document.createElement('div');
+        section.className = 'repo-section';
+
+        const githubUrl = repo.apis[0].github_url.replace(/\/releases\/tag\/.*$/, '');
+
+        section.innerHTML = `
+          <div class="repo-header">
+            <div>
+              <div class="repo-name"><a href="${githubUrl}" target="_blank">${repoName}</a></div>
+              <div class="repo-stats">${repo.releases.length} releases | ${repo.apis.length} API versions</div>
+            </div>
+          </div>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>API Name</th>
+                <th>Version</th>
+                <th>Release</th>
+                <th>Meta-Release</th>
+                <th>Maturity</th>
+                <th>Published</th>
+                <th>Category</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${repo.apis.map(api => `
+                <tr class="${!api.published ? 'unpublished-row' : ''} ${api.meta_release === 'None (Sandbox)' ? 'sandbox-row' : ''}">
+                  <td>${api.title}</td>
+                  <td>${api.version}</td>
+                  <td><a href="${api.github_url}" target="_blank">${api.release_tag}</a></td>
+                  <td>${api.meta_release === 'None (Sandbox)' ? 'Sandbox' : api.meta_release}</td>
+                  <td>${ViewerLib.renderMaturityBadge(api.maturity)}</td>
+                  <td>${api.published ? '✓' : '✗'}</td>
+                  <td>${api.portfolio_category || '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+
+        container.appendChild(section);
+      });
+
+      if (Object.keys(grouped).length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No repositories match the current filters</p>';
+      }
+    }
+
+    /**
+     * Show debug modal for specific API
+     */
+    function showDebug(apiName) {
+      const api = filteredData.find(a => a.api_name === apiName);
+      if (!api) return;
+
+      const modal = document.getElementById('debug-modal');
+      const overlay = document.getElementById('debug-modal-overlay');
+      const content = document.getElementById('debug-content');
+
+      content.textContent = JSON.stringify(api, null, 2);
+
+      modal.classList.remove('hidden-view');
+      overlay.classList.remove('hidden-view');
+    }
+
+    /**
+     * Close debug modal
+     */
+    function closeDebugModal() {
+      document.getElementById('debug-modal').classList.add('hidden-view');
+      document.getElementById('debug-modal-overlay').classList.add('hidden-view');
+    }
+
+    /**
+     * Export debug data
+     */
+    function exportDebugData() {
+      const json = JSON.stringify(RELEASE_DATA, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `camara-internal-debug-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    /**
+     * Sort table
+     */
+    function sortTable(columnIndex) {
+      if (!filteredData || filteredData.length === 0) return;
+
+      const table = document.getElementById('apiTable');
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+
+      if (currentSort.column === columnIndex) {
+        currentSort.ascending = !currentSort.ascending;
+      } else {
+        currentSort.column = columnIndex;
+        currentSort.ascending = true;
+      }
+
+      rows.sort((a, b) => {
+        let aValue = a.cells[columnIndex].textContent.trim();
+        let bValue = b.cells[columnIndex].textContent.trim();
+
+        if (aValue === '-') aValue = '';
+        if (bValue === '-') bValue = '';
+
+        let result = 0;
+
+        if (columnIndex === 1) {
+          // Version column
+          result = ViewerLib.compareVersions(aValue, bValue);
+        } else if (columnIndex === 6) {
+          // Published column (✓/✗)
+          result = (aValue === '✓' ? 1 : 0) - (bValue === '✓' ? 1 : 0);
+        } else {
+          result = aValue.localeCompare(bValue);
+        }
+
+        return currentSort.ascending ? result : -result;
+      });
+
+      rows.forEach(row => tbody.appendChild(row));
+      updateSortIndicators(columnIndex);
+    }
+
+    /**
+     * Update sort indicators
+     */
+    function updateSortIndicators(activeColumn) {
+      const headers = document.querySelectorAll('#apiTable th');
+      headers.forEach((header, index) => {
+        const arrow = header.querySelector('.sort-arrow');
+        if (!arrow) return;
+
+        arrow.classList.remove('active-asc', 'active-desc');
+
+        if (index === activeColumn) {
+          if (currentSort.ascending) {
+            arrow.classList.add('active-asc');
+          } else {
+            arrow.classList.add('active-desc');
+          }
+        }
+      });
+    }
+
+    /**
+     * Update results counter
+     */
+    function updateResultsCounter() {
+      const counter = document.getElementById('resultsCounter');
+      const resultsText = counter.querySelector('.results-text');
+      const total = currentData ? currentData.apis.length : 0;
+
+      const count = filteredData.length;
+
+      if (count === 0) {
+        resultsText.textContent = 'No APIs match the current filters';
+        counter.classList.add('no-results');
+      } else if (count === total) {
+        resultsText.textContent = `Showing all ${total} API versions`;
+        counter.classList.remove('no-results');
+      } else {
+        resultsText.textContent = `Showing ${count} of ${total} API versions`;
+        counter.classList.remove('no-results');
+      }
+
+      counter.classList.remove('hidden');
+    }
+
+    // Initialize on page load
+    initDarkMode();
+    initializeData();
+  </script>
+</body>
+</html>

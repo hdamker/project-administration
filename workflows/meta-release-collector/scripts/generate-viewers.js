@@ -22,27 +22,59 @@ const FORCE_REGENERATE = process.env.FORCE_REGENERATE === 'true';
 
 /**
  * Check if viewer needs regeneration based on source file timestamps
- * @param {string} release - Release name (e.g., 'fall25')
+ * @param {string} release - Release name (e.g., 'fall25', 'portfolio', 'internal')
  * @returns {Promise<boolean>} True if regeneration needed
  */
 async function shouldRegenerateViewer(release) {
-  const reportPath = path.join(REPORTS_DIR, `${release}.json`);
-  const viewerPath = path.join(VIEWERS_DIR, `${release}.html`);
+  // Map viewer types to their data sources and templates
+  const config = {
+    'fall24': {
+      reportPath: path.join(REPORTS_DIR, 'fall24.json'),
+      viewerPath: path.join(VIEWERS_DIR, 'fall24.html'),
+      template: 'meta-release-template.html'
+    },
+    'spring25': {
+      reportPath: path.join(REPORTS_DIR, 'spring25.json'),
+      viewerPath: path.join(VIEWERS_DIR, 'spring25.html'),
+      template: 'meta-release-template.html'
+    },
+    'fall25': {
+      reportPath: path.join(REPORTS_DIR, 'fall25.json'),
+      viewerPath: path.join(VIEWERS_DIR, 'fall25.html'),
+      template: 'meta-release-template.html'
+    },
+    'portfolio': {
+      reportPath: path.join(REPORTS_DIR, 'all-releases.json'),
+      viewerPath: path.join(VIEWERS_DIR, 'portfolio.html'),
+      template: 'portfolio-template.html'
+    },
+    'internal': {
+      reportPath: path.join(REPORTS_DIR, 'all-releases.json'),
+      viewerPath: path.join(VIEWERS_DIR, 'internal.html'),
+      template: 'internal-template.html'
+    }
+  };
+
+  const cfg = config[release];
+  if (!cfg) {
+    console.log(`  ⚠ Unknown viewer type: ${release}`);
+    return false;
+  }
 
   // Template files that affect viewer output
   const templateFiles = [
     path.join(TEMPLATES_DIR, 'viewer-lib.js'),
     path.join(TEMPLATES_DIR, 'viewer-styles.css'),
-    path.join(TEMPLATES_DIR, 'meta-release-template.html')
+    path.join(TEMPLATES_DIR, cfg.template)
   ];
 
   try {
     // Check if viewer exists
-    const viewerStat = await fs.stat(viewerPath);
+    const viewerStat = await fs.stat(cfg.viewerPath);
     const viewerTime = viewerStat.mtime.getTime();
 
     // Check if report is newer
-    const reportStat = await fs.stat(reportPath);
+    const reportStat = await fs.stat(cfg.reportPath);
     if (reportStat.mtime.getTime() > viewerTime) {
       console.log(`  ↻ Report data updated (${release})`);
       return true;
@@ -150,6 +182,153 @@ async function generateMetaReleaseViewer(release, options = {}) {
 }
 
 /**
+ * Generate portfolio viewer (multi-release comparison)
+ * @param {Object} options - Generation options
+ * @returns {Promise<Object>} Generation result
+ */
+async function generatePortfolioViewer(options = {}) {
+  try {
+    console.log(`\nGenerating portfolio viewer...`);
+
+    // Load shared library and styles
+    const libraryPath = path.join(TEMPLATES_DIR, 'viewer-lib.js');
+    const stylesPath = path.join(TEMPLATES_DIR, 'viewer-styles.css');
+    const templatePath = path.join(TEMPLATES_DIR, 'portfolio-template.html');
+
+    console.log(`  Loading shared library from: ${libraryPath}`);
+    const library = await fs.readFile(libraryPath, 'utf8');
+
+    console.log(`  Loading shared styles from: ${stylesPath}`);
+    const styles = await fs.readFile(stylesPath, 'utf8');
+
+    console.log(`  Loading template from: ${templatePath}`);
+    const template = await fs.readFile(templatePath, 'utf8');
+
+    // Load all-releases data
+    const reportPath = path.join(REPORTS_DIR, 'all-releases.json');
+    console.log(`  Loading report data from: ${reportPath}`);
+    const reportData = JSON.parse(await fs.readFile(reportPath, 'utf8'));
+
+    // Filter for published only (external/product audience)
+    let filteredData = { ...reportData };
+    if (options.publishedOnly !== false) {
+      console.log(`  Filtering for published APIs only...`);
+      if (filteredData.releases) {
+        filteredData.releases = filteredData.releases.map(release => ({
+          ...release,
+          apis: release.apis.filter(api => api.published)
+        })).filter(release => release.apis.length > 0); // Remove releases with no published APIs
+      }
+    }
+
+    // Count APIs for logging
+    let apiCount = 0;
+    if (filteredData.releases) {
+      filteredData.releases.forEach(release => {
+        apiCount += release.apis.length;
+      });
+    }
+    console.log(`  Data contains ${apiCount} APIs in ${filteredData.releases?.length || 0} releases`);
+
+    // Embed everything into template
+    console.log(`  Embedding library, styles, and data...`);
+    let html = template;
+
+    // Replace placeholders
+    html = html.replace('{{VIEWER_LIBRARY}}', library);
+    html = html.replace('{{VIEWER_STYLES}}', styles);
+    html = html.replace('{{RELEASE_DATA}}', JSON.stringify(filteredData, null, 2));
+
+    // Write self-contained HTML file
+    const outputFilename = options.outputFilename || 'portfolio.html';
+    const outputPath = path.join(VIEWERS_DIR, outputFilename);
+
+    console.log(`  Writing viewer to: ${outputPath}`);
+    await fs.writeFile(outputPath, html, 'utf8');
+
+    console.log(`✓ Generated ${outputFilename} (${apiCount} API versions, published only)`);
+
+    return {
+      filename: outputFilename,
+      path: outputPath,
+      apiCount: apiCount,
+      releaseCount: filteredData.releases?.length || 0
+    };
+  } catch (error) {
+    console.error(`✗ Error generating portfolio viewer:`, error.message);
+    throw error;
+  }
+}
+
+/**
+ * Generate internal administration viewer (all data)
+ * @param {Object} options - Generation options
+ * @returns {Promise<Object>} Generation result
+ */
+async function generateInternalViewer(options = {}) {
+  try {
+    console.log(`\nGenerating internal viewer...`);
+
+    // Load shared library and styles
+    const libraryPath = path.join(TEMPLATES_DIR, 'viewer-lib.js');
+    const stylesPath = path.join(TEMPLATES_DIR, 'viewer-styles.css');
+    const templatePath = path.join(TEMPLATES_DIR, 'internal-template.html');
+
+    console.log(`  Loading shared library from: ${libraryPath}`);
+    const library = await fs.readFile(libraryPath, 'utf8');
+
+    console.log(`  Loading shared styles from: ${stylesPath}`);
+    const styles = await fs.readFile(stylesPath, 'utf8');
+
+    console.log(`  Loading template from: ${templatePath}`);
+    const template = await fs.readFile(templatePath, 'utf8');
+
+    // Load all-releases data (no filtering - show everything)
+    const reportPath = path.join(REPORTS_DIR, 'all-releases.json');
+    console.log(`  Loading report data from: ${reportPath}`);
+    const reportData = JSON.parse(await fs.readFile(reportPath, 'utf8'));
+
+    // Count APIs for logging
+    let apiCount = 0;
+    if (reportData.releases) {
+      reportData.releases.forEach(release => {
+        apiCount += release.apis.length;
+      });
+    }
+    const publishedCount = apiCount; // Will count properly in client side
+    console.log(`  Data contains ${apiCount} API versions (all data including unpublished)`);
+
+    // Embed everything into template
+    console.log(`  Embedding library, styles, and data...`);
+    let html = template;
+
+    // Replace placeholders
+    html = html.replace('{{VIEWER_LIBRARY}}', library);
+    html = html.replace('{{VIEWER_STYLES}}', styles);
+    html = html.replace('{{RELEASE_DATA}}', JSON.stringify(reportData, null, 2));
+
+    // Write self-contained HTML file
+    const outputFilename = options.outputFilename || 'internal.html';
+    const outputPath = path.join(VIEWERS_DIR, outputFilename);
+
+    console.log(`  Writing viewer to: ${outputPath}`);
+    await fs.writeFile(outputPath, html, 'utf8');
+
+    console.log(`✓ Generated ${outputFilename} (${apiCount} API versions, all data)`);
+
+    return {
+      filename: outputFilename,
+      path: outputPath,
+      apiCount: apiCount,
+      releaseCount: reportData.releases?.length || 0
+    };
+  } catch (error) {
+    console.error(`✗ Error generating internal viewer:`, error.message);
+    throw error;
+  }
+}
+
+/**
  * Generate all meta-release viewers
  */
 async function generateAllViewers() {
@@ -206,15 +385,56 @@ async function generateAllViewers() {
       }
     }
 
+    // Generate portfolio viewer
+    console.log('\n--- Portfolio Viewer ---');
+    if (FORCE_REGENERATE || await shouldRegenerateViewer('portfolio')) {
+      if (FORCE_REGENERATE) {
+        console.log(`  ⚡ Force regeneration (portfolio)`);
+      }
+      try {
+        const result = await generatePortfolioViewer({ publishedOnly: true });
+        results.push(result);
+        regenerated++;
+      } catch (error) {
+        console.error(`✗ Portfolio viewer generation failed: ${error.message}`);
+      }
+    } else {
+      console.log(`  ⊘ Skipping portfolio (unchanged)`);
+      skipped++;
+    }
+
+    // Generate internal viewer
+    console.log('\n--- Internal Viewer ---');
+    if (FORCE_REGENERATE || await shouldRegenerateViewer('internal')) {
+      if (FORCE_REGENERATE) {
+        console.log(`  ⚡ Force regeneration (internal)`);
+      }
+      try {
+        const result = await generateInternalViewer();
+        results.push(result);
+        regenerated++;
+      } catch (error) {
+        console.error(`✗ Internal viewer generation failed: ${error.message}`);
+      }
+    } else {
+      console.log(`  ⊘ Skipping internal (unchanged)`);
+      skipped++;
+    }
+
     // Summary
+    const totalViewers = existingReleases.length + 2; // meta-releases + portfolio + internal
     console.log('\n=== Generation Summary ===');
     console.log(`Regenerated: ${regenerated} viewers`);
     console.log(`Skipped: ${skipped} viewers`);
-    console.log(`Total available: ${existingReleases.length} releases`);
+    console.log(`Total available: ${totalViewers} viewers (${existingReleases.length} meta-releases + portfolio + internal)`);
     if (results.length > 0) {
       console.log('\nRegenerated viewers:');
       results.forEach(result => {
-        console.log(`  - ${result.filename}: ${result.apiCount} APIs, ${result.releaseCount} releases`);
+        if (result.apiCount && result.releaseCount) {
+          console.log(`  - ${result.filename}: ${result.apiCount} APIs, ${result.releaseCount} releases`);
+        } else {
+          console.log(`  - ${result.filename}`);
+        }
       });
     }
     console.log(`\nViewers directory: ${VIEWERS_DIR}`);
@@ -275,5 +495,7 @@ if (require.main === module) {
 // Export for potential use as module
 module.exports = {
   generateMetaReleaseViewer,
+  generatePortfolioViewer,
+  generateInternalViewer,
   generateAllViewers
 };
