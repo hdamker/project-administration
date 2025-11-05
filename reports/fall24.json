@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated": "2025-11-04T08:47:27.177Z",
+    "generated": "2025-11-05T10:58:46.271Z",
     "meta_release": "Fall24",
     "source": "Meta-release Collector v3",
     "landscape_version": "1.1.0"
@@ -808,11 +808,11 @@
           "display_name": "QoD Provisioning API",
           "published": true,
           "canonical_name": "qos-provisioning",
-          "first_release": "Fall25",
+          "first_release": "Fall24",
           "previous_names": [
             "qod-provisioning"
           ],
-          "isNew": false
+          "isNew": true
         },
         {
           "api_name": "qos-profiles",
@@ -868,11 +868,11 @@
           "display_name": "QoD Provisioning API",
           "published": true,
           "canonical_name": "qos-provisioning",
-          "first_release": "Fall25",
+          "first_release": "Fall24",
           "previous_names": [
             "qod-provisioning"
           ],
-          "isNew": false
+          "isNew": true
         },
         {
           "api_name": "qos-profiles",
@@ -1701,11 +1701,11 @@
       "display_name": "QoD Provisioning API",
       "published": true,
       "canonical_name": "qos-provisioning",
-      "first_release": "Fall25",
+      "first_release": "Fall24",
       "previous_names": [
         "qod-provisioning"
       ],
-      "isNew": false,
+      "isNew": true,
       "repository": "QualityOnDemand",
       "release_tag": "r1.2",
       "release_date": "2024-09-06T16:16:48Z",
@@ -1725,11 +1725,11 @@
       "display_name": "QoD Provisioning API",
       "published": true,
       "canonical_name": "qos-provisioning",
-      "first_release": "Fall25",
+      "first_release": "Fall24",
       "previous_names": [
         "qod-provisioning"
       ],
-      "isNew": false,
+      "isNew": true,
       "repository": "QualityOnDemand",
       "release_tag": "r1.3",
       "release_date": "2024-12-18T14:58:23Z",
