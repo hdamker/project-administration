@@ -181,7 +181,7 @@ apis:
     previous_names:
     - qod-provisioning
     published: true
-    first_release: Fall25
+    first_release: Fall24
   qos-booking:
     category: Communication Quality
     website_url: https://camaraproject.org/qos-booking/

@@ -416,6 +416,7 @@
       Object.keys(grouped).forEach(apiName => {
         const versions = grouped[apiName];
         const firstAPI = versions[0];
+        const latestAPI = versions[versions.length - 1];
 
         // Only include meta-releases (exclude Sandbox)
         const metaVersions = versions.filter(v =>
@@ -425,7 +426,7 @@
         // Create row data with version for each meta-release
         const row = {
           api_name: apiName,
-          title: firstAPI.title,
+          title: latestAPI.display_name || latestAPI.title,
           category: firstAPI.portfolio_category || '-',
           website_url: firstAPI.website_url,
           first_release: firstAPI.first_release,
@@ -735,6 +736,7 @@
       Object.keys(grouped).sort().forEach(apiName => {
         const versions = grouped[apiName];
         const firstAPI = versions[0];
+        const latestAPI = versions[versions.length - 1];
 
         const section = document.createElement('div');
         section.className = 'api-evolution-section';
@@ -744,7 +746,7 @@
         header.className = 'api-evolution-header';
         header.innerHTML = `
           <div>
-            <div class="api-evolution-name">${firstAPI.title}</div>
+            <div class="api-evolution-name">${latestAPI.display_name || latestAPI.title}</div>
             <div class="api-evolution-category">${firstAPI.portfolio_category || 'Uncategorized'}</div>
           </div>
           <div>
