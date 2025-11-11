@@ -134,7 +134,7 @@ apis:
     first_release: Fall25
   brand-registration:
     category: Communication Services
-    website_url: null
+    website_url: https://camaraproject.org/brand-registration/
     tooltip: Register brand for verified communications
     published: true
     first_release: Fall25
@@ -244,19 +244,19 @@ apis:
     first_release: Fall25
   dedicated-network:
     category: Communication Quality
-    website_url: null
+    website_url: https://camaraproject.org/dedicated-networks/#
     tooltip: Manage dedicated private networks
     published: true
     first_release: Fall25
   dedicated-network-accesses:
     category: Communication Quality
-    website_url: null
+    website_url: https://camaraproject.org/dedicated-networks/#
     tooltip: Control access to dedicated networks
     published: true
     first_release: Fall25
   dedicated-network-profiles:
     category: Communication Quality
-    website_url: null
+    website_url: https://camaraproject.org/dedicated-networks/#
     tooltip: Configure dedicated network profiles
     published: true
     first_release: Fall25
@@ -298,7 +298,7 @@ apis:
     first_release: Fall25
   subscription-status:
     category: Device Information
-    website_url: null
+    website_url: https://camaraproject.org/subscription-status/
     tooltip: Obtain the current subscription status of a certain phone number
     published: true
     first_release: Fall25
@@ -310,7 +310,7 @@ apis:
     first_release: PreFall24
   optimal-edge-discovery:
     category: Computing Services
-    website_url: null
+    website_url: https://camaraproject.org/optimal-edge-discovery/
     tooltip: Find optimal edge computing locations
     published: true
     first_release: Fall25
@@ -322,25 +322,25 @@ apis:
     first_release: Fall25
   application-endpoint-registration:
     category: Computing Services
-    website_url: null
+    website_url: https://camaraproject.org/application-endpoint-registration/
     tooltip: Register application endpoints
     published: true
     first_release: Fall25
   qa-assistant-manage:
     category: Computing Services
-    website_url: null
+    website_url: https://camaraproject.org/model-as-a-service/
     tooltip: Quickly construct unique Q&A assistant applications
     published: true
     first_release: Fall25
   qa-assistant-service:
     category: Computing Services
-    website_url: null
+    website_url: https://camaraproject.org/model-as-a-service/
     tooltip: Provide Q&A services to the users of the application
     published: true
     first_release: Fall25
   knowledge-base:
     category: Computing Services
-    website_url: null
+    website_url: https://camaraproject.org/model-as-a-service/
     tooltip: Build and manage personalized knowledge bases
     published: true
     first_release: Fall25
@@ -370,13 +370,13 @@ apis:
     first_release: Spring25
   blockchain-public-address-validation:
     category: Payments and Charging
-    website_url: null
-    tooltip: Validate blockchain addresses
+    website_url: https://camaraproject.org/blockchain-public-address-validation/
+    tooltip: Ensure that blockchain public address and mobile phone number belong to the same user
     published: true
     first_release: Fall25
   consent-info:
     category: Service Management
-    website_url: null
+    website_url: https://camaraproject.org/consent-info/
     tooltip: Determine the need for consent and get current consent
     published: true
     first_release: Fall25
