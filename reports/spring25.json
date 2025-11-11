@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated": "2025-11-04T08:47:27.178Z",
+    "generated": "2025-11-11T18:37:36.219Z",
     "meta_release": "Spring25",
     "source": "Meta-release Collector v3",
     "landscape_version": "1.1.0"
@@ -872,7 +872,7 @@
           "display_name": "QoD Provisioning API",
           "published": true,
           "canonical_name": "qos-provisioning",
-          "first_release": "Fall25",
+          "first_release": "Fall24",
           "previous_names": [
             "qod-provisioning"
           ],
@@ -1692,7 +1692,7 @@
       "display_name": "QoD Provisioning API",
       "published": true,
       "canonical_name": "qos-provisioning",
-      "first_release": "Fall25",
+      "first_release": "Fall24",
       "previous_names": [
         "qod-provisioning"
       ],
