@@ -1,6 +1,6 @@
 metadata:
-  last_updated: '2025-11-13T01:41:58.479Z'
-  last_checked: '2025-11-13T01:41:58.479Z'
+  last_updated: '2025-11-13T04:26:44.918Z'
+  last_checked: '2025-11-13T04:26:44.918Z'
   workflow_version: 3.0.0
   schema_version: 1.0.0
 releases:
@@ -188,7 +188,7 @@ releases:
         version: 0.3.0
         title: Connectivity Insights - Application Profiles
         commonalities: '0.4'
-      - api_name: v0.4
+      - api_name: connectivity-insights-subscriptions
         file_name: connectivity-insights-subscriptions
         version: 0.4.0
         title: Connectivity Insights
