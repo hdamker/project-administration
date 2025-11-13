@@ -475,6 +475,7 @@ jobs:
     name: Deploy to Staging (GitHub Pages)
     needs: generate-viewers
     if: |
+      always() &&
       github.event.inputs.execution_mode == 'pr' &&
       needs.generate-viewers.result == 'success'
     permissions:
