@@ -1,4 +1,4 @@
-# Meta-Release Collector v3 - User Guide
+# Release Collector v3 - User Guide
 
 **Status**: Production Ready (Phase 3 Complete - Staging Deployment Active)
 **Last Updated**: 2025-11-05
@@ -11,7 +11,7 @@ Automatically tracks all CAMARA API releases across repositories, categorizes th
 
 ## Overview
 
-The Meta-Release Collector is a GitHub Actions workflow that provides comprehensive release tracking and reporting for the CAMARA project.
+The Release Collector is a GitHub Actions workflow that provides comprehensive release tracking and reporting for the CAMARA project.
 
 **Key Features**:
 - Incremental updates (analyze only new releases)
@@ -25,7 +25,7 @@ The Meta-Release Collector is a GitHub Actions workflow that provides comprehens
 ### Running the Workflow
 
 1. Navigate to **Actions** tab in the repository
-2. Select **Meta-release Collector v3** workflow
+2. Select **Release Collector v3** workflow
 3. Click **Run workflow**
 4. Configure options:
    - **Analysis scope**: `incremental` or `full`
