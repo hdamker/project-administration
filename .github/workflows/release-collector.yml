@@ -1,5 +1,5 @@
 # =========================================================================================
-# CAMARA Project - Meta-release Collector Workflow v3
+# CAMARA Project - Release Collector Workflow v3
 #
 # Interim solution for collecting and reporting release metadata across all CAMARA API
 # repositories until Spring 2026 when native release-metadata.yaml files become standard.
@@ -12,7 +12,7 @@
 #
 # =========================================================================================
 
-name: Meta-release Collector v3
+name: Release Collector v3
 
 on:
   workflow_dispatch:
@@ -62,7 +62,7 @@ env:
 
   # Data Locations
   MASTER_METADATA_PATH: 'data/releases-master.yaml'
-  CONFIG_PATH: 'workflows/meta-release-collector/config'
+  CONFIG_PATH: 'workflows/release-collector/config'
   REPORTS_PATH: 'reports'
   VIEWERS_PATH: 'viewers'
 
@@ -95,9 +95,9 @@ jobs:
         run: |
           # Check if template files changed in recent commits
           CHANGED=$(git diff HEAD~1 --name-only -- \
-            'workflows/meta-release-collector/templates/*.html' \
-            'workflows/meta-release-collector/templates/*.css' \
-            'workflows/meta-release-collector/templates/*.js' \
+            'workflows/release-collector/templates/*.html' \
+            'workflows/release-collector/templates/*.css' \
+            'workflows/release-collector/templates/*.js' \
             2>/dev/null || echo "")
 
           if [ -n "$CHANGED" ]; then
@@ -122,7 +122,7 @@ jobs:
           mkdir -p temp
 
           # Run detection script
-          node workflows/meta-release-collector/scripts/detect-releases.js --mode ${{ github.event.inputs.analysis_scope }} > temp/detection-output.json
+          node workflows/release-collector/scripts/detect-releases.js --mode ${{ github.event.inputs.analysis_scope }} > temp/detection-output.json
 
           # Parse output
           HAS_UPDATES=$(jq -r '.has_updates' temp/detection-output.json)
@@ -193,7 +193,7 @@ jobs:
             echo "Analyzing ${REPO} @ ${TAG}..."
 
             # Run analysis script
-            node workflows/meta-release-collector/scripts/analyze-release.js --github "${REPO}" "${TAG}" > temp/single-analysis.json
+            node workflows/release-collector/scripts/analyze-release.js --github "${REPO}" "${TAG}" > temp/single-analysis.json
 
             # Append to results
             jq -s '.[0] + [.[1]]' temp/analysis-results.json temp/single-analysis.json > temp/analysis-updated.json
@@ -252,7 +252,7 @@ jobs:
           done
 
           # Update master metadata (format corrections already applied by analyze-release.js)
-          node workflows/meta-release-collector/scripts/update-master.js --mode ${{ github.event.inputs.analysis_scope }} --input temp/combined-analysis.json
+          node workflows/release-collector/scripts/update-master.js --mode ${{ github.event.inputs.analysis_scope }} --input temp/combined-analysis.json
 
           echo "Master metadata updated with $(jq '. | length' temp/combined-analysis.json) releases"
 
@@ -260,7 +260,7 @@ jobs:
         run: |
           echo "📝 Generating reports..."
           # Generate JSON files for each meta-release
-          node workflows/meta-release-collector/scripts/generate-reports.js
+          node workflows/release-collector/scripts/generate-reports.js
 
       - name: Upload processed data
         uses: actions/upload-artifact@v4
@@ -309,7 +309,7 @@ jobs:
         run: |
           echo "🎨 Generating HTML viewers..."
           # Build viewers with embedded JSON
-          node workflows/meta-release-collector/scripts/generate-viewers.js
+          node workflows/release-collector/scripts/generate-viewers.js
 
       - name: Upload final outputs as artifacts
         uses: actions/upload-artifact@v4
@@ -461,7 +461,7 @@ jobs:
 
             ---
 
-            *This PR was generated automatically by the Meta-Release Collector v3 workflow.*
+            *This PR was generated automatically by the Release Collector v3 workflow.*
           commit-message: |
             chore: Update CAMARA release metadata
 
@@ -473,8 +473,10 @@ jobs:
   # =========================================================================================
   deploy-staging:
     name: Deploy to Staging (GitHub Pages)
-    needs: [publish-changes, generate-viewers]
-    if: github.event.inputs.execution_mode == 'pr'
+    needs: generate-viewers
+    if: |
+      github.event.inputs.execution_mode == 'pr' &&
+      needs.generate-viewers.result == 'success'
     permissions:
       contents: read
       pages: write
@@ -526,7 +528,7 @@ jobs:
     steps:
       - name: Generate summary
         run: |
-          echo "## Meta-release Collector Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Release Collector Workflow Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Analysis Scope**: ${{ github.event.inputs.analysis_scope }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Execution Mode**: ${{ github.event.inputs.execution_mode }}" >> $GITHUB_STEP_SUMMARY

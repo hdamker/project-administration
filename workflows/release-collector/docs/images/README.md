@@ -1,6 +1,6 @@
 # Documentation Images
 
-This directory contains visual assets for the Meta-Release Collector workflow documentation.
+This directory contains visual assets for the Release Collector workflow documentation.
 
 ## Required Images
 
@@ -10,7 +10,7 @@ This directory contains visual assets for the Meta-Release Collector workflow do
 
 **How to capture**:
 1. Navigate to Actions tab in project-administration repository
-2. Run the Meta-release Collector v3 workflow
+2. Run the Release Collector v3 workflow
 3. Once workflow completes, view the workflow run page
 4. Take screenshot showing the visual workflow graph with all phases:
    - Detect New Releases

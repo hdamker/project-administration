@@ -16,7 +16,7 @@ These documents explain the architectural decisions and implementation details:
 **Date**: 2025-10-30
 **Status**: Accepted
 
-Explains the decision to organize the workflow in a feature-grouped directory structure (`workflows/meta-release-collector/`) rather than a flat layout.
+Explains the decision to organize the workflow in a feature-grouped directory structure (`workflows/release-collector/`) rather than a flat layout.
 
 **Key decision**: Group all related files (scripts, config, templates, docs) under a single directory for better maintainability.
 

@@ -84,7 +84,7 @@ function generateEnrichedReport(metaRelease, releases, landscape) {
     metadata: {
       generated: timestamp,
       meta_release: metaRelease,
-      source: 'Meta-release Collector v3',
+      source: 'Release Collector v3',
       landscape_version: landscapeVersion
     },
     statistics: statistics,

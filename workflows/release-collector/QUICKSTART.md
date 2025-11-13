@@ -10,7 +10,7 @@ Automatically tracks all CAMARA API releases across repositories, categorizes th
 
 1. **Navigate to Actions**
    - Go to: github.com/camaraproject/project-administration
-   - Click **Actions** tab → **Meta-release Collector v3** → **Run workflow**
+   - Click **Actions** tab → **Release Collector v3** → **Run workflow**
 
 2. **Use These Settings**
 

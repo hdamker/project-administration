@@ -183,16 +183,16 @@ workflows/meta-release-collector/
 
 ### Files Moved
 
-- `config/` → `workflows/meta-release-collector/config/`
-- `schemas/` → `workflows/meta-release-collector/schemas/`
-- `scripts/` → `workflows/meta-release-collector/scripts/`
-- `documentation/` → `workflows/meta-release-collector/docs/`
-- Created: `workflows/meta-release-collector/templates/` (for Phase 2)
+- `config/` → `workflows/release-collector/config/`
+- `schemas/` → `workflows/release-collector/schemas/`
+- `scripts/` → `workflows/release-collector/scripts/`
+- `documentation/` → `workflows/release-collector/docs/`
+- Created: `workflows/release-collector/templates/` (for Phase 2)
 
 ### Files Updated
 
-- `.github/workflows/meta-release-collector.yml` - All script paths
-- `workflows/meta-release-collector/scripts/*.js` - Path references using REPO_ROOT pattern
+- `.github/workflows/release-collector.yml` - All script paths
+- `workflows/release-collector/scripts/*.js` - Path references using REPO_ROOT pattern
 - Documentation updated to reflect new structure
 
 ### Kept at Root
