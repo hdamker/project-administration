@@ -169,14 +169,22 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
           commonalities: spec.info['x-camara-commonalities'] || null
         };
 
+        // Apply format corrections only (not content changes)
+        const correctedApi = applyFormatCorrections(apiData);
+
+        // Repository/release-specific corrections
+        if (repoName === 'ConnectivityInsights' && releaseTag === 'r1.2' &&
+            correctedApi.api_name === 'v0.4' && correctedApi.file_name === 'connectivity-insights-subscriptions') {
+          console.error(`Applying correction: ConnectivityInsights r1.2 - mapping 'v0.4' to 'connectivity-insights-subscriptions'`);
+          correctedApi.api_name = 'connectivity-insights-subscriptions';
+        }
+
         // Exclude known invalid RC release
-        if (apiData.api_name === 'region-device-count' && apiData.version === '0.1.0-rc.1') {
-          console.error(`Excluding invalid RC release: ${apiData.api_name} ${apiData.version}`);
+        if (correctedApi.api_name === 'region-device-count' && correctedApi.version === '0.1.0-rc.1') {
+          console.error(`Excluding invalid RC release: ${correctedApi.api_name} ${correctedApi.version}`);
           continue;
         }
 
-        // Apply format corrections only (not content changes)
-        const correctedApi = applyFormatCorrections(apiData);
         apis.push(correctedApi);
       }
     } catch (error) {
@@ -264,14 +272,22 @@ async function analyzeGitHubRelease(repository, releaseTag) {
           commonalities: spec.info['x-camara-commonalities'] || null
         };
 
+        // Apply format corrections only (not content changes)
+        const correctedApi = applyFormatCorrections(apiData);
+
+        // Repository/release-specific corrections
+        if (repository === 'ConnectivityInsights' && releaseTag === 'r1.2' &&
+            correctedApi.api_name === 'v0.4' && correctedApi.file_name === 'connectivity-insights-subscriptions') {
+          console.error(`Applying correction: ConnectivityInsights r1.2 - mapping 'v0.4' to 'connectivity-insights-subscriptions'`);
+          correctedApi.api_name = 'connectivity-insights-subscriptions';
+        }
+
         // Exclude known invalid RC release
-        if (apiData.api_name === 'region-device-count' && apiData.version === '0.1.0-rc.1') {
-          console.error(`Excluding invalid RC release: ${apiData.api_name} ${apiData.version}`);
+        if (correctedApi.api_name === 'region-device-count' && correctedApi.version === '0.1.0-rc.1') {
+          console.error(`Excluding invalid RC release: ${correctedApi.api_name} ${correctedApi.version}`);
           continue;
         }
 
-        // Apply format corrections only (not content changes)
-        const correctedApi = applyFormatCorrections(apiData);
         apis.push(correctedApi);
       }
     } catch (error) {
