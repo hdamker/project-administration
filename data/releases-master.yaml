@@ -1,6 +1,6 @@
 metadata:
-  last_updated: '2025-09-23T18:24:47.879Z'
-  last_checked: '2025-09-23T18:24:47.879Z'
+  last_updated: '2025-11-04T08:47:27.051Z'
+  last_checked: '2025-11-04T08:47:27.051Z'
   workflow_version: 3.0.0
   schema_version: 1.0.0
 releases:
@@ -74,7 +74,7 @@ releases:
         file_name: call-forwarding-signal
         version: 0.2.0
         title: Call Forwarding Signal
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: CallForwardingSignal
     release_tag: r2.2
     release_date: '2025-03-06T08:29:28Z'
@@ -187,17 +187,17 @@ releases:
         file_name: application-profiles
         version: 0.3.0
         title: Connectivity Insights - Application Profiles
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: v0.4
         file_name: connectivity-insights-subscriptions
         version: 0.4.0
         title: Connectivity Insights
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: connectivity-insights
         file_name: connectivity-insights
         version: 0.4.0
         title: Connectivity Insights
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: ConnectivityInsights
     release_tag: r2.2
     release_date: '2025-03-14T16:33:24Z'
@@ -348,17 +348,17 @@ releases:
         file_name: geofencing-subscriptions
         version: 0.3.0
         title: Device Geofencing Subscriptions
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: location-retrieval
         file_name: location-retrieval
         version: 0.3.0
         title: Device Location Retrieval
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: location-verification
         file_name: location-verification
         version: 1.0.0
         title: Device Location Verification
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: DeviceLocation
     release_tag: r2.2
     release_date: '2025-03-10T13:54:47Z'
@@ -443,22 +443,22 @@ releases:
         file_name: device-reachability-status-subscriptions
         version: 0.6.0
         title: Device Reachability Status Subscriptions
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: device-reachability-status
         file_name: device-reachability-status
         version: 0.6.0
         title: Device Reachability Status
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: device-roaming-status-subscriptions
         file_name: device-roaming-status-subscriptions
         version: 0.6.0
         title: Device Roaming Status Subscriptions
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: device-roaming-status
         file_name: device-roaming-status
         version: 0.6.0
         title: Device Roaming Status
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: DeviceStatus
     release_tag: r1.3
     release_date: '2024-11-05T21:11:50Z'
@@ -469,22 +469,22 @@ releases:
         file_name: device-reachability-status-subscriptions
         version: 0.6.1
         title: Device Reachability Status Subscriptions
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: device-reachability-status
         file_name: device-reachability-status
         version: 0.6.1
         title: Device Reachability Status
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: device-roaming-status-subscriptions
         file_name: device-roaming-status-subscriptions
         version: 0.6.1
         title: Device Roaming Status Subscriptions
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: device-roaming-status
         file_name: device-roaming-status
         version: 0.6.1
         title: Device Roaming Status
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: DeviceStatus
     release_tag: r2.2
     release_date: '2025-03-14T11:49:32Z'
@@ -531,7 +531,7 @@ releases:
         file_name: device-swap
         version: 0.1.0
         title: Device Swap
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: DeviceSwap
     release_tag: r2.2
     release_date: '2025-03-13T07:59:07Z'
@@ -575,7 +575,7 @@ releases:
         file_name: home-devices-qod
         version: 0.4.0
         title: Home Devices QoD
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: KnowYourCustomer
     release_tag: r1.3
     release_date: '2024-09-12T09:29:42Z'
@@ -586,12 +586,12 @@ releases:
         file_name: kyc-fill-in
         version: 0.2.0
         title: Know Your Customer Fill-in
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: kyc-match
         file_name: kyc-match
         version: 0.2.1
         title: Know Your Customer Match
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: KnowYourCustomer
     release_tag: r1.4
     release_date: '2024-12-11T15:37:20Z'
@@ -602,12 +602,12 @@ releases:
         file_name: kyc-fill-in
         version: 0.2.0
         title: Know Your Customer Fill-in
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: kyc-match
         file_name: kyc-match
         version: 0.2.1
         title: Know Your Customer Match
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: KnowYourCustomer
     release_tag: r2.2
     release_date: '2025-03-10T11:44:37Z'
@@ -759,7 +759,7 @@ releases:
         file_name: number-verification
         version: 1.0.0
         title: Number Verification
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: NumberVerification
     release_tag: r1.3
     release_date: '2024-10-01T12:49:13Z'
@@ -770,7 +770,7 @@ releases:
         file_name: number-verification
         version: 1.0.0
         title: Number Verification
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: NumberVerification
     release_tag: r2.4
     release_date: '2025-03-20T14:24:37Z'
@@ -814,7 +814,7 @@ releases:
         file_name: one-time-password-sms
         version: 1.0.0
         title: One Time Password SMS
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: OTPValidation
     release_tag: r2.3
     release_date: '2025-03-11T15:47:08Z'
@@ -847,7 +847,7 @@ releases:
         file_name: population-density-data
         version: 0.1.1
         title: Population Density Data
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: PopulationDensityData
     release_tag: r2.2
     release_date: '2025-03-14T09:52:57Z'
@@ -907,17 +907,17 @@ releases:
         file_name: qod-provisioning
         version: 0.1.0
         title: QoD Provisioning API
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: qos-profiles
         file_name: qos-profiles
         version: 0.11.0
         title: QoS Profiles
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: quality-on-demand
         file_name: quality-on-demand
         version: 0.11.0
         title: Quality-On-Demand
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: QualityOnDemand
     release_tag: r1.3
     release_date: '2024-12-18T14:58:23Z'
@@ -928,17 +928,17 @@ releases:
         file_name: qod-provisioning
         version: 0.1.1
         title: QoD Provisioning API
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: qos-profiles
         file_name: qos-profiles
         version: 0.11.1
         title: QoS Profiles
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: quality-on-demand
         file_name: quality-on-demand
         version: 0.11.1
         title: Quality-On-Demand
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: QualityOnDemand
     release_tag: r2.2
     release_date: '2025-03-11T15:31:39Z'
@@ -986,12 +986,7 @@ releases:
     release_date: '2025-03-12T06:07:28Z'
     meta_release: Spring25
     github_url: https://github.com/camaraproject/RegionDeviceCount/releases/tag/r1.2
-    apis:
-      - api_name: region-device-count
-        file_name: region-device-count
-        version: 0.1.0-rc.1
-        title: Region Device Count
-        commonalities: '0.5'
+    apis: []
   - repository: RegionDeviceCount
     release_tag: r1.3
     release_date: '2025-06-04T11:39:59Z'
@@ -1024,7 +1019,7 @@ releases:
         file_name: simple-edge-discovery
         version: 1.0.0
         title: Simple Edge Discovery
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: SimpleEdgeDiscovery
     release_tag: r2.2
     release_date: '2025-09-17T17:29:46Z'
@@ -1046,12 +1041,12 @@ releases:
         file_name: sim-swap-subscriptions
         version: 0.1.0
         title: Sim Swap Subscriptions
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: sim-swap
         file_name: sim-swap
         version: 1.0.0
         title: SIM Swap
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: SimSwap
     release_tag: r1.3
     release_date: '2024-10-29T17:21:56Z'
@@ -1062,12 +1057,12 @@ releases:
         file_name: sim-swap-subscriptions
         version: 0.1.1
         title: Sim Swap Subscriptions
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: sim-swap
         file_name: sim-swap
         version: 1.0.0
         title: SIM Swap
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: SimSwap
     release_tag: r1.4
     release_date: '2025-04-04T11:51:06Z'
@@ -1078,12 +1073,12 @@ releases:
         file_name: sim-swap-subscriptions
         version: 0.1.2
         title: Sim Swap Subscriptions
-        commonalities: 0.4.0
+        commonalities: '0.4'
       - api_name: sim-swap
         file_name: sim-swap
         version: 1.0.0
         title: SIM Swap
-        commonalities: 0.4.0
+        commonalities: '0.4'
   - repository: SimSwap
     release_tag: r2.2
     release_date: '2025-03-13T11:20:01Z'

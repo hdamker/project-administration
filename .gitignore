@@ -24,6 +24,9 @@ results.csv
 results.jsonl
 plan.md
 
+# Workflow v3 generated viewers (generated from templates)
+viewers/
+
 # IDE
 .vscode/
 .idea/
