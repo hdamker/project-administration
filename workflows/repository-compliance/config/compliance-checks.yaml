@@ -1,0 +1,328 @@
+version: 1
+
+metadata:
+  description: >-
+    Machine-readable specification of repository compliance checks
+    for CAMARA. This file is the authoritative source for all checks
+    consumed by the Repository Compliance Overview workflow.
+  owner: "camaraproject/project-administration"
+  repo_categories:
+    - api-sandbox
+    - api-incubating
+    - api-graduated
+    - working-group
+    - project-infrastructure
+    - marketing
+    - archived
+    - out-of-scope
+  severities:
+    - critical
+    - high
+    - medium
+    - low
+
+checks:
+  # ---------------------------------------------------------------------------
+  # Category 1: Repository Configuration
+  # ---------------------------------------------------------------------------
+  - id: topic-alignment
+    name: "Topics aligned with repository category"
+    description: >-
+      Validate that repository topics are consistent with the
+      configured repository category and include required markers
+      for CAMARA API repositories.
+    category: "Repository Configuration"
+    applies_to:
+      - api-sandbox
+      - api-incubating
+      - api-graduated
+    severity: high
+    enforcement: warn
+    implemented: true
+    parameters:
+      required_topics_common:
+        - "camaraproject"
+      required_topics_by_category:
+        api-sandbox:
+          - "sandbox-api-repository"
+        api-incubating:
+          - "incubating-api-repository"
+        api-graduated:
+          - "graduated-api-repository"
+    notes: >-
+      Initial focus on API repositories. Other categories may receive
+      lighter topic requirements later.
+
+  - id: description-present
+    name: "Repository description present"
+    description: "Repository must have a non-empty description set."
+    category: "Repository Configuration"
+    applies_to:
+      - api-sandbox
+      - api-incubating
+      - api-graduated
+      - working-group
+      - project-infrastructure
+      - marketing
+    severity: medium
+    enforcement: warn
+    implemented: false
+    parameters: {}
+
+  - id: license-apache-2
+    name: "Apache 2.0 license configuration"
+    description: >-
+      Validate that the repository is licensed under Apache 2.0 and
+      that a LICENSE file is present, except where explicitly
+      excluded (e.g., marketing repositories).
+    category: "Repository Configuration"
+    applies_to:
+      - api-sandbox
+      - api-incubating
+      - api-graduated
+      - working-group
+      - project-infrastructure
+    severity: critical
+    enforcement: fail
+    implemented: true
+    parameters:
+      expected_license_spdx: "Apache-2.0"
+      license_file: "LICENSE"
+
+  - id: branch-protection-main
+    name: "Branch protection on main"
+    description: >-
+      Validate that the `main` branch has mandatory protection rules
+      configured appropriate for the repository category.
+    category: "Repository Configuration"
+    applies_to:
+      - api-incubating
+      - api-graduated
+      - project-infrastructure
+    severity: high
+    enforcement: warn
+    implemented: false
+    parameters:
+      require_pull_request_reviews: true
+      require_status_checks: true
+
+  # ---------------------------------------------------------------------------
+  # Category 2: Governance Files
+  # ---------------------------------------------------------------------------
+  - id: codeowners-present
+    name: "CODEOWNERS present"
+    description: "Repository must contain a CODEOWNERS file."
+    category: "Governance Files"
+    applies_to:
+      - api-sandbox
+      - api-incubating
+      - api-graduated
+      - working-group
+      - project-infrastructure
+    severity: high
+    enforcement: warn
+    implemented: true
+    parameters:
+      locations:
+        - ".github/CODEOWNERS"
+        - "CODEOWNERS"
+
+  - id: maintainers-minimum
+    name: "Minimum maintainer count"
+    description: >-
+      Validate that MAINTAINERS.md exists and contains at least the
+      minimum number of maintainers for the repository category.
+    category: "Governance Files"
+    applies_to:
+      - api-incubating
+      - api-graduated
+      - working-group
+      - project-infrastructure
+    severity: high
+    enforcement: warn
+    implemented: true
+    parameters:
+      file: "MAINTAINERS.md"
+      min_count_by_category:
+        api-incubating: 2
+        api-graduated: 3
+        working-group: 2
+        project-infrastructure: 2
+
+  - id: governance-reference
+    name: "GOVERNANCE.md references central Governance repository"
+    description: >-
+      Validate that GOVERNANCE.md is present and references the
+      CAMARA Governance repository as the source of governance rules.
+    category: "Governance Files"
+    applies_to:
+      - api-incubating
+      - api-graduated
+      - working-group
+      - project-infrastructure
+    severity: medium
+    enforcement: warn
+    implemented: false
+    parameters:
+      file: "GOVERNANCE.md"
+      required_substring: "Governance\" repository of the Project"
+
+  # ---------------------------------------------------------------------------
+  # Category 3: Documentation Structure
+  # ---------------------------------------------------------------------------
+  - id: readme-present
+    name: "README present"
+    description: "Repository MUST contain a README.md at the root."
+    category: "Documentation Structure"
+    applies_to:
+      - api-sandbox
+      - api-incubating
+      - api-graduated
+      - working-group
+      - project-infrastructure
+      - marketing
+    severity: high
+    enforcement: warn
+    implemented: true
+    parameters:
+      file: "README.md"
+
+  - id: changelog-present
+    name: "CHANGELOG present"
+    description: "Repositories that publish releases should maintain a CHANGELOG.md."
+    category: "Documentation Structure"
+    applies_to:
+      - api-incubating
+      - api-graduated
+      - project-infrastructure
+    severity: medium
+    enforcement: warn
+    implemented: false
+    parameters:
+      file: "CHANGELOG.md"
+
+  - id: api-directory-structure
+    name: "API repository directory structure"
+    description: >-
+      API repositories must follow the standard directory structure
+      for API and test definitions and documentation.
+    category: "Documentation Structure"
+    applies_to:
+      - api-sandbox
+      - api-incubating
+      - api-graduated
+    severity: high
+    enforcement: warn
+    implemented: true
+    parameters:
+      required_directories:
+        - "code/API_definitions"
+        - "code/Test_definitions"
+        - "documentation"
+
+  # ---------------------------------------------------------------------------
+  # Category 4: Process Templates
+  # ---------------------------------------------------------------------------
+  - id: issue-templates-present
+    name: "Issue templates present"
+    description: >-
+      Repositories must define standard issue templates for common
+      contribution types (e.g., bug, enhancement, documentation).
+    category: "Process Templates"
+    applies_to:
+      - api-incubating
+      - api-graduated
+      - working-group
+      - project-infrastructure
+    severity: medium
+    enforcement: warn
+    implemented: false
+    parameters:
+      directory: ".github/ISSUE_TEMPLATE"
+
+  - id: pr-template-present
+    name: "Pull request template present"
+    description: "Repository should provide a standard pull request template."
+    category: "Process Templates"
+    applies_to:
+      - api-incubating
+      - api-graduated
+      - working-group
+      - project-infrastructure
+    severity: medium
+    enforcement: warn
+    implemented: false
+    parameters:
+      locations:
+        - ".github/pull_request_template.md"
+
+  - id: ci-workflow-present
+    name: "Core CI workflow present"
+    description: >-
+      Validate that at least one GitHub Actions workflow is defined
+      for basic validation (linting, tests, or equivalent).
+    category: "Process Templates"
+    applies_to:
+      - api-sandbox
+      - api-incubating
+      - api-graduated
+      - project-infrastructure
+    severity: high
+    enforcement: warn
+    implemented: false
+    parameters:
+      workflows_directory: ".github/workflows"
+
+  # ---------------------------------------------------------------------------
+  # Category 5: Activity & Health
+  # ---------------------------------------------------------------------------
+  - id: repository-inactive
+    name: "Repository potentially inactive"
+    description: >-
+      Flag repositories without commits or issues/PR activity for an
+      extended period.
+    category: "Activity & Health"
+    applies_to:
+      - api-incubating
+      - api-graduated
+      - working-group
+      - project-infrastructure
+    severity: medium
+    enforcement: log
+    implemented: false
+    parameters:
+      inactivity_days_threshold: 180
+
+  - id: stale-issues
+    name: "Stale issues"
+    description: >-
+      Flag issues with no activity for longer than the configured
+      threshold.
+    category: "Activity & Health"
+    applies_to:
+      - api-incubating
+      - api-graduated
+      - working-group
+      - project-infrastructure
+    severity: low
+    enforcement: log
+    implemented: false
+    parameters:
+      stale_days_threshold: 90
+
+  - id: stale-pull-requests
+    name: "Stale pull requests"
+    description: >-
+      Flag open pull requests with no activity for longer than the
+      configured threshold.
+    category: "Activity & Health"
+    applies_to:
+      - api-incubating
+      - api-graduated
+      - working-group
+      - project-infrastructure
+    severity: low
+    enforcement: log
+    implemented: false
+    parameters:
+      stale_days_threshold: 60

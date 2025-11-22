@@ -1,0 +1,83 @@
+# CAMARA Repository Registry Schema
+# Schema for repository-registry.yaml containing manual repository registry (source of truth)
+# Version: 1.0.0
+
+$schema: http://json-schema.org/draft-07/schema#
+title: CAMARA Repository Registry
+description: Manual registry of CAMARA repositories serving as source of truth for compliance expectations
+type: object
+required:
+  - metadata
+  - repositories
+
+properties:
+  metadata:
+    type: object
+    required:
+      - version
+      - last_updated
+      - description
+    properties:
+      version:
+        type: string
+        pattern: ^\d+\.\d+\.\d+$
+        description: Version of the registry data (semver)
+      last_updated:
+        type: string
+        pattern: ^\d{4}-\d{2}-\d{2}$
+        description: Date of last update (YYYY-MM-DD)
+      description:
+        type: string
+        description: Description of the repository registry
+
+  repositories:
+    type: array
+    description: List of registered CAMARA repositories
+    items:
+      type: object
+      required:
+        - name
+        - category
+      properties:
+        name:
+          type: string
+          description: Repository name (must be unique within camaraproject organization)
+          pattern: ^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$
+
+        category:
+          type: string
+          description: Repository category defining compliance expectations
+          enum:
+            - api-sandbox
+            - api-incubating
+            - api-graduated
+            - working-group
+            - project-infrastructure
+            - marketing
+            - archived
+            - out-of-scope
+
+        sub_project:
+          type: string
+          description: Optional sub-project classification (e.g., connectivity-quality-management)
+
+        required_maintainers:
+          type: integer
+          minimum: 1
+          description: Minimum number of maintainers required for this repository (overrides category default)
+
+        branch_protection_required:
+          type: boolean
+          description: Whether branch protection is required on main branch
+
+        exceptions:
+          type: array
+          description: List of compliance check IDs that are exempted for this repository
+          items:
+            type: string
+            pattern: ^[a-z0-9]+(-[a-z0-9]+)*$
+          uniqueItems: true
+
+        notes:
+          type: string
+          description: Optional notes about this repository's compliance status or special considerations

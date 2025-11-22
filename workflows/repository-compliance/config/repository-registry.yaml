@@ -1,0 +1,274 @@
+metadata:
+  version: 1.0.0
+  last_updated: '2025-11-22'
+  description: Manual registry of CAMARA repositories (source of truth for compliance expectations)
+repositories:
+  - name: .github
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: APIBacklog
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: ApplicationEndpointDiscovery
+    category: api-sandbox
+    required_maintainers: 1
+  - name: ApplicationEndpointRegistration
+    category: api-sandbox
+    required_maintainers: 1
+  - name: ApplicationProfiles
+    category: api-sandbox
+    required_maintainers: 1
+  - name: BlockchainPublicAddress
+    category: api-sandbox
+    required_maintainers: 1
+  - name: CallForwardingSignal
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: camara-landscape
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: camaraproject.github.io
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: CapabilitiesAndRuntimeRestrictions
+    category: api-sandbox
+    required_maintainers: 1
+  - name: CarrierBillingCheckOut
+    category: api-sandbox
+    required_maintainers: 1
+  - name: ClickToDial
+    category: api-sandbox
+    required_maintainers: 1
+  - name: Commonalities
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: ConnectedNetworkType
+    category: api-sandbox
+    required_maintainers: 1
+  - name: ConnectivityInsights
+    category: api-sandbox
+    required_maintainers: 1
+  - name: ConsentInfo
+    category: api-sandbox
+    required_maintainers: 1
+  - name: CustomerInsights
+    category: api-sandbox
+    required_maintainers: 1
+  - name: DedicatedNetworks
+    category: api-sandbox
+    required_maintainers: 1
+  - name: DeviceDataVolume
+    category: api-sandbox
+    required_maintainers: 1
+  - name: DeviceIdentifier
+    category: api-sandbox
+    required_maintainers: 1
+  - name: DeviceLocation
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: DeviceQualityIndicator
+    category: api-sandbox
+    required_maintainers: 1
+  - name: DeviceReachabilityStatus
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: DeviceRoamingStatus
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: DeviceStatus
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: DeviceSwap
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: DeviceVisitLocation
+    category: api-sandbox
+    required_maintainers: 1
+  - name: EasyCLA
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: EdgeCloud
+    category: api-sandbox
+    required_maintainers: 1
+  - name: EnergyFootprintNotification
+    category: api-sandbox
+    required_maintainers: 1
+  - name: EnergyFootprintNotification_PI
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: Governance
+    category: project-infrastructure
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: HighThroughputElasticNetworks
+    category: api-sandbox
+    required_maintainers: 1
+  - name: HomeDevicesQoD
+    category: api-sandbox
+    required_maintainers: 1
+  - name: IdentityAndConsentManagement
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: IoTDeviceManagement
+    category: api-sandbox
+    required_maintainers: 1
+  - name: IoTNetworkOptimization
+    category: api-sandbox
+    required_maintainers: 1
+  - name: IoTSIMFraudPrevention
+    category: api-sandbox
+    required_maintainers: 1
+  - name: KnowYourCustomer
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: KnowYourCustomerAgeVerification
+    category: api-sandbox
+    required_maintainers: 1
+  - name: KnowYourCustomerFill-in
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: KnowYourCustomerMatch
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: Marketing
+    category: marketing
+    required_maintainers: 1
+  - name: ModelAsAService
+    category: api-sandbox
+    required_maintainers: 1
+  - name: MostFrequentLocation
+    category: api-sandbox
+    required_maintainers: 1
+  - name: MultiPointVPN
+    category: api-sandbox
+    required_maintainers: 1
+  - name: NetworkAccessManagement
+    category: api-sandbox
+    required_maintainers: 1
+  - name: NetworkInsights
+    category: api-sandbox
+    required_maintainers: 1
+  - name: NetworkSliceBooking
+    category: api-sandbox
+    required_maintainers: 1
+  - name: NumberRecycling
+    category: api-sandbox
+    required_maintainers: 1
+  - name: NumberVerification
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: OptimalEdgeDiscovery
+    category: api-sandbox
+    required_maintainers: 1
+  - name: OTPValidation
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: PopulationDensityData
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: PredictiveConnectivityData
+    category: api-sandbox
+    required_maintainers: 1
+  - name: project-administration
+    category: project-infrastructure
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: QoSBooking
+    category: api-sandbox
+    required_maintainers: 1
+  - name: QualityOnDemand
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: QualityOnDemand_PI1
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: QualityOnDemand_PI2
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: QualityOnDemand_PI3
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: RegionDeviceCount
+    category: api-sandbox
+    required_maintainers: 1
+  - name: ReleaseManagement
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: ReleaseManagementTraining
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: SessionInsights
+    category: api-sandbox
+    required_maintainers: 1
+  - name: ShortMessageService
+    category: api-sandbox
+    required_maintainers: 1
+  - name: SimpleEdgeDiscovery
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: SimSwap
+    category: api-incubating
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: SiteToCloudVPN
+    category: api-sandbox
+    required_maintainers: 1
+  - name: SponsoredData
+    category: api-sandbox
+    required_maintainers: 1
+  - name: SubscriptionStatus
+    category: api-sandbox
+    required_maintainers: 1
+  - name: Template_API_Repository
+    category: project-infrastructure
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: Template_PI_Repository
+    category: project-infrastructure
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: Tenure
+    category: api-sandbox
+    required_maintainers: 1
+  - name: test-repo-w-linting
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: test-repo-wo-linting
+    category: out-of-scope
+    notes: Requires manual categorization
+  - name: tooling
+    category: project-infrastructure
+    required_maintainers: 2
+    branch_protection_required: true
+  - name: TrafficInfluence
+    category: api-sandbox
+    required_maintainers: 1
+  - name: VerifiedCaller
+    category: api-sandbox
+    required_maintainers: 1
+  - name: VoiceNotification
+    category: api-sandbox
+    required_maintainers: 1
+  - name: VoiceVerificationCode
+    category: api-sandbox
+    required_maintainers: 1
+  - name: WebRTC
+    category: api-sandbox
+    required_maintainers: 1
+  - name: WorkingGroups
+    category: archived
+    notes: Repository is archived
