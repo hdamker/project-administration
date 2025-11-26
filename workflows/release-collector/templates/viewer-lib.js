@@ -183,9 +183,10 @@ const ViewerLib = {
    * @param {string} filename - Output filename
    */
   exportToCSV: function(apis, filename = 'camara-apis.csv') {
-    const headers = ['API Name', 'Version', 'Category', 'Maturity', 'Repository', 'New', 'Release Tag'];
+    const headers = ['API Name', 'Title', 'Version', 'Category', 'Maturity', 'Repository', 'New', 'Release Tag'];
     const rows = apis.map(api => [
-      api.title || api.api_name,
+      api.api_name || '',
+      api.title || '',
       api.version || '',
       api.portfolio_category || '',
       api.maturity || '',
