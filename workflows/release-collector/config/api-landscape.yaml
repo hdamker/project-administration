@@ -87,7 +87,7 @@ apis:
   call-forwarding-signal:
     category: Authentication and Fraud Prevention
     website_url: https://camaraproject.org/call-forwarding-signal/
-    tooltip: Determine if a "call forwarding" service is enabled
+    tooltip: Determine if a call forwarding service is enabled
     published: true
     first_release: Fall24
   location-retrieval:
