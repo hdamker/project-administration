@@ -292,14 +292,18 @@ const ViewerLib = {
   },
 
   /**
-   * Escape HTML special characters
+   * Escape HTML special characters while preserving newlines
+   * Manual escaping prevents browser from normalizing whitespace
    * @param {string} text - Text to escape
-   * @returns {string} Escaped text
+   * @returns {string} Escaped text with preserved newlines
    */
   escapeHtml: function(text) {
     if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 };
