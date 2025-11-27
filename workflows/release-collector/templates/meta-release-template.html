@@ -65,6 +65,12 @@
             <label for="filterVersionMax">Version Max:</label>
             <input type="text" id="filterVersionMax" placeholder="e.g., 2.0.0" onkeyup="applyFilters()">
           </div>
+          <div class="filter-group">
+            <label>
+              <input type="checkbox" id="showOnlyLatestPatches" checked onchange="applyFilters()" style="margin-right: 6px;">
+              Show only latest patch versions
+            </label>
+          </div>
           <button class="clear-filters-btn" onclick="clearAllFilters()">Clear Filters</button>
         </div>
       </div>
@@ -109,6 +115,7 @@
     let filteredData = [];
     let currentCategoryFilter = '';
     let currentSort = { column: -1, ascending: true };
+    let showOnlyLatestPatches = true; // Default: show only latest patches
 
     /**
      * Flatten v3 nested structure to flat array
@@ -369,6 +376,7 @@
       const versionFilter = document.getElementById('filterVersion').value;
       const versionMinFilter = document.getElementById('filterVersionMin').value;
       const versionMaxFilter = document.getElementById('filterVersionMax').value;
+      showOnlyLatestPatches = document.getElementById('showOnlyLatestPatches').checked;
 
       // Filter data
       filteredData = currentData.apis.filter(api => {
@@ -420,6 +428,11 @@
         return true;
       });
 
+      // Apply latest-patch filter if toggle is checked
+      if (showOnlyLatestPatches) {
+        filteredData = ViewerLib.filterLatestPatches(filteredData);
+      }
+
       // Render filtered data
       renderTable(filteredData);
     }
@@ -455,7 +468,18 @@
         resultsText.textContent = `Showing all ${total} APIs`;
         counter.classList.remove('no-results');
       } else {
-        resultsText.textContent = `Showing ${count} of ${total} APIs`;
+        let message = `Showing ${count} of ${total} APIs`;
+
+        // Add context about filtering mode
+        if (showOnlyLatestPatches) {
+          const allCount = currentData.apis.length;
+          const filteredCount = ViewerLib.filterLatestPatches(currentData.apis).length;
+          if (filteredCount < allCount) {
+            message += ' (latest patches only)';
+          }
+        }
+
+        resultsText.textContent = message;
         counter.classList.remove('no-results');
       }
 

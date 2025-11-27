@@ -550,6 +550,11 @@
           <input type="checkbox" id="show-unpublished" checked onchange="applyFilters()">
           Show Unpublished
         </label>
+
+        <label>
+          <input type="checkbox" id="showOnlyLatestPatches" checked onchange="applyFilters()">
+          Show only latest patch versions
+        </label>
       </div>
 
       <!-- Category Pills -->
@@ -657,6 +662,7 @@
     let currentCategoryFilter = '';
     let currentPerspective = 'api';
     let currentSort = { column: -1, ascending: true };
+    let showOnlyLatestPatches = true; // Default: show only latest patches
 
     /**
      * Flatten v3 nested structure to flat array
@@ -847,6 +853,7 @@
       const metaReleaseFilter = document.getElementById('filterMetaRelease').value;
       const publishedFilter = document.getElementById('filterPublished').value;
       const showUnpublished = document.getElementById('show-unpublished').checked;
+      showOnlyLatestPatches = document.getElementById('showOnlyLatestPatches').checked;
 
       filteredData = currentData.apis.filter(api => {
         // Category filter
@@ -886,6 +893,11 @@
 
         return true;
       });
+
+      // Apply latest-patch filter if toggle is checked
+      if (showOnlyLatestPatches) {
+        filteredData = ViewerLib.filterLatestPatches(filteredData);
+      }
 
       renderCurrentView();
     }
