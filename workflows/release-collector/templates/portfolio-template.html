@@ -240,6 +240,12 @@
               <option value="stable">Stable</option>
             </select>
           </div>
+          <div class="filter-group">
+            <label>
+              <input type="checkbox" id="showOnlyLatestPatches" checked onchange="applyFilters()" style="margin-right: 6px;">
+              Show only latest patch versions
+            </label>
+          </div>
           <button class="clear-filters-btn" onclick="clearAllFilters()">Clear Filters</button>
         </div>
       </div>
@@ -301,6 +307,7 @@
     let currentCategoryFilter = '';
     let currentView = 'meta-release';
     let currentSort = { column: -1, ascending: true };
+    let showOnlyLatestPatches = true; // Default: show only latest patches
 
     // Meta-release constants
     const META_RELEASES = ['Fall24', 'Spring25', 'Fall25'];
@@ -419,9 +426,14 @@
         const latestAPI = versions[versions.length - 1];
 
         // Only include meta-releases (exclude Sandbox)
-        const metaVersions = versions.filter(v =>
+        let metaVersions = versions.filter(v =>
           META_RELEASES.includes(v.meta_release)
         );
+
+        // Apply latest-patch filter if toggle is checked
+        if (showOnlyLatestPatches) {
+          metaVersions = ViewerLib.filterLatestPatches(metaVersions);
+        }
 
         // Create row data with version for each meta-release
         const row = {
@@ -581,6 +593,7 @@
 
       const searchFilter = document.getElementById('filterApiName').value.toLowerCase();
       const maturityFilter = document.getElementById('filterMaturity').value.toLowerCase();
+      showOnlyLatestPatches = document.getElementById('showOnlyLatestPatches').checked;
 
       filteredData = currentData.apis.filter(api => {
         // Category filter
@@ -729,7 +742,15 @@
      * Render API evolution view (includes Sandbox)
      */
     function renderAPIEvolution() {
-      const grouped = groupAPIsByName(filteredData);
+      let grouped = groupAPIsByName(filteredData);
+
+      // Apply latest-patch filter to each API's versions if toggle is checked
+      if (showOnlyLatestPatches) {
+        Object.keys(grouped).forEach(apiName => {
+          grouped[apiName] = ViewerLib.filterLatestPatches(grouped[apiName]);
+        });
+      }
+
       const container = document.getElementById('apiEvolutionContainer');
       container.innerHTML = '';
 
@@ -794,7 +815,15 @@
      * Render repository view (includes Sandbox)
      */
     function renderRepositoryView() {
-      const grouped = groupAPIsByRepository(filteredData);
+      let grouped = groupAPIsByRepository(filteredData);
+
+      // Apply latest-patch filter to each repo's APIs if toggle is checked
+      if (showOnlyLatestPatches) {
+        Object.keys(grouped).forEach(repoName => {
+          grouped[repoName].apis = ViewerLib.filterLatestPatches(grouped[repoName].apis);
+        });
+      }
+
       const container = document.getElementById('repositoryContainer');
       container.innerHTML = '';
 

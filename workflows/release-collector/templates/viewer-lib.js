@@ -33,6 +33,86 @@ const ViewerLib = {
   },
 
   /**
+   * Parse semantic version into components
+   * @param {string} version - Version string (e.g., "1.2.3")
+   * @returns {Object} {major, minor, patch} or null if invalid
+   */
+  parseVersion: function(version) {
+    if (!version) return null;
+
+    const parts = version.split(/[.-]/);
+    if (parts.length < 2) return null;
+
+    return {
+      major: parseInt(parts[0]) || 0,
+      minor: parseInt(parts[1]) || 0,
+      patch: parseInt(parts[2]) || 0,
+      full: version
+    };
+  },
+
+  /**
+   * Filter to latest patch release per MAJOR.MINOR cycle
+   * Keeps all different MAJOR.MINOR versions, filters older patches
+   * @param {Array} apis - Flat array of API objects
+   * @returns {Array} Filtered array with latest patch per release cycle
+   */
+  filterLatestPatches: function(apis) {
+    // Group by canonical_name + MAJOR.MINOR
+    const grouped = {};
+
+    apis.forEach(api => {
+      const apiKey = api.canonical_name || api.api_name;
+      const parsedVersion = this.parseVersion(api.version);
+
+      if (!parsedVersion) {
+        // Keep APIs without valid versions
+        const key = `${apiKey}|unknown`;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(api);
+        return;
+      }
+
+      // Group by API name + MAJOR.MINOR
+      const releaseKey = `${apiKey}|${parsedVersion.major}.${parsedVersion.minor}`;
+
+      if (!grouped[releaseKey]) {
+        grouped[releaseKey] = [];
+      }
+      grouped[releaseKey].push(api);
+    });
+
+    // For each group, find the latest patch
+    const latest = [];
+    Object.keys(grouped).forEach(key => {
+      const versions = grouped[key];
+
+      if (versions.length === 1) {
+        // Only one version in this release cycle
+        latest.push(versions[0]);
+        return;
+      }
+
+      // Sort by patch version (descending), then by date (descending)
+      versions.sort((a, b) => {
+        const versionCompare = this.compareVersions(b.version, a.version);
+        if (versionCompare !== 0) {
+          return versionCompare;
+        }
+        // Same version, compare dates
+        const dateA = new Date(a.release_date);
+        const dateB = new Date(b.release_date);
+        return dateB - dateA;
+      });
+
+      // Take the first (latest)
+      latest.push(versions[0]);
+    });
+
+    return latest;
+  },
+
+  /**
    * Filter APIs based on criteria
    * @param {Array} apis - Array of API objects
    * @param {Object} criteria - Filter criteria
