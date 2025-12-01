@@ -208,7 +208,7 @@
       populateRepositoryDropdown();
       populateVersionDropdown();
       buildCategoryPills();
-      renderTable(filteredData);
+      applyFilters();
     }
 
     /**
@@ -248,13 +248,14 @@
      * Build category filter pills
      */
     function buildCategoryPills() {
-      const categoryCounts = ViewerLib.getCategoryCounts(currentData.apis);
+      const categoryCounts = ViewerLib.getUniqueCategoryCounts(currentData.apis);
       const pillsContainer = document.getElementById('categoryPills');
 
-      // Update "All" count
+      // Update "All" count with unique API count
       const allPill = pillsContainer.querySelector('.all-categories');
       const allCount = document.getElementById('allCount');
-      allCount.textContent = `(${currentData.apis.length})`;
+      const uniqueTotal = ViewerLib.countUniqueAPIs(currentData.apis);
+      allCount.textContent = `(${uniqueTotal})`;
 
       // Remove existing category pills (keep All pill)
       const existingPills = pillsContainer.querySelectorAll('.category-pill:not(.all-categories)');
@@ -486,24 +487,21 @@
     function updateResultsCounter(count) {
       const counter = document.getElementById('resultsCounter');
       const resultsText = counter.querySelector('.results-text');
-      const total = currentData ? currentData.apis.length : 0;
 
       if (count === 0) {
         resultsText.textContent = 'No APIs match the current filters';
         counter.classList.add('no-results');
-      } else if (count === total) {
-        resultsText.textContent = `Showing all ${total} APIs`;
-        counter.classList.remove('no-results');
       } else {
-        let message = `Showing ${count} of ${total} APIs`;
+        // Count unique APIs in displayed data
+        const uniqueCount = ViewerLib.countUniqueAPIs(filteredData);
 
-        // Add context about filtering mode
-        if (showOnlyLatestPatches) {
-          const allCount = currentData.apis.length;
-          const filteredCount = ViewerLib.filterLatestPatches(currentData.apis).length;
-          if (filteredCount < allCount) {
-            message += ' (latest patches only)';
-          }
+        let message;
+        if (uniqueCount === count) {
+          // One entry per API
+          message = `Showing ${uniqueCount} APIs`;
+        } else {
+          // Multiple entries for some APIs (different versions/releases)
+          message = `Showing ${uniqueCount} APIs (${count} released versions)`;
         }
 
         resultsText.textContent = message;
