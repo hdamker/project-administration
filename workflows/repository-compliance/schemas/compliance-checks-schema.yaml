@@ -1,0 +1,110 @@
+# CAMARA Repository Compliance Checks Schema
+# Schema for compliance-checks.yaml containing check definitions
+# Version: 1.0.0
+
+$schema: http://json-schema.org/draft-07/schema#
+$id: https://camaraproject.org/schemas/compliance-checks-schema.yaml
+title: CAMARA Repository Compliance Checks
+description: Schema for repository compliance check definitions
+type: object
+additionalProperties: true
+required:
+  - version
+  - metadata
+  - checks
+
+properties:
+  version:
+    type: integer
+    minimum: 1
+    description: Schema / specification version of this file
+
+  metadata:
+    type: object
+    additionalProperties: true
+    required:
+      - description
+      - owner
+      - repo_categories
+      - severities
+    properties:
+      description:
+        type: string
+        description: Description of the compliance checks specification
+      owner:
+        type: string
+        description: Owner repository in format "org/repo"
+      repo_categories:
+        type: array
+        description: Canonical repository category identifiers
+        items:
+          type: string
+        minItems: 1
+        uniqueItems: true
+      severities:
+        type: array
+        description: Allowed severity values
+        items:
+          type: string
+        minItems: 1
+        uniqueItems: true
+
+  checks:
+    type: array
+    description: List of individual compliance checks
+    items:
+      type: object
+      additionalProperties: true
+      required:
+        - id
+        - name
+        - description
+        - category
+        - applies_to
+        - severity
+        - enforcement
+      properties:
+        id:
+          type: string
+          pattern: ^[a-z0-9]+(-[a-z0-9]+)*$
+          description: Unique kebab-case identifier (e.g., topic-alignment)
+        name:
+          type: string
+          description: Short human-readable name of the check
+        description:
+          type: string
+          description: Detailed explanation of what the check validates
+        category:
+          type: string
+          description: High-level category label (e.g., Repository Configuration)
+        applies_to:
+          type: array
+          description: Repository categories this check applies to
+          items:
+            type: string
+          minItems: 1
+        severity:
+          type: string
+          description: Severity of a violation
+          enum:
+            - critical
+            - high
+            - medium
+            - low
+        enforcement:
+          type: string
+          description: How violations should influence the workflow result
+          enum:
+            - fail
+            - warn
+            - log
+        parameters:
+          type: object
+          description: Implementation-specific configuration for this check
+          additionalProperties: true
+        notes:
+          type: string
+          description: Optional free-form notes for maintainers
+        implemented:
+          type: boolean
+          description: Whether this check is implemented (true for Phase 1, false for Phase 2/3)
