@@ -781,7 +781,7 @@
       `;
 
       buildCategoryPills();
-      renderCurrentView();
+      applyFilters();
     }
 
     /**
@@ -1187,18 +1187,26 @@
     function updateResultsCounter() {
       const counter = document.getElementById('resultsCounter');
       const resultsText = counter.querySelector('.results-text');
-      const total = currentData ? currentData.apis.length : 0;
 
       const count = filteredData.length;
 
       if (count === 0) {
         resultsText.textContent = 'No APIs match the current filters';
         counter.classList.add('no-results');
-      } else if (count === total) {
-        resultsText.textContent = `Showing all ${total} API versions`;
-        counter.classList.remove('no-results');
       } else {
-        resultsText.textContent = `Showing ${count} of ${total} API versions`;
+        // Count unique APIs in displayed data
+        const uniqueCount = ViewerLib.countUniqueAPIs(filteredData);
+
+        let message;
+        if (uniqueCount === count) {
+          // One entry per API
+          message = `Showing ${uniqueCount} APIs`;
+        } else {
+          // Multiple entries for some APIs (different versions/releases)
+          message = `Showing ${uniqueCount} APIs (${count} released versions)`;
+        }
+
+        resultsText.textContent = message;
         counter.classList.remove('no-results');
       }
 
