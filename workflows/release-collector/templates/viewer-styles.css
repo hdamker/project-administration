@@ -312,7 +312,9 @@ th {
   user-select: none;
   position: relative;
   font-size: 13px;
-  white-space: nowrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
   padding: 18px 14px;
 }
 
