@@ -264,7 +264,7 @@
         <table class="meta-release-table" id="metaReleaseTable">
           <thead>
             <tr>
-              <th onclick="sortMetaReleaseTable(0)">API Name <span class="sort-arrow"></span></th>
+              <th onclick="sortMetaReleaseTable(0)">API <span class="sort-arrow"></span></th>
               <th onclick="sortMetaReleaseTable(1)">Category <span class="sort-arrow"></span></th>
               <th onclick="sortMetaReleaseTable(2)">Fall24 <span class="sort-arrow"></span></th>
               <th onclick="sortMetaReleaseTable(3)">Spring25 <span class="sort-arrow"></span></th>
@@ -704,9 +704,9 @@
         // API Name
         const nameCell = document.createElement('td');
         if (row.website_url) {
-          nameCell.innerHTML = `<a href="${row.website_url}" target="_blank" rel="noopener">${row.title}</a>`;
+          nameCell.innerHTML = `<a href="${row.website_url}" target="_blank" rel="noopener">${row.api_name}</a>`;
         } else {
-          nameCell.textContent = row.title;
+          nameCell.textContent = row.api_name;
         }
         tr.appendChild(nameCell);
 
@@ -793,7 +793,7 @@
         header.className = 'api-evolution-header';
         header.innerHTML = `
           <div>
-            <div class="api-evolution-name">${latestAPI.display_name || latestAPI.title}</div>
+            <div class="api-evolution-name">${latestAPI.api_name}</div>
             <div class="api-evolution-category">${firstAPI.portfolio_category || 'Uncategorized'}</div>
           </div>
           <div>
@@ -895,7 +895,7 @@
 
           apiItem.innerHTML = `
             <div>
-              <strong>${latestVersion.title}</strong><br>
+              <strong>${latestVersion.api_name}</strong><br>
               <span style="font-size: 12px; color: #666;">${releaseInfo}</span>
             </div>
             <div>

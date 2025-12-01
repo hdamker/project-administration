@@ -269,9 +269,10 @@ const ViewerLib = {
    * @param {string} filename - Output filename
    */
   exportToCSV: function(apis, filename = 'camara-apis.csv') {
-    const headers = ['API Name', 'Version', 'Category', 'Maturity', 'Repository', 'New', 'Release Tag'];
+    const headers = ['API Name', 'Title', 'Version', 'Category', 'Maturity', 'Repository', 'New', 'Release Tag'];
     const rows = apis.map(api => [
-      api.title || api.api_name,
+      api.api_name || '',
+      api.title || '',
       api.version || '',
       api.portfolio_category || '',
       api.maturity || '',
@@ -377,14 +378,18 @@ const ViewerLib = {
   },
 
   /**
-   * Escape HTML special characters
+   * Escape HTML special characters while preserving newlines
+   * Manual escaping prevents browser from normalizing whitespace
    * @param {string} text - Text to escape
-   * @returns {string} Escaped text
+   * @returns {string} Escaped text with preserved newlines
    */
   escapeHtml: function(text) {
     if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 };

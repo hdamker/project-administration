@@ -614,7 +614,7 @@
         <table class="admin-table" id="apiTable">
           <thead>
             <tr>
-              <th onclick="sortTable(0)">API Name <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(0)">API <span class="sort-arrow"></span></th>
               <th onclick="sortTable(1)">Version <span class="sort-arrow"></span></th>
               <th onclick="sortTable(2)">Repository <span class="sort-arrow"></span></th>
               <th onclick="sortTable(3)">Release Tag <span class="sort-arrow"></span></th>
@@ -1002,7 +1002,7 @@
                            'status-published';
 
         row.innerHTML = `
-          <td><span class="status-indicator ${statusClass}"></span>${api.title}</td>
+          <td><span class="status-indicator ${statusClass}"></span>${api.api_name}</td>
           <td>${api.version}</td>
           <td><a href="${api.github_url.replace(/\/releases\/tag\/.*$/, '')}" target="_blank">${api.repository}</a></td>
           <td><a href="${api.github_url}" target="_blank">${api.release_tag}</a></td>
@@ -1044,7 +1044,7 @@
           <table>
             <thead>
               <tr>
-                <th>API Name</th>
+                <th>API</th>
                 <th>Version</th>
                 <th>Release</th>
                 <th>Meta-Release</th>
@@ -1084,7 +1084,7 @@
 
           tableHtml += `
             <tr class="${rowClasses.join(' ')}">
-              <td>${api.title}</td>
+              <td>${api.api_name}</td>
               <td>${api.version}</td>
               <td><a href="${api.github_url}" target="_blank">${api.release_tag}</a></td>
               <td>${api.meta_release === 'None (Sandbox)' ? 'Sandbox' : api.meta_release}</td>
