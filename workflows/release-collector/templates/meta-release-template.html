@@ -107,7 +107,7 @@
     // Global state
     let currentData = null;
     let filteredData = [];
-    let currentCategoryFilter = '';
+    let selectedCategories = [];
     let currentSort = { column: -1, ascending: true };
 
     /**
@@ -279,26 +279,48 @@
     }
 
     /**
-     * Filter by category
+     * Filter by category (multi-select)
      */
     function filterByCategory(category) {
-      currentCategoryFilter = category;
-
-      // Update active state
-      const pills = document.querySelectorAll('.category-pill');
-      pills.forEach(pill => pill.classList.remove('active'));
-
       if (category === '') {
-        document.querySelector('.all-categories').classList.add('active');
+        // "All" button - clear all selections
+        selectedCategories = [];
       } else {
-        pills.forEach(pill => {
-          if (pill.textContent.includes(category)) {
-            pill.classList.add('active');
-          }
-        });
+        // Toggle individual category
+        const index = selectedCategories.indexOf(category);
+        if (index > -1) {
+          selectedCategories.splice(index, 1);
+        } else {
+          selectedCategories.push(category);
+        }
       }
 
+      updatePillStates();
       applyFilters();
+    }
+
+    /**
+     * Update pill active states based on selectedCategories
+     */
+    function updatePillStates() {
+      const pills = document.querySelectorAll('.category-pill');
+
+      pills.forEach(pill => {
+        pill.classList.remove('active');
+
+        // "All" is active only when no categories selected
+        if (pill.classList.contains('all-categories')) {
+          if (selectedCategories.length === 0) {
+            pill.classList.add('active');
+          }
+        } else {
+          // Check if this pill's category is selected
+          const pillText = pill.textContent.split('(')[0].trim();
+          if (selectedCategories.includes(pillText)) {
+            pill.classList.add('active');
+          }
+        }
+      });
     }
 
     /**
@@ -372,9 +394,11 @@
 
       // Filter data
       filteredData = currentData.apis.filter(api => {
-        // Category filter
-        if (currentCategoryFilter && api.portfolio_category !== currentCategoryFilter) {
-          return false;
+        // Category filter (multi-select with OR logic)
+        if (selectedCategories.length > 0) {
+          if (!selectedCategories.includes(api.portfolio_category)) {
+            return false;
+          }
         }
 
         // API Name filter
@@ -435,7 +459,8 @@
       document.getElementById('filterVersion').value = '';
       document.getElementById('filterVersionMin').value = '';
       document.getElementById('filterVersionMax').value = '';
-      filterByCategory(''); // Clear category filter
+      selectedCategories = [];
+      updatePillStates();
 
       applyFilters();
     }
