@@ -312,8 +312,7 @@
         const row = document.createElement('tr');
 
         // API Name cell with tooltip and link
-        // Combine title + tooltip for hover text (title on own line, empty line, then tooltip)
-        const tooltipText = api.title.toUpperCase() + (api.tooltip ? '\n\n' + api.tooltip : '');
+        const tooltipText = api.tooltip || '';
         const tooltipAttr = tooltipText ? `data-tooltip="${ViewerLib.escapeHtml(tooltipText).replace(/\n/g, '&#10;')}"` : '';
         const apiNameCell = api.website_url ?
           `<span class="api-tooltip" ${tooltipAttr}><a href="${api.website_url}" target="_blank" rel="noopener">${api.api_name}</a></span>` :
