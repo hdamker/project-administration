@@ -275,39 +275,36 @@ jobs:
         if: ${{ github.event.inputs.dry_run != 'true' && env.TEAMS_ENABLED == 'true' }}
         run: |
           echo "🔍 Checking team creation prerequisites..."
-          
-          # Verify parent teams exist
-          if ! gh api orgs/$OWNER/teams/maintainers > /dev/null 2>&1; then
-            echo "::error::Parent team 'maintainers' does not exist in organization $OWNER"
-            exit 1
-          fi
-          
+
+          # Verify codeowners parent team exists
           if ! gh api orgs/$OWNER/teams/codeowners > /dev/null 2>&1; then
             echo "::error::Parent team 'codeowners' does not exist in organization $OWNER"
             exit 1
           fi
-          
-          # Get parent team IDs
-          MAINTAINERS_PARENT_ID=$(gh api orgs/$OWNER/teams/maintainers | jq -r '.id')
+
+          # Get codeowners parent team ID
           CODEOWNERS_PARENT_ID=$(gh api orgs/$OWNER/teams/codeowners | jq -r '.id')
-          
-          echo "MAINTAINERS_PARENT_ID=$MAINTAINERS_PARENT_ID" >> $GITHUB_ENV
+
           echo "CODEOWNERS_PARENT_ID=$CODEOWNERS_PARENT_ID" >> $GITHUB_ENV
-          
+
           echo "✅ Team creation prerequisites verified"
+          echo "Note: Maintainers team will be created without parent team (manual assignment required)"
 
       - name: Create maintainers team
         if: ${{ github.event.inputs.dry_run != 'true' && env.TEAMS_ENABLED == 'true' }}
         run: |
           echo "👥 Creating maintainers team: $MAINTAINERS_TEAM"
-          
+
           if gh api orgs/$OWNER/teams/$MAINTAINERS_TEAM > /dev/null 2>&1; then
             echo "Team $MAINTAINERS_TEAM already exists. Skipping creation."
           else
-            echo "{\"name\": \"$MAINTAINERS_TEAM\", \"description\": \"Maintainers for $REPO_NAME repository (team: $TEAM_PREFIX)\", \"parent_team_id\": $MAINTAINERS_PARENT_ID}" > maintainer_payload.json
-            
+            echo "{\"name\": \"$MAINTAINERS_TEAM\", \"description\": \"Maintainers for $REPO_NAME repository (team: $TEAM_PREFIX)\"}" > maintainer_payload.json
+
             if gh api orgs/$OWNER/teams -X POST -H "Accept: application/vnd.github+json" --input maintainer_payload.json; then
-              echo "✅ Created maintainers team: $MAINTAINERS_TEAM"
+              echo "✅ Created maintainers team: $MAINTAINERS_TEAM (without parent team)"
+              echo "::notice::Maintainers team created without parent. Add to appropriate parent team manually:"
+              echo "::notice::  - For independent Sandbox API repos: maintainers_independent-api-repositories"
+              echo "::notice::  - For Sub Project repos: respective Sub Project maintainer team"
             else
               echo "::error::Failed to create maintainers team"
               exit 1
@@ -693,8 +690,12 @@ jobs:
             cat << EOF >> $GITHUB_STEP_SUMMARY
           ### 👥 Teams Created
 
-          - **\`$MAINTAINERS_TEAM\`** - Triage permissions
+          - **\`$MAINTAINERS_TEAM\`** - Triage permissions (created without parent team)
           - **\`$CODEOWNERS_TEAM\`** - Push permissions (includes: ${{ github.event.inputs.initial_codeowners }})
+
+          ⚠️ **Manual Action Required:** Add the maintainers team to the appropriate parent team:
+          - For independent Sandbox API repositories: \`maintainers_independent-api-repositories\`
+          - For Sandbox repositories within a Sub Project: the respective Sub Project maintainer team
 
           EOF
           fi
@@ -780,13 +781,17 @@ jobs:
             cat << 'EOF' >> $GITHUB_STEP_SUMMARY
           ## 🔧 Teams That Would Be Created
 
-          - `${{ github.event.inputs.team_prefix }}_maintainers` (under maintainers team)
+          - `${{ github.event.inputs.team_prefix }}_maintainers` (created without parent team - requires manual assignment)
           - `${{ github.event.inputs.team_prefix }}_codeowners` (under codeowners team)
 
           **Team Permissions:**
           - Maintainers team: `triage` permission
-          - Codeowners team: `push` permission  
+          - Codeowners team: `push` permission
           - Admin team: `maintain` permission
+
+          ⚠️ **Manual Action Required:** The maintainers team must be added to the appropriate parent team after creation:
+          - For independent Sandbox API repositories: `maintainers_independent-api-repositories`
+          - For Sandbox repositories within a Sub Project: the respective Sub Project maintainer team
 
           EOF
           else
