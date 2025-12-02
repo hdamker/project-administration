@@ -125,9 +125,15 @@ const ViewerLib = {
         return false;
       }
 
-      // Category filter
-      if (criteria.category && api.portfolio_category !== criteria.category) {
-        return false;
+      // Category filter - supports both single and multi-select
+      if (criteria.category) {
+        if (api.portfolio_category !== criteria.category) {
+          return false;
+        }
+      } else if (criteria.categories && criteria.categories.length > 0) {
+        if (!criteria.categories.includes(api.portfolio_category)) {
+          return false;
+        }
       }
 
       // Maturity filter

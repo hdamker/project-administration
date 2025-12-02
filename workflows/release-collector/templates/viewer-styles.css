@@ -135,6 +135,20 @@ body.in-iframe .content {
   border-color: #0092f5;
 }
 
+/* Enhanced active pill styling for multi-select */
+.category-pill.active:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 146, 245, 0.3);
+  opacity: 0.9;
+}
+
+/* Add checkmark indicator for selected pills */
+.category-pill.active::before {
+  content: '✓ ';
+  font-weight: bold;
+  margin-right: 2px;
+}
+
 .category-pill.all-categories {
   background: #6c757d;
   color: white;
@@ -142,6 +156,13 @@ body.in-iframe .content {
 
 .category-pill.all-categories.active {
   background: #5a6268;
+}
+
+/* All pill gets different styling when inactive */
+.category-pill.all-categories:not(.active) {
+  background: white;
+  color: #6c757d;
+  border: 2px solid #6c757d;
 }
 
 .category-count {
