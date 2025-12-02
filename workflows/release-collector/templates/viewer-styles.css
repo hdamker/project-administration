@@ -488,7 +488,7 @@ td:first-child a:hover::after {
   border-radius: 6px;
   font-size: 12px;
   font-weight: normal;
-  white-space: normal;
+  white-space: pre-line;
   max-width: 380px;
   min-width: 200px;
   z-index: 1000;

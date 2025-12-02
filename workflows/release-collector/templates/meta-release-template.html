@@ -342,10 +342,11 @@
         const row = document.createElement('tr');
 
         // API Name cell with tooltip and link
-        const tooltipAttr = api.tooltip ? `data-tooltip="${ViewerLib.escapeHtml(api.tooltip)}"` : '';
+        const tooltipText = api.tooltip || '';
+        const tooltipAttr = tooltipText ? `data-tooltip="${ViewerLib.escapeHtml(tooltipText).replace(/\n/g, '&#10;')}"` : '';
         const apiNameCell = api.website_url ?
-          `<span class="api-tooltip" ${tooltipAttr}><a href="${api.website_url}" target="_blank" rel="noopener">${api.title}</a></span>` :
-          `<span class="api-name-plain api-tooltip" ${tooltipAttr}>${api.title}</span>`;
+          `<span class="api-tooltip" ${tooltipAttr}><a href="${api.website_url}" target="_blank" rel="noopener">${api.api_name}</a></span>` :
+          `<span class="api-name-plain api-tooltip" ${tooltipAttr}>${api.api_name}</span>`;
 
         // Maturity cell
         const maturityCell = `<span class="badge badge-${api.maturity}">${api.maturity.charAt(0).toUpperCase() + api.maturity.slice(1)}</span>`;
