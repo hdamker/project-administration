@@ -336,6 +336,47 @@ const ViewerLib = {
   },
 
   /**
+   * Count unique APIs in a dataset (by canonical_name or api_name)
+   * @param {Array} apis - Array of API objects
+   * @returns {number} Count of unique APIs
+   */
+  countUniqueAPIs: function(apis) {
+    const uniqueNames = new Set();
+    apis.forEach(api => {
+      const key = api.canonical_name || api.api_name;
+      uniqueNames.add(key);
+    });
+    return uniqueNames.size;
+  },
+
+  /**
+   * Get unique API counts per category
+   * @param {Array} apis - Array of API objects
+   * @returns {Object} Category counts based on unique APIs
+   */
+  getUniqueCategoryCounts: function(apis) {
+    const categoryApis = {}; // Track unique APIs per category
+
+    apis.forEach(api => {
+      const category = api.portfolio_category || 'Other';
+      const apiKey = api.canonical_name || api.api_name;
+
+      if (!categoryApis[category]) {
+        categoryApis[category] = new Set();
+      }
+      categoryApis[category].add(apiKey);
+    });
+
+    // Convert Sets to counts
+    const counts = {};
+    Object.keys(categoryApis).forEach(category => {
+      counts[category] = categoryApis[category].size;
+    });
+
+    return counts;
+  },
+
+  /**
    * Get unique values for a field
    * @param {Array} apis - Array of APIs
    * @param {string} field - Field name

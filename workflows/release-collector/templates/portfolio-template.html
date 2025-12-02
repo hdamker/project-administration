@@ -502,36 +502,20 @@
       headerDiv.innerHTML = `API Portfolio across all meta-releases`;
 
       buildCategoryPills();
-      renderCurrentView();
+      applyFilters();
     }
 
     /**
      * Build category filter pills
      */
     function buildCategoryPills() {
-      // Group by unique API names first
-      const uniqueAPIsMap = new Map();
-      currentData.apis.forEach(api => {
-        const key = api.canonical_name || api.api_name;
-        if (!uniqueAPIsMap.has(key)) {
-          // Store first occurrence (has category info)
-          uniqueAPIsMap.set(key, api);
-        }
-      });
-
-      // Count unique APIs per category
-      const categoryCounts = {};
-      uniqueAPIsMap.forEach(api => {
-        const category = api.portfolio_category || 'Other';
-        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
-      });
-
+      const categoryCounts = ViewerLib.getUniqueCategoryCounts(currentData.apis);
       const pillsContainer = document.getElementById('categoryPills');
 
-      // Update "All" count (unique APIs)
-      const uniqueAPIs = uniqueAPIsMap.size;
+      // Update "All" count with unique API count
       const allCount = document.getElementById('allCount');
-      allCount.textContent = `(${uniqueAPIs})`;
+      const uniqueTotal = ViewerLib.countUniqueAPIs(currentData.apis);
+      allCount.textContent = `(${uniqueTotal})`;
 
       // Remove existing category pills (keep All pill)
       const existingPills = pillsContainer.querySelectorAll('.category-pill:not(.all-categories)');
@@ -907,17 +891,25 @@
       const counter = document.getElementById('resultsCounter');
       const resultsText = counter.querySelector('.results-text');
 
-      const uniqueFiltered = new Set(filteredData.map(a => a.canonical_name || a.api_name)).size;
-      const uniqueTotal = new Set(currentData.apis.map(a => a.canonical_name || a.api_name)).size;
+      const count = filteredData.length;
 
-      if (uniqueFiltered === 0) {
+      if (count === 0) {
         resultsText.textContent = 'No APIs match the current filters';
         counter.classList.add('no-results');
-      } else if (uniqueFiltered === uniqueTotal) {
-        resultsText.textContent = `Showing all ${uniqueTotal} APIs`;
-        counter.classList.remove('no-results');
       } else {
-        resultsText.textContent = `Showing ${uniqueFiltered} of ${uniqueTotal} APIs`;
+        // Count unique APIs in displayed data
+        const uniqueCount = ViewerLib.countUniqueAPIs(filteredData);
+
+        let message;
+        if (uniqueCount === count) {
+          // One entry per API
+          message = `Showing ${uniqueCount} APIs`;
+        } else {
+          // Multiple entries for some APIs (different versions/releases)
+          message = `Showing ${uniqueCount} APIs (${count} released versions)`;
+        }
+
+        resultsText.textContent = message;
         counter.classList.remove('no-results');
       }
 
