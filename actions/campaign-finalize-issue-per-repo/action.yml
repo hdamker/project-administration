@@ -138,6 +138,15 @@ runs:
         INPUT_CREATED_ISSUE_NUMBER: ${{ steps.create_issue.outputs.created_issue_number }}
         INPUT_CREATED_ISSUE_URL: ${{ steps.create_issue.outputs.created_issue_url }}
 
+    - name: Copy issue body for artifact
+      if: ${{ inputs.issue_body_file != '' }}
+      shell: bash
+      run: |
+        if [ -f "${{ inputs.issue_body_file }}" ]; then
+          cp "${{ inputs.issue_body_file }}" issue-body.md
+          echo "Copied issue body to artifact"
+        fi
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -145,3 +154,4 @@ runs:
         path: |
           ${{ inputs.mode == 'plan' && 'plan' || 'results' }}.md
           ${{ inputs.mode == 'plan' && 'plan' || 'results' }}.jsonl
+          issue-body.md
