@@ -30,6 +30,8 @@ env:
   ORG: camaraproject
   ISSUE_TITLE: "Reset API and test code version information in main branch to wip"
   ISSUE_LABELS: "automated"
+  # Read-only repositories that should be excluded from compliance checks
+  EXCLUDE_REPOS: "DeviceStatus,KnowYourCustomer"
 
 permissions:
   contents: read
@@ -50,10 +52,12 @@ jobs:
             const includeSandbox = '${{ inputs.include_sandbox }}' === 'true';
             const includeIncubating = '${{ inputs.include_incubating }}' === 'true';
             const repoFilter = '${{ inputs.repository_filter }}'.trim();
+            const excludeRepos = process.env.EXCLUDE_REPOS.split(',').map(r => r.trim()).filter(r => r);
 
             console.log(`Fetching repositories from ${org}`);
             console.log(`Include sandbox: ${includeSandbox}`);
             console.log(`Include incubating: ${includeIncubating}`);
+            console.log(`Exclude repos: ${excludeRepos.join(', ')}`);
             if (repoFilter) {
               console.log(`Filter: ${repoFilter}`);
             }
@@ -75,6 +79,9 @@ jobs:
             const filteredRepos = repos.filter(repo => {
               // Skip archived repos
               if (repo.archived) return false;
+
+              // Skip excluded repos (read-only repositories)
+              if (excludeRepos.includes(repo.name)) return false;
 
               // Check if repo has any of the target topics
               const repoTopics = repo.topics || [];
