@@ -134,9 +134,11 @@ jobs:
         id: format
         if: steps.check.outputs.is_compliant == 'false'
         uses: actions/github-script@v7
+        env:
+          CHECK_JSON: ${{ steps.check.outputs.json }}
         with:
           script: |
-            const data = JSON.parse(`${{ steps.check.outputs.json }}`);
+            const data = JSON.parse(process.env.CHECK_JSON);
 
             // Format YAML files section
             if (data.yaml_files && data.yaml_files.length > 0) {
