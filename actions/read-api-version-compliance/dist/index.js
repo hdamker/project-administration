@@ -4552,8 +4552,8 @@ function checkFeatureFile(filePath, repoPath) {
     // Pattern for resource/path URLs
     // Matches: the resource "/api-name/v1/..." or the path "/api-name/v1/..."
     const resourcePattern = /(?:the resource|the path)\s+["'`]([^"'`]+)["'`]/gi;
-    // Pattern to extract version from URL path: /api-name/vX.Y/resource
-    const urlVersionPattern = /\/[\w-]+\/(v[\w.-]+)\//i;
+    // Pattern to extract version from URL path: /api-name/vX.Y/resource or api-name/vX.Y/resource
+    const urlVersionPattern = /(?:^|\/)[\w-]+\/(v[\w.-]+)\//i;
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const lineNumber = i + 1;
