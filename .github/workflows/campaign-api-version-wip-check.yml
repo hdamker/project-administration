@@ -163,7 +163,7 @@ jobs:
                   'resource_url': 'resource URL'
                 };
                 const label = checkLabels[f.check_type] || f.check_type;
-                return `- \`${f.file}\` (line ${f.line_number}): ${label} — currently \`${f.actual}\``;
+                return `- \`${f.file}\` (line ${f.line_number}): ${label} — currently \`${f.actual}\`, should be \`${f.expected}\``;
               });
               data.formatted_feature_files = '*Test Definition Files:*\n' + lines.join('\n');
             } else {
