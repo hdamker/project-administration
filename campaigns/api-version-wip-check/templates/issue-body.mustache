@@ -1,8 +1,8 @@
 **Problem description**
 
-The main branch of this repository contains API definitions and/or test files with version references that are not yet reset to `wip`. According to CAMARA guidelines, all version fields on the main branch must use work-in-progress (`wip`) versions after a release.
+The main branch of this repository contains API definitions and/or test files with version references that are not yet reset to `wip`. According to CAMARA guidelines, all version fields on the main branch must use work-in-progress (`wip`) versions between releases.
 
-**Files to update:**
+**Files affected:**
 
 {{formatted_yaml_files}}
 
@@ -18,12 +18,12 @@ Codeowners should create a PR to update the affected files to use `wip` versions
 
 **Additional context**
 
-This is standard post-release procedure. The main branch always stays in a work-in-progress state, with version fields only updated to specific versions on dedicated release branches. This prepares the repository for the next development cycle and aligns with the new CAMARA Release Workflow.
+This is a standard post-release procedure. It won't be necessary within the new CAMARA Release Workflow. The main branch will always stay in work-in-progress state, with version fields only updated to specific versions on dedicated release branches. Therefore the requested PR will prepare the repository for the next development cycle and aligns with the new CAMARA Release Workflow.
 
 References:
-- [CAMARA Release Workflow and Metadata Concept](https://github.com/camaraproject/ReleaseManagement/blob/main/documentation/SupportingDocuments/CAMARA-Release-Workflow-and-Metadata-Concept.md)
-- [Original discussion: ReleaseManagement#328](https://github.com/camaraproject/ReleaseManagement/issues/328)
 - [CAMARA API Design Guide - Versioning](https://github.com/camaraproject/Commonalities/blob/main/documentation/CAMARA-API-Design-Guide.md#7-versioning)
+- [Original discussion: ReleaseManagement#328](https://github.com/camaraproject/ReleaseManagement/issues/328)
+- [CAMARA Release Workflow and Metadata Concept](https://github.com/camaraproject/ReleaseManagement/blob/main/documentation/SupportingDocuments/CAMARA-Release-Workflow-and-Metadata-Concept.md)
 
 ---
 *Automated check by CAMARA project-administration — checked {{yaml_files_checked}} API definitions and {{feature_files_checked}} test files*
