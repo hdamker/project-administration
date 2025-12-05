@@ -4468,6 +4468,24 @@ function info(message) {
 function warning(message) {
     console.log(`::warning::${message}`);
 }
+// Sanitize strings to remove control characters that break JSON parsing in workflows
+function sanitizeForJson(obj) {
+    if (typeof obj === 'string') {
+        // Replace control characters (except \n, \r, \t which are handled by JSON.stringify)
+        return obj.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    }
+    if (Array.isArray(obj)) {
+        return obj.map(sanitizeForJson);
+    }
+    if (obj && typeof obj === 'object') {
+        const result = {};
+        for (const key of Object.keys(obj)) {
+            result[key] = sanitizeForJson(obj[key]);
+        }
+        return result;
+    }
+    return obj;
+}
 // Server URL validation per CAMARA-API-Design-Guide.md
 // Expected format: {apiRoot}/<api-name>/<api-version>
 const SERVER_URL_PATTERN = /^\{apiRoot\}\/[\w-]+\/(v[\w.-]+)$/;
@@ -4651,8 +4669,8 @@ async function run() {
             info(`  - YAML file issues: ${report.yaml_files.length}`);
             info(`  - Feature file issues: ${report.feature_files.length}`);
         }
-        // Output full JSON for Mustache templates
-        setOutput('json', JSON.stringify(report));
+        // Output full JSON for Mustache templates (sanitized to avoid control character issues)
+        setOutput('json', JSON.stringify(sanitizeForJson(report)));
         // Output compact summary for JSONL records
         const summary = {
             repo_slug: report.repo_slug,

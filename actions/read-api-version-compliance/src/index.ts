@@ -36,6 +36,25 @@ function warning(message: string): void {
   console.log(`::warning::${message}`);
 }
 
+// Sanitize strings to remove control characters that break JSON parsing in workflows
+function sanitizeForJson(obj: any): any {
+  if (typeof obj === 'string') {
+    // Replace control characters (except \n, \r, \t which are handled by JSON.stringify)
+    return obj.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeForJson);
+  }
+  if (obj && typeof obj === 'object') {
+    const result: any = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = sanitizeForJson(obj[key]);
+    }
+    return result;
+  }
+  return obj;
+}
+
 // Types
 interface YamlFileIssue {
   file: string;
@@ -270,8 +289,8 @@ async function run(): Promise<void> {
       info(`  - Feature file issues: ${report.feature_files.length}`);
     }
 
-    // Output full JSON for Mustache templates
-    setOutput('json', JSON.stringify(report));
+    // Output full JSON for Mustache templates (sanitized to avoid control character issues)
+    setOutput('json', JSON.stringify(sanitizeForJson(report)));
 
     // Output compact summary for JSONL records
     const summary = {
