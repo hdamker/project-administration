@@ -1,0 +1,18 @@
+name: campaign-api-version-wip-check
+
+# STUB - Run from branch feat-api-version-compliance-check-63 for testing
+
+on:
+  workflow_dispatch:
+
+jobs:
+  stub:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stub placeholder
+        run: |
+          echo "This is a stub workflow on main branch."
+          echo "For testing, run from branch: feat-api-version-compliance-check-63"
+          echo ""
+          echo "gh workflow run campaign-api-version-wip-check.yml --ref feat-api-version-compliance-check-63"
+          exit 1
