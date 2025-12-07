@@ -12,7 +12,7 @@ const ViewerLib = {
    * @param {string} b - Second version
    * @returns {number} -1 if a < b, 0 if equal, 1 if a > b
    */
-  compareVersions: function(a, b) {
+  compareVersions: function (a, b) {
     if (!a && !b) return 0;
     if (!a) return -1;
     if (!b) return 1;
@@ -37,7 +37,7 @@ const ViewerLib = {
    * @param {string} version - Version string (e.g., "1.2.3")
    * @returns {Object} {major, minor, patch} or null if invalid
    */
-  parseVersion: function(version) {
+  parseVersion: function (version) {
     if (!version) return null;
 
     const parts = version.split(/[.-]/);
@@ -57,7 +57,7 @@ const ViewerLib = {
    * @param {Array} apis - Flat array of API objects
    * @returns {Array} Filtered array with latest patch per release cycle
    */
-  filterLatestPatches: function(apis) {
+  filterLatestPatches: function (apis) {
     // Group by canonical_name + MAJOR.MINOR
     const grouped = {};
 
@@ -118,7 +118,7 @@ const ViewerLib = {
    * @param {Object} criteria - Filter criteria
    * @returns {Array} Filtered APIs
    */
-  filterAPIs: function(apis, criteria) {
+  filterAPIs: function (apis, criteria) {
     return apis.filter(api => {
       // Published filter
       if (criteria.publishedOnly && !api.published) {
@@ -174,7 +174,7 @@ const ViewerLib = {
    * @param {string} query - Search query
    * @returns {Array} Matching APIs
    */
-  searchAPIs: function(apis, query) {
+  searchAPIs: function (apis, query) {
     if (!query) return apis;
 
     const lowerQuery = query.toLowerCase();
@@ -193,7 +193,7 @@ const ViewerLib = {
    * @param {boolean} ascending - Sort direction
    * @returns {Array} Sorted APIs
    */
-  sortAPIs: function(apis, field, ascending = true) {
+  sortAPIs: function (apis, field, ascending = true) {
     const sorted = [...apis].sort((a, b) => {
       let aVal = a[field];
       let bVal = b[field];
@@ -229,7 +229,7 @@ const ViewerLib = {
    * @param {string} category - Category name
    * @returns {string} HTML string
    */
-  renderCategoryPill: function(category) {
+  renderCategoryPill: function (category) {
     if (!category) {
       return '<span class="category-pill category-other">Other</span>';
     }
@@ -243,7 +243,7 @@ const ViewerLib = {
    * @param {string} maturity - Maturity level
    * @returns {string} HTML string
    */
-  renderMaturityBadge: function(maturity) {
+  renderMaturityBadge: function (maturity) {
     const badges = {
       'stable': '<span class="badge badge-stable">Stable</span>',
       'initial': '<span class="badge badge-initial">Initial</span>',
@@ -259,7 +259,7 @@ const ViewerLib = {
    * @param {boolean} isNew - Whether API is new
    * @returns {string} HTML string
    */
-  renderNewIndicator: function(isNew) {
+  renderNewIndicator: function (isNew) {
     return isNew ? '<span class="badge badge-new">New</span>' : '-';
   },
 
@@ -268,7 +268,7 @@ const ViewerLib = {
    * @param {Array} apis - APIs to export
    * @param {string} filename - Output filename
    */
-  exportToCSV: function(apis, filename = 'camara-apis.csv') {
+  exportToCSV: function (apis, filename = 'camara-apis.csv') {
     const headers = ['API Name', 'Title', 'Version', 'Category', 'Maturity', 'Repository', 'New', 'Release Tag'];
     const rows = apis.map(api => [
       api.api_name || '',
@@ -289,34 +289,44 @@ const ViewerLib = {
   },
 
   // Theme Toggling Logic
-  initThemeToggle: function() {
+  // Theme Toggling Logic (3-State: Auto -> Light -> Dark)
+  initThemeToggle: function (scope = 'default') {
     const themeToggleBtn = document.getElementById('theme-toggle');
     if (!themeToggleBtn) return;
 
-    // Check saved theme or system preference
-    const savedTheme = localStorage.getItem('camara-theme');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const storageKey = `camara-theme-${scope}`;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-    // Determine initial theme
-    const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+    // State management: 'auto' | 'light' | 'dark'
+    let currentState = localStorage.getItem(storageKey) || 'auto';
 
-    // Apply initial theme
-    document.documentElement.setAttribute('data-theme', initialTheme);
-    updateToggleIcon(initialTheme);
+    function applyTheme(state) {
+      // Determine effective theme
+      let effectiveTheme = state;
+      if (state === 'auto') {
+        effectiveTheme = mediaQuery.matches ? 'dark' : 'light';
+      }
 
-    // Toggle event listener
-    themeToggleBtn.addEventListener('click', () => {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', effectiveTheme);
+      updateToggleIcon(state);
+    }
 
-      document.documentElement.setAttribute('data-theme', newTheme);
-      localStorage.setItem('camara-theme', newTheme);
-      updateToggleIcon(newTheme);
-    });
-
-    function updateToggleIcon(theme) {
-      const icon = theme === 'dark' ? '☀️' : '🌙';
-      const label = theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+    function updateToggleIcon(state) {
+      let icon, label;
+      switch (state) {
+        case 'auto':
+          icon = '🌗'; // Half moon/sun for Auto
+          label = 'System Theme (Auto)';
+          break;
+        case 'light':
+          icon = '☀️';
+          label = 'Light Mode';
+          break;
+        case 'dark':
+          icon = '🌙';
+          label = 'Dark Mode';
+          break;
+      }
 
       const iconSpan = themeToggleBtn.querySelector('.theme-icon');
       if (iconSpan) {
@@ -324,13 +334,33 @@ const ViewerLib = {
       } else {
         themeToggleBtn.textContent = icon;
       }
-      themeToggleBtn.setAttribute('title', label);
+      themeToggleBtn.setAttribute('title', `${label} (Click to cycle)`);
       themeToggleBtn.setAttribute('aria-label', label);
     }
+
+    // Initial Apply
+    applyTheme(currentState);
+
+    // Toggle event listener (Cycle: Auto -> Light -> Dark -> Auto)
+    themeToggleBtn.addEventListener('click', () => {
+      if (currentState === 'auto') currentState = 'light';
+      else if (currentState === 'light') currentState = 'dark';
+      else currentState = 'auto';
+
+      localStorage.setItem(storageKey, currentState);
+      applyTheme(currentState);
+    });
+
+    // System Theme Listener (only affects if in 'auto' mode)
+    mediaQuery.addEventListener('change', () => {
+      if (currentState === 'auto') {
+        applyTheme('auto');
+      }
+    });
   },
 
   // Helper to create the button HTML
-  createThemeToggle: function() {
+  createThemeToggle: function () {
     return `
       <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Dark Mode">
         <span class="theme-icon">🌙</span>
@@ -343,7 +373,7 @@ const ViewerLib = {
    * @param {Array} apis - APIs to export
    * @param {string} filename - Output filename
    */
-  exportToJSON: function(apis, filename = 'camara-apis.json') {
+  exportToJSON: function (apis, filename = 'camara-apis.json') {
     const json = JSON.stringify(apis, null, 2);
     this.downloadFile(json, filename, 'application/json');
   },
@@ -354,7 +384,7 @@ const ViewerLib = {
    * @param {string} filename - Filename
    * @param {string} mimeType - MIME type
    */
-  downloadFile: function(content, filename, mimeType) {
+  downloadFile: function (content, filename, mimeType) {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -370,7 +400,7 @@ const ViewerLib = {
    * Detect if page is running in iframe
    * @returns {boolean} True if in iframe
    */
-  isInIframe: function() {
+  isInIframe: function () {
     try {
       return window.self !== window.top;
     } catch (e) {
@@ -383,7 +413,7 @@ const ViewerLib = {
    * @param {Array} apis - Array of APIs
    * @returns {Object} Category counts
    */
-  getCategoryCounts: function(apis) {
+  getCategoryCounts: function (apis) {
     const counts = {};
     apis.forEach(api => {
       const category = api.portfolio_category || 'Other';
@@ -397,7 +427,7 @@ const ViewerLib = {
    * @param {Array} apis - Array of API objects
    * @returns {number} Count of unique APIs
    */
-  countUniqueAPIs: function(apis) {
+  countUniqueAPIs: function (apis) {
     const uniqueNames = new Set();
     apis.forEach(api => {
       const key = api.canonical_name || api.api_name;
@@ -411,7 +441,7 @@ const ViewerLib = {
    * @param {Array} apis - Array of API objects
    * @returns {Object} Category counts based on unique APIs
    */
-  getUniqueCategoryCounts: function(apis) {
+  getUniqueCategoryCounts: function (apis) {
     const categoryApis = {}; // Track unique APIs per category
 
     apis.forEach(api => {
@@ -439,7 +469,7 @@ const ViewerLib = {
    * @param {string} field - Field name
    * @returns {Array} Sorted unique values
    */
-  getUniqueValues: function(apis, field) {
+  getUniqueValues: function (apis, field) {
     const values = new Set();
     apis.forEach(api => {
       const value = api[field];
@@ -455,7 +485,7 @@ const ViewerLib = {
    * @param {string} dateString - ISO date string
    * @returns {string} Formatted date
    */
-  formatDate: function(dateString) {
+  formatDate: function (dateString) {
     if (!dateString) return '';
     try {
       return new Date(dateString).toLocaleDateString('en-US', {
@@ -474,7 +504,7 @@ const ViewerLib = {
    * @param {string} text - Text to escape
    * @returns {string} Escaped text with preserved newlines
    */
-  escapeHtml: function(text) {
+  escapeHtml: function (text) {
     if (!text) return '';
     return text
       .replace(/&/g, '&amp;')

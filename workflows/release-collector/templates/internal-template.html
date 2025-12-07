@@ -6,11 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CAMARA Release Administration (Alpha)</title>
   <style>
-    {
-        {
-        VIEWER_STYLES
-      }
-    }
+    {{VIEWER_STYLES}}
 
     /* CSS Variables */
     :root {
@@ -1281,8 +1277,8 @@
 
     // Initialize on page load
     initializeData();
-    // Initialize theme toggle
-    ViewerLib.initThemeToggle();
+    // Initialize theme toggle (separate scope for internal viewer)
+    ViewerLib.initThemeToggle('internal');
   </script>
 </body>
 
