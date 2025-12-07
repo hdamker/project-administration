@@ -288,6 +288,56 @@ const ViewerLib = {
     this.downloadFile(csv, filename, 'text/csv');
   },
 
+  // Theme Toggling Logic
+  initThemeToggle: function() {
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    if (!themeToggleBtn) return;
+
+    // Check saved theme or system preference
+    const savedTheme = localStorage.getItem('camara-theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    // Determine initial theme
+    const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+
+    // Apply initial theme
+    document.documentElement.setAttribute('data-theme', initialTheme);
+    updateToggleIcon(initialTheme);
+
+    // Toggle event listener
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('camara-theme', newTheme);
+      updateToggleIcon(newTheme);
+    });
+
+    function updateToggleIcon(theme) {
+      const icon = theme === 'dark' ? '☀️' : '🌙';
+      const label = theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+
+      const iconSpan = themeToggleBtn.querySelector('.theme-icon');
+      if (iconSpan) {
+        iconSpan.textContent = icon;
+      } else {
+        themeToggleBtn.textContent = icon;
+      }
+      themeToggleBtn.setAttribute('title', label);
+      themeToggleBtn.setAttribute('aria-label', label);
+    }
+  },
+
+  // Helper to create the button HTML
+  createThemeToggle: function() {
+    return `
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Dark Mode">
+        <span class="theme-icon">🌙</span>
+      </button>
+    `;
+  },
+
   /**
    * Export APIs to JSON format
    * @param {Array} apis - APIs to export

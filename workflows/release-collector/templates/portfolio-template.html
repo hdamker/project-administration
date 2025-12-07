@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CAMARA API Portfolio Overview (Alpha)</title>
   <style>
-{{VIEWER_STYLES}}
+    {{VIEWER_STYLES}}
+
     /* View toggle specific styles */
     .view-toggle {
       display: flex;
@@ -201,13 +203,95 @@
     .hidden-view {
       display: none;
     }
+
+    /* Dark Mode Overrides for Portfolio Layout */
+    html[data-theme="dark"] .view-toggle {
+      background: var(--bg-filter);
+      border-color: var(--border-accent-light);
+    }
+
+    html[data-theme="dark"] .view-toggle-btn {
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border-color: var(--border-light);
+    }
+
+    html[data-theme="dark"] .view-toggle-btn:hover {
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    html[data-theme="dark"] .view-toggle-btn.active {
+      background: var(--accent-primary);
+      color: white;
+      border-color: var(--accent-primary);
+    }
+
+    html[data-theme="dark"] .meta-release-table th {
+      background: var(--bg-table-header-start);
+      /* Uses the dark gray */
+      color: var(--text-on-accent);
+      border-bottom-color: var(--border-light);
+    }
+
+    html[data-theme="dark"] .meta-release-table td {
+      border-bottom-color: var(--border-light);
+    }
+
+    html[data-theme="dark"] .meta-release-table tr:hover td {
+      background-color: var(--bg-table-row-hover);
+    }
+
+    html[data-theme="dark"] .version-badge {
+      background: rgba(3, 102, 214, 0.2);
+      color: #58a6ff;
+    }
+
+    html[data-theme="dark"] .repo-section,
+    html[data-theme="dark"] .api-evolution-section {
+      background: var(--bg-container);
+      border-color: var(--border-light);
+    }
+
+    html[data-theme="dark"] .repo-header {
+      border-bottom-color: var(--border-light);
+    }
+
+    html[data-theme="dark"] .repo-api-item {
+      background: var(--bg-container);
+      border: 1px solid var(--border-light);
+      border-left: 3px solid var(--accent-primary);
+    }
+
+    html[data-theme="dark"] .timeline-item {
+      background: var(--bg-container);
+      border-color: var(--border-light);
+    }
+
+    html[data-theme="dark"] .timeline-item.sandbox {
+      background: rgba(245, 167, 66, 0.1);
+      border-color: var(--warning-color);
+    }
+
+    html[data-theme="dark"] .footer-note {
+      background: var(--bg-filter) !important;
+      color: var(--text-secondary) !important;
+      border: 1px solid var(--border-light);
+    }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="header">
       <h1>CAMARA API Portfolio Overview (Alpha)</h1>
-      <div class="metadata" id="header-metadata"></div>
+      <div class="header-content">
+        <div class="metadata" id="header-metadata"></div>
+      </div>
+      <div class="theme-toggle-wrapper">
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Dark Mode">
+          <span class="theme-icon">🌙</span>
+        </button>
+      </div>
     </div>
 
     <div class="content" id="content">
@@ -242,7 +326,8 @@
           </div>
           <div class="filter-group">
             <label>
-              <input type="checkbox" id="showOnlyLatestPatches" checked onchange="applyFilters()" style="margin-right: 6px;">
+              <input type="checkbox" id="showOnlyLatestPatches" checked onchange="applyFilters()"
+                style="margin-right: 6px;">
               Show only latest patch versions
             </label>
           </div>
@@ -275,8 +360,10 @@
           <tbody id="metaReleaseTableBody">
           </tbody>
         </table>
-        <div class="footer-note" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 13px; color: #666;">
-          Note: This table shows only meta-releases (Fall24, Spring25, Fall25). Sandbox releases are shown in API Evolution and Repository views.
+        <div class="footer-note"
+          style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 13px; color: #666;">
+          Note: This table shows only meta-releases (Fall24, Spring25, Fall25). Sandbox releases are shown in API
+          Evolution and Repository views.
         </div>
       </div>
 
@@ -296,7 +383,7 @@
 
   <script>
     // Embedded shared library
-{{VIEWER_LIBRARY}}
+    {{VIEWER_LIBRARY}}
 
     // Embedded release data (fully enriched from workflow)
     const RELEASE_DATA = {{RELEASE_DATA}};
@@ -611,9 +698,9 @@
 
         // Search filter (API name or repository)
         if (searchFilter &&
-            !api.api_name.toLowerCase().includes(searchFilter) &&
-            !api.title.toLowerCase().includes(searchFilter) &&
-            !api.repository.toLowerCase().includes(searchFilter)) {
+          !api.api_name.toLowerCase().includes(searchFilter) &&
+          !api.title.toLowerCase().includes(searchFilter) &&
+          !api.repository.toLowerCase().includes(searchFilter)) {
           return false;
         }
 
@@ -959,6 +1046,9 @@
     // Initialize on page load
     detectIframe();
     initializeData();
+    // Initialize theme toggle
+    ViewerLib.initThemeToggle();
   </script>
 </body>
+
 </html>

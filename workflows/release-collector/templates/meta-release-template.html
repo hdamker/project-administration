@@ -12,7 +12,14 @@
   <div class="container">
     <div class="header">
       <h1>CAMARA API Overview</h1>
-      <div class="metadata" id="header-metadata"></div>
+      <div class="header-content">
+        <div class="metadata" id="header-metadata"></div>
+      </div>
+      <div class="theme-toggle-wrapper">
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Dark Mode">
+          <span class="theme-icon">🌙</span>
+        </button>
+      </div>
     </div>
 
     <div class="content" id="content">
@@ -601,6 +608,8 @@
     // Initialize on page load
     detectIframe();
     initializeData();
+    // Initialize theme toggle
+    ViewerLib.initThemeToggle();
   </script>
 </body>
 </html>
