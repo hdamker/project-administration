@@ -47,9 +47,9 @@ on:
         type: boolean
         default: false
 
-  # schedule:
-    # Weekly run on Mondays at 04:35 UTC
-    # - cron: '35 4 * * 1'
+  schedule:
+    # Daily run at 04:35 UTC (for testing)
+    - cron: '35 4 * * *'
 
 env:
   # GitHub API Configuration
@@ -499,6 +499,11 @@ jobs:
         with:
           name: release-reports-${{ github.run_number }}
           path: staging
+
+      - name: Copy staging entry page
+        run: |
+          cp workflows/release-collector/staging-index.html staging/viewers/index.html
+          echo "✓ Copied staging-index.html to viewers/index.html"
 
       - name: Show deployment contents
         run: |
