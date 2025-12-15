@@ -12,9 +12,9 @@
 # - Secret PRODUCTION_DEPLOY_TOKEN: Fine-grained PAT for camaraproject/camaraproject.github.io
 #   Required permissions:
 #   - Contents: Read and write (push files)
-#   - Pages: Read and write (trigger Pages build)
-#   - Actions: Read and write (trigger workflows)
+#   - Actions: Read and write (trigger workflow_dispatch)
 #   - Metadata: Read (required for API access)
+#   Note: Pages permission is NOT needed - the target repo's workflow uses GITHUB_TOKEN
 
 name: Release Collector - Production Deploy
 
@@ -39,8 +39,7 @@ on:
 
 env:
   STAGING_URL: https://camaraproject.github.io/project-administration
-  # TODO: Change to camaraproject/camaraproject.github.io for final deployment
-  PRODUCTION_REPO: hdamker/hdamker.github.io
+  PRODUCTION_REPO: camaraproject/camaraproject.github.io
   PRODUCTION_PATH: releases
 
 jobs:
@@ -321,7 +320,6 @@ jobs:
           Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           # Always commit and push (--allow-empty ensures push even if no file changes)
-          # This triggers the GitHub Pages build workflow in the target repository
           git commit --allow-empty -m "$COMMIT_MSG"
           git push
 
@@ -331,6 +329,19 @@ jobs:
           echo "commit_url=https://github.com/${{ env.PRODUCTION_REPO }}/commit/$COMMIT_SHA" >> $GITHUB_OUTPUT
 
           echo "Deployed to production: $COMMIT_SHA"
+
+      - name: Trigger Pages deployment
+        env:
+          GH_TOKEN: ${{ secrets.PRODUCTION_DEPLOY_TOKEN }}
+        run: |
+          echo "Triggering Pages deployment in ${{ env.PRODUCTION_REPO }}..."
+
+          gh workflow run pages-deploy.yml \
+            --repo "${{ env.PRODUCTION_REPO }}" \
+            --field source_repo="${{ github.repository }}" \
+            --field source_sha="${{ needs.validate-deployment.outputs.deploy_sha }}"
+
+          echo "Pages deployment triggered successfully"
 
   # =========================================================================================
   # Job 4: Workflow Summary
