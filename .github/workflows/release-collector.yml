@@ -433,7 +433,7 @@ jobs:
             - 📊 `data/releases-master.yaml` - Master release metadata
             - 📈 `reports/*.json` - Meta-release reports (Fall24, Spring25, Fall25, All)
 
-            **Note**: Viewers are generated in workflow artifacts for testing. Production deployment to camaraproject.github.io will be implemented in Phase 4.
+            **Note**: Viewers are deployed to staging for preview. After merging, trigger the **Release Collector - Production Deploy** workflow to publish to https://camaraproject.github.io/releases/
 
             ### File Changes
 
@@ -451,6 +451,12 @@ jobs:
             ### Merge Instructions
 
             **Use squash and merge** to keep main history clean. Each workflow run creates a single logical change.
+
+            ### After Merging
+
+            1. **Trigger production deployment** - Run the "Release Collector - Production Deploy" workflow
+               - Uses default mode (timestamp safety check ensures staging content matches main)
+               - Deploys merged content to https://camaraproject.github.io/releases/
 
             ### Preview Viewers (Staging)
 
