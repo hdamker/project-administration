@@ -1,0 +1,425 @@
+# CAMARA Release Collector - Production Deployment Workflow
+#
+# This workflow deploys the Release Collector viewers to production
+# (camaraproject.github.io/releases/).
+#
+# Safety checks:
+# - Default mode: Compares staging vs main timestamps to prevent deploying stale content
+# - Rollback mode: Allows deploying specific ref from main branch history
+# - Emergency mode: Allows deploying from any branch (explicit override)
+#
+# Prerequisites:
+# - Secret PRODUCTION_DEPLOY_TOKEN with write access to camaraproject/camaraproject.github.io
+
+name: Release Collector - Production Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'ROLLBACK ONLY: Git ref from main to deploy. Leave empty for normal deployment (with timestamp safety check).'
+        required: false
+        default: ''
+        type: string
+      allow_branch:
+        description: 'Allow deployment from any branch (emergency override). Skips also timestamp safety check.'
+        required: false
+        type: boolean
+        default: false
+      dry_run:
+        description: 'Preview deployment without actually deploying'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  STAGING_URL: https://camaraproject.github.io/project-administration
+  # TODO: Change to camaraproject/camaraproject.github.io for final deployment
+  PRODUCTION_REPO: hdamker/hdamker.github.io
+  PRODUCTION_PATH: releases
+
+jobs:
+  # =========================================================================================
+  # Job 1: Validate Deployment
+  # =========================================================================================
+  validate-deployment:
+    name: Validate Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_ref: ${{ steps.determine-ref.outputs.ref }}
+      deploy_sha: ${{ steps.determine-ref.outputs.sha }}
+      deploy_mode: ${{ steps.determine-ref.outputs.mode }}
+      main_timestamp: ${{ steps.timestamp-check.outputs.main_timestamp }}
+      staging_timestamp: ${{ steps.timestamp-check.outputs.staging_timestamp }}
+      skip_deploy: ${{ steps.timestamp-check.outputs.skip_deploy }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || 'main' }}
+          fetch-depth: 0  # Full history for ancestor check
+
+      - name: Determine deployment ref and mode
+        id: determine-ref
+        run: |
+          INPUT_REF="${{ github.event.inputs.ref }}"
+          ALLOW_BRANCH="${{ github.event.inputs.allow_branch }}"
+
+          if [[ -z "$INPUT_REF" ]]; then
+            # Default mode: HEAD of main
+            DEPLOY_REF="main"
+            DEPLOY_MODE="default"
+            echo "mode=default" >> $GITHUB_OUTPUT
+            echo "ref=main" >> $GITHUB_OUTPUT
+            echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+            echo "Using default mode: HEAD of main"
+
+          elif [[ "$ALLOW_BRANCH" == "true" ]]; then
+            # Emergency mode: Any ref allowed
+            DEPLOY_REF="$INPUT_REF"
+            DEPLOY_MODE="emergency"
+            echo "mode=emergency" >> $GITHUB_OUTPUT
+            echo "ref=$INPUT_REF" >> $GITHUB_OUTPUT
+            echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+            echo "::warning::EMERGENCY MODE - Deploying from $INPUT_REF without safety checks"
+
+          else
+            # Rollback mode: Verify ref is on main
+            DEPLOY_REF="$INPUT_REF"
+            DEPLOY_MODE="rollback"
+
+            # Check if ref is ancestor of main or is on main
+            if git merge-base --is-ancestor "$INPUT_REF" main 2>/dev/null || \
+               git merge-base --is-ancestor main "$INPUT_REF" 2>/dev/null; then
+              echo "mode=rollback" >> $GITHUB_OUTPUT
+              echo "ref=$INPUT_REF" >> $GITHUB_OUTPUT
+              echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+              echo "Rollback mode: Deploying $INPUT_REF (verified on main branch)"
+            else
+              echo "::error::Ref '$INPUT_REF' is not on main branch. Use allow_branch=true for emergency deployment."
+              exit 1
+            fi
+          fi
+
+      - name: Timestamp safety check
+        id: timestamp-check
+        run: |
+          DEPLOY_MODE="${{ steps.determine-ref.outputs.mode }}"
+
+          # Skip timestamp check for rollback/emergency modes
+          if [[ "$DEPLOY_MODE" != "default" ]]; then
+            echo "Skipping timestamp check for $DEPLOY_MODE mode"
+            echo "skip_deploy=false" >> $GITHUB_OUTPUT
+            echo "main_timestamp=N/A" >> $GITHUB_OUTPUT
+            echo "staging_timestamp=N/A" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Performing timestamp safety check..."
+
+          # Get main timestamp from reports
+          if [[ -f "reports/fall24.json" ]]; then
+            MAIN_TIMESTAMP=$(jq -r '.metadata.generated' reports/fall24.json)
+          else
+            echo "::error::reports/fall24.json not found. Run release-collector workflow first."
+            exit 1
+          fi
+          echo "Main timestamp: $MAIN_TIMESTAMP"
+          echo "main_timestamp=$MAIN_TIMESTAMP" >> $GITHUB_OUTPUT
+
+          # Get staging timestamp from deployed HTML
+          STAGING_HTML=$(curl -sf "${{ env.STAGING_URL }}/fall24.html" || echo "")
+          if [[ -z "$STAGING_HTML" ]]; then
+            echo "::warning::Could not fetch staging viewer. Assuming first deployment."
+            echo "staging_timestamp=none" >> $GITHUB_OUTPUT
+            echo "skip_deploy=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Extract timestamp from embedded JSON
+          STAGING_TIMESTAMP=$(echo "$STAGING_HTML" | grep -oP '"generated":\s*"\K[^"]+' | head -1)
+          echo "Staging timestamp: $STAGING_TIMESTAMP"
+          echo "staging_timestamp=$STAGING_TIMESTAMP" >> $GITHUB_OUTPUT
+
+          # Compare timestamps (ISO format allows string comparison)
+          if [[ "$STAGING_TIMESTAMP" > "$MAIN_TIMESTAMP" ]]; then
+            echo "::error::Staging has newer content ($STAGING_TIMESTAMP) than main ($MAIN_TIMESTAMP)"
+            echo "::error::This suggests a PR has not been merged yet."
+            echo "::error::Either merge the pending PR first, or use 'ref' parameter to deploy specific commit."
+            echo "skip_deploy=true" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "Timestamp check passed: main ($MAIN_TIMESTAMP) >= staging ($STAGING_TIMESTAMP)"
+          echo "skip_deploy=false" >> $GITHUB_OUTPUT
+
+      - name: Validation summary
+        run: |
+          echo "## Deployment Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy Mode | ${{ steps.determine-ref.outputs.mode }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy Ref | ${{ steps.determine-ref.outputs.ref }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit SHA | ${{ steps.determine-ref.outputs.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Main Timestamp | ${{ steps.timestamp-check.outputs.main_timestamp }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Staging Timestamp | ${{ steps.timestamp-check.outputs.staging_timestamp }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ steps.determine-ref.outputs.mode }}" == "emergency" ]]; then
+            echo "> **Warning**: Emergency mode - deploying without timestamp safety check" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # =========================================================================================
+  # Job 2: Generate Viewers
+  # =========================================================================================
+  generate-viewers:
+    name: Generate Viewers
+    needs: validate-deployment
+    runs-on: ubuntu-latest
+    outputs:
+      viewers_generated: ${{ steps.generate.outputs.success }}
+
+    steps:
+      - name: Checkout at deploy ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-deployment.outputs.deploy_ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate viewers
+        id: generate
+        run: |
+          echo "Generating viewers from ref: ${{ needs.validate-deployment.outputs.deploy_ref }}"
+
+          # Run viewer generation with force flag to ensure fresh generation
+          cd workflows/release-collector/scripts
+          FORCE_REGENERATE=true node generate-viewers.js
+
+          echo "success=true" >> $GITHUB_OUTPUT
+
+      - name: Validate generated files
+        run: |
+          echo "Validating generated viewers..."
+
+          REQUIRED_FILES=(
+            "viewers/fall24.html"
+            "viewers/spring25.html"
+            "viewers/fall25.html"
+            "viewers/portfolio.html"
+          )
+
+          MISSING=0
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [[ -f "$file" ]]; then
+              SIZE=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null)
+              echo "✓ $file ($SIZE bytes)"
+            else
+              echo "✗ $file - MISSING"
+              MISSING=$((MISSING + 1))
+            fi
+          done
+
+          if [[ $MISSING -gt 0 ]]; then
+            echo "::error::$MISSING required files are missing"
+            exit 1
+          fi
+
+          echo "All required files validated successfully"
+
+      - name: Upload viewers artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-viewers-${{ github.run_number }}
+          path: |
+            viewers/fall24.html
+            viewers/spring25.html
+            viewers/fall25.html
+            viewers/portfolio.html
+            workflows/release-collector/production-index.html
+          retention-days: 30
+
+  # =========================================================================================
+  # Job 3: Deploy to Production
+  # =========================================================================================
+  deploy-production:
+    name: Deploy to Production
+    needs: [validate-deployment, generate-viewers]
+    if: github.event.inputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      deployed: ${{ steps.push.outputs.deployed }}
+      commit_sha: ${{ steps.push.outputs.commit_sha }}
+      commit_url: ${{ steps.push.outputs.commit_url }}
+
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-deployment.outputs.deploy_ref }}
+
+      - name: Download viewers artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: production-viewers-${{ github.run_number }}
+          path: artifact
+
+      - name: Checkout production repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.PRODUCTION_REPO }}
+          path: production-site
+          token: ${{ secrets.PRODUCTION_DEPLOY_TOKEN }}
+
+      - name: Copy viewers to production
+        run: |
+          mkdir -p production-site/${{ env.PRODUCTION_PATH }}
+
+          # Copy viewer files
+          cp artifact/viewers/fall24.html production-site/${{ env.PRODUCTION_PATH }}/
+          cp artifact/viewers/spring25.html production-site/${{ env.PRODUCTION_PATH }}/
+          cp artifact/viewers/fall25.html production-site/${{ env.PRODUCTION_PATH }}/
+          cp artifact/viewers/portfolio.html production-site/${{ env.PRODUCTION_PATH }}/
+
+          # Copy production index as index.html
+          cp artifact/workflows/release-collector/production-index.html production-site/${{ env.PRODUCTION_PATH }}/index.html
+
+          echo "Files copied to production-site/${{ env.PRODUCTION_PATH }}/"
+          ls -la production-site/${{ env.PRODUCTION_PATH }}/
+
+      - name: Commit and push to production
+        id: push
+        run: |
+          cd production-site
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add ${{ env.PRODUCTION_PATH }}/
+
+          # Check if there are changes
+          if git diff --staged --quiet; then
+            echo "No changes to deploy"
+            echo "deployed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Create commit message
+          DEPLOY_MODE="${{ needs.validate-deployment.outputs.deploy_mode }}"
+          SOURCE_SHA="${{ needs.validate-deployment.outputs.deploy_sha }}"
+
+          COMMIT_MSG="Update CAMARA release viewers from project-administration
+
+          Source: ${{ github.repository }}@${SOURCE_SHA:0:7}
+          Mode: $DEPLOY_MODE
+          Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          git commit -m "$COMMIT_MSG"
+          git push
+
+          COMMIT_SHA=$(git rev-parse HEAD)
+          echo "deployed=true" >> $GITHUB_OUTPUT
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "commit_url=https://github.com/${{ env.PRODUCTION_REPO }}/commit/$COMMIT_SHA" >> $GITHUB_OUTPUT
+
+          echo "Deployed to production: $COMMIT_SHA"
+
+  # =========================================================================================
+  # Job 4: Workflow Summary
+  # =========================================================================================
+  summary:
+    name: Workflow Summary
+    needs: [validate-deployment, generate-viewers, deploy-production]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate summary
+        run: |
+          DRY_RUN="${{ github.event.inputs.dry_run }}"
+          DEPLOY_MODE="${{ needs.validate-deployment.outputs.deploy_mode }}"
+          DEPLOY_REF="${{ needs.validate-deployment.outputs.deploy_ref }}"
+          DEPLOY_SHA="${{ needs.validate-deployment.outputs.deploy_sha }}"
+          MAIN_TS="${{ needs.validate-deployment.outputs.main_timestamp }}"
+          STAGING_TS="${{ needs.validate-deployment.outputs.staging_timestamp }}"
+          DEPLOYED="${{ needs.deploy-production.outputs.deployed }}"
+          COMMIT_URL="${{ needs.deploy-production.outputs.commit_url }}"
+
+          echo "## Release Collector - Production Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Mode warning (rollback and emergency skip timestamp checks)
+          if [[ "$DEPLOY_MODE" == "emergency" ]]; then
+            echo "> **Warning**: EMERGENCY MODE - deploying from non-main branch. Timestamp safety check was bypassed." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          elif [[ "$DEPLOY_MODE" == "rollback" ]]; then
+            echo "> **Note**: ROLLBACK MODE - deploying specific ref from main. Timestamp safety check was bypassed." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Dry run notice
+          if [[ "$DRY_RUN" == "true" ]]; then
+            echo "> **Dry Run** - No changes were pushed to production." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Deployment source
+          echo "### Deployment Source" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Mode | $DEPLOY_MODE |" >> $GITHUB_STEP_SUMMARY
+          echo "| Ref | $DEPLOY_REF |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | ${DEPLOY_SHA:0:7} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Timestamp validation (only for default mode)
+          if [[ "$DEPLOY_MODE" == "default" ]]; then
+            echo "### Timestamp Validation" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            if [[ "$STAGING_TS" == "none" ]]; then
+              echo "- Staging: Not deployed yet (first deployment)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- Main: $MAIN_TS" >> $GITHUB_STEP_SUMMARY
+              echo "- Staging: $STAGING_TS" >> $GITHUB_STEP_SUMMARY
+              echo "- Status: ✓ Safe to deploy" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Files deployed
+          echo "### Files Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Description |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| index.html | Production entry page |" >> $GITHUB_STEP_SUMMARY
+          echo "| fall24.html | Fall 2024 meta-release viewer |" >> $GITHUB_STEP_SUMMARY
+          echo "| spring25.html | Spring 2025 meta-release viewer |" >> $GITHUB_STEP_SUMMARY
+          echo "| fall25.html | Fall 2025 meta-release viewer |" >> $GITHUB_STEP_SUMMARY
+          echo "| portfolio.html | Portfolio overview |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Deployment result
+          if [[ "$DRY_RUN" == "true" ]]; then
+            echo "### Dry Run Complete" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Validation passed. Re-run without dry_run to deploy to production." >> $GITHUB_STEP_SUMMARY
+          elif [[ "$DEPLOYED" == "true" ]]; then
+            echo "### Deployment Complete" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Production URL**: https://camaraproject.github.io/${{ env.PRODUCTION_PATH }}/" >> $GITHUB_STEP_SUMMARY
+            echo "- **Commit**: [$COMMIT_URL]($COMMIT_URL)" >> $GITHUB_STEP_SUMMARY
+          elif [[ "$DEPLOYED" == "false" ]]; then
+            echo "### No Changes" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Production already has the same content. No deployment needed." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### Deployment Skipped" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Deployment was skipped or failed. Check the workflow logs for details." >> $GITHUB_STEP_SUMMARY
+          fi
