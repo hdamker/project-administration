@@ -52,6 +52,13 @@ on:
     - cron: '35 4 * * *'
 
 env:
+  # Effective inputs (with defaults for scheduled runs)
+  # Scheduled runs use: incremental analysis, pr mode, no debug, no force
+  ANALYSIS_SCOPE: ${{ github.event.inputs.analysis_scope || 'incremental' }}
+  EXECUTION_MODE: ${{ github.event.inputs.execution_mode || 'pr' }}
+  DEBUG_MODE: ${{ github.event.inputs.debug_mode || 'false' }}
+  FORCE_VIEWERS: ${{ github.event.inputs.force_viewers || 'false' }}
+
   # GitHub API Configuration
   GITHUB_ORG: 'camaraproject'
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -116,13 +123,13 @@ jobs:
       - name: Detect releases
         id: detect
         run: |
-          echo "🔍 Detecting releases in analysis scope: ${{ github.event.inputs.analysis_scope }}"
+          echo "🔍 Detecting releases in analysis scope: ${{ env.ANALYSIS_SCOPE }}"
 
           # Create temp directory
           mkdir -p temp
 
           # Run detection script
-          node workflows/release-collector/scripts/detect-releases.js --mode ${{ github.event.inputs.analysis_scope }} > temp/detection-output.json
+          node workflows/release-collector/scripts/detect-releases.js --mode ${{ env.ANALYSIS_SCOPE }} > temp/detection-output.json
 
           # Parse output
           HAS_UPDATES=$(jq -r '.has_updates' temp/detection-output.json)
@@ -252,7 +259,7 @@ jobs:
           done
 
           # Update master metadata (format corrections already applied by analyze-release.js)
-          node workflows/release-collector/scripts/update-master.js --mode ${{ github.event.inputs.analysis_scope }} --input temp/combined-analysis.json
+          node workflows/release-collector/scripts/update-master.js --mode ${{ env.ANALYSIS_SCOPE }} --input temp/combined-analysis.json
 
           echo "Master metadata updated with $(jq '. | length' temp/combined-analysis.json) releases"
 
@@ -281,7 +288,7 @@ jobs:
       always() &&
       (needs.update-metadata.result == 'success' ||
        needs.detect-releases.outputs.templates_changed == 'true' ||
-       github.event.inputs.force_viewers == 'true')
+       env.FORCE_VIEWERS == 'true')
     runs-on: ubuntu-latest
 
     steps:
@@ -305,7 +312,7 @@ jobs:
 
       - name: Generate HTML viewers
         env:
-          FORCE_REGENERATE: ${{ github.event.inputs.force_viewers }}
+          FORCE_REGENERATE: ${{ env.FORCE_VIEWERS }}
         run: |
           echo "🎨 Generating HTML viewers..."
           # Build viewers with embedded JSON
@@ -327,7 +334,7 @@ jobs:
   publish-changes:
     name: Publish Changes
     needs: generate-viewers
-    if: github.event.inputs.execution_mode != 'dry-run'
+    if: env.EXECUTION_MODE != 'dry-run'
     runs-on: ubuntu-latest
     outputs:
       pr_url: ${{ steps.create-pr.outputs.pull-request-url }}
@@ -343,7 +350,7 @@ jobs:
           name: release-reports-${{ github.run_number }}
 
       - name: Validate generated files
-        if: github.event.inputs.execution_mode == 'pr'
+        if: env.EXECUTION_MODE == 'pr'
         run: |
           echo "Validating generated files..."
 
@@ -378,7 +385,7 @@ jobs:
 
       - name: Check for changes
         id: diff
-        if: github.event.inputs.execution_mode == 'pr'
+        if: env.EXECUTION_MODE == 'pr'
         run: |
           # Only commit data and reports (viewers are deployed separately in Phase 4)
           git add data/releases-master.yaml
@@ -398,7 +405,7 @@ jobs:
           fi
 
       - name: No changes summary
-        if: github.event.inputs.execution_mode == 'pr' && steps.diff.outputs.has_changes == 'false'
+        if: env.EXECUTION_MODE == 'pr' && steps.diff.outputs.has_changes == 'false'
         run: |
           echo "## No Changes Detected" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -413,7 +420,7 @@ jobs:
 
       - name: Create pull request
         id: create-pr
-        if: github.event.inputs.execution_mode == 'pr' && steps.diff.outputs.has_changes == 'true'
+        if: env.EXECUTION_MODE == 'pr' && steps.diff.outputs.has_changes == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           branch: meta-release-update-${{ github.run_number }}
@@ -422,7 +429,7 @@ jobs:
           body: |
             ## CAMARA Release Metadata Update
 
-            **Analysis scope**: ${{ github.event.inputs.analysis_scope }}
+            **Analysis scope**: ${{ env.ANALYSIS_SCOPE }}
             **Workflow run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
             **Generated**: ${{ steps.timestamp.outputs.current }}
 
@@ -475,7 +482,7 @@ jobs:
           commit-message: |
             chore: Update CAMARA release metadata
 
-            Analysis scope: ${{ github.event.inputs.analysis_scope }}
+            Analysis scope: ${{ env.ANALYSIS_SCOPE }}
             Workflow run: ${{ github.run_number }}
 
   # =========================================================================================
@@ -486,7 +493,7 @@ jobs:
     needs: generate-viewers
     if: |
       always() &&
-      github.event.inputs.execution_mode == 'pr' &&
+      env.EXECUTION_MODE == 'pr' &&
       needs.generate-viewers.result == 'success'
     permissions:
       contents: read
@@ -546,16 +553,16 @@ jobs:
         run: |
           echo "## Release Collector Workflow Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Analysis Scope**: ${{ github.event.inputs.analysis_scope }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Execution Mode**: ${{ github.event.inputs.execution_mode }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Analysis Scope**: ${{ env.ANALYSIS_SCOPE }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Execution Mode**: ${{ env.EXECUTION_MODE }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Updates Found**: ${{ needs.detect-releases.outputs.has_updates }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Workflow Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # Determine state
           HAS_UPDATES="${{ needs.detect-releases.outputs.has_updates }}"
-          FORCE_VIEWERS="${{ github.event.inputs.force_viewers }}"
-          EXEC_MODE="${{ github.event.inputs.execution_mode }}"
+          FORCE_VIEWERS="${{ env.FORCE_VIEWERS }}"
+          EXEC_MODE="${{ env.EXECUTION_MODE }}"
           PUBLISH_RESULT="${{ needs.publish-changes.result }}"
           STAGING_DEPLOYED="${{ needs.deploy-staging.result }}"
           PR_URL="${{ needs.publish-changes.outputs.pr_url }}"

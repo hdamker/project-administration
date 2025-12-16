@@ -6,7 +6,15 @@
 
 Automatically tracks all CAMARA API releases across repositories, categorizes them by meta-release (Fall24, Spring25, Fall25), and generates browsable HTML viewers.
 
-## Running the Workflow
+## Scheduled Runs
+
+The workflow runs automatically **daily at 04:35 UTC** with these settings:
+- Analysis scope: `incremental` (only new releases)
+- Execution mode: `pr` (creates PR if updates found)
+
+When new releases are detected, a PR is created automatically. Maintainers receive notifications and can review/merge when convenient.
+
+## Manual Runs
 
 1. **Navigate to Actions**
    - Go to: github.com/camaraproject/project-administration
@@ -52,6 +60,21 @@ Automatically tracks all CAMARA API releases across repositories, categorizes th
 See [User Guide - PR Review Checklist](docs/README.md#if-pr-is-created) for the complete review checklist.
 
 Then: **Squash and merge** to keep history clean
+
+## After Merging - Deploy to Production
+
+After merging the PR, deploy viewers to the public site:
+
+1. **Navigate to Actions**
+   - Go to: github.com/camaraproject/project-administration
+   - Click **Actions** tab → **Release Collector - Production Deploy** → **Run workflow**
+
+2. **Use default settings** (recommended)
+   - Validates staging content matches main branch before deploying
+
+3. **What Happens**
+   - Viewers are published to: https://camaraproject.github.io/releases/
+   - Links: [Fall24](https://camaraproject.github.io/releases/fall24.html) | [Spring25](https://camaraproject.github.io/releases/spring25.html) | [Fall25](https://camaraproject.github.io/releases/fall25.html)
 
 ## When to Use Full Re-analysis
 
