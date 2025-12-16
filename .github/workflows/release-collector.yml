@@ -288,7 +288,7 @@ jobs:
       always() &&
       (needs.update-metadata.result == 'success' ||
        needs.detect-releases.outputs.templates_changed == 'true' ||
-       env.FORCE_VIEWERS == 'true')
+       (github.event.inputs.force_viewers || 'false') == 'true')
     runs-on: ubuntu-latest
 
     steps:
@@ -334,7 +334,7 @@ jobs:
   publish-changes:
     name: Publish Changes
     needs: generate-viewers
-    if: env.EXECUTION_MODE != 'dry-run'
+    if: (github.event.inputs.execution_mode || 'pr') != 'dry-run'
     runs-on: ubuntu-latest
     outputs:
       pr_url: ${{ steps.create-pr.outputs.pull-request-url }}
@@ -493,7 +493,7 @@ jobs:
     needs: generate-viewers
     if: |
       always() &&
-      env.EXECUTION_MODE == 'pr' &&
+      (github.event.inputs.execution_mode || 'pr') == 'pr' &&
       needs.generate-viewers.result == 'success'
     permissions:
       contents: read
