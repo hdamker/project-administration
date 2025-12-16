@@ -47,9 +47,9 @@ on:
         type: boolean
         default: false
 
-  # schedule:
-    # Weekly run on Mondays at 04:35 UTC
-    # - cron: '35 4 * * 1'
+  schedule:
+    # Daily run at 04:35 UTC (for testing)
+    - cron: '35 4 * * *'
 
 env:
   # GitHub API Configuration
@@ -329,6 +329,9 @@ jobs:
     needs: generate-viewers
     if: github.event.inputs.execution_mode != 'dry-run'
     runs-on: ubuntu-latest
+    outputs:
+      pr_url: ${{ steps.create-pr.outputs.pull-request-url }}
+      pr_number: ${{ steps.create-pr.outputs.pull-request-number }}
 
     steps:
       - name: Checkout repository
@@ -409,6 +412,7 @@ jobs:
         run: echo "current=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
 
       - name: Create pull request
+        id: create-pr
         if: github.event.inputs.execution_mode == 'pr' && steps.diff.outputs.has_changes == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
@@ -429,7 +433,7 @@ jobs:
             - 📊 `data/releases-master.yaml` - Master release metadata
             - 📈 `reports/*.json` - Meta-release reports (Fall24, Spring25, Fall25, All)
 
-            **Note**: Viewers are generated in workflow artifacts for testing. Production deployment to camaraproject.github.io will be implemented in Phase 4.
+            **Note**: Viewers are deployed to staging for preview. After merging, trigger the **Release Collector - Production Deploy** workflow to publish to https://camaraproject.github.io/releases/
 
             ### File Changes
 
@@ -447,6 +451,12 @@ jobs:
             ### Merge Instructions
 
             **Use squash and merge** to keep main history clean. Each workflow run creates a single logical change.
+
+            ### After Merging
+
+            1. **Trigger production deployment** - Run the "Release Collector - Production Deploy" workflow
+               - Uses default mode (timestamp safety check ensures staging content matches main)
+               - Deploys merged content to https://camaraproject.github.io/releases/
 
             ### Preview Viewers (Staging)
 
@@ -500,6 +510,11 @@ jobs:
           name: release-reports-${{ github.run_number }}
           path: staging
 
+      - name: Copy staging entry page
+        run: |
+          cp workflows/release-collector/staging-index.html staging/viewers/index.html
+          echo "✓ Copied staging-index.html to viewers/index.html"
+
       - name: Show deployment contents
         run: |
           echo "About to publish:"
@@ -522,7 +537,7 @@ jobs:
   # =========================================================================================
   summary:
     name: Workflow Summary
-    needs: [detect-releases, generate-viewers]
+    needs: [detect-releases, generate-viewers, publish-changes, deploy-staging]
     if: always()
     runs-on: ubuntu-latest
 
@@ -536,13 +551,80 @@ jobs:
           echo "- **Updates Found**: ${{ needs.detect-releases.outputs.has_updates }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Workflow Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Artifacts Available" >> $GITHUB_STEP_SUMMARY
-          echo "- **release-reports-${{ github.run_number }}**: Contains all generated files" >> $GITHUB_STEP_SUMMARY
-          echo "  - Master metadata (YAML)" >> $GITHUB_STEP_SUMMARY
-          echo "  - JSON reports for each meta-release" >> $GITHUB_STEP_SUMMARY
-          echo "  - HTML viewers with embedded data" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "- Download artifacts from the workflow run page" >> $GITHUB_STEP_SUMMARY
-          echo "- Review the generated reports in the viewers" >> $GITHUB_STEP_SUMMARY
-          echo "- Check for any inconsistencies in the logs" >> $GITHUB_STEP_SUMMARY
+
+          # Determine state
+          HAS_UPDATES="${{ needs.detect-releases.outputs.has_updates }}"
+          FORCE_VIEWERS="${{ github.event.inputs.force_viewers }}"
+          EXEC_MODE="${{ github.event.inputs.execution_mode }}"
+          PUBLISH_RESULT="${{ needs.publish-changes.result }}"
+          STAGING_DEPLOYED="${{ needs.deploy-staging.result }}"
+          PR_URL="${{ needs.publish-changes.outputs.pr_url }}"
+
+          # Check if artifacts exist
+          ARTIFACTS_EXIST="false"
+          if [[ "$HAS_UPDATES" == "true" || "$FORCE_VIEWERS" == "true" ]]; then
+            ARTIFACTS_EXIST="true"
+          fi
+
+          # Check if PR was created
+          PR_CREATED="false"
+          if [[ "$EXEC_MODE" == "pr" && "$PUBLISH_RESULT" == "success" && "$HAS_UPDATES" == "true" && -n "$PR_URL" ]]; then
+            PR_CREATED="true"
+          fi
+
+          # Case 1: No changes detected
+          if [[ "$ARTIFACTS_EXIST" == "false" ]]; then
+            echo "### No Changes Detected" >> $GITHUB_STEP_SUMMARY
+            echo "- No new releases found in incremental analysis" >> $GITHUB_STEP_SUMMARY
+            echo "- No artifacts generated" >> $GITHUB_STEP_SUMMARY
+            echo "- All jobs skipped (no updates required)" >> $GITHUB_STEP_SUMMARY
+
+          # Case 2: PR created
+          elif [[ "$PR_CREATED" == "true" ]]; then
+            echo "### Pull Request Created" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**PR**: [$PR_URL]($PR_URL)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "A pull request has been created with updated release metadata." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Artifacts Available" >> $GITHUB_STEP_SUMMARY
+            echo "- **release-reports-${{ github.run_number }}**: Contains all generated files" >> $GITHUB_STEP_SUMMARY
+            echo "  - Master metadata (YAML)" >> $GITHUB_STEP_SUMMARY
+            echo "  - JSON reports for each meta-release" >> $GITHUB_STEP_SUMMARY
+            echo "  - HTML viewers with embedded data" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "1. **Review the PR** [$PR_URL]($PR_URL) - Check data changes and preview viewers" >> $GITHUB_STEP_SUMMARY
+            echo "2. **Merge the PR** - Approve and merge to update master metadata" >> $GITHUB_STEP_SUMMARY
+            echo "3. **Deploy to production** - Trigger production deployment workflow (manual)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Staging Preview" >> $GITHUB_STEP_SUMMARY
+            echo "Viewers are deployed to:" >> $GITHUB_STEP_SUMMARY
+            echo "- https://${{ github.repository_owner }}.github.io/project-administration/" >> $GITHUB_STEP_SUMMARY
+
+          # Case 3: Viewers regenerated, no PR
+          else
+            echo "### Viewers Regenerated" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Viewers have been regenerated but no PR was created (dry-run mode or forced regeneration)." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Artifacts Available" >> $GITHUB_STEP_SUMMARY
+            echo "- **release-reports-${{ github.run_number }}**: Contains all generated files" >> $GITHUB_STEP_SUMMARY
+            echo "  - Master metadata (YAML)" >> $GITHUB_STEP_SUMMARY
+            echo "  - JSON reports for each meta-release" >> $GITHUB_STEP_SUMMARY
+            echo "  - HTML viewers with embedded data" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "1. **Review viewers** - Download artifacts from workflow run page" >> $GITHUB_STEP_SUMMARY
+            echo "2. **If changes look good** - Re-run workflow in PR mode for staging deployment and review" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            # Only show staging links if staging was actually deployed
+            if [[ "$STAGING_DEPLOYED" == "success" ]]; then
+              echo "### Staging Preview" >> $GITHUB_STEP_SUMMARY
+              echo "Viewers are deployed to:" >> $GITHUB_STEP_SUMMARY
+              echo "- https://${{ github.repository_owner }}.github.io/project-administration/" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "**Note**: Staging deployment only occurs in PR mode. Viewers are available in artifacts only." >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
