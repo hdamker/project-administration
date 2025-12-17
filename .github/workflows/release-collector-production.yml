@@ -148,11 +148,16 @@ jobs:
 
           # Compare timestamps (ISO format allows string comparison)
           if [[ "$STAGING_TIMESTAMP" > "$MAIN_TIMESTAMP" ]]; then
-            echo "::error::Staging has newer content ($STAGING_TIMESTAMP) than main ($MAIN_TIMESTAMP)"
-            echo "::error::This suggests a PR has not been merged yet."
-            echo "::error::Either merge the pending PR first, or use 'ref' parameter to deploy specific commit."
+            MSG="Staging has newer content ($STAGING_TIMESTAMP) than main ($MAIN_TIMESTAMP). Merge the pending PR first, or use 'ref' parameter to deploy specific commit."
             echo "skip_deploy=true" >> $GITHUB_OUTPUT
-            exit 1
+
+            if [[ "${{ github.event.inputs.dry_run }}" == "true" ]]; then
+              echo "::warning::$MSG"
+              # Don't fail in dry-run - just report the issue
+            else
+              echo "::error::$MSG"
+              exit 1
+            fi
           fi
 
           echo "Timestamp check passed: main ($MAIN_TIMESTAMP) >= staging ($STAGING_TIMESTAMP)"
@@ -361,8 +366,16 @@ jobs:
           DEPLOY_SHA="${{ needs.validate-deployment.outputs.deploy_sha }}"
           MAIN_TS="${{ needs.validate-deployment.outputs.main_timestamp }}"
           STAGING_TS="${{ needs.validate-deployment.outputs.staging_timestamp }}"
+          SKIP_DEPLOY="${{ needs.validate-deployment.outputs.skip_deploy }}"
+          VALIDATION_RESULT="${{ needs.validate-deployment.result }}"
           DEPLOYED="${{ needs.deploy-production.outputs.deployed }}"
           COMMIT_URL="${{ needs.deploy-production.outputs.commit_url }}"
+
+          # Determine if validation failed (job failed or skip_deploy set)
+          VALIDATION_FAILED="false"
+          if [[ "$VALIDATION_RESULT" != "success" || "$SKIP_DEPLOY" == "true" ]]; then
+            VALIDATION_FAILED="true"
+          fi
 
           echo "## Release Collector - Production Deployment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -401,7 +414,11 @@ jobs:
             else
               echo "- Main: $MAIN_TS" >> $GITHUB_STEP_SUMMARY
               echo "- Staging: $STAGING_TS" >> $GITHUB_STEP_SUMMARY
-              echo "- Status: ✓ Safe to deploy" >> $GITHUB_STEP_SUMMARY
+              if [[ "$VALIDATION_FAILED" == "true" ]]; then
+                echo "- Status: ❌ Validation failed - staging has newer content than main" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "- Status: ✓ Safe to deploy" >> $GITHUB_STEP_SUMMARY
+              fi
             fi
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
@@ -419,7 +436,11 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # Deployment result
-          if [[ "$DRY_RUN" == "true" ]]; then
+          if [[ "$VALIDATION_FAILED" == "true" ]]; then
+            echo "### Validation Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Deployment blocked. Merge the pending PR first, then re-run this workflow." >> $GITHUB_STEP_SUMMARY
+          elif [[ "$DRY_RUN" == "true" ]]; then
             echo "### Dry Run Complete" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "Validation passed. Re-run without dry_run to deploy to production." >> $GITHUB_STEP_SUMMARY
