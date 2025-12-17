@@ -424,17 +424,19 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
 
-          # Files deployed
-          echo "### Files Deployed" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| File | Description |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|-------------|" >> $GITHUB_STEP_SUMMARY
-          echo "| index.html | Production entry page |" >> $GITHUB_STEP_SUMMARY
-          echo "| fall24.html | Fall 2024 meta-release viewer |" >> $GITHUB_STEP_SUMMARY
-          echo "| spring25.html | Spring 2025 meta-release viewer |" >> $GITHUB_STEP_SUMMARY
-          echo "| fall25.html | Fall 2025 meta-release viewer |" >> $GITHUB_STEP_SUMMARY
-          echo "| portfolio.html | Portfolio overview |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          # Files deployed (only show when validation passed)
+          if [[ "$VALIDATION_FAILED" != "true" ]]; then
+            echo "### Files Deployed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| File | Description |" >> $GITHUB_STEP_SUMMARY
+            echo "|------|-------------|" >> $GITHUB_STEP_SUMMARY
+            echo "| index.html | Production entry page |" >> $GITHUB_STEP_SUMMARY
+            echo "| fall24.html | Fall 2024 meta-release viewer |" >> $GITHUB_STEP_SUMMARY
+            echo "| spring25.html | Spring 2025 meta-release viewer |" >> $GITHUB_STEP_SUMMARY
+            echo "| fall25.html | Fall 2025 meta-release viewer |" >> $GITHUB_STEP_SUMMARY
+            echo "| portfolio.html | Portfolio overview |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
 
           # Deployment result
           if [[ "$VALIDATION_FAILED" == "true" ]]; then
