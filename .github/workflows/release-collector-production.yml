@@ -158,10 +158,10 @@ jobs:
               echo "::error::$MSG"
               exit 1
             fi
+          else
+            echo "Timestamp check passed: main ($MAIN_TIMESTAMP) >= staging ($STAGING_TIMESTAMP)"
+            echo "skip_deploy=false" >> $GITHUB_OUTPUT
           fi
-
-          echo "Timestamp check passed: main ($MAIN_TIMESTAMP) >= staging ($STAGING_TIMESTAMP)"
-          echo "skip_deploy=false" >> $GITHUB_OUTPUT
 
       - name: Validation summary
         run: |
@@ -186,6 +186,7 @@ jobs:
   generate-viewers:
     name: Generate Viewers
     needs: validate-deployment
+    if: needs.validate-deployment.outputs.skip_deploy != 'true'
     runs-on: ubuntu-latest
     outputs:
       viewers_generated: ${{ steps.generate.outputs.success }}
