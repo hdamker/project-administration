@@ -191,7 +191,7 @@ apis:
   qos-booking-and-assignment:
     category: Communication Quality
     website_url: https://camaraproject.org/qos-booking-and-assignment/
-    tooltip: Request an assignment of a certain QoS Profile to a certain device
+    tooltip: Request an assignment of a certain QoS Profile to a certain device (test change)
     published: true
     first_release: Fall25
   connectivity-insights:
