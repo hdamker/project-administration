@@ -2,7 +2,79 @@
 
 ## Table of Contents
 
+- **[r1.2](#r12)**
 - **[r1.1](#r11)**
+
+## r1.2
+
+**Release focus: Release Collector and Campaign workflows**
+
+### Added
+
+* **Release Collector** (`release-collector.yml`, `release-collector-production.yml`)
+  - Automated collection and tracking of CAMARA API releases
+  - Incremental and full analysis modes
+  - Interactive HTML viewers with dark mode support
+  - Multi-select category filtering
+  - Latest patch version filtering
+  - Staging deployment to GitHub Pages
+  - Production deployment workflow for camaraproject.github.io
+
+* **Campaign - API Version WIP Check** (`campaign-api-version-wip-check.yml`)
+  - Verifies API files have wip versions after releases
+  - Plan mode (dry-run) and apply mode
+  - Documentation: [campaigns/api-version-wip-check/](campaigns/api-version-wip-check/)
+
+* **Campaign - Release Info Sync** (`campaign-release-info.yml`)
+  - Updates Release Information sections in API repository READMEs
+  - Creates PRs with latest release details, API versions, and viewer links
+  - Idempotent execution with change detection
+  - Documentation: [campaigns/release-info/docs/](campaigns/release-info/docs/)
+
+* **Reusable Actions** (`actions/`)
+  - `campaign-finalize-per-repo` - Creates branches, PRs, and reports for campaigns
+  - `campaign-finalize-issue-per-repo` - Creates issues for repositories
+  - `ensure-delimited-section` - Ensures delimited sections exist in files
+  - `read-api-version-compliance` - Reads API version compliance data
+  - `read-release-data` - Reads release data from repositories
+  - `render-mustache` - Renders Mustache templates
+  - `replace-delimited-content` - Replaces content within delimited sections
+
+* **Configuration files** (`config/`)
+  - `api-landscape.yaml` - API portfolio metadata for enrichment
+  - `meta-release-mappings.yaml` - Repository release cycle to meta-release mappings
+
+* **Release data** (`data/`)
+  - `releases-master.yaml` - Generated release metadata for all public API releases since Fall24 meta-release
+
+### Changed
+
+* Workflow file names harmonized with category prefixes
+* Workflow display names standardized (e.g., "Campaign - Release Info Sync")
+* Standard headers added to all workflow files
+* Config files moved from workflows/release-collector/config/ to repository root
+* API Repository Creation: Removed automated parent team assignment (maintainers team no longer has a dedicated parent after team restructuring)
+
+### Removed
+
+* **Bulk Repository Administration Workflows** - Replaced by campaign framework
+  - `project-admin-single-repo-test.yml`
+  - `project-admin-repository-worker.yml`
+  - `project-admin-bulk-repository-changes.yml`
+  - Associated bulk operations
+
+* **API Releases Report** (`project-report-camara-api-releases.yml`) - Replaced by Release Collector
+
+### Deprecated
+
+* **Repository Overview Report** (`report-repository-overview.yml`) - Will be replaced in a future release
+
+### Security
+
+* Workflows now use Fine-grained Personal Access Tokens (FGPAT) with minimal required permissions
+* `CAMARA_BULK_CHANGE_TOKEN` no longer needed (bulk framework removed)
+
+---
 
 ## r1.1
 
