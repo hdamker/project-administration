@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated": "2025-12-17T20:52:36.086Z",
+    "generated": "2025-12-18T08:57:07.365Z",
     "meta_release": "Fall25",
     "source": "Release Collector v3",
     "landscape_version": "1.1.0"
@@ -1487,7 +1487,7 @@
           "maturity": "initial",
           "portfolio_category": "Communication Quality",
           "website_url": "https://camaraproject.org/qos-booking-and-assignment/",
-          "tooltip": "Request an assignment of a certain QoS Profile to a certain device",
+          "tooltip": "Request an assignment of a certain QoS Profile to a certain device (test change)",
           "display_name": "QoS Booking and Assignment",
           "published": true,
           "canonical_name": "qos-booking-and-assignment",
@@ -2833,7 +2833,7 @@
       "maturity": "initial",
       "portfolio_category": "Communication Quality",
       "website_url": "https://camaraproject.org/qos-booking-and-assignment/",
-      "tooltip": "Request an assignment of a certain QoS Profile to a certain device",
+      "tooltip": "Request an assignment of a certain QoS Profile to a certain device (test change)",
       "display_name": "QoS Booking and Assignment",
       "published": true,
       "canonical_name": "qos-booking-and-assignment",
