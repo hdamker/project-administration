@@ -108,7 +108,7 @@ async function fetchReleases(repoName) {
     // Now includes pre-releases for visibility of release candidates
     const validReleases = data.filter(release =>
       !release.draft &&
-      /^r\d+\.\d+$/.test(release.tag_name)  // Only rX.Y format
+      /^r[1-9]\d*\.[1-9]\d*$/.test(release.tag_name)  // Only rX.Y format where X,Y >= 1
     );
 
     releases.push(...validReleases);
