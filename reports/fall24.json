@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated": "2025-12-17T20:52:36.084Z",
+    "generated": "2026-01-05T19:22:34.493Z",
     "meta_release": "Fall24",
     "source": "Release Collector v3",
     "landscape_version": "1.1.0"
@@ -220,6 +220,7 @@
       "release_date": "2024-09-05T11:05:48Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/CallForwardingSignal/releases/tag/r1.3",
+      "release_type": "public-release",
       "apis": [
         {
           "api_name": "call-forwarding-signal",
@@ -245,6 +246,7 @@
       "release_date": "2024-09-05T15:39:42Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.2",
+      "release_type": "public-release",
       "apis": [
         {
           "api_name": "carrier-billing-refund",
@@ -286,6 +288,7 @@
       "release_date": "2024-11-23T07:48:50Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.3",
+      "release_type": "maintenance-release",
       "apis": [
         {
           "api_name": "carrier-billing-refund",
@@ -327,6 +330,7 @@
       "release_date": "2024-09-11T03:30:01Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/ConnectivityInsights/releases/tag/r1.2",
+      "release_type": "public-release",
       "apis": [
         {
           "api_name": "application-profiles",
@@ -384,6 +388,7 @@
       "release_date": "2024-09-10T15:00:47Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/r1.2",
+      "release_type": "public-release",
       "apis": [
         {
           "api_name": "geofencing-subscriptions",
@@ -441,6 +446,7 @@
       "release_date": "2024-09-10T07:58:36Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.2",
+      "release_type": "public-release",
       "apis": [
         {
           "api_name": "device-reachability-status-subscriptions",
@@ -514,6 +520,7 @@
       "release_date": "2024-11-05T21:11:50Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.3",
+      "release_type": "maintenance-release",
       "apis": [
         {
           "api_name": "device-reachability-status-subscriptions",
@@ -587,6 +594,7 @@
       "release_date": "2024-09-06T08:39:24Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/HomeDevicesQoD/releases/tag/r1.2",
+      "release_type": "public-release",
       "apis": [
         {
           "api_name": "home-devices-qod",
@@ -612,6 +620,7 @@
       "release_date": "2024-09-12T09:29:42Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/KnowYourCustomer/releases/tag/r1.3",
+      "release_type": "public-release",
       "apis": [
         {
           "api_name": "kyc-fill-in",
@@ -653,6 +662,7 @@
       "release_date": "2024-12-11T15:37:20Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/KnowYourCustomer/releases/tag/r1.4",
+      "release_type": "maintenance-release",
       "apis": [
         {
           "api_name": "kyc-fill-in",
@@ -694,6 +704,7 @@
       "release_date": "2024-09-06T15:22:46Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/r1.2",
+      "release_type": "public-release",
       "apis": [
         {
           "api_name": "number-verification",
@@ -719,6 +730,7 @@
       "release_date": "2024-10-01T12:49:13Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/r1.3",
+      "release_type": "maintenance-release",
       "apis": [
         {
           "api_name": "number-verification",
@@ -744,6 +756,7 @@
       "release_date": "2024-09-09T08:52:34Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/OTPValidation/releases/tag/r1.2",
+      "release_type": "public-release",
       "apis": [
         {
           "api_name": "one-time-password-sms",
@@ -769,6 +782,7 @@
       "release_date": "2024-09-11T17:46:08Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/PopulationDensityData/releases/tag/r1.2",
+      "release_type": "public-release",
       "apis": [
         {
           "api_name": "population-density-data",
@@ -794,6 +808,7 @@
       "release_date": "2024-09-06T16:16:48Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.2",
+      "release_type": "public-release",
       "apis": [
         {
           "api_name": "qod-provisioning",
@@ -854,6 +869,7 @@
       "release_date": "2024-12-18T14:58:23Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.3",
+      "release_type": "maintenance-release",
       "apis": [
         {
           "api_name": "qod-provisioning",
@@ -914,6 +930,7 @@
       "release_date": "2024-09-11T10:39:25Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/SimpleEdgeDiscovery/releases/tag/r1.3",
+      "release_type": "public-release",
       "apis": [
         {
           "api_name": "simple-edge-discovery",
@@ -939,6 +956,7 @@
       "release_date": "2024-09-12T15:07:04Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.2",
+      "release_type": "public-release",
       "apis": [
         {
           "api_name": "sim-swap-subscriptions",
@@ -980,6 +998,7 @@
       "release_date": "2024-10-29T17:21:56Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.3",
+      "release_type": "maintenance-release",
       "apis": [
         {
           "api_name": "sim-swap-subscriptions",
@@ -1021,6 +1040,7 @@
       "release_date": "2025-04-04T11:51:06Z",
       "meta_release": "Fall24",
       "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.4",
+      "release_type": "maintenance-release",
       "apis": [
         {
           "api_name": "sim-swap-subscriptions",
@@ -1077,7 +1097,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-09-05T11:05:48Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/CallForwardingSignal/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/CallForwardingSignal/releases/tag/r1.3",
+      "release_type": "public-release"
     },
     {
       "api_name": "carrier-billing",
@@ -1098,7 +1119,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-05T15:39:42Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "carrier-billing",
@@ -1119,7 +1141,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-11-23T07:48:50Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.3",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "carrier-billing-refund",
@@ -1140,7 +1163,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-05T15:39:42Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "carrier-billing-refund",
@@ -1161,7 +1185,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-11-23T07:48:50Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/CarrierBillingCheckOut/releases/tag/r1.3",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "application-profiles",
@@ -1182,7 +1207,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-11T03:30:01Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/ConnectivityInsights/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/ConnectivityInsights/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "connectivity-insights",
@@ -1203,7 +1229,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-11T03:30:01Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/ConnectivityInsights/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/ConnectivityInsights/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "connectivity-insights-subscriptions",
@@ -1224,7 +1251,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-11T03:30:01Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/ConnectivityInsights/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/ConnectivityInsights/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "geofencing-subscriptions",
@@ -1245,7 +1273,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-10T15:00:47Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "location-retrieval",
@@ -1266,7 +1295,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-10T15:00:47Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "location-verification",
@@ -1287,7 +1317,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-10T15:00:47Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "device-reachability-status",
@@ -1308,7 +1339,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-10T07:58:36Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "device-reachability-status",
@@ -1329,7 +1361,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-11-05T21:11:50Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.3",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "device-reachability-status-subscriptions",
@@ -1350,7 +1383,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-10T07:58:36Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "device-reachability-status-subscriptions",
@@ -1371,7 +1405,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-11-05T21:11:50Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.3",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "device-roaming-status",
@@ -1392,7 +1427,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-10T07:58:36Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "device-roaming-status",
@@ -1413,7 +1449,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-11-05T21:11:50Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.3",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "device-roaming-status-subscriptions",
@@ -1434,7 +1471,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-10T07:58:36Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "device-roaming-status-subscriptions",
@@ -1455,7 +1493,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-11-05T21:11:50Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r1.3",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "home-devices-qod",
@@ -1476,7 +1515,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-06T08:39:24Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/HomeDevicesQoD/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/HomeDevicesQoD/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "kyc-fill-in",
@@ -1497,7 +1537,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-09-12T09:29:42Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/KnowYourCustomer/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/KnowYourCustomer/releases/tag/r1.3",
+      "release_type": "public-release"
     },
     {
       "api_name": "kyc-fill-in",
@@ -1518,7 +1559,8 @@
       "release_tag": "r1.4",
       "release_date": "2024-12-11T15:37:20Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/KnowYourCustomer/releases/tag/r1.4"
+      "github_url": "https://github.com/camaraproject/KnowYourCustomer/releases/tag/r1.4",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "kyc-match",
@@ -1539,7 +1581,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-09-12T09:29:42Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/KnowYourCustomer/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/KnowYourCustomer/releases/tag/r1.3",
+      "release_type": "public-release"
     },
     {
       "api_name": "kyc-match",
@@ -1560,7 +1603,8 @@
       "release_tag": "r1.4",
       "release_date": "2024-12-11T15:37:20Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/KnowYourCustomer/releases/tag/r1.4"
+      "github_url": "https://github.com/camaraproject/KnowYourCustomer/releases/tag/r1.4",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "number-verification",
@@ -1581,7 +1625,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-06T15:22:46Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "number-verification",
@@ -1602,7 +1647,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-10-01T12:49:13Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/NumberVerification/releases/tag/r1.3",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "one-time-password-sms",
@@ -1623,7 +1669,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-09T08:52:34Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/OTPValidation/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/OTPValidation/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "population-density-data",
@@ -1644,7 +1691,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-11T17:46:08Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/PopulationDensityData/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/PopulationDensityData/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "qos-profiles",
@@ -1665,7 +1713,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-06T16:16:48Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "qos-profiles",
@@ -1686,7 +1735,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-12-18T14:58:23Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.3",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "qod-provisioning",
@@ -1710,7 +1760,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-06T16:16:48Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "qod-provisioning",
@@ -1734,7 +1785,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-12-18T14:58:23Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.3",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "quality-on-demand",
@@ -1755,7 +1807,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-06T16:16:48Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "quality-on-demand",
@@ -1776,7 +1829,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-12-18T14:58:23Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r1.3",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "simple-edge-discovery",
@@ -1797,7 +1851,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-09-11T10:39:25Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/SimpleEdgeDiscovery/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/SimpleEdgeDiscovery/releases/tag/r1.3",
+      "release_type": "public-release"
     },
     {
       "api_name": "sim-swap",
@@ -1818,7 +1873,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-12T15:07:04Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "sim-swap",
@@ -1839,7 +1895,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-10-29T17:21:56Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.3",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "sim-swap",
@@ -1860,7 +1917,8 @@
       "release_tag": "r1.4",
       "release_date": "2025-04-04T11:51:06Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.4"
+      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.4",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "sim-swap-subscriptions",
@@ -1881,7 +1939,8 @@
       "release_tag": "r1.2",
       "release_date": "2024-09-12T15:07:04Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.2"
+      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.2",
+      "release_type": "public-release"
     },
     {
       "api_name": "sim-swap-subscriptions",
@@ -1902,7 +1961,8 @@
       "release_tag": "r1.3",
       "release_date": "2024-10-29T17:21:56Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.3"
+      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.3",
+      "release_type": "maintenance-release"
     },
     {
       "api_name": "sim-swap-subscriptions",
@@ -1923,7 +1983,8 @@
       "release_tag": "r1.4",
       "release_date": "2025-04-04T11:51:06Z",
       "meta_release": "Fall24",
-      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.4"
+      "github_url": "https://github.com/camaraproject/SimSwap/releases/tag/r1.4",
+      "release_type": "maintenance-release"
     }
   ]
 }
