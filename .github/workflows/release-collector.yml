@@ -129,24 +129,28 @@ jobs:
         run: |
           npm install js-yaml axios @octokit/rest
 
-      - name: Detect releases
+      - name: Detect repositories and releases
         id: detect
         run: |
-          echo "🔍 Detecting releases in analysis scope: ${{ env.ANALYSIS_SCOPE }}"
+          echo "🔍 Detecting repositories and releases in analysis scope: ${{ env.ANALYSIS_SCOPE }}"
 
           # Create temp directory
           mkdir -p temp
 
-          # Run detection script
+          # Run detection script (also outputs repositories list)
           node workflows/release-collector/scripts/detect-releases.js --mode ${{ env.ANALYSIS_SCOPE }} > temp/detection-output.json
 
           # Parse output
           HAS_UPDATES=$(jq -r '.has_updates' temp/detection-output.json)
           RELEASES_TO_ANALYZE=$(jq -c '.releases_to_analyze' temp/detection-output.json)
           RELEASES_COUNT=$(jq -r '.releases_count' temp/detection-output.json)
+          REPOS_COUNT=$(jq -r '.repositories_count' temp/detection-output.json)
 
           echo "has_updates=${HAS_UPDATES}" >> $GITHUB_OUTPUT
           echo "releases_to_analyze=${RELEASES_TO_ANALYZE}" >> $GITHUB_OUTPUT
+
+          # Extract repositories list for update-master.js
+          jq '{repositories: .repositories}' temp/detection-output.json > temp/repositories.json
 
           # Create release groups for parallel processing
           # Split into groups of 20 releases
@@ -161,7 +165,13 @@ jobs:
           " > temp/release-groups.json
 
           echo "release_groups=$(cat temp/release-groups.json)" >> $GITHUB_OUTPUT
-          echo "Found ${RELEASES_COUNT} releases to analyze"
+          echo "Found ${RELEASES_COUNT} releases to analyze across ${REPOS_COUNT} repositories"
+
+      - name: Upload repositories data
+        uses: actions/upload-artifact@v4
+        with:
+          name: repositories-data
+          path: temp/repositories.json
 
   # =========================================================================================
   # Phase 2: Release Analysis (Parallel)
@@ -267,8 +277,19 @@ jobs:
             fi
           done
 
-          # Update master metadata (format corrections already applied by analyze-release.js)
-          node workflows/release-collector/scripts/update-master.js --mode ${{ env.ANALYSIS_SCOPE }} --input temp/combined-analysis.json
+          # Get repositories data (uploaded by detect-releases job)
+          REPOS_FILE="temp/repositories-data/repositories.json"
+          if [[ ! -f "$REPOS_FILE" ]]; then
+            echo "ERROR: repositories.json not found"
+            exit 1
+          fi
+          echo "Using $(jq '.repositories | length' $REPOS_FILE) repositories"
+
+          # Update master metadata with release_type and repositories
+          node workflows/release-collector/scripts/update-master.js \
+            --mode ${{ env.ANALYSIS_SCOPE }} \
+            --input temp/combined-analysis.json \
+            --repos "$REPOS_FILE"
 
           echo "Master metadata updated with $(jq '. | length' temp/combined-analysis.json) releases"
 

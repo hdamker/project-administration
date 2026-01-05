@@ -88,7 +88,7 @@ async function fetchAPIRepositories() {
 }
 
 /**
- * Fetch all releases for a repository
+ * Fetch all releases for a repository (including pre-releases)
  */
 async function fetchReleases(repoName) {
   const releases = [];
@@ -104,14 +104,14 @@ async function fetchReleases(repoName) {
 
     if (data.length === 0) break;
 
-    // Get all public releases with rX.Y format (exclude pre-releases, drafts, and pre-Fall24 formats)
-    const publicReleases = data.filter(release =>
-      !release.prerelease &&
+    // Get all releases with rX.Y format (exclude drafts and pre-Fall24 formats)
+    // Now includes pre-releases for visibility of release candidates
+    const validReleases = data.filter(release =>
       !release.draft &&
       /^r\d+\.\d+$/.test(release.tag_name)  // Only rX.Y format
     );
 
-    releases.push(...publicReleases);
+    releases.push(...validReleases);
     page++;
   }
 
@@ -180,7 +180,8 @@ async function main() {
           repository: repo,
           release_tag: release.tag_name,
           release_date: release.published_at,
-          github_url: release.html_url
+          github_url: release.html_url,
+          is_prerelease: release.prerelease  // Flag from GitHub API for release_type determination
         });
       }
     } catch (error) {
@@ -188,7 +189,7 @@ async function main() {
     }
   }
 
-  console.error(`Found ${allReleases.length} total rX.Y releases`);
+  console.error(`Found ${allReleases.length} total rX.Y releases (including pre-releases)`);
 
   let releasesToAnalyze = [];
 
@@ -211,13 +212,39 @@ async function main() {
     repoSummary[release.repository]++;
   }
 
+  // Build repositories list with minimal data for update-master.js
+  const repositoriesList = repositories.map(repo => ({
+    repository: repo.name,
+    github_url: repo.html_url
+  })).sort((a, b) => a.repository.localeCompare(b.repository));
+
+  // Check for new repositories (not in existing master data)
+  const existingRepoNames = new Set(
+    (masterData.repositories || []).map(r => r.repository)
+  );
+  const newRepositories = repositoriesList.filter(r => !existingRepoNames.has(r.repository));
+  const hasNewRepositories = newRepositories.length > 0;
+
+  if (hasNewRepositories) {
+    console.error(`Found ${newRepositories.length} new repositories:`);
+    newRepositories.forEach(r => console.error(`  - ${r.repository}`));
+  }
+
+  // has_updates is true if there are new releases OR new repositories
+  const hasUpdates = releasesToAnalyze.length > 0 || hasNewRepositories;
+
   const output = {
-    has_updates: releasesToAnalyze.length > 0,
+    has_updates: hasUpdates,
     releases_to_analyze: releasesToAnalyze,
     releases_count: releasesToAnalyze.length,
     repositories_affected: Object.keys(repoSummary).length,
     repository_summary: repoSummary,
-    mode: mode
+    mode: mode,
+    // Include repositories for use by update-master.js
+    repositories: repositoriesList,
+    repositories_count: repositoriesList.length,
+    new_repositories: newRepositories,
+    new_repositories_count: newRepositories.length
   };
 
   console.log(JSON.stringify(output, null, 2));
