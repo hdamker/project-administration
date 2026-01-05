@@ -239,7 +239,37 @@ const ViewerLib = {
   },
 
   /**
-   * Render maturity badge HTML
+   * Compute API status from version string
+   * Status progression: alpha -> rc -> public (initial or stable)
+   * @param {string} version - API version string (e.g., "0.5.0-alpha.1", "1.0.0-rc.2", "1.0.0")
+   * @returns {string} API status: 'alpha', 'rc', 'initial', 'stable'
+   */
+  getApiStatus: function (version) {
+    if (!version) return 'unknown';
+    if (version.includes('-alpha.')) return 'alpha';
+    if (version.includes('-rc.')) return 'rc';
+    // Public: check initial (0.x) vs stable (1.x+)
+    if (version.match(/^0\./)) return 'initial';
+    return 'stable';
+  },
+
+  /**
+   * Render API status badge HTML
+   * @param {string} status - API status from getApiStatus()
+   * @returns {string} HTML string
+   */
+  renderApiStatusBadge: function (status) {
+    const badges = {
+      'stable': '<span class="badge badge-stable">Stable</span>',
+      'initial': '<span class="badge badge-initial">Initial</span>',
+      'rc': '<span class="badge badge-rc">RC</span>',
+      'alpha': '<span class="badge badge-alpha">Alpha</span>'
+    };
+    return badges[status] || `<span class="badge badge-unknown">${status}</span>`;
+  },
+
+  /**
+   * Render maturity badge HTML (deprecated - use renderApiStatusBadge)
    * @param {string} maturity - Maturity level
    * @returns {string} HTML string
    */
@@ -248,8 +278,7 @@ const ViewerLib = {
       'stable': '<span class="badge badge-stable">Stable</span>',
       'initial': '<span class="badge badge-initial">Initial</span>',
       'rc': '<span class="badge badge-rc">RC</span>',
-      'alpha': '<span class="badge badge-alpha">Alpha</span>',
-      'beta': '<span class="badge badge-beta">Beta</span>'
+      'alpha': '<span class="badge badge-alpha">Alpha</span>'
     };
     return badges[maturity] || `<span class="badge badge-unknown">${maturity}</span>`;
   },
