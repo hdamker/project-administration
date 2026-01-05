@@ -562,7 +562,13 @@
         apis: flatApis
       };
 
-      filteredData = currentData.apis;
+      // Filter out alpha pre-releases (keep rc and public/maintenance)
+      filteredData = currentData.apis.filter(api =>
+        !api.release_type || api.release_type !== 'pre-release-alpha'
+      );
+
+      // Also update currentData.apis to exclude alpha for counts
+      currentData.apis = filteredData;
 
       displayData(currentData);
     }

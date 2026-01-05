@@ -326,7 +326,8 @@ function createFlattenedAPIView(releases) {
         release_tag: release.release_tag,
         release_date: release.release_date,
         meta_release: release.meta_release,
-        github_url: release.github_url
+        github_url: release.github_url,
+        release_type: release.release_type
       });
     }
   }
