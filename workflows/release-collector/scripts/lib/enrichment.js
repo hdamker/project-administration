@@ -76,10 +76,10 @@ function findEnrichment(apiName, landscape) {
 function enrichAPI(api, landscape, currentMetaRelease = null) {
   const enrichment = findEnrichment(api.api_name, landscape);
 
-  // Determine API maturity based on version
+  // Determine API maturity based on api_version
   let maturity = 'initial';  // default
-  if (api.version && typeof api.version === 'string') {
-    if (api.version.match(/^0\./)) {
+  if (api.api_version && typeof api.api_version === 'string') {
+    if (api.api_version.match(/^0\./)) {
       maturity = 'initial';
     } else {
       maturity = 'stable';
@@ -94,7 +94,7 @@ function enrichAPI(api, landscape, currentMetaRelease = null) {
       portfolio_category: null,
       website_url: null,
       tooltip: null,
-      display_name: api.title || api.api_name,
+      display_name: api.api_title || api.api_name,
       published: true,  // Default to published if not specified
       canonical_name: api.api_name,
       first_release: 'Sandbox',  // Default for unknown APIs
@@ -121,7 +121,7 @@ function enrichAPI(api, landscape, currentMetaRelease = null) {
     portfolio_category: enrichment.category || null,
     website_url: enrichment.website_url || null,
     tooltip: enrichment.tooltip || null,
-    display_name: enrichment.display_name || api.title || api.api_name,
+    display_name: enrichment.display_name || api.api_title || api.api_name,
     published: enrichment.published !== false,  // Default to true
     canonical_name: enrichment.canonical_name || api.api_name,
     first_release: enrichment.first_release || 'Sandbox',
@@ -255,10 +255,10 @@ function generateEnrichedStatistics(releases) {
       }
 
       // Determine API maturity
-      if (api.version) {
-        if (api.version.includes('-rc')) {
+      if (api.api_version) {
+        if (api.api_version.includes('-rc')) {
           stats.api_maturity.rc++;
-        } else if (api.version.match(/^0\./)) {
+        } else if (api.api_version.match(/^0\./)) {
           stats.api_maturity.initial++;
         } else {
           stats.api_maturity.stable++;
@@ -267,8 +267,8 @@ function generateEnrichedStatistics(releases) {
         // Track latest version per canonical API
         const canonicalName = api.canonical_name || api.api_name;
         const currentLatest = stats.latest_versions.get(canonicalName);
-        if (!currentLatest || compareVersions(api.version, currentLatest) > 0) {
-          stats.latest_versions.set(canonicalName, api.version);
+        if (!currentLatest || compareVersions(api.api_version, currentLatest) > 0) {
+          stats.latest_versions.set(canonicalName, api.api_version);
         }
       }
 
@@ -286,10 +286,10 @@ function generateEnrichedStatistics(releases) {
   }
 
   // Calculate unique API maturity based on latest versions
-  for (const [canonicalName, version] of stats.latest_versions) {
-    if (version.includes('-rc')) {
+  for (const [canonicalName, latestVersion] of stats.latest_versions) {
+    if (latestVersion.includes('-rc')) {
       stats.unique_api_maturity.rc++;
-    } else if (version.match(/^0\./)) {
+    } else if (latestVersion.match(/^0\./)) {
       stats.unique_api_maturity.initial++;
     } else {
       stats.unique_api_maturity.stable++;

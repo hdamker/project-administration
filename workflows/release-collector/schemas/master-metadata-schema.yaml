@@ -1,6 +1,10 @@
 # Master Metadata Schema
 # Schema for releases-master.yaml containing GitHub facts with format corrections only
-# Version: 1.1.0
+# Version: 2.0.0
+#
+# Changes in 2.0.0:
+# - Renamed 'version' to 'api_version' in APIs array (per issue #69 property alignment)
+# - Renamed 'title' to 'api_title' in APIs array (per issue #69 property alignment)
 #
 # Changes in 1.1.0:
 # - Added release_type field to releases (pre-release-alpha, pre-release-rc, public-release, maintenance-release)
@@ -103,7 +107,7 @@ properties:
             type: object
             required:
               - file_name
-              - version
+              - api_version
             properties:
               api_name:
                 type: ["string", "null"]
@@ -117,7 +121,7 @@ properties:
                 pattern: "^[a-zA-Z][a-zA-Z0-9-_]*$"
                 description: Original YAML filename without extension
 
-              version:
+              api_version:
                 type: string
                 pattern: "^\\d+\\.\\d+\\.\\d+(-[a-z]+\\.\\d+)?$"
                 description: |
@@ -125,7 +129,7 @@ properties:
                   'v' prefix is removed if present (v0.11.0 → 0.11.0).
                   Pre-release extensions follow pattern: X.Y.Z-alpha.N or X.Y.Z-rc.N
 
-              title:
+              api_title:
                 type: ["string", "null"]
                 description: Human-readable API title from OpenAPI spec
 

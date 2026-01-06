@@ -56,6 +56,12 @@ on:
         type: boolean
         default: false
 
+      force_metadata:
+        description: 'Force metadata regeneration even if no data updates'
+        required: false
+        type: boolean
+        default: false
+
   schedule:
     # Daily run at 04:35 UTC (for testing)
     - cron: '35 4 * * *'
@@ -67,6 +73,7 @@ env:
   EXECUTION_MODE: ${{ github.event.inputs.execution_mode || 'pr' }}
   DEBUG_MODE: ${{ github.event.inputs.debug_mode || 'false' }}
   FORCE_VIEWERS: ${{ github.event.inputs.force_viewers || 'false' }}
+  FORCE_METADATA: ${{ github.event.inputs.force_metadata || 'false' }}
 
   # GitHub API Configuration
   GITHUB_ORG: 'camaraproject'
@@ -308,6 +315,58 @@ jobs:
             reports/*.json
 
   # =========================================================================================
+  # Phase 3b: Generate Release Metadata Files
+  # Create release-metadata.yaml/.json for GitHub release uploads
+  # Always regenerates ALL files - diff shows what changed
+  # =========================================================================================
+  generate-release-metadata:
+    name: Generate Release Metadata
+    needs: [detect-releases, update-metadata]
+    if: |
+      always() &&
+      (needs.update-metadata.result == 'success' ||
+       (github.event.inputs.force_metadata || 'false') == 'true')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download processed data
+        if: needs.update-metadata.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: processed-data
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install js-yaml
+
+      - name: Generate release metadata files
+        run: |
+          echo "📄 Generating release-metadata files for ALL releases..."
+
+          node workflows/release-collector/scripts/generate-release-metadata.js
+
+          # Show summary
+          echo ""
+          echo "Generated files:"
+          find data/release-artifacts -name "*.yaml" -o -name "*.json" | head -20
+          TOTAL=$(find data/release-artifacts -name "*.yaml" | wc -l | tr -d ' ')
+          echo "Total releases with metadata: $TOTAL"
+
+      - name: Upload release metadata artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-metadata-${{ github.run_number }}
+          path: data/release-artifacts/
+          retention-days: 30
+
+  # =========================================================================================
   # Phase 4: Generate Viewers
   # Generate HTML viewers with embedded data
   # =========================================================================================
@@ -363,8 +422,11 @@ jobs:
   # =========================================================================================
   publish-changes:
     name: Publish Changes
-    needs: generate-viewers
-    if: (github.event.inputs.execution_mode || 'pr') != 'dry-run'
+    needs: [generate-viewers, generate-release-metadata]
+    if: |
+      always() &&
+      (github.event.inputs.execution_mode || 'pr') != 'dry-run' &&
+      needs.generate-viewers.result == 'success'
     runs-on: ubuntu-latest
     outputs:
       pr_url: ${{ steps.create-pr.outputs.pull-request-url }}
@@ -378,6 +440,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release-reports-${{ github.run_number }}
+
+      - name: Download release metadata (if generated)
+        if: needs.generate-release-metadata.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: release-metadata-${{ github.run_number }}
+          path: data/release-artifacts
 
       - name: Validate generated files
         if: env.EXECUTION_MODE == 'pr'
@@ -420,6 +489,7 @@ jobs:
           # Only commit data and reports (viewers are deployed separately in Phase 4)
           git add data/releases-master.yaml
           git add reports/*.json 2>/dev/null || true
+          git add data/release-artifacts/ 2>/dev/null || true
           # Note: viewers/*.html are gitignored and deployed to camaraproject.github.io
 
           if git diff --cached --quiet; then
@@ -469,8 +539,9 @@ jobs:
 
             - 📊 `data/releases-master.yaml` - Master release metadata
             - 📈 `reports/*.json` - Meta-release reports (Fall24, Spring25, Fall25, All)
+            - 📦 `data/release-artifacts/` - Per-release metadata files (if generated)
 
-            **Note**: Viewers are deployed to staging for preview. After merging, trigger the **Release Collector - Production Deploy** workflow to publish to https://camaraproject.github.io/releases/
+            **Note**: Viewers are deployed to staging for preview. After merging, trigger the **Release Collector - Production Deploy** workflow to publish viewers and upload metadata to GitHub releases.
 
             ### File Changes
 

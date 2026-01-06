@@ -28,6 +28,21 @@ name: Release Collector - Production Deploy
 on:
   workflow_dispatch:
     inputs:
+      deploy_viewers:
+        description: 'Deploy viewers to production site'
+        required: false
+        type: boolean
+        default: true
+      upload_metadata:
+        description: 'Upload release-metadata files to GitHub releases'
+        required: false
+        type: boolean
+        default: true
+      upload_releases:
+        description: 'Selective upload: comma-separated list (e.g., "QualityOnDemand/r1.2,DeviceLocation/r2.1"). Empty = all.'
+        required: false
+        type: string
+        default: ''
       ref:
         description: 'ROLLBACK ONLY: Git ref from main to deploy. Leave empty for normal deployment (with timestamp safety check).'
         required: false
@@ -193,7 +208,9 @@ jobs:
   generate-viewers:
     name: Generate Viewers
     needs: validate-deployment
-    if: needs.validate-deployment.outputs.skip_deploy != 'true'
+    if: |
+      needs.validate-deployment.outputs.skip_deploy != 'true' &&
+      (github.event.inputs.deploy_viewers || 'true') == 'true'
     runs-on: ubuntu-latest
     outputs:
       viewers_generated: ${{ steps.generate.outputs.success }}
@@ -267,7 +284,9 @@ jobs:
   deploy-production:
     name: Deploy to Production
     needs: [validate-deployment, generate-viewers]
-    if: github.event.inputs.dry_run != 'true'
+    if: |
+      github.event.inputs.dry_run != 'true' &&
+      needs.generate-viewers.result == 'success'
     runs-on: ubuntu-latest
     outputs:
       deployed: ${{ steps.push.outputs.deployed }}
@@ -357,11 +376,136 @@ jobs:
           echo "Pages deployment triggered successfully"
 
   # =========================================================================================
-  # Job 4: Workflow Summary
+  # Job 4: Upload Release Metadata to GitHub Releases
+  # =========================================================================================
+  upload-release-metadata:
+    name: Upload to GitHub Releases
+    needs: validate-deployment
+    if: |
+      needs.validate-deployment.outputs.skip_deploy != 'true' &&
+      (github.event.inputs.upload_metadata || 'true') == 'true' &&
+      github.event.inputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      uploaded_count: ${{ steps.upload.outputs.uploaded }}
+      failed_count: ${{ steps.upload.outputs.failed }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-deployment.outputs.deploy_ref }}
+
+      - name: Check for release artifacts
+        id: check
+        run: |
+          if [[ -d "data/release-artifacts" ]]; then
+            COUNT=$(find data/release-artifacts -name "release-metadata.yaml" | wc -l | tr -d ' ')
+            echo "Found $COUNT release metadata files to upload"
+            echo "has_artifacts=true" >> $GITHUB_OUTPUT
+            echo "count=$COUNT" >> $GITHUB_OUTPUT
+          else
+            echo "No release artifacts found in data/release-artifacts/"
+            echo "has_artifacts=false" >> $GITHUB_OUTPUT
+            echo "count=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload metadata files to GitHub releases
+        id: upload
+        if: steps.check.outputs.has_artifacts == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PRODUCTION_DEPLOY_TOKEN }}
+          UPLOAD_RELEASES: ${{ github.event.inputs.upload_releases }}
+        run: |
+          UPLOADED=0
+          FAILED=0
+          SKIPPED=0
+
+          # Parse selective list if provided
+          if [[ -n "$UPLOAD_RELEASES" ]]; then
+            echo "Selective upload mode: $UPLOAD_RELEASES"
+            echo ""
+
+            IFS=',' read -ra RELEASES <<< "$UPLOAD_RELEASES"
+            for release in "${RELEASES[@]}"; do
+              release=$(echo "$release" | xargs)  # trim whitespace
+              repo="${release%/*}"
+              tag="${release#*/}"
+
+              YAML_FILE="data/release-artifacts/$repo/$tag/release-metadata.yaml"
+              JSON_FILE="data/release-artifacts/$repo/$tag/release-metadata.json"
+
+              if [[ ! -f "$YAML_FILE" ]] || [[ ! -f "$JSON_FILE" ]]; then
+                echo "⚠️ Files not found for $repo/$tag"
+                FAILED=$((FAILED + 1))
+                continue
+              fi
+
+              echo "Uploading $repo/$tag..."
+
+              if gh release upload "$tag" --repo "camaraproject/$repo" \
+                  "$YAML_FILE" "$JSON_FILE" --clobber 2>/dev/null; then
+                echo "  ✓ Uploaded"
+                UPLOADED=$((UPLOADED + 1))
+              else
+                echo "  ✗ Failed (release may not exist or no permission)"
+                FAILED=$((FAILED + 1))
+              fi
+            done
+
+          else
+            # Full upload mode
+            echo "Full upload mode: all releases"
+            echo ""
+
+            for repo_dir in data/release-artifacts/*/; do
+              repo=$(basename "$repo_dir")
+
+              for tag_dir in "$repo_dir"*/; do
+                tag=$(basename "$tag_dir")
+
+                YAML_FILE="$tag_dir/release-metadata.yaml"
+                JSON_FILE="$tag_dir/release-metadata.json"
+
+                if [[ ! -f "$YAML_FILE" ]] || [[ ! -f "$JSON_FILE" ]]; then
+                  echo "⚠️ Missing files in $repo/$tag"
+                  SKIPPED=$((SKIPPED + 1))
+                  continue
+                fi
+
+                echo "Uploading $repo/$tag..."
+
+                if gh release upload "$tag" --repo "camaraproject/$repo" \
+                    "$YAML_FILE" "$JSON_FILE" --clobber 2>/dev/null; then
+                  echo "  ✓ Uploaded"
+                  UPLOADED=$((UPLOADED + 1))
+                else
+                  echo "  ✗ Failed (release may not exist or no permission)"
+                  FAILED=$((FAILED + 1))
+                fi
+              done
+            done
+          fi
+
+          echo ""
+          echo "=== Upload Summary ==="
+          echo "Uploaded: $UPLOADED"
+          echo "Failed: $FAILED"
+          echo "Skipped: $SKIPPED"
+
+          echo "uploaded=$UPLOADED" >> $GITHUB_OUTPUT
+          echo "failed=$FAILED" >> $GITHUB_OUTPUT
+
+          if [[ $FAILED -gt 0 ]]; then
+            echo "::warning::Some uploads failed. Check logs for details."
+          fi
+
+  # =========================================================================================
+  # Job 5: Workflow Summary
   # =========================================================================================
   summary:
     name: Workflow Summary
-    needs: [validate-deployment, generate-viewers, deploy-production]
+    needs: [validate-deployment, generate-viewers, deploy-production, upload-release-metadata]
     if: always()
     runs-on: ubuntu-latest
 
@@ -378,6 +522,9 @@ jobs:
           VALIDATION_RESULT="${{ needs.validate-deployment.result }}"
           DEPLOYED="${{ needs.deploy-production.outputs.deployed }}"
           COMMIT_URL="${{ needs.deploy-production.outputs.commit_url }}"
+          UPLOAD_RESULT="${{ needs.upload-release-metadata.result }}"
+          UPLOADED_COUNT="${{ needs.upload-release-metadata.outputs.uploaded_count }}"
+          FAILED_COUNT="${{ needs.upload-release-metadata.outputs.failed_count }}"
 
           # Determine if validation failed (job failed or skip_deploy set)
           VALIDATION_FAILED="false"
@@ -442,6 +589,22 @@ jobs:
             echo "| spring25.html | Spring 2025 meta-release viewer |" >> $GITHUB_STEP_SUMMARY
             echo "| fall25.html | Fall 2025 meta-release viewer |" >> $GITHUB_STEP_SUMMARY
             echo "| portfolio.html | Portfolio overview |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Metadata upload results
+          if [[ "$UPLOAD_RESULT" == "success" && -n "$UPLOADED_COUNT" ]]; then
+            echo "### Release Metadata Upload" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- Uploaded: $UPLOADED_COUNT releases" >> $GITHUB_STEP_SUMMARY
+            if [[ "$FAILED_COUNT" -gt 0 ]]; then
+              echo "- Failed: $FAILED_COUNT releases (check logs)" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+          elif [[ "$UPLOAD_RESULT" == "skipped" ]]; then
+            echo "### Release Metadata Upload" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Skipped (upload_metadata=false or no artifacts)" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
 

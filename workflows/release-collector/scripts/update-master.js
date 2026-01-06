@@ -42,7 +42,7 @@ function loadMaster() {
         last_updated: null,
         last_checked: null,
         workflow_version: "3.0.0",
-        schema_version: "1.1.0"
+        schema_version: "2.0.0"
       },
       releases: [],
       repositories: []
@@ -54,7 +54,7 @@ function loadMaster() {
     master.repositories = [];
   }
   // Update schema version if needed
-  master.metadata.schema_version = "1.1.0";
+  master.metadata.schema_version = "2.0.0";
   return master;
 }
 
@@ -238,8 +238,8 @@ function updateMaster(master, analysisResults, mode, mappings) {
       apis: result.apis.map(api => ({
         api_name: api.api_name,        // Raw API name from server URL
         file_name: api.file_name,      // Raw filename for reference
-        version: api.version,
-        title: api.title,
+        api_version: api.api_version,
+        api_title: api.api_title,
         commonalities: api.commonalities
       }))
     };

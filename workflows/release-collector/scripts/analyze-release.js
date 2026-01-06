@@ -82,7 +82,7 @@ function extractAPINameFromSpec(spec) {
  * - If ALL APIs are -rc.N or public (no extension) → 'pre-release-rc'
  * - If pre-release but no valid alpha/rc extensions → warn and classify as 'pre-release-alpha'
  *
- * @param {Array} apis - Array of API objects with version field
+ * @param {Array} apis - Array of API objects with api_version field
  * @param {boolean} isPrerelease - GitHub prerelease flag
  * @param {string} repository - Repository name for logging
  * @param {string} releaseTag - Release tag for logging
@@ -95,12 +95,12 @@ function determinePreReleaseType(apis, isPrerelease, repository, releaseTag) {
 
   // Check if any API has an alpha version extension
   const hasAlpha = apis.some(api =>
-    api.version && api.version.includes('-alpha.')
+    api.api_version && api.api_version.includes('-alpha.')
   );
 
   // Check if any API has an rc version extension
   const hasRc = apis.some(api =>
-    api.version && api.version.includes('-rc.')
+    api.api_version && api.api_version.includes('-rc.')
   );
 
   // If any API is alpha, the release can't be better than alpha
@@ -121,16 +121,16 @@ function determinePreReleaseType(apis, isPrerelease, repository, releaseTag) {
 /**
  * Apply format corrections to API data
  * These corrections are hardcoded and always applied:
- * 1. Remove 'v' prefix from version (v0.11.0 → 0.11.0)
+ * 1. Remove 'v' prefix from api_version (v0.11.0 → 0.11.0)
  * 2. Ensure commonalities is a string and correct format (0.4.0 → 0.4 for Fall24)
  * 3. Convert API names to lowercase for consistency
  */
 function applyFormatCorrections(api) {
   const corrected = { ...api };
 
-  // 1. Strip 'v' prefix from version if present
-  if (corrected.version && typeof corrected.version === 'string') {
-    corrected.version = corrected.version.replace(/^v/, '');
+  // 1. Strip 'v' prefix from api_version if present
+  if (corrected.api_version && typeof corrected.api_version === 'string') {
+    corrected.api_version = corrected.api_version.replace(/^v/, '');
   }
 
   // 2. Ensure commonalities is a string (convert numbers, preserve existing strings)
@@ -212,8 +212,8 @@ async function analyzeLocalRelease(repoPath, releaseTag, isPrerelease = false) {
         const apiData = {
           api_name: apiName || fileName,        // Use filename as fallback for legacy releases
           file_name: fileName,                  // Filename for consistency check
-          version: spec.info.version || 'unknown',
-          title: spec.info.title || 'Untitled',
+          api_version: spec.info.version || 'unknown',
+          api_title: spec.info.title || 'Untitled',
           commonalities: spec.info['x-camara-commonalities'] || null
         };
 
@@ -227,16 +227,16 @@ async function analyzeLocalRelease(repoPath, releaseTag, isPrerelease = false) {
           correctedApi.api_name = 'connectivity-insights-subscriptions';
         }
 
-        // Fix incorrect title for connectivity-insights-subscriptions in r1.2 and r2.2
+        // Fix incorrect api_title for connectivity-insights-subscriptions in r1.2 and r2.2
         if (repoName === 'ConnectivityInsights' && (releaseTag === 'r1.2' || releaseTag === 'r2.2') &&
-            correctedApi.file_name === 'connectivity-insights-subscriptions' && correctedApi.title === 'Connectivity Insights') {
-          console.error(`Applying correction: ConnectivityInsights ${releaseTag} - fixing title to 'Connectivity Insights Subscriptions'`);
-          correctedApi.title = 'Connectivity Insights Subscriptions';
+            correctedApi.file_name === 'connectivity-insights-subscriptions' && correctedApi.api_title === 'Connectivity Insights') {
+          console.error(`Applying correction: ConnectivityInsights ${releaseTag} - fixing api_title to 'Connectivity Insights Subscriptions'`);
+          correctedApi.api_title = 'Connectivity Insights Subscriptions';
         }
 
         // Exclude known invalid RC release
-        if (correctedApi.api_name === 'region-device-count' && correctedApi.version === '0.1.0-rc.1') {
-          console.error(`Excluding invalid RC release: ${correctedApi.api_name} ${correctedApi.version}`);
+        if (correctedApi.api_name === 'region-device-count' && correctedApi.api_version === '0.1.0-rc.1') {
+          console.error(`Excluding invalid RC release: ${correctedApi.api_name} ${correctedApi.api_version}`);
           continue;
         }
 
@@ -327,8 +327,8 @@ async function analyzeGitHubRelease(repository, releaseTag) {
         const apiData = {
           api_name: apiName || fileName,        // Use filename as fallback for legacy releases
           file_name: fileName,                  // Filename for consistency check
-          version: spec.info.version || 'unknown',
-          title: spec.info.title || 'Untitled',
+          api_version: spec.info.version || 'unknown',
+          api_title: spec.info.title || 'Untitled',
           commonalities: spec.info['x-camara-commonalities'] || null
         };
 
@@ -342,16 +342,16 @@ async function analyzeGitHubRelease(repository, releaseTag) {
           correctedApi.api_name = 'connectivity-insights-subscriptions';
         }
 
-        // Fix incorrect title for connectivity-insights-subscriptions in r1.2 and r2.2
+        // Fix incorrect api_title for connectivity-insights-subscriptions in r1.2 and r2.2
         if (repository === 'ConnectivityInsights' && (releaseTag === 'r1.2' || releaseTag === 'r2.2') &&
-            correctedApi.file_name === 'connectivity-insights-subscriptions' && correctedApi.title === 'Connectivity Insights') {
-          console.error(`Applying correction: ConnectivityInsights ${releaseTag} - fixing title to 'Connectivity Insights Subscriptions'`);
-          correctedApi.title = 'Connectivity Insights Subscriptions';
+            correctedApi.file_name === 'connectivity-insights-subscriptions' && correctedApi.api_title === 'Connectivity Insights') {
+          console.error(`Applying correction: ConnectivityInsights ${releaseTag} - fixing api_title to 'Connectivity Insights Subscriptions'`);
+          correctedApi.api_title = 'Connectivity Insights Subscriptions';
         }
 
         // Exclude known invalid RC release
-        if (correctedApi.api_name === 'region-device-count' && correctedApi.version === '0.1.0-rc.1') {
-          console.error(`Excluding invalid RC release: ${correctedApi.api_name} ${correctedApi.version}`);
+        if (correctedApi.api_name === 'region-device-count' && correctedApi.api_version === '0.1.0-rc.1') {
+          console.error(`Excluding invalid RC release: ${correctedApi.api_name} ${correctedApi.api_version}`);
           continue;
         }
 

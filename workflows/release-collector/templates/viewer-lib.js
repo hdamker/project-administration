@@ -63,7 +63,7 @@ const ViewerLib = {
 
     apis.forEach(api => {
       const apiKey = api.canonical_name || api.api_name;
-      const parsedVersion = this.parseVersion(api.version);
+      const parsedVersion = this.parseVersion(api.api_version);
 
       if (!parsedVersion) {
         // Keep APIs without valid versions
@@ -95,7 +95,7 @@ const ViewerLib = {
 
       // Sort by patch version (descending), then by date (descending)
       versions.sort((a, b) => {
-        const versionCompare = this.compareVersions(b.version, a.version);
+        const versionCompare = this.compareVersions(b.api_version, a.api_version);
         if (versionCompare !== 0) {
           return versionCompare;
         }
@@ -157,10 +157,10 @@ const ViewerLib = {
       }
 
       // Version range filters
-      if (criteria.versionMin && this.compareVersions(api.version, criteria.versionMin) < 0) {
+      if (criteria.versionMin && this.compareVersions(api.api_version, criteria.versionMin) < 0) {
         return false;
       }
-      if (criteria.versionMax && this.compareVersions(api.version, criteria.versionMax) > 0) {
+      if (criteria.versionMax && this.compareVersions(api.api_version, criteria.versionMax) > 0) {
         return false;
       }
 
@@ -180,7 +180,7 @@ const ViewerLib = {
     const lowerQuery = query.toLowerCase();
     return apis.filter(api =>
       api.api_name.toLowerCase().includes(lowerQuery) ||
-      (api.title && api.title.toLowerCase().includes(lowerQuery)) ||
+      (api.api_title && api.api_title.toLowerCase().includes(lowerQuery)) ||
       (api.portfolio_category && api.portfolio_category.toLowerCase().includes(lowerQuery)) ||
       (api.repository && api.repository.toLowerCase().includes(lowerQuery))
     );
@@ -199,7 +199,7 @@ const ViewerLib = {
       let bVal = b[field];
 
       // Handle version fields specially
-      if (field === 'version') {
+      if (field === 'api_version') {
         return this.compareVersions(aVal, bVal);
       }
 
@@ -298,11 +298,11 @@ const ViewerLib = {
    * @param {string} filename - Output filename
    */
   exportToCSV: function (apis, filename = 'camara-apis.csv') {
-    const headers = ['API Name', 'Title', 'Version', 'Category', 'Maturity', 'Repository', 'New', 'Release Tag'];
+    const headers = ['API Name', 'API Title', 'API Version', 'Category', 'Maturity', 'Repository', 'New', 'Release Tag'];
     const rows = apis.map(api => [
       api.api_name || '',
-      api.title || '',
-      api.version || '',
+      api.api_title || '',
+      api.api_version || '',
       api.portfolio_category || '',
       api.maturity || '',
       api.repository || '',
