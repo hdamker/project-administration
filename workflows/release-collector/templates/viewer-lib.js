@@ -320,7 +320,22 @@ const ViewerLib = {
   // Theme Toggling Logic
   // Theme Toggling Logic (3-State: Auto -> Light -> Dark)
   initThemeToggle: function (scope = 'default') {
-    const themeToggleBtn = document.getElementById('theme-toggle');
+    let themeToggleBtn = document.getElementById('theme-toggle');
+
+    // In iframe: inject toggle into footer (header is hidden in iframe)
+    if (this.isInIframe()) {
+      const footerMetadata = document.getElementById('footer-metadata');
+      if (footerMetadata) {
+        const footerToggle = document.createElement('button');
+        footerToggle.id = 'theme-toggle-footer';
+        footerToggle.className = 'theme-toggle-btn theme-toggle-footer';
+        footerToggle.setAttribute('aria-label', 'Toggle Dark Mode');
+        footerToggle.innerHTML = '<span class="theme-icon">🌗</span>';
+        footerMetadata.appendChild(footerToggle);
+        themeToggleBtn = footerToggle;
+      }
+    }
+
     if (!themeToggleBtn) return;
 
     const storageKey = `camara-theme-${scope}`;

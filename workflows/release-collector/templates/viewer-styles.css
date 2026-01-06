@@ -753,6 +753,21 @@ td:nth-child(7) {
   line-height: 1;
 }
 
+/* Footer theme toggle (for iframe context where header is hidden) */
+.theme-toggle-footer {
+  display: inline-flex;
+  margin-left: 12px;
+  background: var(--bg-container);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.theme-toggle-footer:hover {
+  background: var(--bg-table-row-hover);
+  transform: scale(1.05);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   body:not(.in-iframe) {
