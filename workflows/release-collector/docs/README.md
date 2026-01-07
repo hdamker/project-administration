@@ -163,7 +163,54 @@ For testing or manual review:
 
 **Merge instructions**: Use **squash and merge** to keep main history clean. Each workflow run creates a single logical change.
 
-**Viewer deployment** (Phase 3 - Active): Viewers are automatically deployed to GitHub Pages staging for preview. Staging URLs are included in the PR description. Viewers are also available in workflow artifacts for download. Automated production deployment to camaraproject.github.io will be implemented in Phase 4.
+**Viewer deployment** (Phase 3 - Active): Viewers are automatically deployed to GitHub Pages staging for preview. Staging URLs are included in the PR description. Viewers are also available in workflow artifacts for download.
+
+## Production Deployment
+
+After merging a PR, run the **Release Collector - Production Deploy** workflow to:
+1. Deploy viewers to the public site (camaraproject.github.io)
+2. Upload release-metadata files to GitHub releases
+
+### Workflow Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `deploy_viewers` | `true` | Deploy HTML viewers to production site |
+| `upload_metadata` | `true` | Upload release-metadata files to GitHub releases |
+| `upload_releases` | (empty) | Selective upload filter (e.g., "QualityOnDemand/r1.2"). Empty = all releases |
+| `ref` | (empty) | **Rollback only**: Git ref from main branch history to deploy |
+| `allow_branch` | `false` | **Emergency mode**: Allow deployment from any branch |
+| `dry_run` | `false` | Preview deployment without making changes |
+
+### Deployment Modes
+
+| Mode | When | Safety Checks |
+|------|------|---------------|
+| **Default** | `ref` and `allow_branch` both empty | Compares staging vs main timestamps to prevent deploying stale content |
+| **Rollback** | `ref` specified (e.g., `abc123`) | Verifies ref is from main branch history |
+| **Emergency** | `allow_branch` = true | No safety checks - deploys from current branch |
+
+### Upload Analysis
+
+The workflow analyzes each release and reports the action needed:
+
+| Status | Description |
+|--------|-------------|
+| **NEW** | Metadata files don't exist on release (will upload) |
+| **UPDATE** | Metadata files exist but content differs (will replace) |
+| **CURRENT** | Metadata files exist and are identical (no action) |
+| **NO_RELEASE** | Release doesn't exist in repository (error) |
+| **FAILED** | Upload failed (apply mode only) |
+
+### Upload Report
+
+The workflow generates an artifact `release-metadata-upload-report-{run_number}` containing:
+- `upload-report.md` - Human-readable summary with per-release details
+- `upload-report.jsonl` - Machine-readable JSONL format
+
+### Required Permissions
+
+The `PRODUCTION_DEPLOY_TOKEN` must have **Contents: Read and Write** permission for camaraproject repositories to upload release assets.
 
 ### Debug Mode
 
@@ -183,7 +230,12 @@ For testing or manual review:
 
 ```
 data/
-└── releases-master.yaml          # Master metadata (GitHub facts only)
+├── releases-master.yaml          # Master metadata (GitHub facts only)
+└── release-artifacts/            # Staged release metadata (uploaded to releases)
+    └── {repo}/
+        └── {tag}/
+            ├── release-metadata.yaml
+            └── release-metadata.json
 
 reports/
 ├── all-releases.json             # Complete dataset (enriched)
@@ -222,21 +274,24 @@ The workflow executes in this order:
 1. **Detect New Releases** (28s) - Discovers releases to analyze
 2. **Analyze Releases** (parallel matrix) - Processes releases in parallel (up to 6 jobs)
 3. **Update Master Metadata** (12s) - Updates master YAML with analyzed data
-4. **Generate HTML Viewers** (8s) - Creates self-contained HTML viewers
-5. **Publish Changes** (8s) - Creates PR with data/reports
-6. **Deploy to Staging** (13s) - Deploys viewers to GitHub Pages for preview
-7. **Workflow Summary** (3s) - Generates execution summary
+4. **Generate Release Metadata** (15s) - Creates YAML/JSON metadata files for each release
+5. **Generate HTML Viewers** (8s) - Creates self-contained HTML viewers
+6. **Publish Changes** (8s) - Creates PR with data/reports
+7. **Deploy to Staging** (13s) - Deploys viewers to GitHub Pages for preview
+8. **Workflow Summary** (3s) - Generates execution summary
 
 #### Data Pipeline (Technical)
 
 ```
 GitHub API
     ↓
-detect-releases.js → Discovers release tags (rX.Y pattern)
+detect-releases.js → Discovers release tags (rX.Y pattern, includes pre-releases)
     ↓
 analyze-release.js → Extracts API metadata, applies format corrections
     ↓
 update-master.js → Updates releases-master.yaml (facts only)
+    ↓
+generate-release-metadata.js → Creates YAML/JSON for each release (staged)
     ↓
 generate-reports.js → Enriches with api-landscape.yaml, creates JSON reports
     ↓
@@ -262,11 +317,42 @@ generate-viewers.js → Embeds data in HTML templates, creates self-contained vi
 - Viewers embed enriched data (self-contained, no external dependencies)
 - Separation allows independent updates
 
+#### Pre-Releases and Release Types
+The collector tracks all release types, not just public releases:
+
+| Release Type | Detection | Example Tag |
+|--------------|-----------|-------------|
+| `pre-release-alpha` | API version contains `-alpha.N` | r1.1 with version `0.5.0-alpha.1` |
+| `pre-release-rc` | API version contains `-rc.N` | r1.1 with version `1.0.0-rc.1` |
+| `public-release` | Stable version, not on maintenance branch | r1.2 with version `1.0.0` |
+| `maintenance-release` | Release on `maintenance/rX.Y` branch | r1.2 on maintenance/r1.2 |
+
+**Notes:**
+- r0.X tags are excluded (early development, not tracked)
+- Pre-releases appear in viewers with release type badges
+- Internal viewer allows filtering by release type
+
+#### Release Metadata Files
+For each release, the collector generates metadata files that are uploaded to GitHub releases:
+
+| File | Format | Purpose |
+|------|--------|---------|
+| `release-metadata.yaml` | YAML | Human-readable, editable |
+| `release-metadata.json` | JSON | Machine-friendly, fast parsing |
+
+**Content includes:**
+- Repository and release tag
+- Release type and date
+- API details (name, version, status, file)
+- Meta-release assignment
+
+These files enable tooling validation to be self-contained (no dependency on project-administration at runtime).
+
 ## Typical Workflows
 
-### Weekly Monitoring (Recommended)
+### Daily Monitoring (Default)
 ```yaml
-Schedule: Mondays 04:35 UTC (when enabled)
+Schedule: Daily at 04:35 UTC
 Analysis: incremental
 Execution: pr
 Result: Pull request created if changes detected
@@ -428,6 +514,25 @@ This is version 3 of the meta-release collector workflow:
 - **v3**: Current implementation with runtime enrichment
 
 v3 will be the primary workflow until Spring 2026 when native `release-metadata.yaml` files become standard in CAMARA repositories.
+
+### Schema Version 2.0.0
+
+Schema 2.0.0 includes property name alignment (per [#69](https://github.com/camaraproject/project-administration/issues/69)):
+
+**New fields in releases-master.yaml:**
+- `release_type`: Classification (pre-release-alpha, pre-release-rc, public-release, maintenance-release)
+- `repositories`: Array of all repos with quick-reference release pointers
+
+**Property renames:**
+| Old Name | New Name | Location |
+|----------|----------|----------|
+| `commonalities_version` | `commonalities` | releases array |
+| `api_version` | `version` | apis array |
+
+**New output:**
+- `release-metadata.yaml` / `.json` generated for each release
+- Staged in `data/release-artifacts/{repo}/{tag}/`
+- Uploaded to GitHub releases during production deploy
 
 ## Support
 

@@ -4,7 +4,7 @@
 
 ## What This Does
 
-Automatically tracks all CAMARA API releases across repositories, categorizes them by meta-release (Fall24, Spring25, Fall25), and generates browsable HTML viewers.
+Automatically tracks all CAMARA API releases across repositories (including pre-releases), categorizes them by meta-release (Fall24, Spring25, Fall25), and generates browsable HTML viewers. Also generates release-metadata files for each release.
 
 ## Scheduled Runs
 
@@ -47,11 +47,12 @@ When new releases are detected, a PR is created automatically. Maintainers recei
 3. **What Happens Next**
 
    - Workflow runs for 5-15 minutes
-   - You'll see 7 phases execute in the Actions UI:
-     - Detect → Analyze (parallel) → Update → Generate Viewers → Publish → Deploy Staging → Summary
+   - You'll see 8 phases execute in the Actions UI:
+     - Detect → Analyze (parallel) → Update → Generate Metadata → Generate Viewers → Publish → Deploy Staging → Summary
    - If updates found: Creates a PR with title "chore: Update CAMARA release metadata"
    - If no updates: Workflow completes without PR
    - Viewers available for preview at staging GitHub Pages URLs (in PR description)
+   - Release-metadata files (YAML/JSON) staged for each release in `data/release-artifacts/`
 
    ![Workflow phases visualization](docs/images/workflow-visualization.png)
 
@@ -63,18 +64,30 @@ Then: **Squash and merge** to keep history clean
 
 ## After Merging - Deploy to Production
 
-After merging the PR, deploy viewers to the public site:
+After merging the PR, deploy viewers and upload release metadata to the public site:
 
 1. **Navigate to Actions**
    - Go to: github.com/camaraproject/project-administration
    - Click **Actions** tab → **Release Collector - Production Deploy** → **Run workflow**
 
-2. **Use default settings** (recommended)
-   - Validates staging content matches main branch before deploying
+2. **Configure options** (defaults are usually fine)
+
+   | Option | Default | Description |
+   |--------|---------|-------------|
+   | `deploy_viewers` | `true` | Deploy HTML viewers to production |
+   | `upload_metadata` | `true` | Upload release-metadata to GitHub releases |
+   | `upload_releases` | (empty) | Filter: e.g., "QualityOnDemand/r1.2". Empty = all |
+   | `ref` | (empty) | Rollback: deploy specific commit from main history |
+   | `allow_branch` | `false` | Emergency: skip safety checks, deploy from any branch |
+   | `dry_run` | `false` | Preview mode: show what would happen |
 
 3. **What Happens**
    - Viewers are published to: https://camaraproject.github.io/releases/
    - Links: [Fall24](https://camaraproject.github.io/releases/fall24.html) | [Spring25](https://camaraproject.github.io/releases/spring25.html) | [Fall25](https://camaraproject.github.io/releases/fall25.html)
+   - Release-metadata files (YAML/JSON) uploaded to each GitHub release as assets
+   - Upload report artifact generated showing NEW/UPDATE/CURRENT status for each release
+
+   **Safety**: By default, the workflow validates that staging content matches main branch before deploying.
 
 ## When to Use Full Re-analysis
 
