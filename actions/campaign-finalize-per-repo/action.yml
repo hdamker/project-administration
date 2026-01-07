@@ -42,6 +42,30 @@ inputs:
     description: 'Step where error occurred'
     required: false
     default: ''
+  target_files:
+    description: 'Files to track for changes and commit (space-separated)'
+    required: false
+    default: 'README.md'
+  git_user_name:
+    description: 'Git commit author name'
+    required: false
+    default: 'github-actions[bot]'
+  git_user_email:
+    description: 'Git commit author email'
+    required: false
+    default: 'github-actions[bot]@users.noreply.github.com'
+  label_name:
+    description: 'GitHub label for campaign PRs'
+    required: false
+    default: 'automated'
+  label_color:
+    description: 'Label color (hex without #)'
+    required: false
+    default: 'd1d5db'
+  label_description:
+    description: 'Label description'
+    required: false
+    default: 'Automated bulk operations from project-administration'
 
 runs:
   using: 'composite'
@@ -52,9 +76,9 @@ runs:
       shell: bash
       working-directory: repo
       run: |
-        # Search for PRs by base title (partial match) and automated label, sort by created_at DESC
+        # Search for PRs by base title (partial match) and campaign label, sort by created_at DESC
         PR_DATA=$(gh pr list \
-          --search "in:title \"${{ inputs.pr_base_title }}\" label:automated" \
+          --search "in:title \"${{ inputs.pr_base_title }}\" label:${{ inputs.label_name }}" \
           --json number,url,title,createdAt,headRefName \
           --jq 'sort_by(.createdAt) | reverse | .[0]' 2>/dev/null || echo "{}")
 
@@ -89,7 +113,7 @@ runs:
       run: |
         # Stage 1: Compare against main
         echo "Stage 1: Comparing against main..."
-        if git diff --quiet -- README.md; then
+        if git diff --quiet -- ${{ inputs.target_files }}; then
           echo "No changes vs main → noop"
           echo "changed=false" >> $GITHUB_OUTPUT
           echo "reason=main_up_to_date" >> $GITHUB_OUTPUT
@@ -102,7 +126,7 @@ runs:
         if [ -n "$PR_BRANCH" ]; then
           echo "Stage 2: Comparing against PR branch $PR_BRANCH..."
           git fetch origin "$PR_BRANCH" 2>/dev/null || true
-          if git diff --quiet origin/"$PR_BRANCH" -- README.md 2>/dev/null; then
+          if git diff --quiet origin/"$PR_BRANCH" -- ${{ inputs.target_files }} 2>/dev/null; then
             echo "Identical to existing PR → noop"
             echo "changed=false" >> $GITHUB_OUTPUT
             echo "reason=duplicate_of_pr" >> $GITHUB_OUTPUT
@@ -125,7 +149,7 @@ runs:
 
         # Search for PRs with same date in title
         EXISTING_TITLES=$(gh pr list \
-          --search "in:title \"$BASE_TITLE ($DATE\" label:automated" \
+          --search "in:title \"$BASE_TITLE ($DATE\" label:${{ inputs.label_name }}" \
           --json title \
           --jq '.[].title' 2>/dev/null || echo "")
 
@@ -189,20 +213,20 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.github_token }}
 
-    - name: APPLY - Ensure automated label exists
+    - name: APPLY - Ensure campaign label exists
       if: ${{ inputs.mode == 'apply' && steps.change_check.outputs.changed == 'true' }}
       shell: bash
       working-directory: repo
       run: |
-        # Check if automated label exists, create if not
-        if ! gh label list --json name --jq '.[].name' | grep -q "^automated$"; then
-          echo "Creating 'automated' label..."
-          gh label create automated \
-            --description "Automated bulk operations from project-administration" \
-            --color d1d5db
+        # Check if campaign label exists, create if not
+        if ! gh label list --json name --jq '.[].name' | grep -q "^${{ inputs.label_name }}$"; then
+          echo "Creating '${{ inputs.label_name }}' label..."
+          gh label create "${{ inputs.label_name }}" \
+            --description "${{ inputs.label_description }}" \
+            --color "${{ inputs.label_color }}"
           echo "Label created"
         else
-          echo "Label 'automated' already exists"
+          echo "Label '${{ inputs.label_name }}' already exists"
         fi
       env:
         GH_TOKEN: ${{ inputs.github_token }}
@@ -213,10 +237,10 @@ runs:
       shell: bash
       working-directory: repo
       run: |
-        git config user.name "hdamker-bot"
-        git config user.email "hdamker-bot@users.noreply.github.com"
+        git config user.name "${{ inputs.git_user_name }}"
+        git config user.email "${{ inputs.git_user_email }}"
         git checkout -B "${{ inputs.branch }}"
-        git add README.md
+        git add ${{ inputs.target_files }}
         git commit -m "${{ steps.pr_title.outputs.pr_title }}" || echo "No changes to commit"
         git push origin "${{ inputs.branch }}"
         echo "push_succeeded=true" >> $GITHUB_OUTPUT
@@ -233,7 +257,7 @@ runs:
           --body-file "${{ inputs.pr_body_file }}" \
           --head "${{ inputs.branch }}" \
           --base main \
-          --label automated)
+          --label "${{ inputs.label_name }}")
         echo "created_pr_url=$PR_URL" >> $GITHUB_OUTPUT
         echo "Created PR: $PR_URL"
       env:

@@ -1,0 +1,243 @@
+# =========================================================================================
+# CAMARA Project - Campaign: Release Plan Rollout
+#
+# Adds release-plan.yaml to all CAMARA API repositories based on data from
+# releases-master.yaml. Creates PRs for repositories that don't yet have the file.
+#
+# PREREQUISITES:
+# - Secret BULK_CAMPAIGN_TOKEN: Fine-grained PAT with the following permissions:
+#   - Contents: Read and write (create branches, commit changes)
+#   - Pull requests: Read and write (create PRs in target repos)
+#
+# DOCUMENTATION:
+# https://github.com/camaraproject/project-administration/blob/main/campaigns/release-plan-rollout/docs/README.md
+# =========================================================================================
+
+name: Campaign - Release Plan Rollout
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run mode (plan only, no PRs created)'
+        required: true
+        type: boolean
+        default: true
+      include:
+        description: 'Comma-separated list of repository names to process (e.g., "QualityOnDemand, DeviceLocation"). Empty = all repos.'
+        required: false
+        type: string
+        default: ''
+
+concurrency:
+  group: campaign-release-plan-rollout-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  MODE: ${{ inputs.dry_run && 'plan' || 'apply' }}
+  ORG: camaraproject
+  RELEASES_FILE: data/releases-master.yaml
+  INCLUDE: ${{ inputs.include }}
+  BRANCH: bulk/release-plan-rollout-${{ github.run_id }}
+  PR_TITLE: "[bulk] Add release-plan.yaml"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  select:
+    runs-on: ubuntu-latest
+    outputs:
+      repos: ${{ steps.sel.outputs.repos }}
+    steps:
+      - name: Checkout admin repo (self)
+        uses: actions/checkout@v4
+        with:
+          path: admin
+
+      - name: Install js-yaml
+        run: npm install js-yaml
+
+      - id: sel
+        name: Build repo list (from releases-master.yaml + include filter + skip existing)
+        uses: actions/github-script@v7
+        env:
+          GH_TOKEN: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+        with:
+          script: |
+            const fs = require('fs');
+            const yaml = require('js-yaml');
+            const { execSync } = require('child_process');
+
+            // Load releases-master.yaml
+            const doc = yaml.load(fs.readFileSync('admin/data/releases-master.yaml', 'utf8'));
+
+            // Get unique repository names
+            let list = [...new Set((doc?.releases || [])
+              .map(r => `${process.env.ORG}/${r.repository}`)
+              .filter(Boolean))];
+
+            // Apply include filter if specified
+            const include = (process.env.INCLUDE||'').split(',').map(s=>s.trim()).filter(Boolean);
+            if (include.length) {
+              list = list.filter(r => include.some(x => r.endsWith(`/${x}`)));
+              console.log(`Include filter applied: ${include.join(', ')}`);
+            }
+
+            console.log(`Found ${list.length} repositories after filtering`);
+
+            // Check each repo for existing release-plan.yaml
+            const finalList = [];
+            for (const repo of list) {
+              try {
+                // Check if release-plan.yaml exists in main branch
+                const result = execSync(
+                  `gh api repos/${repo}/contents/release-plan.yaml --jq '.name' 2>/dev/null || echo "NOT_FOUND"`,
+                  { encoding: 'utf8' }
+                ).trim();
+
+                if (result === 'NOT_FOUND' || result === '') {
+                  finalList.push(repo);
+                  console.log(`✓ ${repo}: Will process (no release-plan.yaml found)`);
+                } else {
+                  console.log(`⊘ ${repo}: Skipping (release-plan.yaml already exists)`);
+                }
+              } catch (e) {
+                // If API call fails, include the repo (will fail later with better error)
+                finalList.push(repo);
+                console.log(`? ${repo}: Including (could not check, error: ${e.message})`);
+              }
+            }
+
+            console.log(`\nFinal list: ${finalList.length} repositories to process`);
+            core.setOutput('repos', JSON.stringify(finalList));
+
+  run:
+    needs: select
+    if: ${{ needs.select.outputs.repos != '[]' }}
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ env.MODE }}
+    strategy:
+      fail-fast: false
+      matrix:
+        repo: ${{ fromJson(needs.select.outputs.repos) }}
+
+    steps:
+      - name: Checkout admin repo (self)
+        uses: actions/checkout@v4
+        with:
+          path: admin
+
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.repo }}
+          path: repo
+          fetch-depth: 0
+          token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+
+      - name: Install dependencies
+        run: npm install js-yaml mustache
+
+      - name: Generate release-plan.yaml
+        id: generate
+        uses: ./admin/campaigns/release-plan-rollout/actions/generate-release-plan
+        with:
+          releases_file: admin/${{ env.RELEASES_FILE }}
+          repo_slug: ${{ matrix.repo }}
+          out_file: repo/release-plan.yaml
+
+      - name: Render PR body
+        id: pr_body
+        uses: ./admin/actions/render-mustache
+        with:
+          template: admin/campaigns/release-plan-rollout/templates/pr-body.mustache
+          data_json: ${{ steps.generate.outputs.json }}
+          out_file: /tmp/pr-body.md
+
+      # Note: Validation step will be added when tooling shared-action is ready
+      # - name: Validate generated release-plan.yaml
+      #   id: validate
+      #   uses: camaraproject/tooling/shared-actions/validate-release-plan@v0
+      #   with:
+      #     metadata_file: repo/release-plan.yaml
+      #     type: release-plan
+
+      - name: Detect changes
+        id: changes
+        shell: bash
+        working-directory: repo
+        run: |
+          if [ -f "release-plan.yaml" ]; then
+            git add release-plan.yaml
+            if git diff --cached --quiet; then
+              echo "changed=false" >> $GITHUB_OUTPUT
+            else
+              echo "changed=true" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "::warning::release-plan.yaml was not generated"
+          fi
+
+      - name: Campaign finalize
+        uses: ./admin/actions/campaign-finalize-per-repo
+        with:
+          mode: ${{ env.MODE }}
+          changed: ${{ steps.changes.outputs.changed }}
+          repo: ${{ matrix.repo }}
+          campaign_data: ${{ steps.generate.outputs.json }}
+          pr_base_title: ${{ env.PR_TITLE }}
+          pr_body_file: /tmp/pr-body.md
+          branch: ${{ env.BRANCH }}
+          github_token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+          target_files: release-plan.yaml
+
+  aggregate:
+    needs: [select, run]
+    if: ${{ always() && inputs.dry_run && needs.select.outputs.repos != '[]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all plan artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: plan-*
+          merge-multiple: true
+          path: plans
+
+      - name: Merge plan files
+        run: |
+          echo "# Release Plan Rollout Campaign - Plan Summary" > plan.md
+          echo "" >> plan.md
+          echo "Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> plan.md
+          echo "Mode: plan (dry run)" >> plan.md
+          echo "" >> plan.md
+
+          if [ -d plans ]; then
+            for f in plans/*.md; do
+              [ -f "$f" ] && cat "$f" >> plan.md && echo "" >> plan.md
+            done
+
+            # Merge JSONL files
+            cat plans/*.jsonl > plan.jsonl 2>/dev/null || true
+          fi
+
+          echo "## Summary" >> plan.md
+          echo "" >> plan.md
+          echo "Total repositories in plan: $(wc -l < plan.jsonl 2>/dev/null || echo 0)" >> plan.md
+
+      - name: Upload merged plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: campaign-plan
+          path: |
+            plan.md
+            plan.jsonl
+
+      - name: Add workflow summary
+        run: |
+          echo "## Release Plan Rollout Campaign - Plan" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat plan.md >> $GITHUB_STEP_SUMMARY
