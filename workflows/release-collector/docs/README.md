@@ -325,7 +325,7 @@ The collector tracks all release types, not just public releases:
 | `pre-release-alpha` | API version contains `-alpha.N` | r1.1 with version `0.5.0-alpha.1` |
 | `pre-release-rc` | API version contains `-rc.N` | r1.1 with version `1.0.0-rc.1` |
 | `public-release` | Initial or stable version, not on maintenance branch | r1.2 with version `1.0.0` |
-| `maintenance-release` | Release on `maintenance/rX.Y` branch | r1.2 on maintenance/r1.2 |
+| `maintenance-release` | Release on `maintenance-rX` branch for release cycle X | r1.3 on maintenance-r1 with version `1.0.1` |
 
 **Notes:**
 - r0.X tags are excluded (invalid release tags, not tracked)
