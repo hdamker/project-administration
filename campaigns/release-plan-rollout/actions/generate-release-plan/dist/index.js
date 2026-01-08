@@ -4207,11 +4207,23 @@ function mapReleaseType(release) {
         if (!doc || !doc.releases) {
             throw new Error(`Invalid releases-master.yaml structure`);
         }
-        // Filter releases for this repository
-        const repoReleases = doc.releases.filter((r) => r.repository === repoName);
-        if (repoReleases.length === 0) {
+        // Look up repository in repositories array to determine which release to use
+        const repoInfo = doc.repositories?.find(r => r.repository === repoName);
+        let targetReleaseTag = null;
+        if (repoInfo) {
+            // Use newest_pre_release if available (it's newer), otherwise latest_public_release
+            targetReleaseTag = repoInfo.newest_pre_release || repoInfo.latest_public_release;
+            info(`Repository info found: newest_pre_release=${repoInfo.newest_pre_release}, latest_public_release=${repoInfo.latest_public_release}`);
+        }
+        // Find the target release in releases array
+        let targetRelease = null;
+        if (targetReleaseTag) {
+            targetRelease = doc.releases.find(r => r.repository === repoName && r.release_tag === targetReleaseTag) || null;
+        }
+        // Handle repos without releases (WIP or new repos)
+        if (!targetRelease) {
             warning(`No releases found for repository: ${repoName}`);
-            // Generate a minimal release-plan for new repos
+            // Generate a minimal release-plan for repos without releases
             const newRepoPlan = {
                 repository: {
                     release_track: 'none',
@@ -4220,7 +4232,7 @@ function mapReleaseType(release) {
                 },
                 apis: []
             };
-            const yamlContent = generateYamlContent(newRepoPlan, repoName);
+            const yamlContent = generateYamlContent(newRepoPlan, repoName, true);
             fs.writeFileSync(outFile, yamlContent, 'utf8');
             const jsonPayload = {
                 repo_name: repoName,
@@ -4228,36 +4240,16 @@ function mapReleaseType(release) {
                 target_release_tag: 'r1.1',
                 target_release_type: 'none',
                 api_count: 0,
-                apis: []
+                apis: [],
+                warning: 'no_releases',
+                warning_message: 'Repository has no releases. API entries must be added manually based on code/API_definitions/*.yaml files.'
             };
             setOutput('json', JSON.stringify(jsonPayload));
             setOutput('generated', 'true');
-            info(`Generated release-plan.yaml for new repository: ${repoName}`);
+            info(`Generated placeholder release-plan.yaml for repository without releases: ${repoName}`);
             return;
         }
-        // Filter out sandbox releases
-        const publicReleases = repoReleases.filter((r) => r.meta_release &&
-            r.meta_release !== 'None (Sandbox)' &&
-            !r.meta_release.includes('Sandbox'));
-        if (publicReleases.length === 0) {
-            warning(`No public releases found for ${repoName}, using most recent release`);
-            // Use the most recent release even if sandbox
-            repoReleases.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
-        }
-        else {
-            // Sort by release_tag (descending) to get latest
-            publicReleases.sort((a, b) => {
-                try {
-                    const aVer = a.release_tag.startsWith('r') ? a.release_tag.substring(1) : a.release_tag;
-                    const bVer = b.release_tag.startsWith('r') ? b.release_tag.substring(1) : b.release_tag;
-                    return bVer.localeCompare(aVer, undefined, { numeric: true });
-                }
-                catch {
-                    return b.release_tag.localeCompare(a.release_tag);
-                }
-            });
-        }
-        const latest = publicReleases.length > 0 ? publicReleases[0] : repoReleases[0];
+        const latest = targetRelease;
         // Map to release-plan structure (status quo)
         const releaseTrack = latest.meta_release && !latest.meta_release.includes('Sandbox')
             ? 'meta-release'
@@ -4306,14 +4298,21 @@ function mapReleaseType(release) {
 /**
  * Generate YAML content with comments
  */
-function generateYamlContent(plan, repoName) {
+function generateYamlContent(plan, repoName, isPlaceholder = false) {
     let content = `# CAMARA Release Plan
 # This file declares the release targets for this repository.
 # Edit target_* fields to plan your next release.
 #
 # Repository: ${repoName}
 # Generated: ${new Date().toISOString().split('T')[0]}
-
+`;
+    if (isPlaceholder) {
+        content += `#
+# WARNING: This is a placeholder file - no releases found for this repository.
+# Please update all target_* fields and add API entries manually.
+`;
+    }
+    content += `
 repository:
   release_track: "${plan.repository.release_track}"
 `;
@@ -4327,7 +4326,7 @@ repository:
 apis:
 `;
     if (plan.apis.length === 0) {
-        content += `  # No APIs defined yet - add API entries when implementation begins
+        content += `  # No APIs defined yet - add API entries based on code/API_definitions/*.yaml files
   []
 `;
     }

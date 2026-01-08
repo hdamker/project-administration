@@ -36,17 +36,25 @@ include: ""  # All repos
 |-------|------|---------|-------------|
 | `dry_run` | boolean | `true` | Plan mode (no PRs created) |
 | `include` | string | `""` | Comma-separated repository names to process |
+| `include_wip_repos` | boolean | `true` | Include repos without release but with API files (work in progress) |
+| `include_new_repos` | boolean | `false` | Include repos without API files and releases (new repos) |
 
 ## Logic
 
-1. **Select**: Query releases-master.yaml for unique repositories
-2. **Filter**: Apply INCLUDE filter, skip repos with existing release-plan.yaml
-3. **Generate**: Create release-plan.yaml with status quo values from last release
-4. **PR**: Create PR with instructions for code owners
+1. **Select**: Query `repositories` array in releases-master.yaml for all API repositories
+2. **Categorize**: Detect repository categories:
+   - **With releases**: Has `latest_public_release` or `newest_pre_release`
+   - **WIP**: No releases but has API files in `code/API_definitions/`
+   - **New**: No releases and no API files
+3. **Filter**: Apply INCLUDE filter, category filters, skip repos with existing release-plan.yaml
+4. **Generate**: Create release-plan.yaml (status quo for repos with releases, placeholder for others)
+5. **PR**: Create PR with instructions for code owners (includes warning for placeholders)
 
 ## Generated Content
 
-The campaign generates `release-plan.yaml` reflecting the **last release state** (status quo):
+### Repositories with Releases
+
+For repositories with releases, the campaign generates `release-plan.yaml` reflecting the **last release state** (status quo):
 
 ```yaml
 repository:
@@ -61,6 +69,22 @@ apis:
 ```
 
 Code owners should update `target_*` fields to reflect their intended next release.
+
+### Repositories without Releases (Placeholders)
+
+For WIP and new repositories, the campaign generates a **placeholder** with default values:
+
+```yaml
+repository:
+  release_track: "none"
+  target_release_tag: "r1.1"
+  target_release_type: "none"
+apis: []
+```
+
+These PRs include a warning banner. Code owners must:
+1. Update all `target_*` fields to reflect their intended release
+2. Add API entries matching their `code/API_definitions/*.yaml` files
 
 ## Related
 

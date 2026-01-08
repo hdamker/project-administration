@@ -12,16 +12,18 @@ This campaign automates the rollout of `release-plan.yaml` to all CAMARA API rep
 select → run (matrix) → aggregate
 ```
 
-1. **select**: Build repository list from releases-master.yaml
+1. **select**: Build repository list from `repositories` array in releases-master.yaml
+   - Categorize repos: with-release, WIP (has API files), new (no API files)
    - Apply INCLUDE filter if specified
+   - Apply `include_wip_repos` and `include_new_repos` filters
    - Check for existing release-plan.yaml (skip if exists)
 
 2. **run**: Matrix job per repository
-   - Generate release-plan.yaml from last release data
-   - Render PR body template
+   - Generate release-plan.yaml from last release data (or placeholder for WIP/new repos)
+   - Render PR body template (with warning for placeholders)
    - Use campaign-finalize-per-repo for commit/PR creation
 
-3. **aggregate**: Merge plan artifacts (plan mode only)
+3. **aggregate**: Merge plan artifacts (plan mode only) with category breakdown
 
 ### Actions
 
@@ -33,7 +35,18 @@ select → run (matrix) → aggregate
 
 ## Data Mapping
 
-### From releases-master.yaml
+### Repository Lookup (from repositories array)
+
+```yaml
+repositories:
+  - repository: "QualityOnDemand"
+    latest_public_release: "r1.2"
+    newest_pre_release: null
+```
+
+The campaign uses `newest_pre_release` if set (newer), otherwise `latest_public_release`.
+
+### Release Data (from releases array)
 
 ```yaml
 releases:
@@ -90,9 +103,17 @@ include: "QualityOnDemand"
 
 PRs can be reviewed and closed without harm.
 
+## Repository Categories
+
+| Category | Release? | API Files? | Input Control | Generated Content |
+|----------|----------|------------|---------------|-------------------|
+| Has release | Yes | Yes | Always included | Status quo from release |
+| WIP | No | Yes | `include_wip_repos` | Placeholder with warning |
+| New | No | No | `include_new_repos` | Placeholder with warning |
+
 ## Dependencies
 
-- **PR#98**: Extended Release Collector with `release_type` field
+- **PR#98**: Extended Release Collector with `repositories` array (merged)
 - **Workstream 5**: Validation workflow (stub integrated, full validation pending)
 
 ## Related Issues
