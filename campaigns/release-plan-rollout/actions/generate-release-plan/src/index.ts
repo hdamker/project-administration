@@ -30,8 +30,8 @@ function warning(message: string): void {
 interface API {
   api_name: string;
   file_name: string;
-  version: string;
-  title: string;
+  api_version: string;
+  api_title: string;
   commonalities: string | null;
 }
 
@@ -80,7 +80,10 @@ interface ReleasePlan {
  * - Ends with -rc.N -> "rc"
  * - Otherwise -> "public"
  */
-function deriveApiStatus(version: string): string {
+function deriveApiStatus(version: string | undefined | null): string {
+  if (!version) {
+    return 'unknown';
+  }
   if (version.includes('-alpha')) {
     return 'alpha';
   }
@@ -96,7 +99,10 @@ function deriveApiStatus(version: string): string {
  * "1.0.0-rc.2" -> "1.0.0"
  * "1.0.0" -> "1.0.0"
  */
-function extractBaseVersion(version: string): string {
+function extractBaseVersion(version: string | undefined | null): string {
+  if (!version) {
+    return 'unknown';
+  }
   return version.split('-')[0];
 }
 
@@ -172,12 +178,9 @@ function mapReleaseType(release: Release): string {
       fs.writeFileSync(outFile, yamlContent, 'utf8');
 
       const jsonPayload = {
-        repo_name: repoName,
-        release_track: 'none',
         target_release_tag: 'r1.1',
         target_release_type: 'none',
-        api_count: 0,
-        apis: [],
+        apis: [] as string[],
         warning: 'no_releases',
         warning_message: 'Repository has no releases. API entries must be added manually based on code/API_definitions/*.yaml files.'
       };
@@ -203,8 +206,8 @@ function mapReleaseType(release: Release): string {
       },
       apis: latest.apis.map(api => ({
         api_name: api.api_name,
-        target_api_version: extractBaseVersion(api.version),
-        target_api_status: deriveApiStatus(api.version)
+        target_api_version: extractBaseVersion(api.api_version),
+        target_api_status: deriveApiStatus(api.api_version)
       }))
     };
 
@@ -217,15 +220,11 @@ function mapReleaseType(release: Release): string {
     const yamlContent = generateYamlContent(releasePlan, repoName);
     fs.writeFileSync(outFile, yamlContent, 'utf8');
 
-    // Output JSON for PR body template
+    // Output JSON for PR body template (reduced fields for plan summary)
     const jsonPayload = {
-      repo_name: repoName,
-      release_track: releasePlan.repository.release_track,
-      meta_release: releasePlan.repository.meta_release || null,
       target_release_tag: releasePlan.repository.target_release_tag,
       target_release_type: releasePlan.repository.target_release_type,
-      api_count: releasePlan.apis.length,
-      apis: releasePlan.apis
+      apis: releasePlan.apis.map(a => a.api_name)
     };
 
     setOutput('json', JSON.stringify(jsonPayload));

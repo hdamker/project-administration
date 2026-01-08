@@ -29,7 +29,7 @@ This repository has no releases yet. The `release-plan.yaml` contains **placehol
 This PR contains **status quo** values reflecting your last release:
 - Release tag: `{{target_release_tag}}`
 - Release type: `{{target_release_type}}`
-- APIs: {{api_count}}
+- APIs: {{#apis}}{{.}}{{^-last}}, {{/-last}}{{/apis}}{{^apis}}(none){{/apis}}
 
 ### Action Required
 

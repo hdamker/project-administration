@@ -109,15 +109,18 @@ jobs:
 
             for (const repo of reposWithoutRelease) {
               try {
+                // Check if code/API_definitions directory has .yaml files (not just README.md placeholder)
                 const result = execSync(
-                  `gh api repos/${repo.slug}/contents/code/API_definitions --jq 'length' 2>/dev/null || echo "0"`,
-                  { encoding: 'utf8' }
+                  `gh api repos/${repo.slug}/contents/code/API_definitions --jq '[.[] | select(.name | endswith(".yaml"))] | length'`,
+                  { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
                 ).trim();
-                repo.hasApiFiles = parseInt(result) > 0;
-                console.log(`  ${repo.name}: ${repo.hasApiFiles ? 'Has API files' : 'No API files'}`);
+                const yamlCount = parseInt(result);
+                repo.hasApiFiles = yamlCount > 0;
+                console.log(`  ${repo.name}: ${yamlCount > 0 ? `Has ${yamlCount} API file(s)` : 'No API files (only placeholder)'}`);
               } catch (e) {
+                // 404 means directory doesn't exist = no API files
                 repo.hasApiFiles = false;
-                console.log(`  ${repo.name}: Could not check (${e.message})`);
+                console.log(`  ${repo.name}: No API files`);
               }
             }
 
@@ -155,18 +158,16 @@ jobs:
 
               // Check if release-plan.yaml already exists
               try {
-                const result = execSync(
-                  `gh api repos/${repo.slug}/contents/release-plan.yaml --jq '.name' 2>/dev/null || echo "NOT_FOUND"`,
-                  { encoding: 'utf8' }
-                ).trim();
-
-                if (result !== 'NOT_FOUND' && result !== '') {
-                  counts.skippedExists++;
-                  console.log(`⊘ ${repo.name}: Skipping (release-plan.yaml already exists)`);
-                  continue;
-                }
+                execSync(
+                  `gh api repos/${repo.slug}/contents/release-plan.yaml`,
+                  { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
+                );
+                // If we get here, file exists - skip
+                counts.skippedExists++;
+                console.log(`⊘ ${repo.name}: Skipping (release-plan.yaml already exists)`);
+                continue;
               } catch (e) {
-                // If API call fails, include the repo
+                // 404 = file doesn't exist, include the repo
               }
 
               // Add to final list
@@ -278,44 +279,79 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: plan-*
-          merge-multiple: true
           path: plans
 
       - name: Merge plan files
-        run: |
-          echo "# Release Plan Rollout Campaign - Plan Summary" > plan.md
-          echo "" >> plan.md
-          echo "Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> plan.md
-          echo "Mode: plan (dry run)" >> plan.md
-          echo "Settings: include_wip_repos=${{ inputs.include_wip_repos }}, include_new_repos=${{ inputs.include_new_repos }}" >> plan.md
-          echo "" >> plan.md
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
 
-          if [ -d plans ]; then
-            for f in plans/*.md; do
-              [ -f "$f" ] && cat "$f" >> plan.md && echo "" >> plan.md
-            done
+            // Header
+            const header = [
+              '# Release Plan Rollout Campaign - Plan Summary',
+              '',
+              `Generated: ${new Date().toISOString()}`,
+              'Mode: plan (dry run)',
+              `Settings: include_wip_repos=${{ inputs.include_wip_repos }}, include_new_repos=${{ inputs.include_new_repos }}`,
+              ''
+            ];
 
-            # Merge JSONL files
-            cat plans/*.jsonl > plan.jsonl 2>/dev/null || true
-          fi
+            const md = [];
+            const jsonl = [];
 
-          echo "## Summary" >> plan.md
-          echo "" >> plan.md
+            const plansDir = 'plans';
+            if (!fs.existsSync(plansDir)) {
+              console.log('No plans directory found');
+              fs.writeFileSync('plan.md', header.join('\n') + '\n## Summary\n\n**Total repositories processed:** 0\n');
+              fs.writeFileSync('plan.jsonl', '');
+              return;
+            }
 
-          TOTAL=$(wc -l < plan.jsonl 2>/dev/null | tr -d ' ' || echo 0)
-          echo "**Total repositories processed:** ${TOTAL}" >> plan.md
-          echo "" >> plan.md
+            // Each artifact is in its own subdirectory
+            const dirs = fs.readdirSync(plansDir);
+            console.log(`Found ${dirs.length} artifact directories`);
 
-          if [ -f plan.jsonl ] && [ -s plan.jsonl ]; then
-            # Count repos with releases (no warning field)
-            WITH_RELEASE=$(grep -c '"warning":' plan.jsonl 2>/dev/null && echo "" || echo "")
-            WITH_RELEASE_COUNT=$((TOTAL - $(grep -c '"warning"' plan.jsonl 2>/dev/null || echo 0)))
-            WITHOUT_RELEASE_COUNT=$(grep -c '"warning"' plan.jsonl 2>/dev/null || echo 0)
+            for (const d of dirs) {
+              const dir = path.join(plansDir, d);
+              const stat = fs.statSync(dir);
+              if (!stat.isDirectory()) continue;
 
-            echo "**Category breakdown:**" >> plan.md
-            echo "- With releases: ${WITH_RELEASE_COUNT}" >> plan.md
-            echo "- Without releases (placeholders): ${WITHOUT_RELEASE_COUNT}" >> plan.md
-          fi
+              const mdFile = path.join(dir, 'plan.md');
+              const jsonlFile = path.join(dir, 'plan.jsonl');
+
+              if (fs.existsSync(mdFile)) {
+                md.push(fs.readFileSync(mdFile, 'utf8'));
+              }
+              if (fs.existsSync(jsonlFile)) {
+                jsonl.push(fs.readFileSync(jsonlFile, 'utf8'));
+              }
+            }
+
+            // Calculate summary
+            const total = jsonl.length;
+            const jsonlContent = jsonl.join('');
+            const warningCount = (jsonlContent.match(/"warning"/g) || []).length;
+            const withReleaseCount = total - warningCount;
+
+            // Build final output
+            const summary = [
+              '## Summary',
+              '',
+              `**Total repositories processed:** ${total}`,
+              ''
+            ];
+
+            if (total > 0) {
+              summary.push('**Category breakdown:**');
+              summary.push(`- With releases: ${withReleaseCount}`);
+              summary.push(`- Without releases (placeholders): ${warningCount}`);
+            }
+
+            const finalMd = header.join('\n') + md.join('\n') + '\n' + summary.join('\n') + '\n';
+            fs.writeFileSync('plan.md', finalMd);
+            fs.writeFileSync('plan.jsonl', jsonlContent);
 
       - name: Upload merged plan
         uses: actions/upload-artifact@v4

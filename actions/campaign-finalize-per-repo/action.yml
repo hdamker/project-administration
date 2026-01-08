@@ -111,9 +111,10 @@ runs:
       shell: bash
       working-directory: repo
       run: |
-        # Stage 1: Compare against main
+        # Stage 1: Compare against main (stage files first to detect new files)
         echo "Stage 1: Comparing against main..."
-        if git diff --quiet -- ${{ inputs.target_files }}; then
+        git add ${{ inputs.target_files }} 2>/dev/null || true
+        if git diff --cached --quiet -- ${{ inputs.target_files }}; then
           echo "No changes vs main → noop"
           echo "changed=false" >> $GITHUB_OUTPUT
           echo "reason=main_up_to_date" >> $GITHUB_OUTPUT

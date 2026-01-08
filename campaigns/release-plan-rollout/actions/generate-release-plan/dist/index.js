@@ -4160,6 +4160,9 @@ function warning(message) {
  * - Otherwise -> "public"
  */
 function deriveApiStatus(version) {
+    if (!version) {
+        return 'unknown';
+    }
     if (version.includes('-alpha')) {
         return 'alpha';
     }
@@ -4175,6 +4178,9 @@ function deriveApiStatus(version) {
  * "1.0.0" -> "1.0.0"
  */
 function extractBaseVersion(version) {
+    if (!version) {
+        return 'unknown';
+    }
     return version.split('-')[0];
 }
 /**
@@ -4235,11 +4241,8 @@ function mapReleaseType(release) {
             const yamlContent = generateYamlContent(newRepoPlan, repoName, true);
             fs.writeFileSync(outFile, yamlContent, 'utf8');
             const jsonPayload = {
-                repo_name: repoName,
-                release_track: 'none',
                 target_release_tag: 'r1.1',
                 target_release_type: 'none',
-                api_count: 0,
                 apis: [],
                 warning: 'no_releases',
                 warning_message: 'Repository has no releases. API entries must be added manually based on code/API_definitions/*.yaml files.'
@@ -4262,8 +4265,8 @@ function mapReleaseType(release) {
             },
             apis: latest.apis.map(api => ({
                 api_name: api.api_name,
-                target_api_version: extractBaseVersion(api.version),
-                target_api_status: deriveApiStatus(api.version)
+                target_api_version: extractBaseVersion(api.api_version),
+                target_api_status: deriveApiStatus(api.api_version)
             }))
         };
         // Add meta_release if tracking meta-release
@@ -4273,15 +4276,11 @@ function mapReleaseType(release) {
         // Generate YAML content
         const yamlContent = generateYamlContent(releasePlan, repoName);
         fs.writeFileSync(outFile, yamlContent, 'utf8');
-        // Output JSON for PR body template
+        // Output JSON for PR body template (reduced fields for plan summary)
         const jsonPayload = {
-            repo_name: repoName,
-            release_track: releasePlan.repository.release_track,
-            meta_release: releasePlan.repository.meta_release || null,
             target_release_tag: releasePlan.repository.target_release_tag,
             target_release_type: releasePlan.repository.target_release_type,
-            api_count: releasePlan.apis.length,
-            apis: releasePlan.apis
+            apis: releasePlan.apis.map(a => a.api_name)
         };
         setOutput('json', JSON.stringify(jsonPayload));
         setOutput('generated', 'true');
