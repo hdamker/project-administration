@@ -307,6 +307,18 @@ runs:
         INPUT_ERROR_MESSAGE: ${{ inputs.error_message }}
         INPUT_ERROR_STEP: ${{ inputs.error_step }}
 
+    - name: Copy generated files for plan artifact
+      if: ${{ inputs.mode == 'plan' }}
+      shell: bash
+      run: |
+        # Copy generated target files to plan artifact directory
+        mkdir -p plan-files
+        for file in ${{ inputs.target_files }}; do
+          if [ -f "repo/$file" ]; then
+            cp "repo/$file" "plan-files/"
+          fi
+        done
+
     - name: Reset repo (plan mode)
       if: ${{ inputs.mode == 'plan' }}
       shell: bash
@@ -322,3 +334,4 @@ runs:
         path: |
           ${{ inputs.mode == 'plan' && 'plan' || 'results' }}.md
           ${{ inputs.mode == 'plan' && 'plan' || 'results' }}.jsonl
+          ${{ inputs.mode == 'plan' && 'plan-files/*' || '' }}
