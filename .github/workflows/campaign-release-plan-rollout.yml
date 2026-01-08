@@ -1,0 +1,11 @@
+# Stub for testing - full implementation on release-plan-rollout-campaign branch
+name: Campaign - Release Plan Rollout
+
+on:
+  workflow_dispatch:
+
+jobs:
+  stub:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Stub workflow - see release-plan-rollout-campaign branch for implementation"
