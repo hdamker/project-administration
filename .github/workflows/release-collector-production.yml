@@ -6,7 +6,7 @@
 # Safety checks:
 # - Default mode: Compares staging vs main timestamps to prevent deploying stale content
 # - Rollback mode: Allows deploying specific ref from main branch history
-# - Emergency mode: Allows deploying from any branch (explicit override)
+# - Emergency or test mode: Allows deploying from any branch (explicit override)
 #
 # PREREQUISITES:
 # - Secret PRODUCTION_DEPLOY_TOKEN: Fine-grained PAT for camaraproject/camaraproject.github.io
@@ -49,7 +49,7 @@ on:
         default: ''
         type: string
       allow_branch:
-        description: 'Allow deployment from any branch (emergency override). Uses current branch when ref is empty. Skips timestamp safety check.'
+        description: 'Emergency or test: deploy from current branch instead of main. Uses current branch when ref is empty. Skips timestamp safety check.'
         required: false
         type: boolean
         default: false
@@ -95,7 +95,7 @@ jobs:
           CURRENT_BRANCH="${{ github.ref_name }}"
 
           if [[ "$ALLOW_BRANCH" == "true" ]]; then
-            # Emergency mode: Any ref allowed, use current branch if ref is empty
+            # Emergency or test mode: Any ref allowed, use current branch if ref is empty
             if [[ -z "$INPUT_REF" ]]; then
               DEPLOY_REF="$CURRENT_BRANCH"
             else
@@ -104,7 +104,7 @@ jobs:
             echo "mode=emergency" >> $GITHUB_OUTPUT
             echo "ref=$DEPLOY_REF" >> $GITHUB_OUTPUT
             echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-            echo "::warning::EMERGENCY MODE - Deploying from $DEPLOY_REF without safety checks"
+            echo "::warning::EMERGENCY OR TEST MODE - Deploying from $DEPLOY_REF without safety checks"
 
           elif [[ -z "$INPUT_REF" ]]; then
             # Default mode: HEAD of main
@@ -204,7 +204,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           if [[ "${{ steps.determine-ref.outputs.mode }}" == "emergency" ]]; then
-            echo "> **Warning**: Emergency mode - deploying without timestamp safety check" >> $GITHUB_STEP_SUMMARY
+            echo "> **Warning**: Emergency or test mode - deploying without timestamp safety check" >> $GITHUB_STEP_SUMMARY
           fi
 
   # =========================================================================================
@@ -704,7 +704,7 @@ jobs:
 
           # Mode warning (rollback and emergency skip timestamp checks)
           if [[ "$DEPLOY_MODE" == "emergency" ]]; then
-            echo "> **Warning**: EMERGENCY MODE - deploying from non-main branch. Timestamp safety check was bypassed." >> $GITHUB_STEP_SUMMARY
+            echo "> **Warning**: EMERGENCY OR TEST MODE - deploying from non-main branch. Timestamp safety check was bypassed." >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           elif [[ "$DEPLOY_MODE" == "rollback" ]]; then
             echo "> **Note**: ROLLBACK MODE - deploying specific ref from main. Timestamp safety check was bypassed." >> $GITHUB_STEP_SUMMARY

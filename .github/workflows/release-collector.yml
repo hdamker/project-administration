@@ -524,7 +524,7 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           branch: meta-release-update-${{ github.run_number }}
-          title: 'chore: Update CAMARA release metadata'
+          title: 'Review: CAMARA release data updates from Release Collector bot'
           labels: automated
           body: |
             ## CAMARA Release Metadata Update
@@ -581,7 +581,7 @@ jobs:
 
             *This PR was generated automatically by the Release Collector v3 workflow.*
           commit-message: |
-            chore: Update CAMARA release metadata
+            Review: CAMARA release data updates from Release Collector bot
 
             Analysis scope: ${{ env.ANALYSIS_SCOPE }}
             Workflow run: ${{ github.run_number }}

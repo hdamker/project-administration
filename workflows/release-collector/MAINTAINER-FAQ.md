@@ -12,9 +12,9 @@ See [User Guide](docs/README.md#typical-workflows) for scheduling details.
 
 ### 2. What's the difference between incremental and full mode?
 
-**Incremental**: Only processes new releases (fast, 2-5 minutes). Use for regular updates.
+**Incremental**: Only processes new releases (fast, 1-2 minutes). Use for regular updates.
 
-**Full**: Re-analyzes all releases (5-15 minutes). Use after configuration changes or to fix data.
+**Full**: Re-analyzes all releases (3-5 minutes). Use after configuration changes or to fix data.
 
 See [User Guide](docs/README.md#analysis-scope) for complete details.
 
@@ -94,12 +94,12 @@ Pre-releases are only visible in the **internal viewer**, which shows the releas
 Release types:
 - `pre-release-alpha` - Early development (version contains `-alpha.N`)
 - `pre-release-rc` - Release candidate (version contains `-rc.N`)
-- `public-release` - Stable release
+- `public-release` - Public release of initial or stable API versions
 - `maintenance-release` - Release on maintenance branch
 
 ### 14. Why don't I see r0.X releases?
 
-r0.X releases are excluded from collection - they represent early development work before the first formal release.
+Formal releases start at r1.1. Two existing r0.X releases are excluded from the collection - they were pre-releases accidentially created with these non-valid release tags.
 
 ## Production Deployment
 
@@ -130,11 +130,11 @@ Only `data/releases-master.yaml`, `data/release-artifacts/`, and `reports/*.json
 
 ### 19. How do I check what changed in a specific meta-release?
 
-Compare the JSON reports in the PR diff (`reports/fall24.json`, `reports/spring25.json`, etc.). The diff shows new APIs, version changes, and maturity changes.
+For new APIs within a meta-release you can use the meta-release viewer and order the "New" column with "True" values on top. To see the evolution of APIs across meta-releases use the Portfolio viewer.
 
 ### 20. The workflow is taking too long
 
-Normal times: 2-5 minutes (incremental), 5-15 minutes (full). If longer, check for API rate limits in logs or network issues.
+See FAQ #2 for normal times. If significantly longer, check for API rate limits in logs or network issues.
 
 See [User Guide](docs/README.md#workflow-timeout-or-very-slow) for troubleshooting.
 

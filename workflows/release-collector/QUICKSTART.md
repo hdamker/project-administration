@@ -46,10 +46,10 @@ When new releases are detected, a PR is created automatically. Maintainers recei
 
 3. **What Happens Next**
 
-   - Workflow runs for 5-15 minutes
+   - Workflow runs for 3-5 minutes
    - You'll see 8 phases execute in the Actions UI:
      - Detect → Analyze (parallel) → Update → Generate Metadata → Generate Viewers → Publish → Deploy Staging → Summary
-   - If updates found: Creates a PR with title "chore: Update CAMARA release metadata"
+   - If updates found: Creates a PR with title "Review: CAMARA release data updates from Release Collector bot"
    - If no updates: Workflow completes without PR
    - Viewers available for preview at staging GitHub Pages URLs (in PR description)
    - Release-metadata files (YAML/JSON) staged for each release in `data/release-artifacts/`
@@ -77,9 +77,9 @@ After merging the PR, deploy viewers and upload release metadata to the public s
    | `deploy_viewers` | `true` | Deploy HTML viewers to production |
    | `upload_metadata` | `true` | Upload release-metadata to GitHub releases |
    | `upload_releases` | (empty) | Filter: e.g., "QualityOnDemand/r1.2". Empty = all |
-   | `ref` | (empty) | Rollback: deploy specific commit from main history |
-   | `allow_branch` | `false` | Emergency: skip safety checks, deploy from any branch |
-   | `dry_run` | `false` | Preview mode: show what would happen |
+   | `ref` | (empty) | Used only for rollback: commit SHA from main history. Leave empty for normal deployment (latest from main branch) |
+   | `allow_branch` | `false` | Emergency or test: set `true` to deploy from current branch instead of main |
+   | `dry_run` | `false` | Preview mode: set `true` to show what would happen without deploying |
 
 3. **What Happens**
    - Viewers are published to: https://camaraproject.github.io/releases/
@@ -89,7 +89,7 @@ After merging the PR, deploy viewers and upload release metadata to the public s
 
    **Safety**: By default, the workflow validates that staging content matches main branch before deploying.
 
-## When to Use Full Re-analysis
+## When to Use Full Analysis
 
 > **Important**: Config file changes are NOT automatically detected. You MUST manually run a full analysis after changing any config file - scheduled runs (incremental) will not pick up these changes.
 

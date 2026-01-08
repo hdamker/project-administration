@@ -63,7 +63,7 @@ Force viewers: true
 ### If PR is Created
 
 1. **Navigate to the PR**
-   - Look for "chore: Update CAMARA release metadata" PR
+   - Look for "Review: CAMARA release data updates from Release Collector bot" PR
    - Check the PR description for staging viewer links
 
 2. **Review Changes** (checklist):
@@ -110,7 +110,7 @@ For testing or manual review:
 **What it does**:
 - Detects only NEW releases since last run
 - Compares current GitHub state with `data/releases-master.yaml`
-- Fast execution (typically 2-5 minutes)
+- Fast execution (typically 1-2 minutes)
 - Updates master metadata incrementally
 
 **Example**: If you ran the workflow last week and 3 new releases were published, incremental mode will only analyze those 3 releases.
@@ -125,7 +125,7 @@ For testing or manual review:
 **What it does**:
 - Re-analyzes ALL releases across all repositories
 - Ignores current state of releases-master.yaml
-- Longer execution (typically 5-10 minutes)
+- Longer execution (typically 3-5 minutes)
 - Rebuilds master metadata from scratch
 
 **Example**: After updating api-landscape.yaml with new category assignments, use full mode to regenerate all reports with the new categories.
@@ -153,7 +153,7 @@ For testing or manual review:
 - Creates pull request for review
 - Requires approval before deployment
 
-**PR title**: `chore: Update CAMARA release metadata`
+**PR title**: `Review: CAMARA release data updates from Release Collector bot`
 
 **Safety features**:
 - Diff detection prevents empty PRs
@@ -324,11 +324,11 @@ The collector tracks all release types, not just public releases:
 |--------------|-----------|-------------|
 | `pre-release-alpha` | API version contains `-alpha.N` | r1.1 with version `0.5.0-alpha.1` |
 | `pre-release-rc` | API version contains `-rc.N` | r1.1 with version `1.0.0-rc.1` |
-| `public-release` | Stable version, not on maintenance branch | r1.2 with version `1.0.0` |
+| `public-release` | Initial or stable version, not on maintenance branch | r1.2 with version `1.0.0` |
 | `maintenance-release` | Release on `maintenance/rX.Y` branch | r1.2 on maintenance/r1.2 |
 
 **Notes:**
-- r0.X tags are excluded (early development, not tracked)
+- r0.X tags are excluded (invalid release tags, not tracked)
 - Pre-releases appear in viewers with release type badges
 - Internal viewer allows filtering by release type
 
@@ -419,7 +419,7 @@ Result: Artifact download for testing
 - Check GitHub API rate limit status
 - Verify parallel jobs are running (max 6)
 - Network issues may slow API calls
-- Full re-analysis of 80+ releases takes 5-15 minutes (normal)
+- Full re-analysis takes 3-5 minutes (see [Analysis Scope](#analysis-scope))
 
 ### PR merge conflicts
 **Cause**: Multiple workflow runs or manual edits to master YAML
@@ -492,10 +492,7 @@ These corrections are hardcoded and applied to all releases automatically. No co
 ## Maintenance
 
 ### Adding New Meta-Releases
-1. Update `/config/meta-release-mappings.yaml`
-2. Update `scripts/generate-reports.js` (add meta-release to list)
-3. Update `scripts/generate-viewers.js` (add template generation)
-4. Run full re-analysis
+See [issue #100](https://github.com/camaraproject/project-administration/issues/100) for the future enhancement for upcoming meta-releases.
 
 ### Adding New APIs
 1. Add to `/config/api-landscape.yaml`
@@ -523,11 +520,11 @@ Schema 2.0.0 includes property name alignment (per [#69](https://github.com/cama
 - `release_type`: Classification (pre-release-alpha, pre-release-rc, public-release, maintenance-release)
 - `repositories`: Array of all repos with quick-reference release pointers
 
-**Property renames:**
+**Property changes in master-metadata-schema:**
 | Old Name | New Name | Location |
 |----------|----------|----------|
-| `commonalities_version` | `commonalities` | releases array |
-| `api_version` | `version` | apis array |
+| `version` | `api_version` | apis array |
+| `title` | `api_title` | apis array |
 
 **New output:**
 - `release-metadata.yaml` / `.json` generated for each release
