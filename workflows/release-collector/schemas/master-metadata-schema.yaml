@@ -1,6 +1,15 @@
 # Master Metadata Schema
 # Schema for releases-master.yaml containing GitHub facts with format corrections only
-# Version: 1.0.0
+# Version: 2.0.0
+#
+# Changes in 2.0.0:
+# - Renamed 'version' to 'api_version' in APIs array (per issue #69 property alignment)
+# - Renamed 'title' to 'api_title' in APIs array (per issue #69 property alignment)
+#
+# Changes in 1.1.0:
+# - Added release_type field to releases (pre-release-alpha, pre-release-rc, public-release, maintenance-release)
+# - Added repositories array with minimal release reference pointers (latest_public_release, newest_pre_release)
+# - Extended version pattern to support pre-release extensions (-alpha.N, -rc.N)
 
 $schema: http://json-schema.org/draft-07/schema#
 title: CAMARA Master Metadata
@@ -76,6 +85,20 @@ properties:
           pattern: "^https://github\\.com/camaraproject/.*"
           description: Direct link to GitHub release
 
+        release_type:
+          type: string
+          enum:
+            - pre-release-alpha
+            - pre-release-rc
+            - public-release
+            - maintenance-release
+          description: |
+            Classification of the release based on API versions and position in release cycle.
+            - pre-release-alpha: GitHub prerelease with API versions containing -alpha extension
+            - pre-release-rc: GitHub prerelease with API versions containing -rc extension
+            - public-release: First non-prerelease in a release cycle (rX)
+            - maintenance-release: Subsequent non-prereleases in the same cycle
+
         apis:
           type: array
           description: API specifications in this release
@@ -84,7 +107,7 @@ properties:
             type: object
             required:
               - file_name
-              - version
+              - api_version
             properties:
               api_name:
                 type: ["string", "null"]
@@ -98,14 +121,15 @@ properties:
                 pattern: "^[a-zA-Z][a-zA-Z0-9-_]*$"
                 description: Original YAML filename without extension
 
-              version:
+              api_version:
                 type: string
-                pattern: "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9]+)?$"
+                pattern: "^\\d+\\.\\d+\\.\\d+(-[a-z]+\\.\\d+)?$"
                 description: |
                   Semantic version with format corrections applied.
-                  'v' prefix is removed if present (v0.11.0 → 0.11.0)
+                  'v' prefix is removed if present (v0.11.0 → 0.11.0).
+                  Pre-release extensions follow pattern: X.Y.Z-alpha.N or X.Y.Z-rc.N
 
-              title:
+              api_title:
                 type: ["string", "null"]
                 description: Human-readable API title from OpenAPI spec
 
@@ -115,3 +139,41 @@ properties:
                 description: |
                   CAMARA Commonalities version as string.
                   Numbers are converted to strings, existing strings preserved as-is.
+
+  repositories:
+    type: array
+    description: |
+      All CAMARA API repositories with quick-reference release pointers.
+      Minimal data focused on release tracking; comprehensive repository metadata is in a separate workflow.
+    items:
+      type: object
+      required:
+        - repository
+        - github_url
+      properties:
+        repository:
+          type: string
+          pattern: "^[A-Za-z][A-Za-z0-9-]*$"
+          description: GitHub repository name
+
+        github_url:
+          type: string
+          format: uri
+          pattern: "^https://github\\.com/camaraproject/.*"
+          description: URL to the GitHub repository
+
+        latest_public_release:
+          type: ["string", "null"]
+          pattern: "^r\\d+\\.\\d+$"
+          description: |
+            Tag of the most recent public-release or maintenance-release.
+            Null if repository has no public releases yet.
+
+        newest_pre_release:
+          type: ["string", "null"]
+          pattern: "^r\\d+\\.\\d+$"
+          description: |
+            Tag of the newest pre-release, only set if:
+            - Newer than latest_public_release (same cycle rX.Y+1 or next cycle rX+1.Y), OR
+            - latest_public_release is null (repo has only pre-releases)
+            Null if no relevant pre-release exists.

@@ -422,8 +422,8 @@
               flatApis.push({
                 // API info
                 api_name: api.api_name,
-                title: api.title || api.display_name || api.api_name,
-                version: api.version,
+                api_title: api.api_title || api.display_name || api.api_name,
+                api_version: api.api_version,
                 maturity: api.maturity,
 
                 // Repository info from release
@@ -432,6 +432,7 @@
                 release_date: release.release_date,
                 meta_release: release.meta_release,
                 github_url: release.github_url,
+                release_type: release.release_type,
 
                 // Enrichment fields
                 portfolio_category: api.portfolio_category,
@@ -525,7 +526,7 @@
         // Create row data with version for each meta-release
         const row = {
           api_name: apiName,
-          title: latestAPI.display_name || latestAPI.title,
+          api_title: latestAPI.display_name || latestAPI.api_title,
           category: firstAPI.portfolio_category || '-',
           website_url: firstAPI.website_url,
           first_release: firstAPI.first_release,
@@ -536,11 +537,11 @@
 
         metaVersions.forEach(v => {
           if (v.meta_release === 'Fall24') {
-            row.fall24 = { version: v.version, maturity: v.maturity, isNew: v.isNew };
+            row.fall24 = { api_version: v.api_version, maturity: v.maturity, isNew: v.isNew };
           } else if (v.meta_release === 'Spring25') {
-            row.spring25 = { version: v.version, maturity: v.maturity, isNew: v.isNew };
+            row.spring25 = { api_version: v.api_version, maturity: v.maturity, isNew: v.isNew };
           } else if (v.meta_release === 'Fall25') {
-            row.fall25 = { version: v.version, maturity: v.maturity, isNew: v.isNew };
+            row.fall25 = { api_version: v.api_version, maturity: v.maturity, isNew: v.isNew };
           }
         });
 
@@ -562,7 +563,13 @@
         apis: flatApis
       };
 
-      filteredData = currentData.apis;
+      // Filter out alpha pre-releases (keep rc and public/maintenance)
+      filteredData = currentData.apis.filter(api =>
+        !api.release_type || api.release_type !== 'pre-release-alpha'
+      );
+
+      // Also update currentData.apis to exclude alpha for counts
+      currentData.apis = filteredData;
 
       displayData(currentData);
     }
@@ -699,7 +706,7 @@
         // Search filter (API name or repository)
         if (searchFilter &&
           !api.api_name.toLowerCase().includes(searchFilter) &&
-          !api.title.toLowerCase().includes(searchFilter) &&
+          !api.api_title.toLowerCase().includes(searchFilter) &&
           !api.repository.toLowerCase().includes(searchFilter)) {
           return false;
         }
@@ -792,7 +799,7 @@
         fall24Cell.className = 'release-cell';
         if (row.fall24) {
           fall24Cell.innerHTML = `
-            <div class="version-badge">${row.fall24.version}</div>
+            <div class="version-badge">${row.fall24.api_version}</div>
             ${ViewerLib.renderMaturityBadge(row.fall24.maturity)}
           `;
         } else {
@@ -805,7 +812,7 @@
         spring25Cell.className = 'release-cell';
         if (row.spring25) {
           spring25Cell.innerHTML = `
-            <div class="version-badge">${row.spring25.version}</div>
+            <div class="version-badge">${row.spring25.api_version}</div>
             ${ViewerLib.renderMaturityBadge(row.spring25.maturity)}
           `;
         } else {
@@ -818,7 +825,7 @@
         fall25Cell.className = 'release-cell';
         if (row.fall25) {
           fall25Cell.innerHTML = `
-            <div class="version-badge">${row.fall25.version}</div>
+            <div class="version-badge">${row.fall25.api_version}</div>
             ${ViewerLib.renderMaturityBadge(row.fall25.maturity)}
           `;
         } else {
@@ -892,7 +899,7 @@
           item.innerHTML = `
             <div>
               <div class="release-label">${isSandbox ? 'Sandbox' : version.meta_release}</div>
-              <div class="release-version">${version.version}</div>
+              <div class="release-version">${version.api_version}</div>
               ${ViewerLib.renderMaturityBadge(version.maturity)}
             </div>
           `;
@@ -961,7 +968,7 @@
           const releaseInfo = versions.map(v => {
             const isSandbox = v.meta_release === SANDBOX_RELEASE;
             const label = isSandbox ? 'Sandbox' : v.meta_release;
-            return `${label}: ${v.version}`;
+            return `${label}: ${v.api_version}`;
           }).join(' → ');
 
           apiItem.innerHTML = `

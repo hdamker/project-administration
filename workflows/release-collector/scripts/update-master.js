@@ -42,12 +42,20 @@ function loadMaster() {
         last_updated: null,
         last_checked: null,
         workflow_version: "3.0.0",
-        schema_version: "1.0.0"
+        schema_version: "2.0.0"
       },
-      releases: []
+      releases: [],
+      repositories: []
     };
   }
-  return yaml.load(fs.readFileSync(MASTER_FILE, 'utf8'));
+  const master = yaml.load(fs.readFileSync(MASTER_FILE, 'utf8'));
+  // Ensure repositories array exists (migration from 1.0.0)
+  if (!master.repositories) {
+    master.repositories = [];
+  }
+  // Update schema version if needed
+  master.metadata.schema_version = "2.0.0";
+  return master;
 }
 
 /**
@@ -82,6 +90,86 @@ function findExistingRelease(releases, repository, releaseTag) {
 }
 
 /**
+ * Determine if a pre-release should be included
+ * A pre-release is excluded if there's a non-prerelease in the same cycle
+ */
+function shouldIncludePrerelease(prerelease, allReleases) {
+  const cycle = prerelease.release_tag.match(/^(r\d+)\./)?.[1];
+  if (!cycle) return true;
+
+  const hasPublicRelease = allReleases.some(r =>
+    r.repository === prerelease.repository &&
+    r.release_tag.startsWith(cycle + '.') &&
+    !r.is_prerelease
+  );
+
+  return !hasPublicRelease;
+}
+
+/**
+ * Determine release_type for non-prereleases
+ * - First non-prerelease in a cycle → public-release
+ * - Subsequent non-prereleases → maintenance-release
+ */
+function determineNonPrereleaseType(release, allReleases) {
+  const cycle = release.release_tag.match(/^(r\d+)\./)?.[1];
+  if (!cycle) return 'public-release';
+
+  // Get all non-prereleases in the same cycle for this repo, sorted by tag
+  const cycleReleases = allReleases
+    .filter(r =>
+      r.repository === release.repository &&
+      r.release_tag.startsWith(cycle + '.') &&
+      !r.is_prerelease
+    )
+    .sort((a, b) => {
+      const aMatch = a.release_tag.match(/r\d+\.(\d+)/);
+      const bMatch = b.release_tag.match(/r\d+\.(\d+)/);
+      return (aMatch ? parseInt(aMatch[1]) : 0) - (bMatch ? parseInt(bMatch[1]) : 0);
+    });
+
+  // First one in the cycle is public-release, rest are maintenance
+  if (cycleReleases.length > 0 && cycleReleases[0].release_tag === release.release_tag) {
+    return 'public-release';
+  }
+  return 'maintenance-release';
+}
+
+/**
+ * Compute repository release references
+ * - latest_public_release: Most recent public/maintenance release
+ * - newest_pre_release: Most recent pre-release if newer than latest public
+ */
+function computeRepoReleaseRefs(repoName, releases) {
+  const repoReleases = releases.filter(r => r.repository === repoName);
+
+  // Find latest public/maintenance release (by date)
+  const publicReleases = repoReleases
+    .filter(r => r.release_type === 'public-release' || r.release_type === 'maintenance-release')
+    .sort((a, b) => new Date(b.release_date) - new Date(a.release_date));
+  const latestPublic = publicReleases[0]?.release_tag || null;
+  const latestPublicDate = publicReleases[0]?.release_date || null;
+
+  // Find newest pre-release (only if newer than latest public)
+  const preReleases = repoReleases
+    .filter(r => r.release_type === 'pre-release-alpha' || r.release_type === 'pre-release-rc')
+    .sort((a, b) => new Date(b.release_date) - new Date(a.release_date));
+
+  let newestPreRelease = null;
+  if (preReleases.length > 0) {
+    const newestPre = preReleases[0];
+    if (!latestPublicDate || new Date(newestPre.release_date) > new Date(latestPublicDate)) {
+      newestPreRelease = newestPre.release_tag;
+    }
+  }
+
+  return {
+    latest_public_release: latestPublic,
+    newest_pre_release: newestPreRelease
+  };
+}
+
+/**
  * Update master metadata with new analysis results
  * Format corrections have already been applied by analyze-release.js
  */
@@ -92,9 +180,52 @@ function updateMaster(master, analysisResults, mode, mappings) {
   master.metadata.last_updated = timestamp;
   master.metadata.last_checked = timestamp;
 
-  // Process each analysis result
+  // First pass: add all releases to get complete picture for filtering
+  const tempReleases = [...master.releases];
+
   for (const result of analysisResults) {
+    const existingIndex = tempReleases.findIndex(r =>
+      r.repository === result.repository && r.release_tag === result.release_tag
+    );
+
+    const tempEntry = {
+      repository: result.repository,
+      release_tag: result.release_tag,
+      release_date: result.release_date,
+      is_prerelease: result.is_prerelease,
+      release_type: result.release_type  // Pre-populated for pre-releases, null for non-prereleases
+    };
+
+    if (existingIndex >= 0) {
+      tempReleases[existingIndex] = { ...tempReleases[existingIndex], ...tempEntry };
+    } else {
+      tempReleases.push(tempEntry);
+    }
+  }
+
+  // Second pass: process results with full context
+  for (const result of analysisResults) {
+    // Filter pre-releases that are superseded by a public release in same cycle
+    if (result.is_prerelease && !shouldIncludePrerelease(result, tempReleases)) {
+      console.log(`Filtered (superseded): ${result.repository} ${result.release_tag}`);
+      // Remove from master if it existed
+      const idx = master.releases.findIndex(r =>
+        r.repository === result.repository && r.release_tag === result.release_tag
+      );
+      if (idx >= 0) {
+        master.releases.splice(idx, 1);
+      }
+      continue;
+    }
+
     const metaRelease = getMetaRelease(result.repository, result.release_tag, mappings);
+
+    // Determine release_type
+    let releaseType = result.release_type;  // Use pre-populated type for pre-releases
+    if (!releaseType && !result.is_prerelease) {
+      // Determine public-release vs maintenance-release for non-prereleases
+      releaseType = determineNonPrereleaseType(result, tempReleases);
+    }
 
     // Build release entry (with format corrections already applied)
     const releaseEntry = {
@@ -103,11 +234,12 @@ function updateMaster(master, analysisResults, mode, mappings) {
       release_date: result.release_date,
       meta_release: metaRelease,
       github_url: result.github_url,
+      release_type: releaseType,
       apis: result.apis.map(api => ({
         api_name: api.api_name,        // Raw API name from server URL
         file_name: api.file_name,      // Raw filename for reference
-        version: api.version,
-        title: api.title,
+        api_version: api.api_version,
+        api_title: api.api_title,
         commonalities: api.commonalities
       }))
     };
@@ -118,11 +250,11 @@ function updateMaster(master, analysisResults, mode, mappings) {
     if (existingIndex >= 0) {
       // Update existing release
       master.releases[existingIndex] = releaseEntry;
-      console.log(`Updated: ${result.repository} ${result.release_tag}`);
+      console.log(`Updated: ${result.repository} ${result.release_tag} (${releaseType})`);
     } else {
       // Add new release
       master.releases.push(releaseEntry);
-      console.log(`Added: ${result.repository} ${result.release_tag}`);
+      console.log(`Added: ${result.repository} ${result.release_tag} (${releaseType})`);
     }
   }
 
@@ -147,6 +279,41 @@ function updateMaster(master, analysisResults, mode, mappings) {
 }
 
 /**
+ * Update repositories array with release references
+ */
+function updateRepositories(master, repositoriesInput) {
+  // Build map of existing repos
+  const repoMap = new Map();
+
+  // Add all repos from input
+  for (const repo of repositoriesInput) {
+    repoMap.set(repo.repository, {
+      repository: repo.repository,
+      github_url: repo.github_url
+    });
+  }
+
+  // Compute release references for each repo
+  for (const [repoName, repoData] of repoMap) {
+    const refs = computeRepoReleaseRefs(repoName, master.releases);
+    repoData.latest_public_release = refs.latest_public_release;
+    repoData.newest_pre_release = refs.newest_pre_release;
+  }
+
+  // Convert to sorted array
+  master.repositories = Array.from(repoMap.values())
+    .sort((a, b) => a.repository.localeCompare(b.repository));
+
+  console.log(`\nRepositories updated: ${master.repositories.length}`);
+  const withPublic = master.repositories.filter(r => r.latest_public_release).length;
+  const withPreOnly = master.repositories.filter(r => !r.latest_public_release && r.newest_pre_release).length;
+  const noReleases = master.repositories.filter(r => !r.latest_public_release && !r.newest_pre_release).length;
+  console.log(`  With public release: ${withPublic}`);
+  console.log(`  Pre-release only: ${withPreOnly}`);
+  console.log(`  No releases: ${noReleases}`);
+}
+
+/**
  * Main execution
  */
 async function main() {
@@ -155,6 +322,7 @@ async function main() {
   // Parse arguments
   let mode = 'incremental';
   let inputFile = null;
+  let reposFile = null;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--mode' && i + 1 < args.length) {
@@ -163,11 +331,14 @@ async function main() {
     } else if (args[i] === '--input' && i + 1 < args.length) {
       inputFile = args[i + 1];
       i++;
+    } else if (args[i] === '--repos' && i + 1 < args.length) {
+      reposFile = args[i + 1];
+      i++;
     }
   }
 
   if (!inputFile) {
-    console.error('Usage: node update-master.js --mode [incremental|full] --input <analysis-results.json>');
+    console.error('Usage: node update-master.js --mode [incremental|full] --input <analysis-results.json> [--repos <repositories.json>]');
     process.exit(1);
   }
 
@@ -191,6 +362,16 @@ async function main() {
 
     // Update master with new data
     const updatedMaster = updateMaster(master, analysisResults, mode, mappings);
+
+    // Update repositories if repos file provided
+    if (reposFile) {
+      if (!fs.existsSync(reposFile)) {
+        console.error(`Repos file not found: ${reposFile}`);
+        process.exit(1);
+      }
+      const reposData = JSON.parse(fs.readFileSync(reposFile, 'utf8'));
+      updateRepositories(updatedMaster, reposData.repositories || []);
+    }
 
     // Write updated master file
     const yamlContent = yaml.dump(updatedMaster, {
@@ -219,6 +400,17 @@ async function main() {
       console.log(`  ${mr}: ${stats.repositories.size} repositories, ${stats.apis} APIs`);
     }
 
+    // Summary by release_type
+    const typeSummary = {};
+    for (const release of updatedMaster.releases) {
+      const rt = release.release_type || 'unknown';
+      typeSummary[rt] = (typeSummary[rt] || 0) + 1;
+    }
+    console.log('\nSummary by release_type:');
+    for (const [rt, count] of Object.entries(typeSummary)) {
+      console.log(`  ${rt}: ${count}`);
+    }
+
   } catch (error) {
     console.error('Error:', error.message);
     process.exit(1);
@@ -234,5 +426,9 @@ module.exports = {
   loadMaster,
   loadMappings,
   updateMaster,
-  getMetaRelease
+  updateRepositories,
+  getMetaRelease,
+  shouldIncludePrerelease,
+  determineNonPrereleaseType,
+  computeRepoReleaseRefs
 };

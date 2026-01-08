@@ -138,8 +138,8 @@
               flatApis.push({
                 // API info
                 api_name: api.api_name,
-                title: api.title || api.display_name || api.api_name,
-                version: api.version,
+                api_title: api.api_title || api.display_name || api.api_name,
+                api_version: api.api_version,
                 maturity: api.maturity,
 
                 // Repository info from release
@@ -147,6 +147,7 @@
                 release_tag: release.release_tag,
                 release_date: release.release_date,
                 github_url: release.github_url,
+                release_type: release.release_type,
 
                 // Enrichment fields
                 portfolio_category: api.portfolio_category,
@@ -237,7 +238,7 @@
      * Populate version dropdown
      */
     function populateVersionDropdown() {
-      const versions = ViewerLib.getUniqueValues(currentData.apis, 'version');
+      const versions = ViewerLib.getUniqueValues(currentData.apis, 'api_version');
       const dropdown = document.getElementById('filterVersion');
 
       // Keep "All" option and add versions
@@ -359,7 +360,7 @@
         const maturityCell = `<span class="badge badge-${api.maturity}">${api.maturity.charAt(0).toUpperCase() + api.maturity.slice(1)}</span>`;
 
         // Version cell
-        const versionCell = api.version || '-';
+        const versionCell = api.api_version || '-';
 
         // Release cell with link
         const releaseCell = `<a href="${api.github_url}" target="_blank" rel="noopener">${api.release_tag}</a>`;
@@ -442,18 +443,18 @@
         }
 
         // Exact version filter (from dropdown)
-        if (versionFilter && api.version !== versionFilter) {
+        if (versionFilter && api.api_version !== versionFilter) {
           return false;
         }
 
         // Version range filters
-        if (versionMinFilter && api.version) {
-          if (ViewerLib.compareVersions(api.version, versionMinFilter) < 0) {
+        if (versionMinFilter && api.api_version) {
+          if (ViewerLib.compareVersions(api.api_version, versionMinFilter) < 0) {
             return false;
           }
         }
-        if (versionMaxFilter && api.version) {
-          if (ViewerLib.compareVersions(api.version, versionMaxFilter) > 0) {
+        if (versionMaxFilter && api.api_version) {
+          if (ViewerLib.compareVersions(api.api_version, versionMaxFilter) > 0) {
             return false;
           }
         }

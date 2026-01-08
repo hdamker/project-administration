@@ -56,6 +56,12 @@ on:
         type: boolean
         default: false
 
+      force_metadata:
+        description: 'Force metadata regeneration even if no data updates'
+        required: false
+        type: boolean
+        default: false
+
   schedule:
     # Daily run at 04:35 UTC (for testing)
     - cron: '35 4 * * *'
@@ -67,6 +73,7 @@ env:
   EXECUTION_MODE: ${{ github.event.inputs.execution_mode || 'pr' }}
   DEBUG_MODE: ${{ github.event.inputs.debug_mode || 'false' }}
   FORCE_VIEWERS: ${{ github.event.inputs.force_viewers || 'false' }}
+  FORCE_METADATA: ${{ github.event.inputs.force_metadata || 'false' }}
 
   # GitHub API Configuration
   GITHUB_ORG: 'camaraproject'
@@ -129,24 +136,28 @@ jobs:
         run: |
           npm install js-yaml axios @octokit/rest
 
-      - name: Detect releases
+      - name: Detect repositories and releases
         id: detect
         run: |
-          echo "🔍 Detecting releases in analysis scope: ${{ env.ANALYSIS_SCOPE }}"
+          echo "🔍 Detecting repositories and releases in analysis scope: ${{ env.ANALYSIS_SCOPE }}"
 
           # Create temp directory
           mkdir -p temp
 
-          # Run detection script
+          # Run detection script (also outputs repositories list)
           node workflows/release-collector/scripts/detect-releases.js --mode ${{ env.ANALYSIS_SCOPE }} > temp/detection-output.json
 
           # Parse output
           HAS_UPDATES=$(jq -r '.has_updates' temp/detection-output.json)
           RELEASES_TO_ANALYZE=$(jq -c '.releases_to_analyze' temp/detection-output.json)
           RELEASES_COUNT=$(jq -r '.releases_count' temp/detection-output.json)
+          REPOS_COUNT=$(jq -r '.repositories_count' temp/detection-output.json)
 
           echo "has_updates=${HAS_UPDATES}" >> $GITHUB_OUTPUT
           echo "releases_to_analyze=${RELEASES_TO_ANALYZE}" >> $GITHUB_OUTPUT
+
+          # Extract repositories list for update-master.js
+          jq '{repositories: .repositories}' temp/detection-output.json > temp/repositories.json
 
           # Create release groups for parallel processing
           # Split into groups of 20 releases
@@ -161,7 +172,13 @@ jobs:
           " > temp/release-groups.json
 
           echo "release_groups=$(cat temp/release-groups.json)" >> $GITHUB_OUTPUT
-          echo "Found ${RELEASES_COUNT} releases to analyze"
+          echo "Found ${RELEASES_COUNT} releases to analyze across ${REPOS_COUNT} repositories"
+
+      - name: Upload repositories data
+        uses: actions/upload-artifact@v4
+        with:
+          name: repositories-data
+          path: temp/repositories.json
 
   # =========================================================================================
   # Phase 2: Release Analysis (Parallel)
@@ -267,8 +284,19 @@ jobs:
             fi
           done
 
-          # Update master metadata (format corrections already applied by analyze-release.js)
-          node workflows/release-collector/scripts/update-master.js --mode ${{ env.ANALYSIS_SCOPE }} --input temp/combined-analysis.json
+          # Get repositories data (uploaded by detect-releases job)
+          REPOS_FILE="temp/repositories-data/repositories.json"
+          if [[ ! -f "$REPOS_FILE" ]]; then
+            echo "ERROR: repositories.json not found"
+            exit 1
+          fi
+          echo "Using $(jq '.repositories | length' $REPOS_FILE) repositories"
+
+          # Update master metadata with release_type and repositories
+          node workflows/release-collector/scripts/update-master.js \
+            --mode ${{ env.ANALYSIS_SCOPE }} \
+            --input temp/combined-analysis.json \
+            --repos "$REPOS_FILE"
 
           echo "Master metadata updated with $(jq '. | length' temp/combined-analysis.json) releases"
 
@@ -285,6 +313,58 @@ jobs:
           path: |
             data/releases-master.yaml
             reports/*.json
+
+  # =========================================================================================
+  # Phase 3b: Generate Release Metadata Files
+  # Create release-metadata.yaml/.json for GitHub release uploads
+  # Always regenerates ALL files - diff shows what changed
+  # =========================================================================================
+  generate-release-metadata:
+    name: Generate Release Metadata
+    needs: [detect-releases, update-metadata]
+    if: |
+      always() &&
+      (needs.update-metadata.result == 'success' ||
+       (github.event.inputs.force_metadata || 'false') == 'true')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download processed data
+        if: needs.update-metadata.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: processed-data
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install js-yaml
+
+      - name: Generate release metadata files
+        run: |
+          echo "📄 Generating release-metadata files for ALL releases..."
+
+          node workflows/release-collector/scripts/generate-release-metadata.js
+
+          # Show summary
+          echo ""
+          echo "Generated files:"
+          find data/release-artifacts -name "*.yaml" -o -name "*.json" | head -20
+          TOTAL=$(find data/release-artifacts -name "*.yaml" | wc -l | tr -d ' ')
+          echo "Total releases with metadata: $TOTAL"
+
+      - name: Upload release metadata artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-metadata-${{ github.run_number }}
+          path: data/release-artifacts/
+          retention-days: 30
 
   # =========================================================================================
   # Phase 4: Generate Viewers
@@ -342,8 +422,11 @@ jobs:
   # =========================================================================================
   publish-changes:
     name: Publish Changes
-    needs: generate-viewers
-    if: (github.event.inputs.execution_mode || 'pr') != 'dry-run'
+    needs: [generate-viewers, generate-release-metadata]
+    if: |
+      always() &&
+      (github.event.inputs.execution_mode || 'pr') != 'dry-run' &&
+      needs.generate-viewers.result == 'success'
     runs-on: ubuntu-latest
     outputs:
       pr_url: ${{ steps.create-pr.outputs.pull-request-url }}
@@ -357,6 +440,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release-reports-${{ github.run_number }}
+
+      - name: Download release metadata (if generated)
+        if: needs.generate-release-metadata.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: release-metadata-${{ github.run_number }}
+          path: data/release-artifacts
 
       - name: Validate generated files
         if: env.EXECUTION_MODE == 'pr'
@@ -399,6 +489,7 @@ jobs:
           # Only commit data and reports (viewers are deployed separately in Phase 4)
           git add data/releases-master.yaml
           git add reports/*.json 2>/dev/null || true
+          git add data/release-artifacts/ 2>/dev/null || true
           # Note: viewers/*.html are gitignored and deployed to camaraproject.github.io
 
           if git diff --cached --quiet; then
@@ -433,7 +524,7 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           branch: meta-release-update-${{ github.run_number }}
-          title: 'chore: Update CAMARA release metadata'
+          title: 'Review: CAMARA release data updates from Release Collector bot'
           labels: automated
           body: |
             ## CAMARA Release Metadata Update
@@ -448,8 +539,9 @@ jobs:
 
             - 📊 `data/releases-master.yaml` - Master release metadata
             - 📈 `reports/*.json` - Meta-release reports (Fall24, Spring25, Fall25, All)
+            - 📦 `data/release-artifacts/` - Per-release metadata files (if generated)
 
-            **Note**: Viewers are deployed to staging for preview. After merging, trigger the **Release Collector - Production Deploy** workflow to publish to https://camaraproject.github.io/releases/
+            **Note**: Viewers are deployed to staging for preview. After merging, trigger the **Release Collector - Production Deploy** workflow to publish viewers and upload metadata to GitHub releases.
 
             ### File Changes
 
@@ -489,7 +581,7 @@ jobs:
 
             *This PR was generated automatically by the Release Collector v3 workflow.*
           commit-message: |
-            chore: Update CAMARA release metadata
+            Review: CAMARA release data updates from Release Collector bot
 
             Analysis scope: ${{ env.ANALYSIS_SCOPE }}
             Workflow run: ${{ github.run_number }}
