@@ -12,9 +12,9 @@ See [User Guide](docs/README.md#typical-workflows) for scheduling details.
 
 ### 2. What's the difference between incremental and full mode?
 
-**Incremental**: Only processes new releases (fast, 2-5 minutes). Use for regular updates.
+**Incremental**: Only processes new releases (fast, 1-2 minutes). Use for regular updates.
 
-**Full**: Re-analyzes all releases (5-15 minutes). Use after configuration changes or to fix data.
+**Full**: Re-analyzes all releases (3-5 minutes). Use after configuration changes or to fix data.
 
 See [User Guide](docs/README.md#analysis-scope) for complete details.
 
@@ -83,19 +83,58 @@ See [User Guide](docs/README.md#no-pr-created-even-though-i-expected-changes) fo
 
 Yes! Use **execution_mode: dry-run** to run the workflow completely without committing or creating a PR. Download artifacts to review results.
 
+## Pre-Releases and Release Types
+
+### 13. How do pre-releases appear in the viewers?
+
+Pre-releases are only visible in the **internal viewer**, which shows the release type as a text label (not a badge). The internal viewer allows filtering by release type.
+
+**Note**: Closed meta-releases (Fall24) contain only public and maintenance releases - pre-releases are only relevant for open/upcoming meta-releases.
+
+Release types:
+- `pre-release-alpha` - Early development (version contains `-alpha.N`)
+- `pre-release-rc` - Release candidate (version contains `-rc.N`)
+- `public-release` - Public release of initial or stable API versions
+- `maintenance-release` - Release on maintenance branch
+
+### 14. Why don't I see r0.X releases?
+
+Formal releases start at r1.1. Two existing r0.X releases are excluded from the collection - they were pre-releases accidentially created with these non-valid release tags.
+
+## Production Deployment
+
+### 15. What happens during production deploy?
+
+The **Release Collector - Production Deploy** workflow does two things:
+1. Deploys HTML viewers to camaraproject.github.io
+2. Uploads release-metadata files (YAML/JSON) to each GitHub release as assets
+
+### 16. Upload shows FAILED - what went wrong?
+
+Common causes:
+- **403 Forbidden**: Token lacks write permission for repository. The `PRODUCTION_DEPLOY_TOKEN` needs **Contents: Read and Write** permission.
+- **404 Not Found**: Release doesn't exist in the repository.
+- **Network errors**: Retry the workflow.
+
+Check the workflow logs and upload report artifact for the specific error message.
+
+### 17. Can I re-upload release metadata?
+
+Yes. The upload uses `--clobber` mode, so running production deploy again will replace existing metadata files. The workflow shows **UPDATE** status for releases where files exist but content differs.
+
 ## Advanced
 
-### 13. What files does the workflow commit?
+### 18. What files does the workflow commit?
 
-Only `data/releases-master.yaml` and `reports/*.json`. Viewers are NOT committed (available in artifacts and staging deployment).
+Only `data/releases-master.yaml`, `data/release-artifacts/`, and `reports/*.json`. Viewers are NOT committed (available in artifacts and staging deployment).
 
-### 14. How do I check what changed in a specific meta-release?
+### 19. How do I check what changed in a specific meta-release?
 
-Compare the JSON reports in the PR diff (`reports/fall24.json`, `reports/spring25.json`, etc.). The diff shows new APIs, version changes, and maturity changes.
+For new APIs within a meta-release you can use the meta-release viewer and order the "New" column with "True" values on top. To see the evolution of APIs across meta-releases use the Portfolio viewer.
 
-### 15. The workflow is taking too long
+### 20. The workflow is taking too long
 
-Normal times: 2-5 minutes (incremental), 5-15 minutes (full). If longer, check for API rate limits in logs or network issues.
+See FAQ #2 for normal times. If significantly longer, check for API rate limits in logs or network issues.
 
 See [User Guide](docs/README.md#workflow-timeout-or-very-slow) for troubleshooting.
 

@@ -286,12 +286,41 @@
     }
 
     /* Special row types */
-    .unpublished-row {
-      background-color: rgba(212, 167, 44, 0.1);
+    .prerelease-row {
+      background-color: rgba(139, 92, 246, 0.08);
     }
 
     .sandbox-row {
       background-color: rgba(251, 146, 60, 0.1);
+    }
+
+    /* Release type filters */
+    .release-type-filters {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .release-type-filters .filter-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .release-type-filters label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .release-type-filters input[type="checkbox"] {
+      margin: 0;
     }
 
     /* Badges */
@@ -410,12 +439,20 @@
       margin-right: 6px;
     }
 
-    .status-published {
+    .status-public {
       background: var(--success-color);
     }
 
-    .status-unpublished {
-      background: var(--danger-color);
+    .status-maintenance {
+      background: #3b82f6;
+    }
+
+    .status-prerelease-rc {
+      background: #8b5cf6;
+    }
+
+    .status-prerelease-alpha {
+      background: #f59e0b;
     }
 
     .status-sandbox {
@@ -579,10 +616,13 @@
 
         <button onclick="exportDebugData()">Export Debug Data</button>
 
-        <label>
-          <input type="checkbox" id="show-unpublished" checked onchange="applyFilters()">
-          Show Unpublished
-        </label>
+        <div class="release-type-filters">
+          <span class="filter-label">Release Types:</span>
+          <label><input type="checkbox" id="show-alpha" checked onchange="applyFilters()"> Alpha</label>
+          <label><input type="checkbox" id="show-rc" checked onchange="applyFilters()"> RC</label>
+          <label><input type="checkbox" id="show-public" checked onchange="applyFilters()"> Public</label>
+          <label><input type="checkbox" id="show-maintenance" checked onchange="applyFilters()"> Maint</label>
+        </div>
 
         <label>
           <input type="checkbox" id="showOnlyLatestPatches" checked onchange="applyFilters()">
@@ -605,14 +645,13 @@
             <input type="text" id="filterApiName" placeholder="API or repository..." onkeyup="applyFilters()">
           </div>
           <div class="filter-group">
-            <label for="filterMaturity">Maturity:</label>
-            <select id="filterMaturity" onchange="applyFilters()">
+            <label for="filterApiStatus">API Status:</label>
+            <select id="filterApiStatus" onchange="applyFilters()">
               <option value="">All</option>
+              <option value="alpha">Alpha</option>
+              <option value="rc">RC</option>
               <option value="initial">Initial</option>
               <option value="stable">Stable</option>
-              <option value="rc">RC</option>
-              <option value="alpha">Alpha</option>
-              <option value="beta">Beta</option>
             </select>
           </div>
           <div class="filter-group">
@@ -623,14 +662,6 @@
               <option value="Spring25">Spring25</option>
               <option value="Fall25">Fall25</option>
               <option value="None (Sandbox)">Sandbox</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label for="filterPublished">Published:</label>
-            <select id="filterPublished" onchange="applyFilters()">
-              <option value="">All</option>
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
             </select>
           </div>
           <button class="clear-filters-btn" onclick="clearAllFilters()">Clear Filters</button>
@@ -649,12 +680,12 @@
             <tr>
               <th onclick="sortTable(0)">API <span class="sort-arrow"></span></th>
               <th onclick="sortTable(1)">Version <span class="sort-arrow"></span></th>
-              <th onclick="sortTable(2)">Repository <span class="sort-arrow"></span></th>
-              <th onclick="sortTable(3)">Release Tag <span class="sort-arrow"></span></th>
-              <th onclick="sortTable(4)">Meta-Release <span class="sort-arrow"></span></th>
-              <th onclick="sortTable(5)">Maturity <span class="sort-arrow"></span></th>
-              <th onclick="sortTable(6)">Published <span class="sort-arrow"></span></th>
-              <th onclick="sortTable(7)">Category <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(2)">API Status <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(3)">Category <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(4)">Repository <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(5)">Release Tag <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(6)">Release Type <span class="sort-arrow"></span></th>
+              <th onclick="sortTable(7)">Meta-Release <span class="sort-arrow"></span></th>
               <th onclick="sortTable(8)">First Release <span class="sort-arrow"></span></th>
               <th>Debug</th>
             </tr>
@@ -711,14 +742,15 @@
             release.apis.forEach(api => {
               flatApis.push({
                 api_name: api.api_name,
-                title: api.title || api.display_name || api.api_name,
-                version: api.version,
+                api_title: api.api_title || api.display_name || api.api_name,
+                api_version: api.api_version,
                 maturity: api.maturity,
                 repository: release.repository,
                 release_tag: release.release_tag,
                 release_date: release.release_date,
                 meta_release: release.meta_release,
                 github_url: release.github_url,
+                release_type: release.release_type,
                 portfolio_category: api.portfolio_category,
                 website_url: api.website_url,
                 tooltip: api.tooltip,
@@ -803,15 +835,16 @@
       const generated = ViewerLib.formatDate(metadata.generated);
 
       const totalAPIs = data.apis.length;
-      const publishedCount = data.apis.filter(a => a.published).length;
-      const unpublishedCount = totalAPIs - publishedCount;
+      const alphaCount = data.apis.filter(a => a.release_type === 'pre-release-alpha').length;
+      const rcCount = data.apis.filter(a => a.release_type === 'pre-release-rc').length;
+      const publicCount = data.apis.filter(a => a.release_type === 'public-release' || !a.release_type).length;
+      const maintenanceCount = data.apis.filter(a => a.release_type === 'maintenance-release').length;
       const sandboxCount = data.apis.filter(a => a.meta_release === 'None (Sandbox)').length;
 
       footerDiv.innerHTML = `
         Report generated: ${generated} |
-        Total API versions: ${totalAPIs} |
-        Published: ${publishedCount} |
-        Unpublished: ${unpublishedCount} |
+        Total: ${totalAPIs} |
+        Alpha: ${alphaCount} | RC: ${rcCount} | Public: ${publicCount} | Maint: ${maintenanceCount} |
         Sandbox: ${sandboxCount}
       `;
 
@@ -907,10 +940,15 @@
       if (!currentData) return;
 
       const searchFilter = document.getElementById('filterApiName').value.toLowerCase();
-      const maturityFilter = document.getElementById('filterMaturity').value.toLowerCase();
+      const apiStatusFilter = document.getElementById('filterApiStatus').value.toLowerCase();
       const metaReleaseFilter = document.getElementById('filterMetaRelease').value;
-      const publishedFilter = document.getElementById('filterPublished').value;
-      const showUnpublished = document.getElementById('show-unpublished').checked;
+
+      // Release type filters
+      const showAlpha = document.getElementById('show-alpha').checked;
+      const showRc = document.getElementById('show-rc').checked;
+      const showPublic = document.getElementById('show-public').checked;
+      const showMaintenance = document.getElementById('show-maintenance').checked;
+
       showOnlyLatestPatches = document.getElementById('showOnlyLatestPatches').checked;
 
       filteredData = currentData.apis.filter(api => {
@@ -924,14 +962,15 @@
         // Search filter
         if (searchFilter &&
           !api.api_name.toLowerCase().includes(searchFilter) &&
-          !api.title.toLowerCase().includes(searchFilter) &&
+          !api.api_title.toLowerCase().includes(searchFilter) &&
           !api.repository.toLowerCase().includes(searchFilter)) {
           return false;
         }
 
-        // Maturity filter
-        if (maturityFilter && api.maturity.toLowerCase() !== maturityFilter) {
-          return false;
+        // API Status filter (computed from api_version)
+        if (apiStatusFilter) {
+          const apiStatus = ViewerLib.getApiStatus(api.api_version);
+          if (apiStatus !== apiStatusFilter) return false;
         }
 
         // Meta-release filter
@@ -939,17 +978,12 @@
           return false;
         }
 
-        // Published filter
-        if (publishedFilter) {
-          const isPublished = api.published;
-          if (publishedFilter === 'yes' && !isPublished) return false;
-          if (publishedFilter === 'no' && isPublished) return false;
-        }
-
-        // Show unpublished checkbox
-        if (!showUnpublished && !api.published) {
-          return false;
-        }
+        // Release type filter
+        const releaseType = api.release_type || 'public-release';  // Default for legacy data
+        if (releaseType === 'pre-release-alpha' && !showAlpha) return false;
+        if (releaseType === 'pre-release-rc' && !showRc) return false;
+        if (releaseType === 'public-release' && !showPublic) return false;
+        if (releaseType === 'maintenance-release' && !showMaintenance) return false;
 
         return true;
       });
@@ -967,10 +1001,13 @@
      */
     function clearAllFilters() {
       document.getElementById('filterApiName').value = '';
-      document.getElementById('filterMaturity').value = '';
+      document.getElementById('filterApiStatus').value = '';
       document.getElementById('filterMetaRelease').value = '';
-      document.getElementById('filterPublished').value = '';
-      document.getElementById('show-unpublished').checked = true;
+      // Reset release type checkboxes
+      document.getElementById('show-alpha').checked = true;
+      document.getElementById('show-rc').checked = true;
+      document.getElementById('show-public').checked = true;
+      document.getElementById('show-maintenance').checked = true;
       selectedCategories = [];
       updatePillStates();
       applyFilters();
@@ -1024,29 +1061,38 @@
         const row = document.createElement('tr');
 
         // Add row classes for visual indicators
-        if (!api.published) {
-          row.classList.add('unpublished-row');
+        const releaseType = api.release_type || 'public-release';
+        if (releaseType.startsWith('pre-release')) {
+          row.classList.add('prerelease-row');
         }
         if (api.meta_release === 'None (Sandbox)') {
           row.classList.add('sandbox-row');
         }
 
-        // Status indicator
-        const statusClass = !api.published ? 'status-unpublished' :
+        // Status indicator based on release type
+        const statusClass = releaseType === 'pre-release-alpha' ? 'status-prerelease-alpha' :
+          releaseType === 'pre-release-rc' ? 'status-prerelease-rc' :
+          releaseType === 'maintenance-release' ? 'status-maintenance' :
           api.meta_release === 'None (Sandbox)' ? 'status-sandbox' :
-            'status-published';
+            'status-public';
 
+        // Release type display
+        const releaseTypeLabel = releaseType === 'pre-release-alpha' ? 'Alpha' :
+          releaseType === 'pre-release-rc' ? 'RC' :
+          releaseType === 'maintenance-release' ? 'Maint' : 'Public';
+
+        const apiStatus = ViewerLib.getApiStatus(api.api_version);
         row.innerHTML = `
           <td><span class="status-indicator ${statusClass}"></span>${api.api_name}</td>
-          <td>${api.version}</td>
+          <td>${api.api_version}</td>
+          <td>${ViewerLib.renderApiStatusBadge(apiStatus)}</td>
+          <td>${api.portfolio_category || '<em>Missing</em>'}</td>
           <td><a href="${api.github_url.replace(/\/releases\/tag\/.*$/, '')}" target="_blank">${api.repository}</a></td>
           <td><a href="${api.github_url}" target="_blank">${api.release_tag}</a></td>
+          <td>${releaseTypeLabel}</td>
           <td>${api.meta_release === 'None (Sandbox)' ? 'Sandbox' : api.meta_release}</td>
-          <td>${ViewerLib.renderMaturityBadge(api.maturity)}</td>
-          <td>${api.published ? '✓' : '✗'}</td>
-          <td>${api.portfolio_category || '<em>Missing</em>'}</td>
           <td>${api.first_release || '-'}</td>
-          <td><button class="debug-btn" onclick='showDebug(${JSON.stringify(api.api_name)}, ${JSON.stringify(api.version)}, ${JSON.stringify(api.release_tag)})'>🔍</button></td>
+          <td><button class="debug-btn" onclick='showDebug(${JSON.stringify(api.api_name)}, ${JSON.stringify(api.api_version)}, ${JSON.stringify(api.release_tag)})'>🔍</button></td>
         `;
 
         tbody.appendChild(row);
@@ -1081,11 +1127,11 @@
               <tr>
                 <th>API</th>
                 <th>Version</th>
-                <th>Release</th>
-                <th>Meta-Release</th>
-                <th>Maturity</th>
-                <th>Published</th>
+                <th>API Status</th>
                 <th>Category</th>
+                <th>Release</th>
+                <th>Release Type</th>
+                <th>Meta-Release</th>
               </tr>
             </thead>
             <tbody>
@@ -1113,19 +1159,25 @@
         // API rows for this repository
         repo.apis.forEach(api => {
           const rowClasses = [];
-          if (!api.published) rowClasses.push('unpublished-row');
+          const releaseType = api.release_type || 'public-release';
+          if (releaseType.startsWith('pre-release')) rowClasses.push('prerelease-row');
           if (api.meta_release === 'None (Sandbox)') rowClasses.push('sandbox-row');
           rowClasses.push('repo-row');
 
+          const releaseTypeLabel = releaseType === 'pre-release-alpha' ? 'Alpha' :
+            releaseType === 'pre-release-rc' ? 'RC' :
+            releaseType === 'maintenance-release' ? 'Maint' : 'Public';
+
+          const apiStatus = ViewerLib.getApiStatus(api.api_version);
           tableHtml += `
             <tr class="${rowClasses.join(' ')}">
               <td>${api.api_name}</td>
-              <td>${api.version}</td>
-              <td><a href="${api.github_url}" target="_blank">${api.release_tag}</a></td>
-              <td>${api.meta_release === 'None (Sandbox)' ? 'Sandbox' : api.meta_release}</td>
-              <td>${ViewerLib.renderMaturityBadge(api.maturity)}</td>
-              <td>${api.published ? '✓' : '✗'}</td>
+              <td>${api.api_version}</td>
+              <td>${ViewerLib.renderApiStatusBadge(apiStatus)}</td>
               <td>${api.portfolio_category || '-'}</td>
+              <td><a href="${api.github_url}" target="_blank">${api.release_tag}</a></td>
+              <td>${releaseTypeLabel}</td>
+              <td>${api.meta_release === 'None (Sandbox)' ? 'Sandbox' : api.meta_release}</td>
             </tr>
           `;
         });
@@ -1143,10 +1195,10 @@
     /**
      * Show debug modal for specific API
      */
-    function showDebug(apiName, version, releaseTag) {
+    function showDebug(apiName, apiVersion, releaseTag) {
       const api = filteredData.find(a =>
         a.api_name === apiName &&
-        a.version === version &&
+        a.api_version === apiVersion &&
         a.release_tag === releaseTag
       );
       if (!api) return;
@@ -1212,9 +1264,14 @@
         if (columnIndex === 1) {
           // Version column
           result = ViewerLib.compareVersions(aValue, bValue);
+        } else if (columnIndex === 2) {
+          // API Status column (Alpha → RC → Initial → Stable)
+          const statusOrder = { 'Alpha': 0, 'RC': 1, 'Initial': 2, 'Stable': 3 };
+          result = (statusOrder[aValue] ?? 4) - (statusOrder[bValue] ?? 4);
         } else if (columnIndex === 6) {
-          // Published column (✓/✗)
-          result = (aValue === '✓' ? 1 : 0) - (bValue === '✓' ? 1 : 0);
+          // Release Type column (Alpha/RC/Public/Maint)
+          const typeOrder = { 'Alpha': 0, 'RC': 1, 'Public': 2, 'Maint': 3 };
+          result = (typeOrder[aValue] ?? 4) - (typeOrder[bValue] ?? 4);
         } else {
           result = aValue.localeCompare(bValue);
         }

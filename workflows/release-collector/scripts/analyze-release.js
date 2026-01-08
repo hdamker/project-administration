@@ -74,18 +74,63 @@ function extractAPINameFromSpec(spec) {
 }
 
 /**
+ * Determine pre-release type from API versions
+ * Pre-releases contain API versions with -alpha.N or -rc.N extensions
+ *
+ * Logic: A release is only as mature as its least mature API
+ * - If ANY API has -alpha.N extension → 'pre-release-alpha'
+ * - If ALL APIs are -rc.N or public (no extension) → 'pre-release-rc'
+ * - If pre-release but no valid alpha/rc extensions → warn and classify as 'pre-release-alpha'
+ *
+ * @param {Array} apis - Array of API objects with api_version field
+ * @param {boolean} isPrerelease - GitHub prerelease flag
+ * @param {string} repository - Repository name for logging
+ * @param {string} releaseTag - Release tag for logging
+ * @returns {string|null} 'pre-release-alpha' | 'pre-release-rc' | null (if not a pre-release)
+ */
+function determinePreReleaseType(apis, isPrerelease, repository, releaseTag) {
+  if (!isPrerelease) {
+    return null;  // Not a pre-release, type will be determined in update-master.js
+  }
+
+  // Check if any API has an alpha version extension
+  const hasAlpha = apis.some(api =>
+    api.api_version && api.api_version.includes('-alpha.')
+  );
+
+  // Check if any API has an rc version extension
+  const hasRc = apis.some(api =>
+    api.api_version && api.api_version.includes('-rc.')
+  );
+
+  // If any API is alpha, the release can't be better than alpha
+  if (hasAlpha) {
+    return 'pre-release-alpha';
+  }
+
+  // All APIs are rc → release is rc
+  if (hasRc) {
+    return 'pre-release-rc';
+  }
+
+  // No valid alpha or rc extension found (could be typo, missing number, or maintenance pre-release)
+  console.error(`⚠️ WARNING: ${repository} ${releaseTag} is marked as pre-release but contains neither a valid -alpha.N nor -rc.N API version. Classifying as pre-release-alpha.`);
+  return 'pre-release-alpha';
+}
+
+/**
  * Apply format corrections to API data
  * These corrections are hardcoded and always applied:
- * 1. Remove 'v' prefix from version (v0.11.0 → 0.11.0)
+ * 1. Remove 'v' prefix from api_version (v0.11.0 → 0.11.0)
  * 2. Ensure commonalities is a string and correct format (0.4.0 → 0.4 for Fall24)
  * 3. Convert API names to lowercase for consistency
  */
 function applyFormatCorrections(api) {
   const corrected = { ...api };
 
-  // 1. Strip 'v' prefix from version if present
-  if (corrected.version && typeof corrected.version === 'string') {
-    corrected.version = corrected.version.replace(/^v/, '');
+  // 1. Strip 'v' prefix from api_version if present
+  if (corrected.api_version && typeof corrected.api_version === 'string') {
+    corrected.api_version = corrected.api_version.replace(/^v/, '');
   }
 
   // 2. Ensure commonalities is a string (convert numbers, preserve existing strings)
@@ -130,9 +175,12 @@ function getMetaRelease(repository, releaseTag, mappings) {
 
 /**
  * Analyze release from local repository (for testing)
+ * @param {string} repoPath - Path to local repository
+ * @param {string} releaseTag - Release tag to analyze
+ * @param {boolean} isPrerelease - Whether this is a pre-release (default: false)
  */
-async function analyzeLocalRelease(repoPath, releaseTag) {
-  console.error(`Analyzing local release: ${repoPath} @ ${releaseTag}`);
+async function analyzeLocalRelease(repoPath, releaseTag, isPrerelease = false) {
+  console.error(`Analyzing local release: ${repoPath} @ ${releaseTag} (prerelease: ${isPrerelease})`);
 
   const repoName = path.basename(repoPath);
 
@@ -164,8 +212,8 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
         const apiData = {
           api_name: apiName || fileName,        // Use filename as fallback for legacy releases
           file_name: fileName,                  // Filename for consistency check
-          version: spec.info.version || 'unknown',
-          title: spec.info.title || 'Untitled',
+          api_version: spec.info.version || 'unknown',
+          api_title: spec.info.title || 'Untitled',
           commonalities: spec.info['x-camara-commonalities'] || null
         };
 
@@ -179,16 +227,16 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
           correctedApi.api_name = 'connectivity-insights-subscriptions';
         }
 
-        // Fix incorrect title for connectivity-insights-subscriptions in r1.2 and r2.2
+        // Fix incorrect api_title for connectivity-insights-subscriptions in r1.2 and r2.2
         if (repoName === 'ConnectivityInsights' && (releaseTag === 'r1.2' || releaseTag === 'r2.2') &&
-            correctedApi.file_name === 'connectivity-insights-subscriptions' && correctedApi.title === 'Connectivity Insights') {
-          console.error(`Applying correction: ConnectivityInsights ${releaseTag} - fixing title to 'Connectivity Insights Subscriptions'`);
-          correctedApi.title = 'Connectivity Insights Subscriptions';
+            correctedApi.file_name === 'connectivity-insights-subscriptions' && correctedApi.api_title === 'Connectivity Insights') {
+          console.error(`Applying correction: ConnectivityInsights ${releaseTag} - fixing api_title to 'Connectivity Insights Subscriptions'`);
+          correctedApi.api_title = 'Connectivity Insights Subscriptions';
         }
 
         // Exclude known invalid RC release
-        if (correctedApi.api_name === 'region-device-count' && correctedApi.version === '0.1.0-rc.1') {
-          console.error(`Excluding invalid RC release: ${correctedApi.api_name} ${correctedApi.version}`);
+        if (correctedApi.api_name === 'region-device-count' && correctedApi.api_version === '0.1.0-rc.1') {
+          console.error(`Excluding invalid RC release: ${correctedApi.api_name} ${correctedApi.api_version}`);
           continue;
         }
 
@@ -208,11 +256,16 @@ async function analyzeLocalRelease(repoPath, releaseTag) {
   // Return back to main branch
   await execAsync('git checkout main --quiet', { cwd: repoPath });
 
+  // Determine release_type for pre-releases (public/maintenance determined in update-master.js)
+  const releaseType = determinePreReleaseType(apis, isPrerelease, repoName, releaseTag);
+
   return {
     repository: repoName,
     release_tag: releaseTag,
     release_date: releaseDate.trim(),
     github_url: `https://github.com/${GITHUB_ORG}/${repoName}/releases/tag/${releaseTag}`,
+    is_prerelease: isPrerelease,
+    release_type: releaseType,  // null for non-prereleases, determined in update-master.js
     apis: apis
   };
 }
@@ -274,8 +327,8 @@ async function analyzeGitHubRelease(repository, releaseTag) {
         const apiData = {
           api_name: apiName || fileName,        // Use filename as fallback for legacy releases
           file_name: fileName,                  // Filename for consistency check
-          version: spec.info.version || 'unknown',
-          title: spec.info.title || 'Untitled',
+          api_version: spec.info.version || 'unknown',
+          api_title: spec.info.title || 'Untitled',
           commonalities: spec.info['x-camara-commonalities'] || null
         };
 
@@ -289,16 +342,16 @@ async function analyzeGitHubRelease(repository, releaseTag) {
           correctedApi.api_name = 'connectivity-insights-subscriptions';
         }
 
-        // Fix incorrect title for connectivity-insights-subscriptions in r1.2 and r2.2
+        // Fix incorrect api_title for connectivity-insights-subscriptions in r1.2 and r2.2
         if (repository === 'ConnectivityInsights' && (releaseTag === 'r1.2' || releaseTag === 'r2.2') &&
-            correctedApi.file_name === 'connectivity-insights-subscriptions' && correctedApi.title === 'Connectivity Insights') {
-          console.error(`Applying correction: ConnectivityInsights ${releaseTag} - fixing title to 'Connectivity Insights Subscriptions'`);
-          correctedApi.title = 'Connectivity Insights Subscriptions';
+            correctedApi.file_name === 'connectivity-insights-subscriptions' && correctedApi.api_title === 'Connectivity Insights') {
+          console.error(`Applying correction: ConnectivityInsights ${releaseTag} - fixing api_title to 'Connectivity Insights Subscriptions'`);
+          correctedApi.api_title = 'Connectivity Insights Subscriptions';
         }
 
         // Exclude known invalid RC release
-        if (correctedApi.api_name === 'region-device-count' && correctedApi.version === '0.1.0-rc.1') {
-          console.error(`Excluding invalid RC release: ${correctedApi.api_name} ${correctedApi.version}`);
+        if (correctedApi.api_name === 'region-device-count' && correctedApi.api_version === '0.1.0-rc.1') {
+          console.error(`Excluding invalid RC release: ${correctedApi.api_name} ${correctedApi.api_version}`);
           continue;
         }
 
@@ -309,11 +362,16 @@ async function analyzeGitHubRelease(repository, releaseTag) {
     }
   }
 
+  // Determine release_type for pre-releases (public/maintenance determined in update-master.js)
+  const releaseType = determinePreReleaseType(apis, release.prerelease, repository, releaseTag);
+
   return {
     repository: repository,
     release_tag: releaseTag,
     release_date: release.published_at,
     github_url: release.html_url,
+    is_prerelease: release.prerelease,
+    release_type: releaseType,  // null for non-prereleases, determined in update-master.js
     apis: apis
   };
 }
@@ -326,11 +384,12 @@ async function main() {
 
   if (args.length < 2) {
     console.error('Usage:');
-    console.error('  Local:  node analyze-release.js --local <repo-path> <release-tag>');
+    console.error('  Local:  node analyze-release.js --local <repo-path> <release-tag> [--prerelease]');
     console.error('  GitHub: node analyze-release.js --github <repo-name> <release-tag>');
     console.error('');
     console.error('Examples:');
     console.error('  node analyze-release.js --local /path/to/DeviceRoamingStatus r1.1');
+    console.error('  node analyze-release.js --local /path/to/DeviceRoamingStatus r1.1 --prerelease');
     console.error('  node analyze-release.js --github DeviceRoamingStatus r1.1');
     process.exit(1);
   }
@@ -340,8 +399,9 @@ async function main() {
 
   try {
     if (mode === '--local') {
-      const [, repoPath, releaseTag] = args;
-      result = await analyzeLocalRelease(repoPath, releaseTag);
+      const [, repoPath, releaseTag, ...rest] = args;
+      const isPrerelease = rest.includes('--prerelease');
+      result = await analyzeLocalRelease(repoPath, releaseTag, isPrerelease);
     } else if (mode === '--github') {
       const [, repoName, releaseTag] = args;
       result = await analyzeGitHubRelease(repoName, releaseTag);
@@ -371,5 +431,6 @@ module.exports = {
   extractAPINameFromSpec,
   extractFileName,
   applyFormatCorrections,
+  determinePreReleaseType,
   loadConfig
 };

@@ -6,7 +6,7 @@
 # Safety checks:
 # - Default mode: Compares staging vs main timestamps to prevent deploying stale content
 # - Rollback mode: Allows deploying specific ref from main branch history
-# - Emergency mode: Allows deploying from any branch (explicit override)
+# - Emergency or test mode: Allows deploying from any branch (explicit override)
 #
 # PREREQUISITES:
 # - Secret PRODUCTION_DEPLOY_TOKEN: Fine-grained PAT for camaraproject/camaraproject.github.io
@@ -28,13 +28,28 @@ name: Release Collector - Production Deploy
 on:
   workflow_dispatch:
     inputs:
+      deploy_viewers:
+        description: 'Deploy viewers to production site'
+        required: false
+        type: boolean
+        default: true
+      upload_metadata:
+        description: 'Upload release-metadata files to GitHub releases'
+        required: false
+        type: boolean
+        default: true
+      upload_releases:
+        description: 'Selective upload: comma-separated list (e.g., "QualityOnDemand/r1.2,DeviceLocation/r2.1"). Empty = all.'
+        required: false
+        type: string
+        default: ''
       ref:
         description: 'ROLLBACK ONLY: Git ref from main to deploy. Leave empty for normal deployment (with timestamp safety check).'
         required: false
         default: ''
         type: string
       allow_branch:
-        description: 'Allow deployment from any branch (emergency override). Skips also timestamp safety check.'
+        description: 'Emergency or test: deploy from current branch instead of main. Uses current branch when ref is empty. Skips timestamp safety check.'
         required: false
         type: boolean
         default: false
@@ -68,7 +83,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.ref || 'main' }}
+          # Use ref if provided, else current branch if allow_branch, else main
+          ref: ${{ github.event.inputs.ref || (github.event.inputs.allow_branch == 'true' && github.ref_name) || 'main' }}
           fetch-depth: 0  # Full history for ancestor check
 
       - name: Determine deployment ref and mode
@@ -76,8 +92,21 @@ jobs:
         run: |
           INPUT_REF="${{ github.event.inputs.ref }}"
           ALLOW_BRANCH="${{ github.event.inputs.allow_branch }}"
+          CURRENT_BRANCH="${{ github.ref_name }}"
 
-          if [[ -z "$INPUT_REF" ]]; then
+          if [[ "$ALLOW_BRANCH" == "true" ]]; then
+            # Emergency or test mode: Any ref allowed, use current branch if ref is empty
+            if [[ -z "$INPUT_REF" ]]; then
+              DEPLOY_REF="$CURRENT_BRANCH"
+            else
+              DEPLOY_REF="$INPUT_REF"
+            fi
+            echo "mode=emergency" >> $GITHUB_OUTPUT
+            echo "ref=$DEPLOY_REF" >> $GITHUB_OUTPUT
+            echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+            echo "::warning::EMERGENCY OR TEST MODE - Deploying from $DEPLOY_REF without safety checks"
+
+          elif [[ -z "$INPUT_REF" ]]; then
             # Default mode: HEAD of main
             DEPLOY_REF="main"
             DEPLOY_MODE="default"
@@ -85,15 +114,6 @@ jobs:
             echo "ref=main" >> $GITHUB_OUTPUT
             echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
             echo "Using default mode: HEAD of main"
-
-          elif [[ "$ALLOW_BRANCH" == "true" ]]; then
-            # Emergency mode: Any ref allowed
-            DEPLOY_REF="$INPUT_REF"
-            DEPLOY_MODE="emergency"
-            echo "mode=emergency" >> $GITHUB_OUTPUT
-            echo "ref=$INPUT_REF" >> $GITHUB_OUTPUT
-            echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-            echo "::warning::EMERGENCY MODE - Deploying from $INPUT_REF without safety checks"
 
           else
             # Rollback mode: Verify ref is on main
@@ -184,7 +204,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           if [[ "${{ steps.determine-ref.outputs.mode }}" == "emergency" ]]; then
-            echo "> **Warning**: Emergency mode - deploying without timestamp safety check" >> $GITHUB_STEP_SUMMARY
+            echo "> **Warning**: Emergency or test mode - deploying without timestamp safety check" >> $GITHUB_STEP_SUMMARY
           fi
 
   # =========================================================================================
@@ -193,7 +213,9 @@ jobs:
   generate-viewers:
     name: Generate Viewers
     needs: validate-deployment
-    if: needs.validate-deployment.outputs.skip_deploy != 'true'
+    if: |
+      needs.validate-deployment.outputs.skip_deploy != 'true' &&
+      (github.event.inputs.deploy_viewers || 'true') == 'true'
     runs-on: ubuntu-latest
     outputs:
       viewers_generated: ${{ steps.generate.outputs.success }}
@@ -267,7 +289,9 @@ jobs:
   deploy-production:
     name: Deploy to Production
     needs: [validate-deployment, generate-viewers]
-    if: github.event.inputs.dry_run != 'true'
+    if: |
+      github.event.inputs.dry_run != 'true' &&
+      needs.generate-viewers.result == 'success'
     runs-on: ubuntu-latest
     outputs:
       deployed: ${{ steps.push.outputs.deployed }}
@@ -357,11 +381,292 @@ jobs:
           echo "Pages deployment triggered successfully"
 
   # =========================================================================================
-  # Job 4: Workflow Summary
+  # Job 4: Upload Release Metadata to GitHub Releases
+  # Analyzes staged artifacts vs existing release assets, then uploads if not dry-run
+  # =========================================================================================
+  upload-release-metadata:
+    name: Upload to GitHub Releases
+    needs: validate-deployment
+    if: |
+      needs.validate-deployment.outputs.skip_deploy != 'true' &&
+      (github.event.inputs.upload_metadata || 'true') == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      new_count: ${{ steps.analyze.outputs.new }}
+      update_count: ${{ steps.analyze.outputs.update }}
+      current_count: ${{ steps.analyze.outputs.current }}
+      no_release_count: ${{ steps.analyze.outputs.no_release }}
+      uploaded_count: ${{ steps.analyze.outputs.uploaded }}
+      failed_count: ${{ steps.analyze.outputs.failed }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-deployment.outputs.deploy_ref }}
+
+      - name: Check for release artifacts
+        id: check
+        run: |
+          if [[ -d "data/release-artifacts" ]]; then
+            COUNT=$(find data/release-artifacts -name "release-metadata.yaml" | wc -l | tr -d ' ')
+            echo "Found $COUNT release metadata files"
+            echo "has_artifacts=true" >> $GITHUB_OUTPUT
+            echo "count=$COUNT" >> $GITHUB_OUTPUT
+          else
+            echo "No release artifacts found in data/release-artifacts/"
+            echo "has_artifacts=false" >> $GITHUB_OUTPUT
+            echo "count=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Analyze and upload metadata files
+        id: analyze
+        if: steps.check.outputs.has_artifacts == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PRODUCTION_DEPLOY_TOKEN }}
+          UPLOAD_RELEASES: ${{ github.event.inputs.upload_releases }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          # Statistics
+          NEW=0
+          UPDATE=0
+          CURRENT=0
+          NO_RELEASE=0
+          UPLOADED=0
+          FAILED=0
+
+          # Report files
+          mkdir -p reports
+          REPORT_MD="reports/upload-report.md"
+          REPORT_JSONL="reports/upload-report.jsonl"
+          MODE="${DRY_RUN:-false}"
+          [[ "$MODE" == "true" ]] && MODE_LABEL="plan" || MODE_LABEL="apply"
+
+          # Initialize report
+          echo "# Release Metadata Upload Report" > "$REPORT_MD"
+          echo "" >> "$REPORT_MD"
+          echo "**Mode:** ${MODE_LABEL^^}" >> "$REPORT_MD"
+          echo "**Date:** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$REPORT_MD"
+          echo "" >> "$REPORT_MD"
+          > "$REPORT_JSONL"
+
+          # Arrays to collect results by category
+          declare -a NEW_LIST=()
+          declare -a UPDATE_LIST=()
+          declare -a CURRENT_LIST=()
+          declare -a NO_RELEASE_LIST=()
+          declare -a UPLOADED_LIST=()
+          declare -a FAILED_LIST=()
+
+          # Build release list
+          RELEASE_LIST=()
+          if [[ -n "$UPLOAD_RELEASES" ]]; then
+            echo "Selective mode: $UPLOAD_RELEASES"
+            IFS=',' read -ra RELEASES <<< "$UPLOAD_RELEASES"
+            for release in "${RELEASES[@]}"; do
+              release=$(echo "$release" | xargs)
+              RELEASE_LIST+=("$release")
+            done
+          else
+            echo "Full mode: all releases"
+            for repo_dir in data/release-artifacts/*/; do
+              repo=$(basename "$repo_dir")
+              for tag_dir in "$repo_dir"*/; do
+                tag=$(basename "$tag_dir")
+                RELEASE_LIST+=("$repo/$tag")
+              done
+            done
+          fi
+
+          echo "Analyzing ${#RELEASE_LIST[@]} releases..."
+          echo ""
+
+          # Process each release
+          for release in "${RELEASE_LIST[@]}"; do
+            repo="${release%/*}"
+            tag="${release#*/}"
+
+            YAML_FILE="data/release-artifacts/$repo/$tag/release-metadata.yaml"
+            JSON_FILE="data/release-artifacts/$repo/$tag/release-metadata.json"
+
+            # Check local files exist
+            if [[ ! -f "$YAML_FILE" ]] || [[ ! -f "$JSON_FILE" ]]; then
+              echo "⚠️  $repo/$tag - local files missing"
+              echo "::warning::$repo/$tag - local files missing (not in release-artifacts)"
+              echo "{\"repository\":\"$repo\",\"tag\":\"$tag\",\"status\":\"missing_local\",\"mode\":\"$MODE_LABEL\"}" >> "$REPORT_JSONL"
+              continue
+            fi
+
+            # Check if release exists and get assets
+            ASSETS=$(gh release view "$tag" --repo "camaraproject/$repo" --json assets -q '.assets[].name' 2>/dev/null)
+            RELEASE_EXISTS=$?
+
+            if [[ $RELEASE_EXISTS -ne 0 ]]; then
+              # Release doesn't exist
+              echo "❌  $repo/$tag - no release"
+              NO_RELEASE=$((NO_RELEASE + 1))
+              NO_RELEASE_LIST+=("$repo|$tag")
+              echo "{\"repository\":\"$repo\",\"tag\":\"$tag\",\"status\":\"no_release\",\"mode\":\"$MODE_LABEL\"}" >> "$REPORT_JSONL"
+              continue
+            fi
+
+            # Check if our assets exist
+            HAS_YAML=$(echo "$ASSETS" | grep -c "release-metadata.yaml" || true)
+
+            if [[ "$HAS_YAML" -eq 0 ]]; then
+              # Assets don't exist - NEW
+              if [[ "$DRY_RUN" == "true" ]]; then
+                echo "🆕  $repo/$tag - new (would upload)"
+                NEW=$((NEW + 1))
+                NEW_LIST+=("$repo|$tag")
+                echo "{\"repository\":\"$repo\",\"tag\":\"$tag\",\"status\":\"new\",\"mode\":\"$MODE_LABEL\"}" >> "$REPORT_JSONL"
+              else
+                echo -n "🆕  $repo/$tag - new, uploading... "
+                UPLOAD_ERR=$(gh release upload "$tag" --repo "camaraproject/$repo" "$YAML_FILE" "$JSON_FILE" --clobber 2>&1) && UPLOAD_OK=true || UPLOAD_OK=false
+                if [[ "$UPLOAD_OK" == "true" ]]; then
+                  echo "✓"
+                  UPLOADED=$((UPLOADED + 1))
+                  UPLOADED_LIST+=("$repo|$tag|new")
+                  echo "{\"repository\":\"$repo\",\"tag\":\"$tag\",\"status\":\"uploaded\",\"action\":\"new\",\"mode\":\"$MODE_LABEL\"}" >> "$REPORT_JSONL"
+                else
+                  echo "✗"
+                  echo "    Error: $UPLOAD_ERR"
+                  FAILED=$((FAILED + 1))
+                  FAILED_LIST+=("$repo|$tag|new")
+                  echo "{\"repository\":\"$repo\",\"tag\":\"$tag\",\"status\":\"failed\",\"action\":\"new\",\"error\":\"$UPLOAD_ERR\",\"mode\":\"$MODE_LABEL\"}" >> "$REPORT_JSONL"
+                fi
+              fi
+            else
+              # Assets exist - compare content
+              REMOTE_HASH=$(gh release download "$tag" --repo "camaraproject/$repo" -p "release-metadata.yaml" -O - 2>/dev/null | shasum -a 256 | cut -d' ' -f1)
+              LOCAL_HASH=$(shasum -a 256 "$YAML_FILE" | cut -d' ' -f1)
+
+              if [[ "$REMOTE_HASH" == "$LOCAL_HASH" ]]; then
+                # Content identical - CURRENT
+                echo "✅  $repo/$tag - current"
+                CURRENT=$((CURRENT + 1))
+                CURRENT_LIST+=("$repo|$tag")
+                echo "{\"repository\":\"$repo\",\"tag\":\"$tag\",\"status\":\"current\",\"mode\":\"$MODE_LABEL\"}" >> "$REPORT_JSONL"
+              else
+                # Content differs - UPDATE
+                if [[ "$DRY_RUN" == "true" ]]; then
+                  echo "🔄  $repo/$tag - update (would replace)"
+                  UPDATE=$((UPDATE + 1))
+                  UPDATE_LIST+=("$repo|$tag")
+                  echo "{\"repository\":\"$repo\",\"tag\":\"$tag\",\"status\":\"update\",\"mode\":\"$MODE_LABEL\"}" >> "$REPORT_JSONL"
+                else
+                  echo -n "🔄  $repo/$tag - update, uploading... "
+                  UPLOAD_ERR=$(gh release upload "$tag" --repo "camaraproject/$repo" "$YAML_FILE" "$JSON_FILE" --clobber 2>&1) && UPLOAD_OK=true || UPLOAD_OK=false
+                  if [[ "$UPLOAD_OK" == "true" ]]; then
+                    echo "✓"
+                    UPLOADED=$((UPLOADED + 1))
+                    UPLOADED_LIST+=("$repo|$tag|update")
+                    echo "{\"repository\":\"$repo\",\"tag\":\"$tag\",\"status\":\"uploaded\",\"action\":\"update\",\"mode\":\"$MODE_LABEL\"}" >> "$REPORT_JSONL"
+                  else
+                    echo "✗"
+                    echo "    Error: $UPLOAD_ERR"
+                    FAILED=$((FAILED + 1))
+                    FAILED_LIST+=("$repo|$tag|update")
+                    echo "{\"repository\":\"$repo\",\"tag\":\"$tag\",\"status\":\"failed\",\"action\":\"update\",\"error\":\"$UPLOAD_ERR\",\"mode\":\"$MODE_LABEL\"}" >> "$REPORT_JSONL"
+                  fi
+                fi
+              fi
+            fi
+          done
+
+          # Generate markdown summary
+          echo "## Summary" >> "$REPORT_MD"
+          echo "" >> "$REPORT_MD"
+          echo "| Status | Count |" >> "$REPORT_MD"
+          echo "|--------|-------|" >> "$REPORT_MD"
+          if [[ "$DRY_RUN" == "true" ]]; then
+            echo "| New (would upload) | $NEW |" >> "$REPORT_MD"
+            echo "| Update (would replace) | $UPDATE |" >> "$REPORT_MD"
+          else
+            echo "| Uploaded | $UPLOADED |" >> "$REPORT_MD"
+            echo "| Failed | $FAILED |" >> "$REPORT_MD"
+          fi
+          echo "| Current (no action) | $CURRENT |" >> "$REPORT_MD"
+          echo "| No release | $NO_RELEASE |" >> "$REPORT_MD"
+          echo "" >> "$REPORT_MD"
+
+          # Generate details section
+          echo "## Details" >> "$REPORT_MD"
+          echo "" >> "$REPORT_MD"
+
+          # Helper function to write table
+          write_table() {
+            local title="$1"
+            local count="$2"
+            shift 2
+            local items=("$@")
+            if [[ $count -gt 0 ]]; then
+              echo "### $title ($count)" >> "$REPORT_MD"
+              echo "" >> "$REPORT_MD"
+              echo "| Repository | Tag |" >> "$REPORT_MD"
+              echo "|------------|-----|" >> "$REPORT_MD"
+              for item in "${items[@]}"; do
+                IFS='|' read -r r t _ <<< "$item"
+                echo "| $r | $t |" >> "$REPORT_MD"
+              done
+              echo "" >> "$REPORT_MD"
+            fi
+          }
+
+          if [[ "$DRY_RUN" == "true" ]]; then
+            write_table "New" $NEW "${NEW_LIST[@]}"
+            write_table "Update" $UPDATE "${UPDATE_LIST[@]}"
+          else
+            write_table "Uploaded" $UPLOADED "${UPLOADED_LIST[@]}"
+            write_table "Failed" $FAILED "${FAILED_LIST[@]}"
+          fi
+          write_table "Current" $CURRENT "${CURRENT_LIST[@]}"
+          write_table "No Release" $NO_RELEASE "${NO_RELEASE_LIST[@]}"
+
+          # Console summary
+          echo ""
+          echo "=== Upload Analysis ==="
+          if [[ "$DRY_RUN" == "true" ]]; then
+            echo "New (would upload):    $NEW"
+            echo "Update (would replace): $UPDATE"
+          else
+            echo "Uploaded:              $UPLOADED"
+            echo "Failed:                $FAILED"
+          fi
+          echo "Current (no action):   $CURRENT"
+          echo "No release:            $NO_RELEASE"
+
+          # Set outputs
+          echo "new=$NEW" >> $GITHUB_OUTPUT
+          echo "update=$UPDATE" >> $GITHUB_OUTPUT
+          echo "current=$CURRENT" >> $GITHUB_OUTPUT
+          echo "no_release=$NO_RELEASE" >> $GITHUB_OUTPUT
+          echo "uploaded=$UPLOADED" >> $GITHUB_OUTPUT
+          echo "failed=$FAILED" >> $GITHUB_OUTPUT
+
+          if [[ $FAILED -gt 0 ]]; then
+            echo "::warning::Some uploads failed. Check report for details."
+          fi
+          if [[ $NO_RELEASE -gt 0 ]]; then
+            echo "::warning::Some releases don't exist. Check report for details."
+          fi
+
+      - name: Upload report artifact
+        if: steps.check.outputs.has_artifacts == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-metadata-upload-report-${{ github.run_number }}
+          path: |
+            reports/upload-report.md
+            reports/upload-report.jsonl
+          retention-days: 30
+
+  # =========================================================================================
+  # Job 5: Workflow Summary
   # =========================================================================================
   summary:
     name: Workflow Summary
-    needs: [validate-deployment, generate-viewers, deploy-production]
+    needs: [validate-deployment, generate-viewers, deploy-production, upload-release-metadata]
     if: always()
     runs-on: ubuntu-latest
 
@@ -369,6 +674,7 @@ jobs:
       - name: Generate summary
         run: |
           DRY_RUN="${{ github.event.inputs.dry_run }}"
+          DEPLOY_VIEWERS="${{ github.event.inputs.deploy_viewers }}"
           DEPLOY_MODE="${{ needs.validate-deployment.outputs.deploy_mode }}"
           DEPLOY_REF="${{ needs.validate-deployment.outputs.deploy_ref }}"
           DEPLOY_SHA="${{ needs.validate-deployment.outputs.deploy_sha }}"
@@ -376,8 +682,16 @@ jobs:
           STAGING_TS="${{ needs.validate-deployment.outputs.staging_timestamp }}"
           SKIP_DEPLOY="${{ needs.validate-deployment.outputs.skip_deploy }}"
           VALIDATION_RESULT="${{ needs.validate-deployment.result }}"
+          GENERATE_VIEWERS_RESULT="${{ needs.generate-viewers.result }}"
           DEPLOYED="${{ needs.deploy-production.outputs.deployed }}"
           COMMIT_URL="${{ needs.deploy-production.outputs.commit_url }}"
+          UPLOAD_RESULT="${{ needs.upload-release-metadata.result }}"
+          NEW_COUNT="${{ needs.upload-release-metadata.outputs.new_count }}"
+          UPDATE_COUNT="${{ needs.upload-release-metadata.outputs.update_count }}"
+          CURRENT_COUNT="${{ needs.upload-release-metadata.outputs.current_count }}"
+          NO_RELEASE_COUNT="${{ needs.upload-release-metadata.outputs.no_release_count }}"
+          UPLOADED_COUNT="${{ needs.upload-release-metadata.outputs.uploaded_count }}"
+          FAILED_COUNT="${{ needs.upload-release-metadata.outputs.failed_count }}"
 
           # Determine if validation failed (job failed or skip_deploy set)
           VALIDATION_FAILED="false"
@@ -390,7 +704,7 @@ jobs:
 
           # Mode warning (rollback and emergency skip timestamp checks)
           if [[ "$DEPLOY_MODE" == "emergency" ]]; then
-            echo "> **Warning**: EMERGENCY MODE - deploying from non-main branch. Timestamp safety check was bypassed." >> $GITHUB_STEP_SUMMARY
+            echo "> **Warning**: EMERGENCY OR TEST MODE - deploying from non-main branch. Timestamp safety check was bypassed." >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           elif [[ "$DEPLOY_MODE" == "rollback" ]]; then
             echo "> **Note**: ROLLBACK MODE - deploying specific ref from main. Timestamp safety check was bypassed." >> $GITHUB_STEP_SUMMARY
@@ -431,9 +745,21 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
 
-          # Files deployed (only show when validation passed)
-          if [[ "$VALIDATION_FAILED" != "true" ]]; then
-            echo "### Files Deployed" >> $GITHUB_STEP_SUMMARY
+          # Files deployed (only show when viewers were generated/deployed)
+          # Show if: deploy_viewers enabled AND (dry-run OR generate-viewers succeeded)
+          SHOW_FILES="false"
+          if [[ "$DEPLOY_VIEWERS" != "false" && "$VALIDATION_FAILED" != "true" ]]; then
+            if [[ "$DRY_RUN" == "true" || "$GENERATE_VIEWERS_RESULT" == "success" ]]; then
+              SHOW_FILES="true"
+            fi
+          fi
+
+          if [[ "$SHOW_FILES" == "true" ]]; then
+            if [[ "$DRY_RUN" == "true" ]]; then
+              echo "### Files (would be deployed)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "### Files Deployed" >> $GITHUB_STEP_SUMMARY
+            fi
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "| File | Description |" >> $GITHUB_STEP_SUMMARY
             echo "|------|-------------|" >> $GITHUB_STEP_SUMMARY
@@ -442,6 +768,39 @@ jobs:
             echo "| spring25.html | Spring 2025 meta-release viewer |" >> $GITHUB_STEP_SUMMARY
             echo "| fall25.html | Fall 2025 meta-release viewer |" >> $GITHUB_STEP_SUMMARY
             echo "| portfolio.html | Portfolio overview |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Metadata upload results
+          if [[ "$UPLOAD_RESULT" == "success" ]]; then
+            echo "### Release Metadata Upload" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            if [[ "$DRY_RUN" == "true" ]]; then
+              echo "**Mode:** Dry run (no changes made)" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "| Status | Count |" >> $GITHUB_STEP_SUMMARY
+              echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+              echo "| New (would upload) | ${NEW_COUNT:-0} |" >> $GITHUB_STEP_SUMMARY
+              echo "| Update (would replace) | ${UPDATE_COUNT:-0} |" >> $GITHUB_STEP_SUMMARY
+              echo "| Current (no action) | ${CURRENT_COUNT:-0} |" >> $GITHUB_STEP_SUMMARY
+              echo "| No release | ${NO_RELEASE_COUNT:-0} |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "**Mode:** Apply" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "| Status | Count |" >> $GITHUB_STEP_SUMMARY
+              echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+              echo "| Uploaded | ${UPLOADED_COUNT:-0} |" >> $GITHUB_STEP_SUMMARY
+              echo "| Failed | ${FAILED_COUNT:-0} |" >> $GITHUB_STEP_SUMMARY
+              echo "| Current (no action) | ${CURRENT_COUNT:-0} |" >> $GITHUB_STEP_SUMMARY
+              echo "| No release | ${NO_RELEASE_COUNT:-0} |" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "See artifact **release-metadata-upload-report** for details." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          elif [[ "$UPLOAD_RESULT" == "skipped" ]]; then
+            echo "### Release Metadata Upload" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Skipped (upload_metadata=false or no artifacts)" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
 

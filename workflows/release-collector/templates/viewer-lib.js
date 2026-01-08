@@ -63,7 +63,7 @@ const ViewerLib = {
 
     apis.forEach(api => {
       const apiKey = api.canonical_name || api.api_name;
-      const parsedVersion = this.parseVersion(api.version);
+      const parsedVersion = this.parseVersion(api.api_version);
 
       if (!parsedVersion) {
         // Keep APIs without valid versions
@@ -95,7 +95,7 @@ const ViewerLib = {
 
       // Sort by patch version (descending), then by date (descending)
       versions.sort((a, b) => {
-        const versionCompare = this.compareVersions(b.version, a.version);
+        const versionCompare = this.compareVersions(b.api_version, a.api_version);
         if (versionCompare !== 0) {
           return versionCompare;
         }
@@ -157,10 +157,10 @@ const ViewerLib = {
       }
 
       // Version range filters
-      if (criteria.versionMin && this.compareVersions(api.version, criteria.versionMin) < 0) {
+      if (criteria.versionMin && this.compareVersions(api.api_version, criteria.versionMin) < 0) {
         return false;
       }
-      if (criteria.versionMax && this.compareVersions(api.version, criteria.versionMax) > 0) {
+      if (criteria.versionMax && this.compareVersions(api.api_version, criteria.versionMax) > 0) {
         return false;
       }
 
@@ -180,7 +180,7 @@ const ViewerLib = {
     const lowerQuery = query.toLowerCase();
     return apis.filter(api =>
       api.api_name.toLowerCase().includes(lowerQuery) ||
-      (api.title && api.title.toLowerCase().includes(lowerQuery)) ||
+      (api.api_title && api.api_title.toLowerCase().includes(lowerQuery)) ||
       (api.portfolio_category && api.portfolio_category.toLowerCase().includes(lowerQuery)) ||
       (api.repository && api.repository.toLowerCase().includes(lowerQuery))
     );
@@ -199,7 +199,7 @@ const ViewerLib = {
       let bVal = b[field];
 
       // Handle version fields specially
-      if (field === 'version') {
+      if (field === 'api_version') {
         return this.compareVersions(aVal, bVal);
       }
 
@@ -239,7 +239,37 @@ const ViewerLib = {
   },
 
   /**
-   * Render maturity badge HTML
+   * Compute API status from version string
+   * Status progression: alpha -> rc -> public (initial or stable)
+   * @param {string} version - API version string (e.g., "0.5.0-alpha.1", "1.0.0-rc.2", "1.0.0")
+   * @returns {string} API status: 'alpha', 'rc', 'initial', 'stable'
+   */
+  getApiStatus: function (version) {
+    if (!version) return 'unknown';
+    if (version.includes('-alpha.')) return 'alpha';
+    if (version.includes('-rc.')) return 'rc';
+    // Public: check initial (0.x) vs stable (1.x+)
+    if (version.match(/^0\./)) return 'initial';
+    return 'stable';
+  },
+
+  /**
+   * Render API status badge HTML
+   * @param {string} status - API status from getApiStatus()
+   * @returns {string} HTML string
+   */
+  renderApiStatusBadge: function (status) {
+    const badges = {
+      'stable': '<span class="badge badge-stable">Stable</span>',
+      'initial': '<span class="badge badge-initial">Initial</span>',
+      'rc': '<span class="badge badge-rc">RC</span>',
+      'alpha': '<span class="badge badge-alpha">Alpha</span>'
+    };
+    return badges[status] || `<span class="badge badge-unknown">${status}</span>`;
+  },
+
+  /**
+   * Render maturity badge HTML (deprecated - use renderApiStatusBadge)
    * @param {string} maturity - Maturity level
    * @returns {string} HTML string
    */
@@ -248,8 +278,7 @@ const ViewerLib = {
       'stable': '<span class="badge badge-stable">Stable</span>',
       'initial': '<span class="badge badge-initial">Initial</span>',
       'rc': '<span class="badge badge-rc">RC</span>',
-      'alpha': '<span class="badge badge-alpha">Alpha</span>',
-      'beta': '<span class="badge badge-beta">Beta</span>'
+      'alpha': '<span class="badge badge-alpha">Alpha</span>'
     };
     return badges[maturity] || `<span class="badge badge-unknown">${maturity}</span>`;
   },
@@ -269,11 +298,11 @@ const ViewerLib = {
    * @param {string} filename - Output filename
    */
   exportToCSV: function (apis, filename = 'camara-apis.csv') {
-    const headers = ['API Name', 'Title', 'Version', 'Category', 'Maturity', 'Repository', 'New', 'Release Tag'];
+    const headers = ['API Name', 'API Title', 'API Version', 'Category', 'Maturity', 'Repository', 'New', 'Release Tag'];
     const rows = apis.map(api => [
       api.api_name || '',
-      api.title || '',
-      api.version || '',
+      api.api_title || '',
+      api.api_version || '',
       api.portfolio_category || '',
       api.maturity || '',
       api.repository || '',
@@ -291,7 +320,22 @@ const ViewerLib = {
   // Theme Toggling Logic
   // Theme Toggling Logic (3-State: Auto -> Light -> Dark)
   initThemeToggle: function (scope = 'default') {
-    const themeToggleBtn = document.getElementById('theme-toggle');
+    let themeToggleBtn = document.getElementById('theme-toggle');
+
+    // In iframe: inject toggle into footer (header is hidden in iframe)
+    if (this.isInIframe()) {
+      const footerMetadata = document.getElementById('footer-metadata');
+      if (footerMetadata) {
+        const footerToggle = document.createElement('button');
+        footerToggle.id = 'theme-toggle-footer';
+        footerToggle.className = 'theme-toggle-btn theme-toggle-footer';
+        footerToggle.setAttribute('aria-label', 'Toggle Dark Mode');
+        footerToggle.innerHTML = '<span class="theme-icon">🌗</span>';
+        footerMetadata.appendChild(footerToggle);
+        themeToggleBtn = footerToggle;
+      }
+    }
+
     if (!themeToggleBtn) return;
 
     const storageKey = `camara-theme-${scope}`;

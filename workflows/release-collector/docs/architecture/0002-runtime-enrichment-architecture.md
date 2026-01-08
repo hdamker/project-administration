@@ -285,7 +285,7 @@ function enrichAPI(apiData, landscape) {
 
 2. **Full re-analysis needed**
    - Portfolio changes require full re-analysis to regenerate reports
-   - Longer workflow run (5-10 minutes vs 2-5 minutes)
+   - Longer workflow run (3-5 minutes vs 1-2 minutes)
    - Acceptable for weekly/manual updates
 
 3. **Complexity in generate-reports.js**
