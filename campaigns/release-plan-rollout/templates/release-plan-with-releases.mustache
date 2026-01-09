@@ -11,19 +11,16 @@ repository:
   release_track: {{release_track}}
   {{#meta_release}}
 
-  # Meta-release participation (when release_track is meta-release)
+  # Meta-release participation (update for next cycle when planning)
   meta_release: {{meta_release}}
   {{/meta_release}}
-
-  # Uncomment and set when planning your next meta-release participation:
-  # meta_release: Fall26
 
   # Current/last release tag — update for your next release:
   # - New release cycle (increment first number, reset second to 1)
   # - Progression in same cycle (increment second number)
   target_release_tag: {{target_release_tag}}
 
-  # Release type being prepared (set to initiate release process)
+  # Release type being prepared (must be set before release can be triggered)
   # Options: none | pre-release-alpha | pre-release-rc | public-release | maintenance-release
   target_release_type: none
 
