@@ -250,16 +250,28 @@ jobs:
           data_json: ${{ steps.generate.outputs.json }}
           out_file: /tmp/pr-body.md
 
-      # Note: Validation step will be added when tooling shared-action is ready
-      # - name: Validate generated release-plan.yaml
-      #   id: validate
-      #   uses: camaraproject/tooling/shared-actions/validate-release-plan@v0
-      #   with:
-      #     metadata_file: repo/release-plan.yaml
-      #     type: release-plan
+      # TODO: Change to camaraproject/tooling@v0 when shared-action is released
+      - name: Validate generated release-plan.yaml
+        id: validate
+        continue-on-error: true
+        uses: hdamker/tooling/shared-actions/validate-release-plan@release-plan-validation
+        with:
+          release_plan_path: repo/release-plan.yaml
+
+      - name: Log validation result
+        run: |
+          echo "Validation result: valid=${{ steps.validate.outputs.valid }}"
+          if [ "${{ steps.validate.outputs.valid }}" != "true" ]; then
+            echo "::error::Validation failed for ${{ matrix.repo }}"
+            echo "Errors: ${{ steps.validate.outputs.errors }}"
+          fi
+          if [ -n "${{ steps.validate.outputs.warnings }}" ] && [ "${{ steps.validate.outputs.warnings }}" != "[]" ]; then
+            echo "Warnings: ${{ steps.validate.outputs.warnings }}"
+          fi
 
       - name: Detect changes
         id: changes
+        if: steps.validate.outputs.valid == 'true'
         shell: bash
         working-directory: repo
         run: |
@@ -279,7 +291,7 @@ jobs:
         uses: ./admin/actions/campaign-finalize-per-repo
         with:
           mode: ${{ env.MODE }}
-          changed: ${{ steps.changes.outputs.changed }}
+          changed: ${{ steps.validate.outputs.valid == 'true' && steps.changes.outputs.changed || 'false' }}
           repo: ${{ matrix.repo }}
           campaign_data: ${{ steps.generate.outputs.json }}
           pr_base_title: ${{ env.PR_TITLE }}
@@ -287,6 +299,9 @@ jobs:
           branch: ${{ env.BRANCH }}
           github_token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
           target_files: release-plan.yaml
+          error_occurred: ${{ steps.validate.outputs.valid != 'true' }}
+          error_message: "Validation failed: ${{ steps.validate.outputs.errors }}"
+          error_step: validate
 
   aggregate:
     needs: [select, run]

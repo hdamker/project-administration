@@ -190,10 +190,8 @@ function generateApiEntry(api: APIEntry): string {
 
       jsonPayload = {
         target_release_tag: release.release_tag,
-        target_release_type: 'none',
         meta_release: releaseTrack === 'meta-release' ? release.meta_release : null,
-        apis: release.apis.map(a => a.api_name),
-        pr_body_template: prBodyTemplate
+        apis: release.apis.map(a => a.api_name)
       };
 
       info(`Generated release-plan.yaml for ${repoName}`);
@@ -219,11 +217,9 @@ function generateApiEntry(api: APIEntry): string {
 
       jsonPayload = {
         target_release_tag: 'r1.1',
-        target_release_type: 'none',
         apis: ['example-api'],
         warning: 'no_releases',
-        warning_message: 'Repository has no releases. Update example-api with your actual API name.',
-        pr_body_template: prBodyTemplate
+        warning_message: 'Repository has no releases. Update example-api with your actual API name.'
       };
 
       info(`Generated placeholder release-plan.yaml for ${repoName}`);
