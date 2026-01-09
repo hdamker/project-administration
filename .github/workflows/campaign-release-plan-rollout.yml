@@ -259,14 +259,16 @@ jobs:
           release_plan_path: repo/release-plan.yaml
 
       - name: Log validation result
+        shell: bash
         run: |
           echo "Validation result: valid=${{ steps.validate.outputs.valid }}"
-          if [ "${{ steps.validate.outputs.valid }}" != "true" ]; then
+          if [[ "${{ steps.validate.outputs.valid }}" != "true" ]]; then
             echo "::error::Validation failed for ${{ matrix.repo }}"
             echo "Errors: ${{ steps.validate.outputs.errors }}"
           fi
-          if [ -n "${{ steps.validate.outputs.warnings }}" ] && [ "${{ steps.validate.outputs.warnings }}" != "[]" ]; then
-            echo "Warnings: ${{ steps.validate.outputs.warnings }}"
+          WARNINGS='${{ steps.validate.outputs.warnings }}'
+          if [[ -n "$WARNINGS" && "$WARNINGS" != "[]" ]]; then
+            echo "Warnings: $WARNINGS"
           fi
 
       - name: Detect changes
