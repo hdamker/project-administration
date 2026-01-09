@@ -105,14 +105,21 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.github_token }}
 
-    - name: Two-stage change detection
+    - name: Change detection
       id: change_check
       if: ${{ inputs.error_occurred != 'true' }}
       shell: bash
       working-directory: repo
       run: |
-        # Stage 1: Compare against main (stage files first to detect new files)
-        echo "Stage 1: Comparing against main..."
+        # If PR already exists, skip (no superseding)
+        if [ "${{ steps.detect.outputs.pr_exists }}" = "true" ]; then
+          echo "Existing PR found (#${{ steps.detect.outputs.pr_number }}) → skip"
+          echo "changed=false" >> $GITHUB_OUTPUT
+          echo "reason=existing_pr" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        # Compare against main (stage files first to detect new files)
         git add ${{ inputs.target_files }} 2>/dev/null || true
         if git diff --cached --quiet -- ${{ inputs.target_files }}; then
           echo "No changes vs main → noop"
@@ -120,22 +127,8 @@ runs:
           echo "reason=main_up_to_date" >> $GITHUB_OUTPUT
           exit 0
         fi
-        echo "Changes detected vs main"
 
-        # Stage 2: If PR exists, compare against PR branch
-        PR_BRANCH="${{ steps.detect.outputs.pr_branch }}"
-        if [ -n "$PR_BRANCH" ]; then
-          echo "Stage 2: Comparing against PR branch $PR_BRANCH..."
-          git fetch origin "$PR_BRANCH" 2>/dev/null || true
-          if git diff --quiet origin/"$PR_BRANCH" -- ${{ inputs.target_files }} 2>/dev/null; then
-            echo "Identical to existing PR → noop"
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "reason=duplicate_of_pr" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "Different from existing PR"
-        fi
-
+        echo "Changes detected, will create PR"
         echo "changed=true" >> $GITHUB_OUTPUT
         echo "reason=new_changes" >> $GITHUB_OUTPUT
 
@@ -195,25 +188,6 @@ runs:
         echo "pr_status=$STATUS" >> $GITHUB_OUTPUT
         echo "Determined PR status: $STATUS (reason: ${{ steps.change_check.outputs.reason }})"
 
-    - name: APPLY - Warn about outdated PR
-      if: ${{ inputs.mode == 'apply' && steps.change_check.outputs.reason == 'main_up_to_date' && steps.detect.outputs.pr_number != '' }}
-      shell: bash
-      working-directory: repo
-      run: |
-        PR_NUMBER="${{ steps.detect.outputs.pr_number }}"
-        echo "Main is up-to-date but old PR #$PR_NUMBER exists - adding warning comment"
-        gh pr comment "$PR_NUMBER" --body "$(cat <<'EOF'
-        ⚠️ **This PR appears outdated**
-
-        Main branch already contains up-to-date content. Consider closing this PR.
-
-        Detected by [workflow run ${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-        EOF
-        )"
-        echo "Warning comment added to PR #$PR_NUMBER"
-      env:
-        GH_TOKEN: ${{ inputs.github_token }}
-
     - name: APPLY - Ensure campaign label exists
       if: ${{ inputs.mode == 'apply' && steps.change_check.outputs.changed == 'true' }}
       shell: bash
@@ -261,32 +235,6 @@ runs:
           --label "${{ inputs.label_name }}")
         echo "created_pr_url=$PR_URL" >> $GITHUB_OUTPUT
         echo "Created PR: $PR_URL"
-      env:
-        GH_TOKEN: ${{ inputs.github_token }}
-
-    - name: APPLY - Mark old PR as superseded
-      if: ${{ inputs.mode == 'apply' && steps.change_check.outputs.changed == 'true' && steps.detect.outputs.pr_number != '' }}
-      shell: bash
-      working-directory: repo
-      run: |
-        OLD_PR="${{ steps.detect.outputs.pr_number }}"
-        NEW_PR_URL="${{ steps.pr_create.outputs.created_pr_url }}"
-        NEW_PR=$(echo "$NEW_PR_URL" | grep -oE '[0-9]+$')
-
-        echo "New PR #$NEW_PR created, marking old PR #$OLD_PR as superseded and converting to draft"
-
-        # Add warning comment
-        gh pr comment "$OLD_PR" --body "$(cat <<EOF
-        ⚠️ **This PR has been superseded by #${NEW_PR}**
-
-        Please review and merge the newer PR instead. This PR has been converted to draft status.
-        EOF
-        )"
-
-        # Convert to draft to prevent accidental merge
-        gh pr ready "$OLD_PR" --undo
-
-        echo "Old PR #$OLD_PR marked as draft"
       env:
         GH_TOKEN: ${{ inputs.github_token }}
 

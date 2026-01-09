@@ -1,5 +1,5 @@
 name: generate-release-plan
-description: Generate release-plan.yaml from releases-master.yaml data (status quo from last release)
+description: Generate release-plan.yaml from releases-master.yaml data using Mustache templates
 inputs:
   releases_file:
     description: Path to releases-master.yaml
@@ -10,11 +10,20 @@ inputs:
   out_file:
     description: Output path for generated release-plan.yaml
     required: true
+  templates_dir:
+    description: Path to templates directory containing Mustache templates
+    required: true
+  codeowners:
+    description: Comma-separated list of codeowners (GitHub usernames)
+    required: false
+    default: ''
 outputs:
   json:
     description: JSON data for PR body template rendering
   generated:
     description: Whether file was successfully generated (true/false)
+  pr_body_template:
+    description: Name of PR body template to use (pr-body-with-releases.mustache or pr-body-no-releases.mustache)
 runs:
   using: node20
   main: dist/index.js

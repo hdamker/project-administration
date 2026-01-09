@@ -213,8 +213,24 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
 
-      - name: Install dependencies
-        run: npm install js-yaml mustache
+      - name: Fetch CODEOWNERS
+        id: codeowners
+        shell: bash
+        run: |
+          # Fetch CODEOWNERS from target repo main branch
+          CODEOWNERS=$(gh api repos/${{ matrix.repo }}/contents/CODEOWNERS --jq '.content' 2>/dev/null | base64 -d || echo "")
+
+          # Extract usernames from first line starting with "*"
+          if [ -n "$CODEOWNERS" ]; then
+            OWNERS=$(echo "$CODEOWNERS" | grep "^\*" | head -1 | sed 's/\* //' | tr -s ' ' | sed 's/@//g' | tr ' ' ',')
+            echo "owners=$OWNERS" >> $GITHUB_OUTPUT
+            echo "Found codeowners: $OWNERS"
+          else
+            echo "owners=" >> $GITHUB_OUTPUT
+            echo "No CODEOWNERS file found"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
 
       - name: Generate release-plan.yaml
         id: generate
@@ -223,12 +239,14 @@ jobs:
           releases_file: admin/${{ env.RELEASES_FILE }}
           repo_slug: ${{ matrix.repo }}
           out_file: repo/release-plan.yaml
+          templates_dir: admin/campaigns/release-plan-rollout/templates
+          codeowners: ${{ steps.codeowners.outputs.owners }}
 
       - name: Render PR body
         id: pr_body
         uses: ./admin/actions/render-mustache
         with:
-          template: admin/campaigns/release-plan-rollout/templates/pr-body.mustache
+          template: admin/campaigns/release-plan-rollout/templates/${{ steps.generate.outputs.pr_body_template }}
           data_json: ${{ steps.generate.outputs.json }}
           out_file: /tmp/pr-body.md
 
