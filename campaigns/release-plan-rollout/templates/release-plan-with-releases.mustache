@@ -10,9 +10,12 @@ repository:
   # Options: none | independent | meta-release
   release_track: {{release_track}}
   {{#meta_release}}
-
   # Meta-release participation (update for next cycle when planning)
   meta_release: {{meta_release}}
+  {{/meta_release}}
+  {{^meta_release}}
+  # Uncomment and set when planning a meta-release participation:
+  # meta_release: Fall26
   {{/meta_release}}
 
   # Current/last release tag — update for your next release:
