@@ -1,5 +1,5 @@
 metadata:
-  last_updated: '2026-01-08T19:05:10.449Z'
+  last_updated: '2026-01-11T14:32:11.163Z'
   workflow_version: 3.0.0
   schema_version: 2.0.0
 releases:
@@ -1276,6 +1276,23 @@ releases:
         api_version: 0.2.0
         api_title: KYC Tenure
         commonalities: '0.6'
+  - repository: test-repo-w-linting
+    release_tag: r1.2
+    release_date: '2025-09-07T22:24:53Z'
+    meta_release: None (Sandbox)
+    github_url: https://github.com/camaraproject/test-repo-w-linting/releases/tag/r1.2
+    release_type: public-release
+    apis:
+      - api_name: test-service-wrapped
+        file_name: test-service-wrapped
+        api_version: 0.2.1
+        api_title: Test Service Wrapped
+        commonalities: '0.6'
+      - api_name: test-service
+        file_name: test-service
+        api_version: 1.0.0
+        api_title: Test Service
+        commonalities: '0.6'
   - repository: TrafficInfluence
     release_tag: r1.3
     release_date: '2025-09-16T15:12:23Z'
@@ -1585,6 +1602,10 @@ repositories:
   - repository: Tenure
     github_url: https://github.com/camaraproject/Tenure
     latest_public_release: r2.2
+    newest_pre_release: null
+  - repository: test-repo-w-linting
+    github_url: https://github.com/camaraproject/test-repo-w-linting
+    latest_public_release: r1.2
     newest_pre_release: null
   - repository: TrafficInfluence
     github_url: https://github.com/camaraproject/TrafficInfluence
