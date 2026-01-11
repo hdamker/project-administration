@@ -1,5 +1,5 @@
 metadata:
-  last_updated: '2026-01-11T14:32:11.163Z'
+  last_updated: '2026-01-11T14:47:06.644Z'
   workflow_version: 3.0.0
   schema_version: 2.0.0
 releases:
@@ -1606,6 +1606,10 @@ repositories:
   - repository: test-repo-w-linting
     github_url: https://github.com/camaraproject/test-repo-w-linting
     latest_public_release: r1.2
+    newest_pre_release: null
+  - repository: test-repo-wo-linting
+    github_url: https://github.com/camaraproject/test-repo-wo-linting
+    latest_public_release: null
     newest_pre_release: null
   - repository: TrafficInfluence
     github_url: https://github.com/camaraproject/TrafficInfluence
