@@ -310,10 +310,23 @@ jobs:
     if: ${{ always() && needs.select.outputs.repos != '[]' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Download all plan artifacts
+      - name: Determine artifact pattern
+        id: pattern
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "pattern=plan-*" >> $GITHUB_OUTPUT
+            echo "mode=plan (dry run)" >> $GITHUB_OUTPUT
+            echo "base_name=plan" >> $GITHUB_OUTPUT
+          else
+            echo "pattern=results-*" >> $GITHUB_OUTPUT
+            echo "mode=apply" >> $GITHUB_OUTPUT
+            echo "base_name=results" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: plan-*
+          pattern: ${{ steps.pattern.outputs.pattern }}
           path: plans
 
       - name: Merge plan files
@@ -323,12 +336,16 @@ jobs:
             const fs = require('fs');
             const path = require('path');
 
+            // Mode-aware configuration
+            const mode = '${{ steps.pattern.outputs.mode }}';
+            const baseName = '${{ steps.pattern.outputs.base_name }}';
+
             // Header
             const header = [
-              '# Release Plan Rollout Campaign - Plan Summary',
+              '# Release Plan Rollout Campaign - Summary',
               '',
               `Generated: ${new Date().toISOString()}`,
-              'Mode: plan (dry run)',
+              `Mode: ${mode}`,
               `Settings: include_wip_repos=${{ inputs.include_wip_repos }}, include_new_repos=${{ inputs.include_new_repos }}`,
               ''
             ];
@@ -339,8 +356,8 @@ jobs:
             const plansDir = 'plans';
             if (!fs.existsSync(plansDir)) {
               console.log('No plans directory found');
-              fs.writeFileSync('plan.md', header.join('\n') + '\n## Summary\n\n**Total repositories processed:** 0\n');
-              fs.writeFileSync('plan.jsonl', '');
+              fs.writeFileSync(`${baseName}.md`, header.join('\n') + '\n## Summary\n\n**Total repositories processed:** 0\n');
+              fs.writeFileSync(`${baseName}.jsonl`, '');
               return;
             }
 
@@ -353,8 +370,8 @@ jobs:
               const stat = fs.statSync(dir);
               if (!stat.isDirectory()) continue;
 
-              const mdFile = path.join(dir, 'plan.md');
-              const jsonlFile = path.join(dir, 'plan.jsonl');
+              const mdFile = path.join(dir, `${baseName}.md`);
+              const jsonlFile = path.join(dir, `${baseName}.jsonl`);
 
               if (fs.existsSync(mdFile)) {
                 md.push(fs.readFileSync(mdFile, 'utf8'));
@@ -385,19 +402,19 @@ jobs:
             }
 
             const finalMd = header.join('\n') + md.join('\n') + '\n' + summary.join('\n') + '\n';
-            fs.writeFileSync('plan.md', finalMd);
-            fs.writeFileSync('plan.jsonl', jsonlContent);
+            fs.writeFileSync(`${baseName}.md`, finalMd);
+            fs.writeFileSync(`${baseName}.jsonl`, jsonlContent);
 
-      - name: Upload merged plan
+      - name: Upload merged results
         uses: actions/upload-artifact@v4
         with:
-          name: campaign-plan
+          name: campaign-${{ steps.pattern.outputs.base_name }}
           path: |
-            plan.md
-            plan.jsonl
+            ${{ steps.pattern.outputs.base_name }}.md
+            ${{ steps.pattern.outputs.base_name }}.jsonl
 
       - name: Add workflow summary
         run: |
-          echo "## Release Plan Rollout Campaign - Plan" >> $GITHUB_STEP_SUMMARY
+          echo "## Release Plan Rollout Campaign - Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat plan.md >> $GITHUB_STEP_SUMMARY
+          cat ${{ steps.pattern.outputs.base_name }}.md >> $GITHUB_STEP_SUMMARY
