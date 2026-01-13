@@ -46,14 +46,6 @@ inputs:
     description: 'Files to track for changes and commit (space-separated)'
     required: false
     default: 'README.md'
-  git_user_name:
-    description: 'Git commit author name'
-    required: false
-    default: 'github-actions[bot]'
-  git_user_email:
-    description: 'Git commit author email'
-    required: false
-    default: 'github-actions[bot]@users.noreply.github.com'
   label_name:
     description: 'GitHub label for campaign PRs'
     required: false
@@ -212,13 +204,29 @@ runs:
       shell: bash
       working-directory: repo
       run: |
-        git config user.name "${{ inputs.git_user_name }}"
-        git config user.email "${{ inputs.git_user_email }}"
+        # Derive git user from token identity
+        if ! TOKEN_INFO=$(gh api user --jq '{login: .login, id: .id}' 2>&1); then
+          echo "::error::Failed to get token identity: $TOKEN_INFO"
+          exit 1
+        fi
+        TOKEN_USER=$(echo "$TOKEN_INFO" | jq -r '.login')
+        TOKEN_ID=$(echo "$TOKEN_INFO" | jq -r '.id')
+        if [ -z "$TOKEN_USER" ] || [ "$TOKEN_USER" = "null" ]; then
+          echo "::error::Could not determine token user identity"
+          exit 1
+        fi
+        GIT_USER_NAME="${TOKEN_USER}"
+        GIT_USER_EMAIL="${TOKEN_ID}+${TOKEN_USER}@users.noreply.github.com"
+        echo "Committing as: $GIT_USER_NAME <$GIT_USER_EMAIL>"
+        git config user.name "$GIT_USER_NAME"
+        git config user.email "$GIT_USER_EMAIL"
         git checkout -B "${{ inputs.branch }}"
         git add ${{ inputs.target_files }}
         git commit -m "${{ steps.pr_title.outputs.pr_title }}" || echo "No changes to commit"
         git push origin "${{ inputs.branch }}"
         echo "push_succeeded=true" >> $GITHUB_OUTPUT
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
 
     - name: APPLY - Create PR
       id: pr_create
