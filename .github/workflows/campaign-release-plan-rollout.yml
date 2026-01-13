@@ -307,7 +307,7 @@ jobs:
 
   aggregate:
     needs: [select, run]
-    if: ${{ always() && inputs.dry_run && needs.select.outputs.repos != '[]' }}
+    if: ${{ always() && needs.select.outputs.repos != '[]' }}
     runs-on: ubuntu-latest
     steps:
       - name: Download all plan artifacts
