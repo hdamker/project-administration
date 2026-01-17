@@ -206,9 +206,9 @@ function generateApiEntry(api: APIEntry): string {
       // Render header with Mustache (no dynamic data needed)
       yamlContent = Mustache.render(template, {});
 
-      // Append example API entry
+      // Append placeholder API entry
       const apiEntry: APIEntry = {
-        api_name: 'example-api',
+        api_name: 'placeholder-entry',
         target_api_version: '0.1.0',
         target_api_status: 'draft',
         main_contacts: codeowners.length > 0 ? codeowners : ['CODEOWNER']
@@ -217,9 +217,9 @@ function generateApiEntry(api: APIEntry): string {
 
       jsonPayload = {
         target_release_tag: 'r1.1',
-        apis: ['example-api'],
+        apis: ['placeholder-entry'],
         warning: 'no_releases',
-        warning_message: 'Repository has no releases. Update example-api with your actual API name.'
+        warning_message: 'Repository has no releases. Replace placeholder-entry with your actual API name.'
       };
 
       info(`Generated placeholder release-plan.yaml for ${repoName}`);
