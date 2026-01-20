@@ -1,5 +1,5 @@
 metadata:
-  last_updated: '2026-01-08T19:05:10.449Z'
+  last_updated: '2026-01-20T22:04:05.791Z'
   workflow_version: 3.0.0
   schema_version: 2.0.0
 releases:
@@ -1466,6 +1466,10 @@ repositories:
     github_url: https://github.com/camaraproject/HomeDevicesQoD
     latest_public_release: r1.2
     newest_pre_release: null
+  - repository: InHomeDeviceManagement
+    github_url: https://github.com/camaraproject/InHomeDeviceManagement
+    latest_public_release: null
+    newest_pre_release: null
   - repository: IoTDeviceManagement
     github_url: https://github.com/camaraproject/IoTDeviceManagement
     latest_public_release: null
@@ -1549,6 +1553,10 @@ repositories:
   - repository: QualityOnDemand
     github_url: https://github.com/camaraproject/QualityOnDemand
     latest_public_release: r3.2
+    newest_pre_release: null
+  - repository: RainfallIntensity
+    github_url: https://github.com/camaraproject/RainfallIntensity
+    latest_public_release: null
     newest_pre_release: null
   - repository: RegionDeviceCount
     github_url: https://github.com/camaraproject/RegionDeviceCount
