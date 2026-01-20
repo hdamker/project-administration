@@ -148,7 +148,7 @@ runs:
         fi
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ inputs.mode == 'plan' && format('plan-{0}-{1}', github.run_id, strategy.job-index) || format('results-{0}-{1}', github.run_id, strategy.job-index) }}
         path: |
