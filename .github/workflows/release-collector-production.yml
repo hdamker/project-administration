@@ -81,7 +81,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           # Use ref if provided, else current branch if allow_branch, else main
           ref: ${{ github.event.inputs.ref || (github.event.inputs.allow_branch == 'true' && github.ref_name) || 'main' }}
@@ -222,12 +222,12 @@ jobs:
 
     steps:
       - name: Checkout at deploy ref
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ needs.validate-deployment.outputs.deploy_ref }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
@@ -277,7 +277,7 @@ jobs:
           cp workflows/release-collector/production-index.html viewers/production-index.html
 
       - name: Upload viewers artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: production-viewers-${{ github.run_number }}
           path: viewers/
@@ -300,18 +300,18 @@ jobs:
 
     steps:
       - name: Checkout source repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ needs.validate-deployment.outputs.deploy_ref }}
 
       - name: Download viewers artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: production-viewers-${{ github.run_number }}
           path: artifact
 
       - name: Checkout production repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ env.PRODUCTION_REPO }}
           path: production-site
@@ -401,7 +401,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ needs.validate-deployment.outputs.deploy_ref }}
 
@@ -653,7 +653,7 @@ jobs:
 
       - name: Upload report artifact
         if: steps.check.outputs.has_artifacts == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-metadata-upload-report-${{ github.run_number }}
           path: |
