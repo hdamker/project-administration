@@ -241,11 +241,14 @@ jobs:
 
           echo "Analysis complete for group"
 
+      - name: Prepare analysis results for upload
+        run: cp temp/analysis-results.json temp/analysis-results-${{ strategy.job-index }}.json
+
       - name: Upload analysis results
         uses: actions/upload-artifact@v6
         with:
           name: analysis-group-${{ strategy.job-index }}
-          path: temp/analysis-results.json
+          path: temp/analysis-results-${{ strategy.job-index }}.json
 
   # =========================================================================================
   # Phase 3: Data Processing
@@ -285,7 +288,8 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           pattern: analysis-group-*
-          path: temp/
+          path: temp/analysis-downloads/
+          merge-multiple: true
 
       - name: Combine and process data
         run: |
@@ -296,7 +300,7 @@ jobs:
 
           # Combine all analysis results
           echo '[]' > temp/combined-analysis.json
-          for file in temp/analysis-group-*/analysis-results.json; do
+          for file in temp/analysis-downloads/analysis-results-*.json; do
             if [[ -f "$file" ]]; then
               jq -s '.[0] + .[1]' temp/combined-analysis.json "$file" > temp/combined-updated.json
               mv temp/combined-updated.json temp/combined-analysis.json
