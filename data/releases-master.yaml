@@ -1,5 +1,5 @@
 metadata:
-  last_updated: '2026-01-14T00:21:05.523Z'
+  last_updated: '2026-02-10T10:42:34.028Z'
   workflow_version: 3.0.0
   schema_version: 2.0.0
 releases:
@@ -272,6 +272,18 @@ releases:
       - api_name: consent-info
         file_name: consent-info
         api_version: 0.1.0
+        api_title: Consent Info
+        commonalities: '0.6'
+  - repository: ConsentInfo
+    release_tag: r2.1
+    release_date: '2026-02-05T10:25:58Z'
+    meta_release: None (Sandbox)
+    github_url: https://github.com/camaraproject/ConsentInfo/releases/tag/r2.1
+    release_type: pre-release-rc
+    apis:
+      - api_name: consent-info
+        file_name: consent-info
+        api_version: 0.2.0-rc.1
         api_title: Consent Info
         commonalities: '0.6'
   - repository: CustomerInsights
@@ -1393,7 +1405,7 @@ repositories:
   - repository: ConsentInfo
     github_url: https://github.com/camaraproject/ConsentInfo
     latest_public_release: r1.2
-    newest_pre_release: null
+    newest_pre_release: r2.1
   - repository: ConsentManagement
     github_url: https://github.com/camaraproject/ConsentManagement
     latest_public_release: null
