@@ -149,9 +149,10 @@ function computeRepoReleaseRefs(repoName, releases) {
   const latestPublic = publicReleases[0]?.release_tag || null;
   const latestPublicDate = publicReleases[0]?.release_date || null;
 
-  // Find newest pre-release (only if newer than latest public)
+  // Find newest non-superseded pre-release (only if newer than latest public)
   const preReleases = repoReleases
-    .filter(r => r.release_type === 'pre-release-alpha' || r.release_type === 'pre-release-rc')
+    .filter(r => (r.release_type === 'pre-release-alpha' || r.release_type === 'pre-release-rc')
+                 && !r.superseded)
     .sort((a, b) => new Date(b.release_date) - new Date(a.release_date));
 
   let newestPreRelease = null;
@@ -176,9 +177,9 @@ function computeRepoReleaseRefs(repoName, releases) {
 function updateMaster(master, analysisResults, mode, mappings) {
   let releasesAdded = 0;
   let releasesUpdated = 0;
-  let releasesFiltered = 0;
+  let releasesSuperseded = 0;
 
-  // First pass: add all releases to get complete picture for filtering
+  // First pass: add all releases to get complete picture for superseded detection
   const tempReleases = [...master.releases];
 
   for (const result of analysisResults) {
@@ -203,18 +204,11 @@ function updateMaster(master, analysisResults, mode, mappings) {
 
   // Second pass: process results with full context
   for (const result of analysisResults) {
-    // Filter pre-releases that are superseded by a public release in same cycle
+    // Detect superseded pre-releases (mark instead of removing)
+    let superseded = false;
     if (result.is_prerelease && !shouldIncludePrerelease(result, tempReleases)) {
-      console.log(`Filtered (superseded): ${result.repository} ${result.release_tag}`);
-      // Remove from master if it existed
-      const idx = master.releases.findIndex(r =>
-        r.repository === result.repository && r.release_tag === result.release_tag
-      );
-      if (idx >= 0) {
-        master.releases.splice(idx, 1);
-      }
-      releasesFiltered++;
-      continue;
+      superseded = true;
+      releasesSuperseded++;
     }
 
     const metaRelease = getMetaRelease(result.repository, result.release_tag, mappings);
@@ -234,6 +228,7 @@ function updateMaster(master, analysisResults, mode, mappings) {
       meta_release: metaRelease,
       github_url: result.github_url,
       release_type: releaseType,
+      superseded: superseded || undefined,  // only present when true
       apis: result.apis.map(api => ({
         api_name: api.api_name,        // Raw API name from server URL
         file_name: api.file_name,      // Raw filename for reference
@@ -250,12 +245,35 @@ function updateMaster(master, analysisResults, mode, mappings) {
       // Update existing release
       master.releases[existingIndex] = releaseEntry;
       releasesUpdated++;
-      console.log(`Updated: ${result.repository} ${result.release_tag} (${releaseType})`);
+      console.log(`Updated: ${result.repository} ${result.release_tag} (${releaseType}${superseded ? ', superseded' : ''})`);
     } else {
       // Add new release
       master.releases.push(releaseEntry);
       releasesAdded++;
-      console.log(`Added: ${result.repository} ${result.release_tag} (${releaseType})`);
+      console.log(`Added: ${result.repository} ${result.release_tag} (${releaseType}${superseded ? ', superseded' : ''})`);
+    }
+  }
+
+  // Retroactive superseded marking: when a new public release is added,
+  // existing pre-releases in the same cycle become superseded.
+  // Note: is_prerelease is not persisted in master, so use release_type.
+  let retroactiveCount = 0;
+  for (const release of master.releases) {
+    const isPreRelease = release.release_type?.startsWith('pre-release-');
+    if (isPreRelease && !release.superseded) {
+      const cycle = release.release_tag.match(/^(r\d+)\./)?.[1];
+      if (cycle) {
+        const hasPublicRelease = master.releases.some(r =>
+          r.repository === release.repository &&
+          r.release_tag.startsWith(cycle + '.') &&
+          r.release_type && !r.release_type.startsWith('pre-release-')
+        );
+        if (hasPublicRelease) {
+          release.superseded = true;
+          retroactiveCount++;
+          console.log(`Retroactively superseded: ${release.repository} ${release.release_tag}`);
+        }
+      }
     }
   }
 
@@ -277,8 +295,8 @@ function updateMaster(master, analysisResults, mode, mappings) {
   });
 
   // Track whether content changed
-  const hasReleaseChanges = releasesAdded > 0 || releasesUpdated > 0;
-  console.log(`\nRelease changes: ${releasesAdded} added, ${releasesUpdated} updated, ${releasesFiltered} filtered`);
+  const hasReleaseChanges = releasesAdded > 0 || releasesUpdated > 0 || retroactiveCount > 0;
+  console.log(`\nRelease changes: ${releasesAdded} added, ${releasesUpdated} updated, ${releasesSuperseded} superseded (new), ${retroactiveCount} superseded (retroactive)`);
 
   return { master, hasReleaseChanges };
 }
