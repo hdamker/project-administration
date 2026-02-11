@@ -76,7 +76,7 @@ For WIP and new repositories, the campaign generates a **placeholder** with defa
 
 ```yaml
 repository:
-  release_track: "none"
+  release_track: "independent"
   target_release_tag: "r1.1"
   target_release_type: "none"
 apis: []
