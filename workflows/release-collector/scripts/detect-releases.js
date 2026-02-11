@@ -152,7 +152,6 @@ function findNewReleases(repoReleases, storedReleases, mode) {
   );
 
   const newReleases = [];
-  let skippedSuperseded = 0;
 
   for (const releaseInfo of repoReleases) {
     const key = `${releaseInfo.repository}:${releaseInfo.release_tag}`;
@@ -160,20 +159,14 @@ function findNewReleases(repoReleases, storedReleases, mode) {
     // Skip if already in master
     if (storedTags.has(key)) continue;
 
-    // In incremental mode, skip superseded pre-releases
+    // Log superseded pre-releases (but still include them for metadata generation)
     if (mode === 'incremental' && releaseInfo.is_prerelease) {
       if (isSupersededPrerelease(releaseInfo, storedReleases)) {
-        console.error(`  Skipped (superseded): ${releaseInfo.repository} ${releaseInfo.release_tag}`);
-        skippedSuperseded++;
-        continue;
+        console.error(`  New (superseded): ${releaseInfo.repository} ${releaseInfo.release_tag}`);
       }
     }
 
     newReleases.push(releaseInfo);
-  }
-
-  if (skippedSuperseded > 0) {
-    console.error(`Skipped ${skippedSuperseded} superseded pre-releases`);
   }
 
   return newReleases;

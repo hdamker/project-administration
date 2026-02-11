@@ -125,8 +125,15 @@ async function main() {
   // Apply runtime enrichment to master data (without specific meta-release)
   const enrichedMaster = landscape ? enrichReleaseData(master, landscape) : master;
 
+  // Filter out superseded releases (kept in master only for metadata generation)
+  const activeReleases = enrichedMaster.releases.filter(r => !r.superseded);
+  const supersededCount = enrichedMaster.releases.length - activeReleases.length;
+  if (supersededCount > 0) {
+    console.log(`\nFiltered ${supersededCount} superseded pre-releases from reports`);
+  }
+
   // Group by meta-release
-  const grouped = groupByMetaRelease(enrichedMaster.releases);
+  const grouped = groupByMetaRelease(activeReleases);
   console.log(`\nFound ${Object.keys(grouped).length} meta-releases:`);
   for (const [mr, releases] of Object.entries(grouped)) {
     console.log(`  - ${mr}: ${releases.length} releases`);
@@ -135,8 +142,8 @@ async function main() {
   // Generate reports
   console.log('\nGenerating enriched reports...');
 
-  // 1. Generate ALL releases report (everything)
-  const allReport = generateEnrichedReport('All', enrichedMaster.releases, landscape);
+  // 1. Generate ALL releases report (active releases only)
+  const allReport = generateEnrichedReport('All', activeReleases, landscape);
   const allFilepath = path.join(REPORTS_PATH, 'all-releases.json');
   fs.writeFileSync(allFilepath, JSON.stringify(allReport, null, 2));
   console.log(`  ✓ all-releases.json - ${allReport.statistics.repositories_count} repos, ${allReport.statistics.apis_count} APIs`);
