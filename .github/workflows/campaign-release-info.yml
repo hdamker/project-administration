@@ -26,6 +26,11 @@ on:
         required: true
         type: boolean
         default: true
+      include:
+        description: 'Comma-separated list of repository names to process (e.g., "QualityOnDemand, DeviceLocation"). Empty = all repos.'
+        required: false
+        type: string
+        default: ''
 
 concurrency:
   group: campaign-release-info-${{ github.ref }}
@@ -35,7 +40,7 @@ env:
   MODE: ${{ inputs.dry_run && 'plan' || 'apply' }}
   ORG: camaraproject
   RELEASES_FILE: data/releases-master.yaml
-  INCLUDE: ""
+  INCLUDE: ${{ inputs.include }}
   BRANCH: bulk/release-info-sync-${{ github.run_id }}
   PR_TITLE: "[bulk] Sync Release Information section"
   PR_BODY: "Automated update of README Release Information section"
@@ -51,7 +56,7 @@ jobs:
       repos: ${{ steps.sel.outputs.repos }}
     steps:
       - name: Checkout admin repo (self)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: admin
 
@@ -60,7 +65,7 @@ jobs:
 
       - id: sel
         name: Build repo list (from releases-master.yaml + include filter)
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
@@ -85,12 +90,12 @@ jobs:
 
     steps:
       - name: Checkout admin repo (self)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: admin
 
       - name: Checkout target repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ matrix.repo }}
           path: repo
@@ -106,7 +111,7 @@ jobs:
 
       - name: Format API lines
         id: format
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const data = JSON.parse(`${{ steps.data.outputs.json }}`);
@@ -167,7 +172,7 @@ jobs:
       - name: Detect changes with git diff
         id: diff
         if: steps.ensure.outcome == 'success'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { execSync } = require('child_process');
@@ -214,7 +219,7 @@ jobs:
       - name: Capture error state
         id: error
         if: always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const ensureOutcome = '${{ steps.ensure.outcome }}';
@@ -264,13 +269,13 @@ jobs:
             echo "dir_name=results" >> $GITHUB_OUTPUT
           fi
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           pattern: ${{ steps.pattern.outputs.pattern }}
           path: ${{ steps.pattern.outputs.dir_name }}
 
       - name: Merge artifacts
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
@@ -298,7 +303,7 @@ jobs:
             }
             fs.writeFileSync(`${outputName}.md`, md.join('\n'));
             fs.writeFileSync(`${outputName}.jsonl`, lines.join(''));
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.pattern.outputs.output_name }}
           path: |
