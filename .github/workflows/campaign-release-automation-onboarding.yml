@@ -1,0 +1,490 @@
+# =========================================================================================
+# CAMARA Project - Campaign: Release Automation Onboarding
+#
+# Onboards API repositories to the CAMARA release automation by adding:
+# - Caller workflow (.github/workflows/release-automation.yml)
+# - CODEOWNERS entry for /CHANGELOG/ directory
+# - CHANGELOG directory structure (CHANGELOG/README.md + forward-reference note)
+#
+# Creates PRs for repositories that have release-plan.yaml but no caller workflow yet.
+#
+# PREREQUISITES:
+# - Secret BULK_CAMPAIGN_TOKEN: Fine-grained PAT with the following permissions:
+#   - Contents: Read and write (create branches, commit changes)
+#   - Pull requests: Read and write (create PRs in target repos)
+#
+# NOTE: Repository rulesets require admin-level access and are applied separately
+# via the apply-release-rulesets.sh script.
+#
+# DOCUMENTATION:
+# See release_automation/docs/repository-setup.md in camaraproject/tooling
+# =========================================================================================
+
+name: Campaign - Release Automation Onboarding
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Mode: plan (dry run) or apply (create PRs)'
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+        default: plan
+      include:
+        description: 'Comma-separated list of repository names (e.g., "ReleaseTest, QualityOnDemand"). Empty = all eligible.'
+        required: false
+        type: string
+        default: ''
+      caller_ref:
+        description: 'Ref for the caller workflow uses: line (branch or tag in camaraproject/tooling)'
+        required: false
+        type: string
+        default: 'release-automation'
+
+concurrency:
+  group: campaign-release-automation-onboarding-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  MODE: ${{ inputs.mode }}
+  ORG: camaraproject
+  INCLUDE: ${{ inputs.include }}
+  CALLER_REF: ${{ inputs.caller_ref }}
+  BRANCH: bulk/release-automation-onboarding-${{ github.run_id }}
+  PR_TITLE: "[bulk] Sync release automation configuration"
+  # Source location of the caller workflow template in camaraproject/tooling
+  CALLER_TEMPLATE_PATH: release_automation/workflows/release-automation-caller.yml
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 1: Select eligible repositories
+  # Criteria: has release-plan.yaml on main (= participates in CAMARA releases)
+  # Idempotent: per-repo change detection handles already-onboarded repos
+  # ─────────────────────────────────────────────────────────────────────────────
+  select:
+    runs-on: ubuntu-latest
+    outputs:
+      repos: ${{ steps.sel.outputs.repos }}
+    steps:
+      - id: sel
+        name: Build repo list (has release-plan.yaml on main)
+        uses: actions/github-script@v8
+        env:
+          GH_TOKEN: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const org = process.env.ORG;
+            const include = (process.env.INCLUDE || '').split(',').map(s => s.trim()).filter(Boolean);
+
+            // List all repositories in the organization
+            let repos;
+            try {
+              const result = execSync(
+                `gh api --paginate "orgs/${org}/repos" --jq '.[].name'`,
+                { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 }
+              );
+              repos = result.trim().split('\n').filter(Boolean);
+            } catch (e) {
+              core.setFailed(`Failed to list org repos: ${e.message}`);
+              return;
+            }
+
+            console.log(`Found ${repos.length} repositories in ${org}`);
+
+            // Apply include filter
+            if (include.length) {
+              repos = repos.filter(r => include.includes(r));
+              console.log(`Include filter applied: ${include.join(', ')} → ${repos.length} repos`);
+            }
+
+            const eligible = [];
+            const counts = { noReleasePlan: 0, eligible: 0 };
+
+            for (const repo of repos) {
+              const slug = `${org}/${repo}`;
+
+              // Check if release-plan.yaml exists on main
+              try {
+                execSync(
+                  `gh api repos/${slug}/contents/release-plan.yaml`,
+                  { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
+                );
+              } catch (e) {
+                counts.noReleasePlan++;
+                continue;
+              }
+
+              eligible.push(slug);
+              counts.eligible++;
+              console.log(`✓ ${repo}: Eligible (has release-plan.yaml)`);
+            }
+
+            console.log(`\n=== Summary ===`);
+            console.log(`Eligible: ${counts.eligible}`);
+            console.log(`No release-plan.yaml: ${counts.noReleasePlan}`);
+
+            core.setOutput('repos', JSON.stringify(eligible));
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 2: Per-repo onboarding (matrix)
+  # Adds caller workflow, CODEOWNERS entry, CHANGELOG structure
+  # ─────────────────────────────────────────────────────────────────────────────
+  run:
+    needs: select
+    if: ${{ needs.select.outputs.repos != '[]' }}
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ env.MODE }}
+    strategy:
+      fail-fast: false
+      matrix:
+        repo: ${{ fromJson(needs.select.outputs.repos) }}
+
+    steps:
+      - name: Checkout admin repo (self)
+        uses: actions/checkout@v6
+        with:
+          path: admin
+
+      - name: Checkout target repo
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ matrix.repo }}
+          path: repo
+          fetch-depth: 0
+          token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+
+      - name: Fetch caller workflow template from tooling
+        id: fetch_caller
+        shell: bash
+        run: |
+          CALLER_CONTENT=$(gh api \
+            "repos/${{ env.ORG }}/tooling/contents/${{ env.CALLER_TEMPLATE_PATH }}?ref=${{ env.CALLER_REF }}" \
+            --jq '.content' | base64 -d)
+
+          if [ -z "$CALLER_CONTENT" ]; then
+            echo "::error::Failed to fetch caller workflow template from tooling@${{ env.CALLER_REF }}"
+            echo "error=true" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Write to target location
+          mkdir -p repo/.github/workflows
+          echo "$CALLER_CONTENT" > repo/.github/workflows/release-automation.yml
+          echo "Fetched caller workflow template ($(wc -l < repo/.github/workflows/release-automation.yml) lines)"
+
+          # Verify the uses: line references the correct ref
+          USES_LINE=$(grep 'uses:.*release-automation-reusable' repo/.github/workflows/release-automation.yml || true)
+          echo "Uses line: $USES_LINE"
+        env:
+          GH_TOKEN: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+
+      - name: Update CODEOWNERS
+        id: codeowners
+        shell: bash
+        run: |
+          CODEOWNERS_FILE="repo/CODEOWNERS"
+          WARNINGS=""
+
+          if [ ! -f "$CODEOWNERS_FILE" ]; then
+            echo "::warning::CODEOWNERS file does not exist in ${{ matrix.repo }}"
+            WARNINGS="CODEOWNERS file missing"
+            echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
+            echo "changed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check if /CHANGELOG/ line already exists
+          if grep -q "^/CHANGELOG/ " "$CODEOWNERS_FILE"; then
+            echo "CODEOWNERS already has /CHANGELOG/ entry"
+            echo "changed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Find the right insertion point: after existing /CHANGELOG.md or /CHANGELOG.MD lines
+          # If those don't exist, append at end
+          if grep -q "^/CHANGELOG\.\(md\|MD\) " "$CODEOWNERS_FILE"; then
+            # Insert after the last /CHANGELOG.md or /CHANGELOG.MD line
+            # Use awk to insert after the last matching line
+            awk '
+              /^\/CHANGELOG\.(md|MD) / { last_match = NR; lines[NR] = $0; next }
+              { lines[NR] = $0 }
+              END {
+                for (i = 1; i <= NR; i++) {
+                  print lines[i]
+                  if (i == last_match) {
+                    print "/CHANGELOG/ @camaraproject/release-management_reviewers"
+                  }
+                }
+              }
+            ' "$CODEOWNERS_FILE" > "${CODEOWNERS_FILE}.tmp"
+            mv "${CODEOWNERS_FILE}.tmp" "$CODEOWNERS_FILE"
+            echo "Added /CHANGELOG/ entry after existing CHANGELOG lines"
+          else
+            # Append at end of file
+            echo "" >> "$CODEOWNERS_FILE"
+            echo "# Release Management reviewers for per-cycle changelog files" >> "$CODEOWNERS_FILE"
+            echo "/CHANGELOG/ @camaraproject/release-management_reviewers" >> "$CODEOWNERS_FILE"
+            echo "Added /CHANGELOG/ entry at end of file"
+          fi
+
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
+
+      - name: Create CHANGELOG directory structure
+        id: changelog
+        shell: bash
+        run: |
+          TEMPLATES="admin/campaigns/release-automation-onboarding/templates"
+          CHANGELOG_DIR="repo/CHANGELOG"
+          CHANGELOG_ROOT="repo/CHANGELOG.md"
+          CHANGES_MADE="false"
+
+          # Create CHANGELOG/README.md from template if not present
+          if [ ! -f "$CHANGELOG_DIR/README.md" ]; then
+            mkdir -p "$CHANGELOG_DIR"
+            cp "$TEMPLATES/changelog-readme.md" "$CHANGELOG_DIR/README.md"
+            echo "Created CHANGELOG/README.md"
+            CHANGES_MADE="true"
+          else
+            echo "CHANGELOG/README.md already exists"
+          fi
+
+          # Add forward-reference note to root CHANGELOG.md if missing
+          if [ -f "$CHANGELOG_ROOT" ]; then
+            if ! grep -q "CHANGELOG/" "$CHANGELOG_ROOT"; then
+              # Prepend the forward-reference note from template
+              TEMP_FILE=$(mktemp)
+              cat "$TEMPLATES/changelog-forward-reference.md" "$CHANGELOG_ROOT" > "$TEMP_FILE"
+              mv "$TEMP_FILE" "$CHANGELOG_ROOT"
+              echo "Added forward-reference note to root CHANGELOG.md"
+              CHANGES_MADE="true"
+            else
+              echo "Root CHANGELOG.md already has forward-reference"
+            fi
+          else
+            echo "No root CHANGELOG.md found (will be created by first release)"
+          fi
+
+          echo "changed=$CHANGES_MADE" >> $GITHUB_OUTPUT
+
+      - name: Check README delimiters
+        id: readme_check
+        shell: bash
+        run: |
+          README="repo/README.md"
+          if [ -f "$README" ]; then
+            if grep -q "CAMARA:RELEASE-INFO:START" "$README"; then
+              echo "warning=" >> $GITHUB_OUTPUT
+            else
+              echo "::warning::README.md in ${{ matrix.repo }} missing CAMARA:RELEASE-INFO delimiters"
+              echo "warning=README missing CAMARA:RELEASE-INFO delimiters" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "warning=No README.md found" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Detect changes
+        id: changes
+        shell: bash
+        working-directory: repo
+        run: |
+          git add .github/workflows/release-automation.yml CODEOWNERS CHANGELOG.md CHANGELOG/README.md 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Changes detected:"
+            git diff --cached --name-only
+          fi
+
+      - name: Build campaign data JSON
+        id: campaign_data
+        shell: bash
+        run: |
+          REPO_NAME=$(echo "${{ matrix.repo }}" | cut -d'/' -f2)
+          CODEOWNERS_WARNING="${{ steps.codeowners.outputs.warnings }}"
+          README_WARNING="${{ steps.readme_check.outputs.warning }}"
+
+          # Combine warnings
+          WARNINGS=""
+          if [ -n "$CODEOWNERS_WARNING" ]; then
+            WARNINGS="$CODEOWNERS_WARNING"
+          fi
+          if [ -n "$README_WARNING" ]; then
+            if [ -n "$WARNINGS" ]; then
+              WARNINGS="$WARNINGS; $README_WARNING"
+            else
+              WARNINGS="$README_WARNING"
+            fi
+          fi
+
+          # Determine status descriptions for PR body
+          if [ "${{ steps.codeowners.outputs.changed }}" = "true" ]; then
+            CODEOWNERS_STATUS="Added \`/CHANGELOG/\` entry"
+          else
+            CODEOWNERS_STATUS="No changes needed (already present or file missing)"
+          fi
+
+          if [ "${{ steps.changelog.outputs.changed }}" = "true" ]; then
+            CHANGELOG_ROOT_STATUS="Added forward-reference note"
+            CHANGELOG_DIR_STATUS="Created index file"
+          else
+            CHANGELOG_ROOT_STATUS="No changes needed"
+            CHANGELOG_DIR_STATUS="No changes needed (already present)"
+          fi
+
+          HAS_WARNINGS="false"
+          if [ -n "$WARNINGS" ]; then
+            HAS_WARNINGS="true"
+          fi
+
+          JSON=$(jq -n \
+            --arg repo "${{ matrix.repo }}" \
+            --arg name "$REPO_NAME" \
+            --arg org "${{ env.ORG }}" \
+            --arg caller_ref "${{ env.CALLER_REF }}" \
+            --arg codeowners_status "$CODEOWNERS_STATUS" \
+            --arg changelog_root_status "$CHANGELOG_ROOT_STATUS" \
+            --arg changelog_dir_status "$CHANGELOG_DIR_STATUS" \
+            --argjson has_warnings "$HAS_WARNINGS" \
+            --arg warnings "$WARNINGS" \
+            '{
+              repo: $repo,
+              name: $name,
+              org: $org,
+              caller_ref: $caller_ref,
+              codeowners_status: $codeowners_status,
+              changelog_root_status: $changelog_root_status,
+              changelog_dir_status: $changelog_dir_status,
+              has_warnings: $has_warnings,
+              warnings: $warnings
+            }')
+          echo "json<<EOF" >> $GITHUB_OUTPUT
+          echo "$JSON" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Render PR body
+        id: pr_body
+        uses: ./admin/actions/render-mustache
+        with:
+          template: admin/campaigns/release-automation-onboarding/templates/pr-body.mustache
+          data_json: ${{ steps.campaign_data.outputs.json }}
+          out_file: /tmp/pr-body.md
+
+      - name: Campaign finalize
+        uses: ./admin/actions/campaign-finalize-per-repo
+        with:
+          mode: ${{ env.MODE }}
+          changed: ${{ steps.changes.outputs.changed }}
+          repo: ${{ matrix.repo }}
+          campaign_data: ${{ steps.campaign_data.outputs.json }}
+          pr_base_title: ${{ env.PR_TITLE }}
+          pr_body_file: /tmp/pr-body.md
+          branch: ${{ env.BRANCH }}
+          github_token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+          target_files: .github/workflows/release-automation.yml CODEOWNERS CHANGELOG.md CHANGELOG/README.md
+          error_occurred: ${{ steps.fetch_caller.outputs.error || 'false' }}
+          error_message: "Failed to fetch caller workflow template"
+          error_step: fetch_caller
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 3: Aggregate results
+  # ─────────────────────────────────────────────────────────────────────────────
+  aggregate:
+    needs: [select, run]
+    if: ${{ always() && needs.select.outputs.repos != '[]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine artifact pattern
+        id: pattern
+        run: |
+          if [ "${{ inputs.mode }}" = "plan" ]; then
+            echo "pattern=plan-*" >> $GITHUB_OUTPUT
+            echo "mode=plan (dry run)" >> $GITHUB_OUTPUT
+            echo "base_name=plan" >> $GITHUB_OUTPUT
+          else
+            echo "pattern=results-*" >> $GITHUB_OUTPUT
+            echo "mode=apply" >> $GITHUB_OUTPUT
+            echo "base_name=results" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: ${{ steps.pattern.outputs.pattern }}
+          path: plans
+
+      - name: Merge results
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const mode = '${{ steps.pattern.outputs.mode }}';
+            const baseName = '${{ steps.pattern.outputs.base_name }}';
+
+            const header = [
+              '# Release Automation Onboarding Campaign - Summary',
+              '',
+              `Generated: ${new Date().toISOString()}`,
+              `Mode: ${mode}`,
+              `Caller ref: ${{ inputs.caller_ref }}`,
+              ''
+            ];
+
+            const md = [];
+            const jsonl = [];
+
+            const plansDir = 'plans';
+            if (!fs.existsSync(plansDir)) {
+              fs.writeFileSync(`${baseName}.md`, header.join('\n') + '\n## Summary\n\n**Total repositories processed:** 0\n');
+              fs.writeFileSync(`${baseName}.jsonl`, '');
+              return;
+            }
+
+            const dirs = fs.readdirSync(plansDir);
+            for (const d of dirs) {
+              const dir = path.join(plansDir, d);
+              if (!fs.statSync(dir).isDirectory()) continue;
+
+              const mdFile = path.join(dir, `${baseName}.md`);
+              const jsonlFile = path.join(dir, `${baseName}.jsonl`);
+
+              if (fs.existsSync(mdFile)) md.push(fs.readFileSync(mdFile, 'utf8'));
+              if (fs.existsSync(jsonlFile)) jsonl.push(fs.readFileSync(jsonlFile, 'utf8'));
+            }
+
+            const summary = [
+              '## Summary',
+              '',
+              `**Total repositories processed:** ${jsonl.length}`,
+              ''
+            ];
+
+            const finalMd = header.join('\n') + md.join('\n') + '\n' + summary.join('\n') + '\n';
+            fs.writeFileSync(`${baseName}.md`, finalMd);
+            fs.writeFileSync(`${baseName}.jsonl`, jsonl.join(''));
+
+      - name: Upload merged results
+        uses: actions/upload-artifact@v6
+        with:
+          name: campaign-${{ steps.pattern.outputs.base_name }}
+          path: |
+            ${{ steps.pattern.outputs.base_name }}.md
+            ${{ steps.pattern.outputs.base_name }}.jsonl
+
+      - name: Add workflow summary
+        run: |
+          echo "## Release Automation Onboarding Campaign - Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat ${{ steps.pattern.outputs.base_name }}.md >> $GITHUB_STEP_SUMMARY

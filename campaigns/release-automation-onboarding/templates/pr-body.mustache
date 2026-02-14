@@ -1,0 +1,33 @@
+## Release Automation Configuration Sync
+
+Syncs the release automation configuration for **{{name}}**.
+
+### Changes
+
+| File | Description |
+|------|-------------|
+| `.github/workflows/release-automation.yml` | Caller workflow (ref: `@{{caller_ref}}`) |
+| `CODEOWNERS` | {{codeowners_status}} |
+| `CHANGELOG.md` | {{changelog_root_status}} |
+| `CHANGELOG/README.md` | {{changelog_dir_status}} |
+
+### About the release process automation
+
+The release process automation provides slash commands on Release Issues:
+- `/create-snapshot` — create a release snapshot with mechanical transformations
+- `/discard-snapshot` — discard a snapshot and return to planned state
+- `/delete-draft` — delete a draft release
+- `/publish-release --confirm <tag>` — publish the release
+
+Release Issues are created automatically when `release-plan.yaml` is updated on main.
+Updates to `release-plan.yaml` are done via PRs that change only this file.
+
+### Documentation
+
+- [Release Process Documentation](https://github.com/camaraproject/ReleaseManagement/tree/main/documentation)
+{{#has_warnings}}
+
+### Warnings
+
+{{warnings}}
+{{/has_warnings}}
