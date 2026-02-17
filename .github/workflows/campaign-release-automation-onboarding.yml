@@ -3,7 +3,6 @@
 #
 # Onboards API repositories to the CAMARA release automation by:
 # - Adding caller workflow (.github/workflows/release-automation.yml)
-# - Removing legacy /CHANGELOG.md CODEOWNERS lines (RM reviewer now via ruleset)
 # - Adding CHANGELOG directory structure (CHANGELOG/README.md + forward-reference note)
 #
 # Creates PRs for repositories that have release-plan.yaml but no caller workflow yet.
@@ -135,7 +134,7 @@ jobs:
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Job 2: Per-repo onboarding (matrix)
-  # Adds caller workflow, CODEOWNERS entry, CHANGELOG structure
+  # Adds caller workflow, CHANGELOG structure
   # ─────────────────────────────────────────────────────────────────────────────
   run:
     needs: select
@@ -186,37 +185,6 @@ jobs:
           echo "Uses line: $USES_LINE"
         env:
           GH_TOKEN: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
-
-      - name: Update CODEOWNERS
-        id: codeowners
-        shell: bash
-        run: |
-          CODEOWNERS_FILE="repo/CODEOWNERS"
-          WARNINGS=""
-
-          if [ ! -f "$CODEOWNERS_FILE" ]; then
-            echo "::warning::CODEOWNERS file does not exist in ${{ matrix.repo }}"
-            WARNINGS="CODEOWNERS file missing"
-            echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
-            echo "changed=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Remove legacy /CHANGELOG.md and /CHANGELOG.MD lines from CODEOWNERS
-          # RM reviewer enforcement has moved to the repository ruleset (required_reviewers)
-          if ! grep -q "^/CHANGELOG\.\(md\|MD\) " "$CODEOWNERS_FILE"; then
-            echo "No /CHANGELOG.md or /CHANGELOG.MD lines to remove"
-            echo "changed=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Remove the /CHANGELOG.md and /CHANGELOG.MD lines
-          grep -v "^/CHANGELOG\.\(md\|MD\) " "$CODEOWNERS_FILE" > "${CODEOWNERS_FILE}.tmp"
-          mv "${CODEOWNERS_FILE}.tmp" "$CODEOWNERS_FILE"
-          echo "Removed /CHANGELOG.md and /CHANGELOG.MD lines from CODEOWNERS"
-
-          echo "changed=true" >> $GITHUB_OUTPUT
-          echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
 
       - name: Create CHANGELOG directory structure
         id: changelog
@@ -276,7 +244,7 @@ jobs:
         shell: bash
         working-directory: repo
         run: |
-          git add .github/workflows/release-automation.yml CODEOWNERS CHANGELOG.md CHANGELOG/README.md 2>/dev/null || true
+          git add .github/workflows/release-automation.yml CHANGELOG.md CHANGELOG/README.md 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
@@ -290,27 +258,12 @@ jobs:
         shell: bash
         run: |
           REPO_NAME=$(echo "${{ matrix.repo }}" | cut -d'/' -f2)
-          CODEOWNERS_WARNING="${{ steps.codeowners.outputs.warnings }}"
           README_WARNING="${{ steps.readme_check.outputs.warning }}"
 
-          # Combine warnings
+          # Collect warnings
           WARNINGS=""
-          if [ -n "$CODEOWNERS_WARNING" ]; then
-            WARNINGS="$CODEOWNERS_WARNING"
-          fi
           if [ -n "$README_WARNING" ]; then
-            if [ -n "$WARNINGS" ]; then
-              WARNINGS="$WARNINGS; $README_WARNING"
-            else
-              WARNINGS="$README_WARNING"
-            fi
-          fi
-
-          # Determine status descriptions for PR body
-          if [ "${{ steps.codeowners.outputs.changed }}" = "true" ]; then
-            CODEOWNERS_STATUS="Removed legacy \`/CHANGELOG.md\` lines (RM reviewer via ruleset)"
-          else
-            CODEOWNERS_STATUS="No changes needed (no legacy lines or file missing)"
+            WARNINGS="$README_WARNING"
           fi
 
           if [ "${{ steps.changelog.outputs.changed }}" = "true" ]; then
@@ -331,7 +284,6 @@ jobs:
             --arg name "$REPO_NAME" \
             --arg org "${{ env.ORG }}" \
             --arg caller_ref "${{ env.CALLER_REF }}" \
-            --arg codeowners_status "$CODEOWNERS_STATUS" \
             --arg changelog_root_status "$CHANGELOG_ROOT_STATUS" \
             --arg changelog_dir_status "$CHANGELOG_DIR_STATUS" \
             --argjson has_warnings "$HAS_WARNINGS" \
@@ -341,7 +293,6 @@ jobs:
               name: $name,
               org: $org,
               caller_ref: $caller_ref,
-              codeowners_status: $codeowners_status,
               changelog_root_status: $changelog_root_status,
               changelog_dir_status: $changelog_dir_status,
               has_warnings: $has_warnings,
@@ -370,7 +321,7 @@ jobs:
           pr_body_file: /tmp/pr-body.md
           branch: ${{ env.BRANCH }}
           github_token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
-          target_files: .github/workflows/release-automation.yml CODEOWNERS CHANGELOG.md CHANGELOG/README.md
+          target_files: .github/workflows/release-automation.yml CHANGELOG.md CHANGELOG/README.md
           error_occurred: ${{ steps.fetch_caller.outputs.error || 'false' }}
           error_message: "Failed to fetch caller workflow template"
           error_step: fetch_caller
