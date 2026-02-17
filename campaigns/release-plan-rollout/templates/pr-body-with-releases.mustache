@@ -1,50 +1,64 @@
 ## Add release-plan.yaml for automated release tracking
 
-This PR introduces `release-plan.yaml` -- a metadata file that will replace manual wiki-based release tracking with automated tooling.
+**TL;DR:** This PR adds `release-plan.yaml` for **automated release tracking (replacing manual API Release Tracker pages on wiki)**.
+
+> **Note:** Adding `release-plan.yaml` is a prerequisite for the upcoming release automation process.
+> This PR does **not** yet enable the automated release workflow; onboarding will follow separately.
 
 ### What is this?
 
-The `release-plan.yaml` file declares your release intentions for this repository. It enables:
-- **Automated Release Progress Tracker** (replacing wiki API tables)
+The `release-plan.yaml` file declares your release plan for this repository **and its APIs**. It enables:
+- **Automated release tracking** (replacing manual API Release Tracker pages on wiki)
 - **CI validation** of release readiness
-- **Automated release branch creation** (coming soon)
-
-> **Note:** Adding `release-plan.yaml` is a prerequisite for the planned release automation. This does not yet enable the automated release workflow -- onboarding will follow separately.
+- Automated release preparation (enabled during onboarding)
 
 ### Pre-populated data
 
-This file was generated from your latest release data and repository settings:
-- **Release tag**: `target_release_tag` is set to {{target_release_tag}} (your latest release)
-- **APIs**: From your most recent release ({{target_release_tag}})
-- **Contacts**: From your CODEOWNERS file
-
-You only need to change `target_release_tag` when you actively plan your next release.
+The `release-plan.yaml` file is generated from your **current release data** and repository settings:
+- **Release tag:** `target_release_tag` is set to {{target_release_tag}} (detected from your current release)
+- **APIs:** derived from your current release ({{target_release_tag}})
+- **Contacts:** from your CODEOWNERS file
 
 :point_right: **Please review and adjust** if API-specific contacts differ from repository-wide codeowners.
 
-### What to do now
+### What to do next
 
-**Option A: Merge as-is** (recommended if no immediate release planned)
-- The file is pre-populated with your current release state ({{target_release_tag}}{{#meta_release}}, {{meta_release}}{{/meta_release}})
+**Option A: Merge as-is** (if no release planned yet)
+- The file reflects your current release state ({{target_release_tag}}{{#meta_release}}, {{meta_release}}{{/meta_release}})
 - `target_release_type: none` means "no release currently planned"
-- Just merge -- the file will be updated when you plan your next release
+- Just merge
 
-**Option B: Update before merging** (if planning a release soon)
-1. Set `target_release_type` to your intended release type
+**Option B: Update before merging** (if planning your next release now)
+1. Set `target_release_type` (e.g. `pre-release-alpha` or `pre-release-rc`)
 2. Update `target_release_tag` for your next release:
-   - New cycle: increment first number, reset second to 1 (e.g., r3.2 -> r4.1)
-   - Progression in same cycle: increment second number (e.g., r3.2 -> r3.3)
+   - New cycle: increment first number, reset second to 1 (e.g., r3.2 → r4.1)
+   - Progression in same cycle: increment second number (e.g., r3.2 → r3.3)
 3. Update `target_api_version` for any APIs being changed
 4. Optionally add `meta_release: Fall26` if participating in the meta-release
 
-### Before your next release
+<details>
+<summary><b>API status and release type meanings (for later)</b></summary>
 
-Update this file with your release intentions:
-```yaml
-repository:
-  target_release_tag: rX.Y      # Your next release tag
-  target_release_type: pre-release-alpha  # Or: pre-release-rc, public-release, maintenance-release
-```
+### target_api_status
+
+| Status | Meaning |
+|---|---|
+| `draft` | API work in progress / definition not ready |
+| `alpha` | API definition exists, ready for early feedback |
+| `rc` | Release candidate, feature-complete |
+| `public` | Public release |
+
+### target_release_type
+
+| Value | When to use |
+|---|---|
+| `none` | No release currently planned |
+| `pre-release-alpha` | Early, incomplete preview release for feedback |
+| `pre-release-rc` | Release candidate publication |
+| `public-release` | Public CAMARA release |
+| `maintenance-release` | Patch/maintenance release in an existing cycle |
+
+</details>
 
 ### Documentation
 
