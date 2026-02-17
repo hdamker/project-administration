@@ -1,10 +1,10 @@
 # =========================================================================================
 # CAMARA Project - Campaign: Release Automation Onboarding
 #
-# Onboards API repositories to the CAMARA release automation by adding:
-# - Caller workflow (.github/workflows/release-automation.yml)
-# - CODEOWNERS entry for /CHANGELOG/ directory
-# - CHANGELOG directory structure (CHANGELOG/README.md + forward-reference note)
+# Onboards API repositories to the CAMARA release automation by:
+# - Adding caller workflow (.github/workflows/release-automation.yml)
+# - Removing legacy /CHANGELOG.md CODEOWNERS lines (RM reviewer now via ruleset)
+# - Adding CHANGELOG directory structure (CHANGELOG/README.md + forward-reference note)
 #
 # Creates PRs for repositories that have release-plan.yaml but no caller workflow yet.
 #
@@ -202,39 +202,18 @@ jobs:
             exit 0
           fi
 
-          # Check if /CHANGELOG/ line already exists
-          if grep -q "^/CHANGELOG/ " "$CODEOWNERS_FILE"; then
-            echo "CODEOWNERS already has /CHANGELOG/ entry"
+          # Remove legacy /CHANGELOG.md and /CHANGELOG.MD lines from CODEOWNERS
+          # RM reviewer enforcement has moved to the repository ruleset (required_reviewers)
+          if ! grep -q "^/CHANGELOG\.\(md\|MD\) " "$CODEOWNERS_FILE"; then
+            echo "No /CHANGELOG.md or /CHANGELOG.MD lines to remove"
             echo "changed=false" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          # Find the right insertion point: after existing /CHANGELOG.md or /CHANGELOG.MD lines
-          # If those don't exist, append at end
-          if grep -q "^/CHANGELOG\.\(md\|MD\) " "$CODEOWNERS_FILE"; then
-            # Insert after the last /CHANGELOG.md or /CHANGELOG.MD line
-            # Use awk to insert after the last matching line
-            awk '
-              /^\/CHANGELOG\.(md|MD) / { last_match = NR; lines[NR] = $0; next }
-              { lines[NR] = $0 }
-              END {
-                for (i = 1; i <= NR; i++) {
-                  print lines[i]
-                  if (i == last_match) {
-                    print "/CHANGELOG/ @camaraproject/release-management_reviewers"
-                  }
-                }
-              }
-            ' "$CODEOWNERS_FILE" > "${CODEOWNERS_FILE}.tmp"
-            mv "${CODEOWNERS_FILE}.tmp" "$CODEOWNERS_FILE"
-            echo "Added /CHANGELOG/ entry after existing CHANGELOG lines"
-          else
-            # Append at end of file
-            echo "" >> "$CODEOWNERS_FILE"
-            echo "# Release Management reviewers for per-cycle changelog files" >> "$CODEOWNERS_FILE"
-            echo "/CHANGELOG/ @camaraproject/release-management_reviewers" >> "$CODEOWNERS_FILE"
-            echo "Added /CHANGELOG/ entry at end of file"
-          fi
+          # Remove the /CHANGELOG.md and /CHANGELOG.MD lines
+          grep -v "^/CHANGELOG\.\(md\|MD\) " "$CODEOWNERS_FILE" > "${CODEOWNERS_FILE}.tmp"
+          mv "${CODEOWNERS_FILE}.tmp" "$CODEOWNERS_FILE"
+          echo "Removed /CHANGELOG.md and /CHANGELOG.MD lines from CODEOWNERS"
 
           echo "changed=true" >> $GITHUB_OUTPUT
           echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
@@ -329,9 +308,9 @@ jobs:
 
           # Determine status descriptions for PR body
           if [ "${{ steps.codeowners.outputs.changed }}" = "true" ]; then
-            CODEOWNERS_STATUS="Added \`/CHANGELOG/\` entry"
+            CODEOWNERS_STATUS="Removed legacy \`/CHANGELOG.md\` lines (RM reviewer via ruleset)"
           else
-            CODEOWNERS_STATUS="No changes needed (already present or file missing)"
+            CODEOWNERS_STATUS="No changes needed (no legacy lines or file missing)"
           fi
 
           if [ "${{ steps.changelog.outputs.changed }}" = "true" ]; then

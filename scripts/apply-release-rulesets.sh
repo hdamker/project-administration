@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 # =========================================================================================
-# CAMARA Project - Admin Script: Apply Release Automation Rulesets
+# CAMARA Project - Admin Script: Apply Release Automation Ruleset
 #
-# Creates or updates the 3 repository rulesets required by the release automation.
+# Creates or updates the repository ruleset required by the release automation.
+# Also removes legacy rulesets from earlier versions if present.
 # Idempotent: safe to run multiple times on the same repository.
+#
+# The ruleset protects release-snapshot/** branches:
+# - Only the camara-release-automation GitHub App can create/push/delete
+# - Humans must use PRs with 2 approvals, code owner review, and RM team approval
 #
 # PREREQUISITES:
 # - gh CLI authenticated with a Fine-grained PAT that has:
@@ -14,6 +19,11 @@
 #   ./apply-release-rulesets.sh --repos "ReleaseTest,QualityOnDemand" [--org camaraproject] [--dry-run]
 #   ./apply-release-rulesets.sh --repos "ReleaseTest" --dry-run
 #
+# REFERENCE:
+# The canonical ruleset was created manually in Template_API_Repository and serves
+# as the reference. This script replicates that configuration to existing repos.
+# See: camaraproject/tooling release_automation/docs/repository-setup.md
+#
 # =========================================================================================
 
 set -euo pipefail
@@ -23,9 +33,12 @@ ORG="camaraproject"
 DRY_RUN=false
 REPOS=""
 
-# GitHub Actions app actor_id for bypass rules
-# actor_id=2 is the GitHub Actions integration (verify via existing rulesets if different)
-ACTIONS_ACTOR_ID=2
+# camara-release-automation GitHub App actor_id (same as App ID)
+# Verified from Template_API_Repository ruleset extraction
+APP_ACTOR_ID=2865881
+
+# release-management_reviewers team ID (required reviewer for Release PRs)
+RM_REVIEWERS_TEAM_ID=13109132
 
 usage() {
   echo "Usage: $0 --repos <comma-separated-repos> [--org <org>] [--dry-run]"
@@ -57,11 +70,12 @@ if [ -z "$REPOS" ]; then
   usage
 fi
 
-# ── Ruleset Definitions ──────────────────────────────────────────────────────
+# ── Ruleset Definition ───────────────────────────────────────────────────────
 
-# Ruleset 1: Snapshot branch protection
+# Single combined ruleset: branch protection + PR review requirements
+# Matches the manually created ruleset in Template_API_Repository
 ruleset_snapshot_protection() {
-  cat <<'JSONEOF'
+  cat <<JSONEOF
 {
   "name": "release-snapshot-protection",
   "target": "branch",
@@ -73,77 +87,37 @@ ruleset_snapshot_protection() {
     }
   },
   "rules": [
-    { "type": "non_fast_forward" },
     { "type": "deletion" },
-    {
-      "type": "push",
-      "parameters": {
-        "restrict_pushes": true
-      }
-    }
-  ],
-  "bypass_actors": [
-    {
-      "actor_id": ACTOR_ID_PLACEHOLDER,
-      "actor_type": "Integration",
-      "bypass_mode": "always"
-    }
-  ]
-}
-JSONEOF
-}
-
-# Ruleset 2: Release-review branch protection
-ruleset_review_protection() {
-  cat <<'JSONEOF'
-{
-  "name": "release-review-protection",
-  "target": "branch",
-  "enforcement": "active",
-  "conditions": {
-    "ref_name": {
-      "include": ["refs/heads/release-review/**"],
-      "exclude": []
-    }
-  },
-  "rules": [
     { "type": "non_fast_forward" },
-    { "type": "deletion" }
-  ],
-  "bypass_actors": [
-    {
-      "actor_id": ACTOR_ID_PLACEHOLDER,
-      "actor_type": "Integration",
-      "bypass_mode": "always"
-    }
-  ]
-}
-JSONEOF
-}
-
-# Ruleset 3: Release PR approval requirements
-ruleset_pr_rules() {
-  cat <<'JSONEOF'
-{
-  "name": "release-snapshot-pr-rules",
-  "target": "branch",
-  "enforcement": "active",
-  "conditions": {
-    "ref_name": {
-      "include": ["refs/heads/release-snapshot/**"],
-      "exclude": []
-    }
-  },
-  "rules": [
+    { "type": "creation" },
+    { "type": "update" },
     {
       "type": "pull_request",
       "parameters": {
-        "required_approving_review_count": 1,
+        "required_approving_review_count": 2,
         "dismiss_stale_reviews_on_push": true,
+        "required_reviewers": [
+          {
+            "minimum_approvals": 1,
+            "file_patterns": ["*"],
+            "reviewer": {
+              "id": ${RM_REVIEWERS_TEAM_ID},
+              "type": "Team"
+            }
+          }
+        ],
         "require_code_owner_review": true,
         "require_last_push_approval": false,
-        "required_review_thread_resolution": false
+        "required_review_thread_resolution": false,
+        "allowed_merge_methods": ["merge", "squash", "rebase"]
       }
+    }
+  ],
+  "bypass_actors": [
+    {
+      "actor_id": ${APP_ACTOR_ID},
+      "actor_type": "Integration",
+      "bypass_mode": "always"
     }
   ]
 }
@@ -157,9 +131,6 @@ apply_ruleset() {
   local repo="$1"
   local ruleset_name="$2"
   local payload="$3"
-
-  # Replace actor_id placeholder
-  payload=$(echo "$payload" | sed "s/ACTOR_ID_PLACEHOLDER/$ACTIONS_ACTOR_ID/g")
 
   # Check if ruleset already exists
   local existing_id
@@ -186,9 +157,29 @@ apply_ruleset() {
   fi
 }
 
+# Remove a legacy ruleset if it exists
+remove_legacy_ruleset() {
+  local repo="$1"
+  local ruleset_name="$2"
+
+  local legacy_id
+  legacy_id=$(gh api "repos/${ORG}/${repo}/rulesets" \
+    --jq ".[] | select(.name == \"${ruleset_name}\") | .id" 2>/dev/null || echo "")
+
+  if [ -n "$legacy_id" ]; then
+    if [ "$DRY_RUN" = true ]; then
+      echo "  [dry-run] Would DELETE legacy ruleset '${ruleset_name}' (id: ${legacy_id})"
+    else
+      gh api -X DELETE "repos/${ORG}/${repo}/rulesets/${legacy_id}" \
+        -H "Accept: application/vnd.github+json" > /dev/null
+      echo "  Deleted legacy ruleset '${ruleset_name}' (id: ${legacy_id})"
+    fi
+  fi
+}
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 
-echo "=== Release Automation Rulesets ==="
+echo "=== Release Automation Ruleset ==="
 echo "Organization: ${ORG}"
 echo "Mode: $([ "$DRY_RUN" = true ] && echo 'DRY RUN' || echo 'APPLY')"
 echo ""
@@ -214,15 +205,21 @@ for repo in "${REPO_LIST[@]}"; do
     continue
   fi
 
-  # Apply all 3 rulesets
   REPO_OK=true
-  for ruleset_fn in ruleset_snapshot_protection ruleset_review_protection ruleset_pr_rules; do
-    payload=$($ruleset_fn)
-    ruleset_name=$(echo "$payload" | jq -r '.name')
 
-    if ! apply_ruleset "$repo" "$ruleset_name" "$payload"; then
-      echo "  ERROR: Failed to apply '${ruleset_name}'"
-      REPO_OK=false
+  # Apply the combined ruleset
+  payload=$(ruleset_snapshot_protection)
+  ruleset_name=$(echo "$payload" | jq -r '.name')
+
+  if ! apply_ruleset "$repo" "$ruleset_name" "$payload"; then
+    echo "  ERROR: Failed to apply '${ruleset_name}'"
+    REPO_OK=false
+  fi
+
+  # Remove legacy rulesets from earlier versions (if present)
+  for legacy_name in "release-review-protection" "release-snapshot-pr-rules"; do
+    if ! remove_legacy_ruleset "$repo" "$legacy_name"; then
+      echo "  WARNING: Failed to remove legacy ruleset '${legacy_name}'"
     fi
   done
 
