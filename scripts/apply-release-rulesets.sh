@@ -115,6 +115,11 @@ ruleset_snapshot_protection() {
   ],
   "bypass_actors": [
     {
+      "actor_id": null,
+      "actor_type": "OrganizationAdmin",
+      "bypass_mode": "always"
+    },
+    {
       "actor_id": ${APP_ACTOR_ID},
       "actor_type": "Integration",
       "bypass_mode": "always"
