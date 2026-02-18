@@ -3,7 +3,8 @@
 #
 # Onboards API repositories to the CAMARA release automation by:
 # - Adding caller workflow (.github/workflows/release-automation.yml)
-# - Adding CHANGELOG directory structure (CHANGELOG/README.md + forward-reference note)
+# - Adding CHANGELOG directory structure (CHANGELOG/README.md)
+# - Removing unchanged template CHANGELOG.md or adding forward-reference note to real ones
 #
 # Creates PRs for repositories that have release-plan.yaml but no caller workflow yet.
 #
@@ -194,19 +195,42 @@ jobs:
           CHANGELOG_DIR="repo/CHANGELOG"
           CHANGELOG_ROOT="repo/CHANGELOG.md"
           CHANGES_MADE="false"
+          CHANGELOG_ACTION="none"
+
+          # Detect unchanged template CHANGELOG.md (single-line placeholder)
+          IS_TEMPLATE="false"
+          if [ -f "$CHANGELOG_ROOT" ]; then
+            LINE_COUNT=$(wc -l < "$CHANGELOG_ROOT")
+            if [ "$LINE_COUNT" -le 1 ]; then
+              IS_TEMPLATE="true"
+              echo "Root CHANGELOG.md is unchanged template placeholder ($LINE_COUNT line) — will delete"
+            fi
+          fi
 
           # Create CHANGELOG/README.md from template if not present
           if [ ! -f "$CHANGELOG_DIR/README.md" ]; then
             mkdir -p "$CHANGELOG_DIR"
-            cp "$TEMPLATES/changelog-readme.md" "$CHANGELOG_DIR/README.md"
-            echo "Created CHANGELOG/README.md"
+            if [ "$IS_TEMPLATE" = "true" ]; then
+              # Fresh repo — no historical content to reference
+              cp "$TEMPLATES/changelog-readme-fresh.md" "$CHANGELOG_DIR/README.md"
+              echo "Created CHANGELOG/README.md (fresh, no historical reference)"
+            else
+              cp "$TEMPLATES/changelog-readme.md" "$CHANGELOG_DIR/README.md"
+              echo "Created CHANGELOG/README.md (with historical reference)"
+            fi
             CHANGES_MADE="true"
           else
             echo "CHANGELOG/README.md already exists"
           fi
 
-          # Add forward-reference note to root CHANGELOG.md if missing
-          if [ -f "$CHANGELOG_ROOT" ]; then
+          # Handle root CHANGELOG.md based on content
+          if [ "$IS_TEMPLATE" = "true" ]; then
+            # Delete unchanged template placeholder
+            rm "$CHANGELOG_ROOT"
+            echo "Deleted unchanged template CHANGELOG.md"
+            CHANGES_MADE="true"
+            CHANGELOG_ACTION="deleted_template"
+          elif [ -f "$CHANGELOG_ROOT" ]; then
             if ! grep -q "CHANGELOG/" "$CHANGELOG_ROOT"; then
               # Prepend the forward-reference note from template
               TEMP_FILE=$(mktemp)
@@ -214,14 +238,17 @@ jobs:
               mv "$TEMP_FILE" "$CHANGELOG_ROOT"
               echo "Added forward-reference note to root CHANGELOG.md"
               CHANGES_MADE="true"
+              CHANGELOG_ACTION="migrated"
             else
               echo "Root CHANGELOG.md already has forward-reference"
             fi
           else
             echo "No root CHANGELOG.md found (will be created by first release)"
+            CHANGELOG_ACTION="no_file"
           fi
 
           echo "changed=$CHANGES_MADE" >> $GITHUB_OUTPUT
+          echo "changelog_action=$CHANGELOG_ACTION" >> $GITHUB_OUTPUT
 
       - name: Check README delimiters
         id: readme_check
@@ -266,13 +293,26 @@ jobs:
             WARNINGS="$README_WARNING"
           fi
 
-          if [ "${{ steps.changelog.outputs.changed }}" = "true" ]; then
-            CHANGELOG_ROOT_STATUS="Added forward-reference note"
-            CHANGELOG_DIR_STATUS="Created index file"
-          else
-            CHANGELOG_ROOT_STATUS="No changes needed"
-            CHANGELOG_DIR_STATUS="No changes needed (already present)"
-          fi
+          CHANGELOG_ACTION="${{ steps.changelog.outputs.changelog_action }}"
+          case "$CHANGELOG_ACTION" in
+            deleted_template)
+              CHANGELOG_ROOT_STATUS="Removed (unchanged template placeholder)"
+              CHANGELOG_DIR_STATUS="Created index file"
+              ;;
+            migrated)
+              CHANGELOG_ROOT_STATUS="Added forward-reference note"
+              CHANGELOG_DIR_STATUS="Created index file (with historical reference)"
+              ;;
+            *)
+              if [ "${{ steps.changelog.outputs.changed }}" = "true" ]; then
+                CHANGELOG_ROOT_STATUS="No changes needed"
+                CHANGELOG_DIR_STATUS="Created index file"
+              else
+                CHANGELOG_ROOT_STATUS="No changes needed"
+                CHANGELOG_DIR_STATUS="No changes needed (already present)"
+              fi
+              ;;
+          esac
 
           HAS_WARNINGS="false"
           if [ -n "$WARNINGS" ]; then
