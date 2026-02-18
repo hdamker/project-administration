@@ -1,32 +1,57 @@
-## Release Automation Configuration Sync
+## Enable release automation for {{name}}
 
-Syncs the release automation configuration for **{{name}}**.
+**TL;DR:** This PR adds the **release automation workflow** and prepares the CHANGELOG structure for **{{name}}**.
+
+> **Note:** Once merged, the release automation becomes active.
+> Release Issues will be created automatically when `release-plan.yaml` is updated on `main`.
+
+### What is this?
+
+The release automation workflow enables slash commands on **Release Issues** to manage your release lifecycle. Post these as comments on the Release Issue:
+- `/create-snapshot` — create a snapshot branch (updates versions, changelog entries, and release metadata automatically)
+- `/discard-snapshot <reason>` — discard a snapshot and return to planned state
+- `/delete-draft` — delete a draft release
+- `/publish-release --confirm rX.Y` — publish the release
 
 ### Changes
 
 | File | Description |
 |------|-------------|
-| `.github/workflows/release-automation.yml` | Caller workflow (ref: `@{{caller_ref}}`) |
+| `.github/workflows/release-automation.yml` | Release automation workflow (pinned to `@{{caller_ref}}`) |
 | `CHANGELOG.md` | {{changelog_root_status}} |
 | `CHANGELOG/README.md` | {{changelog_dir_status}} |
 
-### About the release process automation
+### What to do next
 
-The release process automation provides slash commands on Release Issues:
-- `/create-snapshot` — create a release snapshot with mechanical transformations
-- `/discard-snapshot` — discard a snapshot and return to planned state
-- `/delete-draft` — delete a draft release
-- `/publish-release --confirm <tag>` — publish the release
+1. **Review** the file changes above
+2. **Merge** this PR to activate the release automation
 
-Release Issues are created automatically when `release-plan.yaml` is updated on main.
-Updates to `release-plan.yaml` are done via PRs that change only this file.
-
-### Documentation
-
-- [Release Process Documentation](https://github.com/camaraproject/ReleaseManagement/tree/main/documentation)
+If `release-plan.yaml` was updated before this workflow was installed, you may need to **trigger the workflow manually once** to create the initial Release Issue:
+- Go to **Actions → [Release Automation](https://github.com/{{org}}/{{name}}/actions/workflows/release-automation.yml) → Run workflow**
 {{#has_warnings}}
 
 ### Warnings
 
 {{warnings}}
 {{/has_warnings}}
+
+<details>
+<summary><b>Release lifecycle overview</b></summary>
+
+More details: [Release Lifecycle](https://github.com/camaraproject/ReleaseManagement/blob/main/documentation/release-process/lifecycle.md)
+
+1. **Plan** — update `release-plan.yaml` with target release tag, type, and API versions/statuses
+2. **Develop** — continue work on `main` branch with version fields set to `wip`
+3. **Create Snapshot** — post `/create-snapshot` on the Release Issue to generate a Release PR
+4. **Review & Merge** — review Release PR (includes CHANGELOG entry), obtain approvals, merge it
+5. **Publish** — post `/publish-release --confirm rX.Y` to finalize the release
+
+If issues arise: use `/discard-snapshot` (during review) or `/delete-draft` (during draft phase) to return to planned state and make corrections on `main`.
+
+</details>
+
+### Documentation
+
+:book: [Release Management Documentation](https://github.com/camaraproject/ReleaseManagement/tree/main/documentation)
+:book: [Release Lifecycle](https://github.com/camaraproject/ReleaseManagement/blob/main/documentation/release-process/lifecycle.md)
+:book: [The release-plan.yaml File](https://github.com/camaraproject/ReleaseManagement/blob/main/documentation/metadata/release-plan.md)
