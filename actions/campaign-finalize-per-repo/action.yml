@@ -230,7 +230,13 @@ runs:
         git config user.name "$GIT_USER_NAME"
         git config user.email "$GIT_USER_EMAIL"
         git checkout -B "${{ inputs.branch }}"
-        git add ${{ inputs.target_files }}
+        for f in ${{ inputs.target_files }}; do
+          if [ -e "$f" ]; then
+            git add "$f"
+          else
+            git rm -f --ignore-unmatch "$f"
+          fi
+        done
         git commit -m "${{ steps.pr_title.outputs.pr_title }}" || echo "No changes to commit"
         git push origin "${{ inputs.branch }}"
         echo "push_succeeded=true" >> $GITHUB_OUTPUT
