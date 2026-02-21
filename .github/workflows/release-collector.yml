@@ -459,7 +459,7 @@ jobs:
   # =========================================================================================
   publish-changes:
     name: Publish Changes
-    needs: [generate-viewers, generate-release-metadata]
+    needs: [detect-releases, generate-viewers, generate-release-metadata]
     if: |
       always() &&
       (github.event.inputs.execution_mode || 'pr') != 'dry-run' &&
