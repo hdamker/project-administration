@@ -206,10 +206,13 @@ class CollectionStats:
 @dataclass
 class ProgressData:
     """Top-level output structure for releases-progress.yaml."""
-    last_updated: str = ""
-    schema_version: str = "1.0.0"
-    collector_version: str = "1.0.0"
-    collection_stats: CollectionStats = field(default_factory=CollectionStats)
+    last_updated: str = ""            # When progress data last changed
+    last_checked: str = ""            # When data was last collected (every run)
+    releases_master_updated: str = "" # When releases-master.yaml was last modified
+    schema_version: str = "1.1.0"
+    collector_version: str = "1.1.0"
+    collection_stats: CollectionStats = field(default_factory=CollectionStats)  # Internal only
+    data_changed: bool = True         # Internal flag, not serialized
     meta_releases: List[MetaReleaseSummary] = field(default_factory=list)
     progress: List[ProgressEntry] = field(default_factory=list)
 
@@ -217,9 +220,10 @@ class ProgressData:
         return {
             "metadata": {
                 "last_updated": self.last_updated,
+                "last_checked": self.last_checked,
+                "releases_master_updated": self.releases_master_updated,
                 "schema_version": self.schema_version,
                 "collector_version": self.collector_version,
-                "collection_stats": self.collection_stats.to_dict(),
             },
             "meta_releases": [m.to_dict() for m in self.meta_releases],
             "progress": [e.to_dict() for e in self.progress],
