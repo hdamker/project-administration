@@ -340,7 +340,7 @@ jobs:
           fi
 
       - name: Download artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: ${{ steps.pattern.outputs.pattern }}
           path: plans
@@ -424,7 +424,7 @@ jobs:
             fs.writeFileSync(`${baseName}.jsonl`, jsonlContent);
 
       - name: Upload merged results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: campaign-${{ steps.pattern.outputs.base_name }}
           path: |

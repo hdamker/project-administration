@@ -195,7 +195,7 @@ jobs:
           echo "Found ${RELEASES_COUNT} releases to analyze across ${REPOS_COUNT} repositories"
 
       - name: Upload repositories data
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: repositories-data
           path: temp/repositories.json
@@ -259,7 +259,7 @@ jobs:
         run: cp temp/analysis-results.json temp/analysis-results-${{ strategy.job-index }}.json
 
       - name: Upload analysis results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: analysis-group-${{ strategy.job-index }}
           path: temp/analysis-results-${{ strategy.job-index }}.json
@@ -292,14 +292,14 @@ jobs:
           npm install js-yaml axios
 
       - name: Download repositories data
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: repositories-data
           path: temp/repositories-data
 
       - name: Download all analysis results
         if: needs.analyze-releases.result == 'success'
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: analysis-group-*
           path: temp/analysis-downloads/
@@ -344,7 +344,7 @@ jobs:
           node workflows/release-collector/scripts/generate-reports.js
 
       - name: Upload processed data
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: processed-data
           path: |
@@ -371,7 +371,7 @@ jobs:
 
       - name: Download processed data
         if: needs.update-metadata.result == 'success'
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: processed-data
 
@@ -397,7 +397,7 @@ jobs:
           echo "Total releases with metadata: $TOTAL"
 
       - name: Upload release metadata artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: release-metadata-${{ github.run_number }}
           path: data/release-artifacts/
@@ -423,7 +423,7 @@ jobs:
 
       - name: Download processed data
         if: needs.update-metadata.result == 'success'
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: processed-data
 
@@ -445,7 +445,7 @@ jobs:
           node workflows/release-collector/scripts/generate-viewers.js
 
       - name: Upload final outputs as artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: release-reports-${{ github.run_number }}
           path: |
@@ -474,13 +474,13 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download final artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: release-reports-${{ github.run_number }}
 
       - name: Download release metadata (if generated)
         if: needs.generate-release-metadata.result == 'success'
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: release-metadata-${{ github.run_number }}
           path: data/release-artifacts
@@ -670,7 +670,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download viewers
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: release-reports-${{ github.run_number }}
           path: staging
