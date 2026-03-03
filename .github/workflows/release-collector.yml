@@ -42,7 +42,7 @@ on:
         options:
           - dry-run       # Test mode - no commits, artifacts only
           - pr            # Create pull request for review
-        default: dry-run
+        default: pr
 
       debug_mode:
         description: 'Enable debug logging'
