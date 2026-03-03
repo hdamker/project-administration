@@ -8,6 +8,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional
 
+# Single source of truth for version constants — update here only
+SCHEMA_VERSION = "1.2.0"
+COLLECTOR_VERSION = "1.2.0"
+
 
 class ProgressState(Enum):
     """Release progress state derived from repository artifacts."""
@@ -209,8 +213,8 @@ class ProgressData:
     last_updated: str = ""            # When progress data last changed
     last_checked: str = ""            # When data was last collected (every run)
     releases_master_updated: str = "" # When releases-master.yaml was last modified
-    schema_version: str = "1.2.0"
-    collector_version: str = "1.2.0"
+    schema_version: str = SCHEMA_VERSION
+    collector_version: str = COLLECTOR_VERSION
     collection_stats: CollectionStats = field(default_factory=CollectionStats)  # Internal only
     data_changed: bool = True         # Internal flag, not serialized
     meta_releases: List[MetaReleaseSummary] = field(default_factory=list)
