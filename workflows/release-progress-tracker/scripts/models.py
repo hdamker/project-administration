@@ -209,8 +209,8 @@ class ProgressData:
     last_updated: str = ""            # When progress data last changed
     last_checked: str = ""            # When data was last collected (every run)
     releases_master_updated: str = "" # When releases-master.yaml was last modified
-    schema_version: str = "1.1.0"
-    collector_version: str = "1.1.0"
+    schema_version: str = "1.2.0"
+    collector_version: str = "1.2.0"
     collection_stats: CollectionStats = field(default_factory=CollectionStats)  # Internal only
     data_changed: bool = True         # Internal flag, not serialized
     meta_releases: List[MetaReleaseSummary] = field(default_factory=list)
@@ -224,6 +224,8 @@ class ProgressData:
                 "releases_master_updated": self.releases_master_updated,
                 "schema_version": self.schema_version,
                 "collector_version": self.collector_version,
+                "repos_scanned": self.collection_stats.repos_scanned,
+                "repos_with_plan": self.collection_stats.repos_with_plan,
             },
             "meta_releases": [m.to_dict() for m in self.meta_releases],
             "progress": [e.to_dict() for e in self.progress],
