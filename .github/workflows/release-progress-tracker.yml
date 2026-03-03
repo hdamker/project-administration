@@ -27,9 +27,8 @@ on:
 env:
   # Source repository and ref for progress tracker code and shared assets.
   # Change these when testing on a fork or switching between branches.
-  # TESTING: revert to camaraproject/project-administration + main before upstream PR
-  SOURCE_REPO: hdamker/project-administration
-  SOURCE_REF: fix/progress-viewer-updates
+  SOURCE_REPO: camaraproject/project-administration
+  SOURCE_REF: main
 
 jobs:
   # ---------------------------------------------------------------------------
