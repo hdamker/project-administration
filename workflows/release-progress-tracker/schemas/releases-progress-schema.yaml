@@ -37,6 +37,12 @@ properties:
       collector_version:
         type: string
         pattern: "^\\d+\\.\\d+\\.\\d+$"
+      repos_scanned:
+        type: integer
+        description: Total repositories checked
+      repos_with_plan:
+        type: integer
+        description: Repositories with release-plan.yaml
 
   meta_releases:
     type: array
