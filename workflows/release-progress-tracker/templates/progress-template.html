@@ -1005,6 +1005,8 @@ tr.not-planned-row:hover td {
       const inIframe = ViewerLib.isInIframe();
       if (!inIframe || !currentTrackFilter) {
         buildTrackPills();
+      } else {
+        document.getElementById('trackPills').style.display = 'none';
       }
 
       applyFilters();           // calls updateHeader(), renderTable(), updateTrackPillStates()

@@ -25,6 +25,8 @@ import yaml
 from .github_api import GitHubAPI, RateLimitError
 from .milestone_deriver import build_meta_release_summaries, derive_cycle_releases
 from .models import (
+    COLLECTOR_VERSION,
+    SCHEMA_VERSION,
     ApiEntry,
     ArtifactInfo,
     CollectionStats,
@@ -37,9 +39,6 @@ from .state_deriver import derive_state, find_matching_snapshot
 from .warnings import generate_warnings
 
 logger = logging.getLogger(__name__)
-
-COLLECTOR_VERSION = "1.2.0"
-SCHEMA_VERSION = "1.2.0"
 
 
 def load_releases_master(path: str) -> Dict:
