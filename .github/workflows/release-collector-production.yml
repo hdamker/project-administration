@@ -277,7 +277,7 @@ jobs:
           cp workflows/release-collector/production-index.html viewers/production-index.html
 
       - name: Upload viewers artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: production-viewers-${{ github.run_number }}
           path: viewers/
@@ -305,7 +305,7 @@ jobs:
           ref: ${{ needs.validate-deployment.outputs.deploy_ref }}
 
       - name: Download viewers artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: production-viewers-${{ github.run_number }}
           path: artifact
@@ -652,7 +652,7 @@ jobs:
 
       - name: Upload report artifact
         if: steps.check.outputs.has_artifacts == 'true'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: release-metadata-upload-report-${{ github.run_number }}
           path: |

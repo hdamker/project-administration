@@ -360,7 +360,7 @@ jobs:
             echo "dir_name=results" >> $GITHUB_OUTPUT
           fi
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           pattern: ${{ steps.pattern.outputs.pattern }}
           path: ${{ steps.pattern.outputs.dir_name }}
@@ -404,7 +404,7 @@ jobs:
             }
             fs.writeFileSync(`${outputName}.md`, md.join('\n'));
             fs.writeFileSync(`${outputName}.jsonl`, lines.join(''));
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.pattern.outputs.output_name }}
           path: |

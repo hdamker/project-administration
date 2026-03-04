@@ -789,7 +789,7 @@ jobs:
             console.log('🎉 Repository overview report generation completed successfully!');
 
       - name: Upload Repository Overview Report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: camara-repository-overview-${{ github.run_number }}
           path: '*.md'
