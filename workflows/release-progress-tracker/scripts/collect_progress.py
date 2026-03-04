@@ -135,7 +135,8 @@ def collect_repo_progress(
                 entry.artifacts.snapshot_branch = snapshot
         # Cross-reference milestones
         entry.cycle_releases = derive_cycle_releases(
-            repo_name, meta_release, all_releases, planned_api_names,
+            repo_name, target_tag, meta_release, all_releases,
+            planned_api_names,
         )
         # Generate warnings
         repo_releases = [r for r in all_releases if r.get("repository") == repo_name]
@@ -180,7 +181,8 @@ def collect_repo_progress(
 
     # Cross-reference M1/M3/M4 from releases-master
     entry.cycle_releases = derive_cycle_releases(
-        repo_name, meta_release, all_releases, planned_api_names,
+        repo_name, target_tag, meta_release, all_releases,
+        planned_api_names,
     )
 
     # Generate warnings
