@@ -161,7 +161,7 @@ body:not(.in-iframe) {
   max-width: 100%;
   margin: 0 auto;
   background: var(--bg-container);
-  overflow: hidden;
+  overflow: clip;
 }
 
 body:not(.in-iframe) .container {
@@ -461,7 +461,7 @@ table {
   font-size: 13px;
   margin-bottom: 20px;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: clip;
   box-shadow: var(--shadow-sm);
   background-color: var(--bg-container);
 }
@@ -478,7 +478,9 @@ th {
   color: var(--text-on-accent);
   cursor: pointer;
   user-select: none;
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 10;
   font-size: 13px;
   word-wrap: break-word;
   overflow-wrap: break-word;

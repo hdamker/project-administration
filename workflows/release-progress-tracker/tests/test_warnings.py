@@ -119,11 +119,163 @@ class TestW002OrphanedSnapshot:
         assert len(w002) == 0
 
 
+class TestW003PublishedNotInReleasesMaster:
+    """Test W003: published release not found in releases-master.yaml."""
+
+    def test_triggers_when_published_tag_missing(self):
+        entry = _make_entry(
+            state=ProgressState.PUBLISHED,
+            target_release_tag="r4.1",
+        )
+        releases = [{
+            "release_tag": "r3.5",
+            "apis": [{"api_name": "some-api", "api_version": "1.0.0"}],
+        }]
+        warnings = generate_warnings(entry, releases)
+        w003 = [w for w in warnings if w.code == "W003"]
+        assert len(w003) == 1
+        assert "r4.1" in w003[0].message
+        assert "releases-master" in w003[0].message
+
+    def test_triggers_with_empty_releases_list(self):
+        entry = _make_entry(
+            state=ProgressState.PUBLISHED,
+            target_release_tag="r4.1",
+        )
+        warnings = generate_warnings(entry, [])
+        w003 = [w for w in warnings if w.code == "W003"]
+        assert len(w003) == 1
+
+    def test_no_trigger_when_tag_found(self):
+        entry = _make_entry(
+            state=ProgressState.PUBLISHED,
+            target_release_tag="r4.1",
+        )
+        releases = [{
+            "release_tag": "r4.1",
+            "apis": [{"api_name": "some-api", "api_version": "1.1.0"}],
+        }]
+        warnings = generate_warnings(entry, releases)
+        w003 = [w for w in warnings if w.code == "W003"]
+        assert len(w003) == 0
+
+    def test_no_trigger_for_non_published_state(self):
+        entry = _make_entry(
+            state=ProgressState.DRAFT_READY,
+            target_release_tag="r4.1",
+        )
+        warnings = generate_warnings(entry, [])
+        w003 = [w for w in warnings if w.code == "W003"]
+        assert len(w003) == 0
+
+    def test_no_trigger_when_no_target_tag(self):
+        entry = _make_entry(
+            state=ProgressState.PUBLISHED,
+            target_release_tag=None,
+        )
+        warnings = generate_warnings(entry, [])
+        w003 = [w for w in warnings if w.code == "W003"]
+        assert len(w003) == 0
+
+
+class TestW004MetaReleaseMismatch:
+    """Test W004: release found by tag prefix has different meta_release."""
+
+    def test_triggers_when_meta_release_differs(self):
+        entry = _make_entry(
+            state=ProgressState.SNAPSHOT_ACTIVE,
+            meta_release="Sync26",
+            target_release_tag="r2.1",
+        )
+        releases = [{
+            "release_tag": "r2.0",
+            "meta_release": "Fall25",
+        }]
+        warnings = generate_warnings(entry, releases)
+        w004 = [w for w in warnings if w.code == "W004"]
+        assert len(w004) == 1
+        assert "Fall25" in w004[0].message
+        assert "Sync26" in w004[0].message
+
+    def test_no_trigger_when_meta_release_matches(self):
+        entry = _make_entry(
+            state=ProgressState.SNAPSHOT_ACTIVE,
+            meta_release="Sync26",
+            target_release_tag="r2.1",
+        )
+        releases = [{
+            "release_tag": "r2.0",
+            "meta_release": "Sync26",
+        }]
+        warnings = generate_warnings(entry, releases)
+        w004 = [w for w in warnings if w.code == "W004"]
+        assert len(w004) == 0
+
+    def test_no_trigger_when_release_meta_is_sandbox(self):
+        """Sandbox repos with 'None (Sandbox)' label should not trigger W004."""
+        entry = _make_entry(
+            state=ProgressState.SNAPSHOT_ACTIVE,
+            meta_release="Sync26",
+            target_release_tag="r1.1",
+        )
+        releases = [{
+            "release_tag": "r1.0",
+            "meta_release": "None (Sandbox)",
+        }]
+        warnings = generate_warnings(entry, releases)
+        w004 = [w for w in warnings if w.code == "W004"]
+        assert len(w004) == 0
+
+    def test_no_trigger_when_release_meta_is_none(self):
+        """Releases with no meta_release label should not trigger W004."""
+        entry = _make_entry(
+            state=ProgressState.SNAPSHOT_ACTIVE,
+            meta_release="Sync26",
+            target_release_tag="r1.1",
+        )
+        releases = [{
+            "release_tag": "r1.0",
+            "meta_release": None,
+        }]
+        warnings = generate_warnings(entry, releases)
+        w004 = [w for w in warnings if w.code == "W004"]
+        assert len(w004) == 0
+
+    def test_no_trigger_when_plan_meta_is_none(self):
+        """Independent repos with no meta_release in plan skip W004."""
+        entry = _make_entry(
+            state=ProgressState.SNAPSHOT_ACTIVE,
+            meta_release=None,
+            target_release_tag="r1.1",
+        )
+        releases = [{
+            "release_tag": "r1.0",
+            "meta_release": "Sync26",
+        }]
+        warnings = generate_warnings(entry, releases)
+        w004 = [w for w in warnings if w.code == "W004"]
+        assert len(w004) == 0
+
+    def test_no_trigger_for_different_tag_prefix(self):
+        """Releases with a different tag prefix should not trigger W004."""
+        entry = _make_entry(
+            meta_release="Sync26",
+            target_release_tag="r2.1",
+        )
+        releases = [{
+            "release_tag": "r3.0",
+            "meta_release": "Fall25",
+        }]
+        warnings = generate_warnings(entry, releases)
+        w004 = [w for w in warnings if w.code == "W004"]
+        assert len(w004) == 0
+
+
 class TestChecksRegistry:
     """Test the extensibility pattern."""
 
     def test_checks_list_is_populated(self):
-        assert len(CHECKS) >= 2
+        assert len(CHECKS) >= 4
 
     def test_custom_check_can_be_added(self):
         """Verify a new check function integrates with generate_warnings."""

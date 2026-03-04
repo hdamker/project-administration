@@ -61,7 +61,7 @@ class TestDeriveCycleReleases:
 
     def test_m1_alpha_detected(self):
         cr = derive_cycle_releases(
-            "QualityOnDemand", "Sync26", SAMPLE_RELEASES,
+            "QualityOnDemand", "r4.1", "Sync26", SAMPLE_RELEASES,
             ["quality-on-demand"],
         )
         assert cr.m1 is not None
@@ -71,7 +71,7 @@ class TestDeriveCycleReleases:
 
     def test_m3_rc_detected(self):
         cr = derive_cycle_releases(
-            "QualityOnDemand", "Sync26", SAMPLE_RELEASES,
+            "QualityOnDemand", "r4.1", "Sync26", SAMPLE_RELEASES,
             ["quality-on-demand"],
         )
         assert cr.m3 is not None
@@ -79,29 +79,29 @@ class TestDeriveCycleReleases:
 
     def test_m4_not_achieved(self):
         cr = derive_cycle_releases(
-            "QualityOnDemand", "Sync26", SAMPLE_RELEASES,
+            "QualityOnDemand", "r4.1", "Sync26", SAMPLE_RELEASES,
             ["quality-on-demand"],
         )
         assert cr.m4 is not None
         assert cr.m4.release_tag is None
         assert cr.m4.apis[0].api_version is None
 
-    def test_filters_by_repo_and_meta_release(self):
+    def test_filters_by_repo_and_tag_prefix(self):
         """Should not include DeviceLocation releases for QualityOnDemand."""
         cr = derive_cycle_releases(
-            "QualityOnDemand", "Sync26", SAMPLE_RELEASES,
+            "QualityOnDemand", "r4.1", "Sync26", SAMPLE_RELEASES,
             ["quality-on-demand"],
         )
         # M1 should be QoD's alpha, not DeviceLocation's
         assert cr.m1.release_tag == "r4.1"
 
-    def test_different_meta_release_excluded(self):
-        """Fall25 releases should not appear in Sync26 cycle."""
+    def test_different_tag_prefix_excluded(self):
+        """Releases with different tag prefix should not appear in cycle."""
         cr = derive_cycle_releases(
-            "QualityOnDemand", "Sync26", SAMPLE_RELEASES,
+            "QualityOnDemand", "r4.1", "Sync26", SAMPLE_RELEASES,
             ["quality-on-demand"],
         )
-        # M4 should be unachieved (Fall25 public release shouldn't count)
+        # M4 should be unachieved (r3.5 has different prefix r3.)
         assert cr.m4.release_tag is None
 
     def test_earliest_by_date(self):
@@ -115,28 +115,82 @@ class TestDeriveCycleReleases:
             "apis": [{"api_name": "quality-on-demand", "api_version": "1.2.0-alpha.0"}],
         }]
         cr = derive_cycle_releases(
-            "QualityOnDemand", "Sync26", releases,
+            "QualityOnDemand", "r4.1", "Sync26", releases,
             ["quality-on-demand"],
         )
         assert cr.m1.release_tag == "r4.0"  # Earlier date
 
     def test_no_releases_returns_empty_milestones(self):
         cr = derive_cycle_releases(
-            "NewRepo", "Sync26", SAMPLE_RELEASES,
+            "NewRepo", "r1.1", "Sync26", SAMPLE_RELEASES,
             ["new-api"],
         )
         assert cr.m1.release_tag is None
         assert cr.m3.release_tag is None
         assert cr.m4.release_tag is None
 
-    def test_independent_returns_empty(self):
-        """Independent repos (no meta_release) get empty CycleReleases."""
+    def test_no_target_tag_returns_empty(self):
+        """When target_release_tag is None, return empty CycleReleases."""
         cr = derive_cycle_releases(
-            "QualityOnDemand", None, SAMPLE_RELEASES,
+            "QualityOnDemand", None, "Sync26", SAMPLE_RELEASES,
             ["quality-on-demand"],
         )
         assert cr.m1 is None
         assert cr.m3 is None
+
+    def test_independent_returns_empty(self):
+        """Independent repos (no target_release_tag) get empty CycleReleases."""
+        cr = derive_cycle_releases(
+            "QualityOnDemand", None, None, SAMPLE_RELEASES,
+            ["quality-on-demand"],
+        )
+        assert cr.m1 is None
+        assert cr.m3 is None
+
+    def test_tag_prefix_matches_across_minor_versions(self):
+        """All rX.Y releases with same major number should be in same cycle."""
+        releases = [
+            {
+                "repository": "TestRepo",
+                "release_tag": "r2.1",
+                "release_date": "2026-01-10T00:00:00Z",
+                "meta_release": "Sync26",
+                "release_type": "pre-release-alpha",
+                "apis": [{"api_name": "test-api", "api_version": "1.0.0-alpha.1"}],
+            },
+            {
+                "repository": "TestRepo",
+                "release_tag": "r2.2",
+                "release_date": "2026-02-10T00:00:00Z",
+                "meta_release": "Sync26",
+                "release_type": "pre-release-rc",
+                "apis": [{"api_name": "test-api", "api_version": "1.0.0-rc.1"}],
+            },
+        ]
+        cr = derive_cycle_releases(
+            "TestRepo", "r2.3", "Sync26", releases, ["test-api"],
+        )
+        assert cr.m1.release_tag == "r2.1"
+        assert cr.m3.release_tag == "r2.2"
+
+    def test_sandbox_repo_matched_by_tag_prefix(self):
+        """Repos with meta_release='None (Sandbox)' in releases-master
+        should still be matched via tag prefix."""
+        releases = [
+            {
+                "repository": "NewSandboxRepo",
+                "release_tag": "r1.1",
+                "release_date": "2026-01-15T00:00:00Z",
+                "meta_release": "None (Sandbox)",
+                "release_type": "pre-release-alpha",
+                "apis": [{"api_name": "sandbox-api", "api_version": "0.1.0-alpha.1"}],
+            },
+        ]
+        cr = derive_cycle_releases(
+            "NewSandboxRepo", "r1.2", "Sync26", releases, ["sandbox-api"],
+        )
+        assert cr.m1.release_tag == "r1.1"
+        assert cr.m1.apis[0].api_version == "0.1.0-alpha.1"
 
 
 class TestBuildMetaReleaseSummaries:

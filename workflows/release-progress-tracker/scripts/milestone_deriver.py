@@ -15,29 +15,45 @@ from .models import CycleReleaseApi, CycleReleases, MilestoneRelease
 
 def derive_cycle_releases(
     repo_name: str,
+    target_release_tag: Optional[str],
     meta_release: Optional[str],
     all_releases: List[Dict],
     planned_apis: List[str],
 ) -> CycleReleases:
-    """Derive M1/M3/M4 milestone releases for a repo in a meta-release cycle.
+    """Derive M1/M3/M4 milestone releases for a repo in a release cycle.
+
+    Matches releases by tag prefix (e.g., "r1." matches r1.1, r1.2, etc.)
+    rather than meta_release label, so repos with "None (Sandbox)" in
+    releases-master.yaml still get milestone data.
 
     Args:
         repo_name: Repository name to filter releases for.
-        meta_release: Meta-release label (e.g., "Sync26"). None for independent.
+        target_release_tag: Target release tag (e.g., "r1.1"). Used to
+            derive the cycle prefix (e.g., "r1.") for matching releases.
+        meta_release: Meta-release label (e.g., "Sync26"). Kept for W004
+            mismatch detection, not used for filtering.
         all_releases: Full releases[] array from releases-master.yaml.
         planned_apis: List of api_name strings from the release plan.
 
     Returns:
         CycleReleases with M1/M3/M4 populated (or None if not found).
     """
-    if not meta_release:
+    if not target_release_tag:
         return CycleReleases()
 
-    # Filter releases for this repo in this meta-release cycle
+    # Extract cycle prefix: "r1.1" → "r1.", "r10.2" → "r10."
+    dot_index = target_release_tag.find(".")
+    tag_prefix = (
+        target_release_tag[:dot_index + 1]
+        if dot_index != -1
+        else target_release_tag + "."
+    )
+
+    # Filter releases for this repo by tag prefix
     cycle_releases = [
         r for r in all_releases
         if r.get("repository") == repo_name
-        and r.get("meta_release") == meta_release
+        and (r.get("release_tag") or "").startswith(tag_prefix)
     ]
 
     if not cycle_releases:
