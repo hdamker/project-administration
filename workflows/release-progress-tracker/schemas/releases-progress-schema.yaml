@@ -12,45 +12,37 @@ required:
 properties:
   metadata:
     type: object
-    description: Collection metadata and statistics
+    description: Collection metadata and timestamps
     required:
       - last_updated
+      - last_checked
       - schema_version
       - collector_version
-      - collection_stats
     properties:
       last_updated:
         type: string
         format: date-time
-        description: When the data was last collected
+        description: When progress data last changed
+      last_checked:
+        type: string
+        format: date-time
+        description: When data was last collected (every run)
+      releases_master_updated:
+        type: string
+        format: date-time
+        description: When releases-master.yaml was last modified (source data freshness)
       schema_version:
         type: string
         pattern: "^\\d+\\.\\d+\\.\\d+$"
       collector_version:
         type: string
         pattern: "^\\d+\\.\\d+\\.\\d+$"
-      collection_stats:
-        type: object
-        required:
-          - repos_scanned
-          - repos_with_plan
-          - repos_planned
-        properties:
-          repos_scanned:
-            type: integer
-            description: Total repositories checked
-          repos_with_plan:
-            type: integer
-            description: Repositories with release-plan.yaml
-          repos_planned:
-            type: integer
-            description: Repositories with active release plans (type != none)
-          api_calls:
-            type: integer
-            description: Total GitHub API calls made
-          duration_seconds:
-            type: number
-            description: Collection duration in seconds
+      repos_scanned:
+        type: integer
+        description: Total repositories checked
+      repos_with_plan:
+        type: integer
+        description: Repositories with release-plan.yaml
 
   meta_releases:
     type: array

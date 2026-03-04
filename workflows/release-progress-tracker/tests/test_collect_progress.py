@@ -10,6 +10,7 @@ from scripts.collect_progress import (
     build_published_context_map,
     collect_all,
     collect_repo_progress,
+    compare_progress_data,
     load_releases_master,
     parse_release_plan,
 )
@@ -262,6 +263,80 @@ class TestCollectRepoProgress:
         assert any(w.code == "W002" for w in result.warnings)
 
 
+class TestCompareProgressData:
+    """Tests for the two-phase comparison logic."""
+
+    SAMPLE_OUTPUT = {
+        "metadata": {
+            "last_updated": "2026-03-01T00:00:00Z",
+            "last_checked": "2026-03-01T00:00:00Z",
+            "releases_master_updated": "2026-03-01T00:00:00Z",
+            "schema_version": "1.1.0",
+            "collector_version": "1.1.0",
+        },
+        "meta_releases": [
+            {"name": "Sync26", "total_apis": 5, "m1_achieved": 2,
+             "m3_achieved": 1, "m4_achieved": 0},
+        ],
+        "progress": [
+            {"repository": "QualityOnDemand", "state": "planned",
+             "github_url": "https://example.com/QoD"},
+            {"repository": "InactiveRepo", "state": "not_planned",
+             "github_url": "https://example.com/Inactive"},
+        ],
+    }
+
+    def test_identical_data_returns_false(self):
+        """Same progress + meta_releases → no change."""
+        import copy
+        existing = copy.deepcopy(self.SAMPLE_OUTPUT)
+        new = copy.deepcopy(self.SAMPLE_OUTPUT)
+        # Metadata differs (timestamps) but stable data is the same
+        new["metadata"]["last_checked"] = "2026-03-02T00:00:00Z"
+        assert compare_progress_data(new, existing) is False
+
+    def test_different_progress_returns_true(self):
+        """Changed state → change detected."""
+        import copy
+        existing = copy.deepcopy(self.SAMPLE_OUTPUT)
+        new = copy.deepcopy(self.SAMPLE_OUTPUT)
+        new["progress"][0]["state"] = "snapshot_active"
+        assert compare_progress_data(new, existing) is True
+
+    def test_different_meta_releases_returns_true(self):
+        """Changed counts → change detected."""
+        import copy
+        existing = copy.deepcopy(self.SAMPLE_OUTPUT)
+        new = copy.deepcopy(self.SAMPLE_OUTPUT)
+        new["meta_releases"][0]["m1_achieved"] = 3
+        assert compare_progress_data(new, existing) is True
+
+    def test_different_order_same_data_returns_false(self):
+        """Repos in different order → no change (normalization)."""
+        import copy
+        existing = copy.deepcopy(self.SAMPLE_OUTPUT)
+        new = copy.deepcopy(self.SAMPLE_OUTPUT)
+        new["progress"] = list(reversed(new["progress"]))
+        assert compare_progress_data(new, existing) is False
+
+    def test_empty_existing_returns_true(self):
+        """No existing data → always changed."""
+        import copy
+        new = copy.deepcopy(self.SAMPLE_OUTPUT)
+        assert compare_progress_data(new, {}) is True
+
+    def test_new_repo_added_returns_true(self):
+        """New repo in progress → change detected."""
+        import copy
+        existing = copy.deepcopy(self.SAMPLE_OUTPUT)
+        new = copy.deepcopy(self.SAMPLE_OUTPUT)
+        new["progress"].append(
+            {"repository": "NewRepo", "state": "planned",
+             "github_url": "https://example.com/New"},
+        )
+        assert compare_progress_data(new, existing) is True
+
+
 class TestCollectAll:
     def test_full_collection(self, tmp_path):
         """End-to-end test with mock API."""
@@ -282,12 +357,22 @@ class TestCollectAll:
         assert result.collection_stats.repos_with_plan == 2
         assert result.collection_stats.repos_planned == 1  # Only QoD is active
 
-        # Verify output file written
+        # Verify output file written with new schema
         assert output_file.exists()
         output = yaml.safe_load(output_file.read_text())
         assert "metadata" in output
         assert "progress" in output
         assert len(output["progress"]) == 2
+
+        # Verify new metadata fields
+        meta = output["metadata"]
+        assert "last_updated" in meta
+        assert "last_checked" in meta
+        assert "releases_master_updated" in meta
+        assert meta["schema_version"] == "1.2.0"
+        assert "collection_stats" not in meta  # Full stats removed from output
+        assert meta["repos_scanned"] == 2      # Stable stats restored
+        assert meta["repos_with_plan"] == 2
 
     def test_collection_handles_api_errors(self, tmp_path):
         """Repos with API errors should be skipped gracefully."""
@@ -313,3 +398,113 @@ class TestCollectAll:
         assert result.collection_stats.repos_scanned == 1
         assert result.collection_stats.repos_with_plan == 0
         assert len(result.progress) == 0
+
+    def test_releases_master_updated_populated(self, tmp_path):
+        """releases_master_updated should be read from master file metadata."""
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(SAMPLE_MASTER))
+
+        api = MockGitHubAPI(
+            file_contents={"QualityOnDemand/release-plan.yaml": PLAN_RC},
+        )
+        result = collect_all(str(master_file), str(output_file), api=api)
+
+        assert result.releases_master_updated == "2026-03-01T00:00:00Z"
+        output = yaml.safe_load(output_file.read_text())
+        assert output["metadata"]["releases_master_updated"] == "2026-03-01T00:00:00Z"
+
+
+class TestCollectAllWithExisting:
+    """Tests for the two-phase write with existing file comparison."""
+
+    def _make_api(self):
+        return MockGitHubAPI(
+            file_contents={
+                "QualityOnDemand/release-plan.yaml": PLAN_RC,
+                "InactiveRepo/release-plan.yaml": PLAN_NONE,
+            },
+        )
+
+    def test_no_existing_file_treated_as_changed(self, tmp_path):
+        """Missing existing file → data_changed = True."""
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(SAMPLE_MASTER))
+
+        result = collect_all(
+            str(master_file), str(output_file),
+            existing_path=str(tmp_path / "nonexistent.yaml"),
+            api=self._make_api(),
+        )
+        assert result.data_changed is True
+
+    def test_unchanged_carries_forward_last_updated(self, tmp_path):
+        """Same data → last_updated preserved from existing, data_changed = False."""
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        existing_file = tmp_path / "existing.yaml"
+        master_file.write_text(yaml.dump(SAMPLE_MASTER))
+
+        # First run: generate baseline
+        api1 = self._make_api()
+        collect_all(str(master_file), str(output_file), api=api1)
+
+        # Copy output as existing file
+        existing_file.write_text(output_file.read_text())
+        original_output = yaml.safe_load(existing_file.read_text())
+        original_last_updated = original_output["metadata"]["last_updated"]
+
+        # Second run: same data, with existing
+        api2 = self._make_api()
+        result = collect_all(
+            str(master_file), str(output_file),
+            existing_path=str(existing_file),
+            api=api2,
+        )
+
+        assert result.data_changed is False
+        assert result.last_updated == original_last_updated
+        # last_checked should be current (newer than last_updated)
+        assert result.last_checked >= original_last_updated
+
+    def test_changed_data_updates_last_updated(self, tmp_path):
+        """Different data → last_updated = last_checked, data_changed = True."""
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        existing_file = tmp_path / "existing.yaml"
+        master_file.write_text(yaml.dump(SAMPLE_MASTER))
+
+        # First run: generate baseline
+        api1 = self._make_api()
+        collect_all(str(master_file), str(output_file), api=api1)
+        existing_file.write_text(output_file.read_text())
+
+        # Second run: different data (add snapshot branch → state change)
+        api2 = MockGitHubAPI(
+            file_contents={
+                "QualityOnDemand/release-plan.yaml": PLAN_RC,
+                "InactiveRepo/release-plan.yaml": PLAN_NONE,
+            },
+            branches={"QualityOnDemand": ["release-snapshot/r4.1-abc123"]},
+        )
+        result = collect_all(
+            str(master_file), str(output_file),
+            existing_path=str(existing_file),
+            api=api2,
+        )
+
+        assert result.data_changed is True
+        assert result.last_updated == result.last_checked
+
+    def test_no_existing_path_always_changed(self, tmp_path):
+        """No existing_path argument → data_changed = True (default)."""
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(SAMPLE_MASTER))
+
+        result = collect_all(
+            str(master_file), str(output_file),
+            api=self._make_api(),
+        )
+        assert result.data_changed is True

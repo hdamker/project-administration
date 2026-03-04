@@ -42,7 +42,7 @@ on:
         options:
           - dry-run       # Test mode - no commits, artifacts only
           - pr            # Create pull request for review
-        default: dry-run
+        default: pr
 
       debug_mode:
         description: 'Enable debug logging'
@@ -62,9 +62,9 @@ on:
         type: boolean
         default: false
 
-  # schedule:
-  #   # Daily run at 04:35 UTC (for testing)
-  #   - cron: '35 4 * * *'
+  schedule:
+    # Daily run at 04:35 UTC (for testing)
+    - cron: '35 4 * * *'
 
 env:
   # Effective inputs (with defaults for scheduled runs)
