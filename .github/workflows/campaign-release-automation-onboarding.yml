@@ -155,23 +155,7 @@ jobs:
         with:
           app-id: ${{ vars.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-
-      - name: Resolve Bot Identity
-        id: bot-identity
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          if [ -n "${{ vars.RELEASE_APP_SLUG }}" ] && [ -n "${{ steps.app-token.outputs.token }}" ]; then
-            BOT_LOGIN="${{ vars.RELEASE_APP_SLUG }}[bot]"
-          else
-            BOT_LOGIN="github-actions[bot]"
-          fi
-          BOT_INFO=$(gh api "/users/$BOT_LOGIN" --jq '{id: .id, login: .login}')
-          BOT_NAME=$(echo "$BOT_INFO" | jq -r '.login')
-          BOT_ID=$(echo "$BOT_INFO" | jq -r '.id')
-          echo "Committing as: $BOT_NAME <${BOT_ID}+${BOT_NAME}@users.noreply.github.com>"
-          echo "bot_name=$BOT_NAME" >> $GITHUB_OUTPUT
-          echo "bot_email=${BOT_ID}+${BOT_NAME}@users.noreply.github.com" >> $GITHUB_OUTPUT
+          owner: ${{ github.repository_owner }}
 
       - name: Checkout admin repo (self)
         uses: actions/checkout@v6
@@ -304,6 +288,16 @@ jobs:
             git diff --cached --name-only
           fi
 
+      - name: Configure git identity
+        if: ${{ env.MODE == 'apply' }}
+        run: |
+          BOT="${{ vars.RELEASE_APP_SLUG }}[bot]"
+          BOT_ID=$(gh api /users/$BOT --jq '.id')
+          git -C repo config user.name "$BOT"
+          git -C repo config user.email "${BOT_ID}+${BOT}@users.noreply.github.com"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
       - name: Build campaign data JSON
         id: campaign_data
         shell: bash
@@ -385,8 +379,6 @@ jobs:
           pr_body_file: /tmp/pr-body.md
           branch: ${{ env.BRANCH }}
           github_token: ${{ steps.app-token.outputs.token }}
-          bot_name: ${{ steps.bot-identity.outputs.bot_name }}
-          bot_email: ${{ steps.bot-identity.outputs.bot_email }}
           target_files: .github/workflows/release-automation.yml CHANGELOG.md CHANGELOG/README.md
           error_occurred: ${{ steps.fetch_caller.outputs.error || 'false' }}
           error_message: "Failed to fetch caller workflow template"
