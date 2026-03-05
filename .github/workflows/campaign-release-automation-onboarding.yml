@@ -42,7 +42,7 @@ on:
         description: 'Ref for the caller workflow uses: line (branch or tag in camaraproject/tooling)'
         required: false
         type: string
-        default: 'release-automation'
+        default: 'ra-v1-rc'
 
 concurrency:
   group: campaign-release-automation-onboarding-${{ github.ref }}
