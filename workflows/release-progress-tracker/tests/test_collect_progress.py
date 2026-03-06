@@ -262,6 +262,37 @@ class TestCollectRepoProgress:
         assert len(result.warnings) >= 1
         assert any(w.code == "W002" for w in result.warnings)
 
+    def test_planned_with_caller_workflow(self):
+        """PLANNED repo with caller workflow → has_caller_workflow=True, no W005."""
+        api = MockGitHubAPI(
+            file_contents={
+                "QualityOnDemand/release-plan.yaml": PLAN_RC,
+                "QualityOnDemand/.github/workflows/release-automation.yml": "name: release",
+            },
+        )
+        result = collect_repo_progress(
+            "QualityOnDemand",
+            "https://github.com/camaraproject/QualityOnDemand",
+            api, [], PublishedContext("r3.2", None),
+        )
+        assert result.state == ProgressState.PLANNED
+        assert result.artifacts.has_caller_workflow is True
+        assert not any(w.code == "W005" for w in result.warnings)
+
+    def test_planned_without_caller_workflow(self):
+        """PLANNED repo without caller workflow → has_caller_workflow=False, W005."""
+        api = MockGitHubAPI(
+            file_contents={"QualityOnDemand/release-plan.yaml": PLAN_RC},
+        )
+        result = collect_repo_progress(
+            "QualityOnDemand",
+            "https://github.com/camaraproject/QualityOnDemand",
+            api, [], PublishedContext("r3.2", None),
+        )
+        assert result.state == ProgressState.PLANNED
+        assert result.artifacts.has_caller_workflow is False
+        assert any(w.code == "W005" for w in result.warnings)
+
 
 class TestCompareProgressData:
     """Tests for the two-phase comparison logic."""

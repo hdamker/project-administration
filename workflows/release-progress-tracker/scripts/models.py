@@ -59,6 +59,7 @@ class ArtifactInfo:
     release_pr: Optional[Dict] = None       # {number, state, url}
     draft_release: Optional[Dict] = None    # {name, url}
     release_issue: Optional[Dict] = None    # {number, url}
+    has_caller_workflow: Optional[bool] = None  # Transient — not serialized
 
     def to_dict(self) -> Dict:
         return {

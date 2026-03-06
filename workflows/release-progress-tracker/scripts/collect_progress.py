@@ -33,6 +33,7 @@ from .models import (
     MetaReleaseSummary,
     ProgressData,
     ProgressEntry,
+    ProgressState,
     PublishedContext,
 )
 from .state_deriver import derive_state, find_matching_snapshot
@@ -153,6 +154,13 @@ def collect_repo_progress(
         target_type, target_tag, tag_exists,
         snapshot_branches, draft_releases,
     )
+
+    # Check caller workflow only for PLANNED (other states imply it exists)
+    if entry.state == ProgressState.PLANNED:
+        wf = api.get_file_content(
+            repo_name, ".github/workflows/release-automation.yml"
+        )
+        entry.artifacts.has_caller_workflow = wf is not None
 
     # Populate artifacts
     snapshot = find_matching_snapshot(snapshot_branches, target_tag)
