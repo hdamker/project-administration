@@ -175,10 +175,26 @@ def _check_meta_release_mismatch(
     return []
 
 
+def _check_no_caller_workflow(
+    entry: ProgressEntry, repo_releases: List[dict]
+) -> List[ProgressWarning]:
+    """W005: Active release plan but no caller workflow installed."""
+    if entry.state != ProgressState.PLANNED:
+        return []
+    if entry.artifacts.has_caller_workflow is None or entry.artifacts.has_caller_workflow:
+        return []
+    return [ProgressWarning(
+        code="W005",
+        message="Active release plan but no caller workflow installed",
+        severity="warning",
+    )]
+
+
 # Registry of check functions — add new checks here
 CHECKS = [
     _check_published_plan_diverged,           # W001
     _check_orphaned_snapshot,                  # W002
     _check_published_not_in_releases_master,   # W003
     _check_meta_release_mismatch,              # W004
+    _check_no_caller_workflow,                 # W005
 ]

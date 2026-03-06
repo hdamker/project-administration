@@ -271,11 +271,62 @@ class TestW004MetaReleaseMismatch:
         assert len(w004) == 0
 
 
+class TestW005NoCallerWorkflow:
+    """Test W005: active plan but no caller workflow."""
+
+    def test_triggers_when_planned_without_workflow(self):
+        entry = _make_entry(
+            state=ProgressState.PLANNED,
+            artifacts=ArtifactInfo(has_caller_workflow=False),
+        )
+        warnings = generate_warnings(entry, [])
+        w005 = [w for w in warnings if w.code == "W005"]
+        assert len(w005) == 1
+        assert "caller workflow" in w005[0].message
+
+    def test_no_trigger_when_workflow_present(self):
+        entry = _make_entry(
+            state=ProgressState.PLANNED,
+            artifacts=ArtifactInfo(has_caller_workflow=True),
+        )
+        warnings = generate_warnings(entry, [])
+        w005 = [w for w in warnings if w.code == "W005"]
+        assert len(w005) == 0
+
+    def test_no_trigger_for_not_planned(self):
+        entry = _make_entry(
+            state=ProgressState.NOT_PLANNED,
+            target_release_type="none",
+            artifacts=ArtifactInfo(has_caller_workflow=False),
+        )
+        warnings = generate_warnings(entry, [])
+        w005 = [w for w in warnings if w.code == "W005"]
+        assert len(w005) == 0
+
+    def test_no_trigger_for_snapshot_active(self):
+        entry = _make_entry(
+            state=ProgressState.SNAPSHOT_ACTIVE,
+            artifacts=ArtifactInfo(has_caller_workflow=False),
+        )
+        warnings = generate_warnings(entry, [])
+        w005 = [w for w in warnings if w.code == "W005"]
+        assert len(w005) == 0
+
+    def test_no_trigger_when_not_checked(self):
+        entry = _make_entry(
+            state=ProgressState.PLANNED,
+            artifacts=ArtifactInfo(has_caller_workflow=None),
+        )
+        warnings = generate_warnings(entry, [])
+        w005 = [w for w in warnings if w.code == "W005"]
+        assert len(w005) == 0
+
+
 class TestChecksRegistry:
     """Test the extensibility pattern."""
 
     def test_checks_list_is_populated(self):
-        assert len(CHECKS) >= 4
+        assert len(CHECKS) >= 5
 
     def test_custom_check_can_be_added(self):
         """Verify a new check function integrates with generate_warnings."""
