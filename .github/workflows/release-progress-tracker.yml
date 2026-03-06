@@ -27,8 +27,8 @@ on:
 env:
   # Source repository and ref for progress tracker code and shared assets.
   # Change these when testing on a fork or switching between branches.
-  SOURCE_REPO: hdamker/project-administration
-  SOURCE_REF: w005-onboarding-warning
+  SOURCE_REPO: camaraproject/project-administration
+  SOURCE_REF: main
 
 jobs:
   # ---------------------------------------------------------------------------
