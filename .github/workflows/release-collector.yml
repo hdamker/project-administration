@@ -64,7 +64,7 @@ on:
 
   schedule:
     # Daily run at 04:35 UTC (for testing)
-    - cron: '35 4 * * *'
+    # - cron: '35 4 * * *'
 
 env:
   # Effective inputs (with defaults for scheduled runs)
