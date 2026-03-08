@@ -234,13 +234,6 @@ tr.not-planned-row:hover td {
             </select>
           </div>
           <div class="filter-group">
-            <label for="filterReleaseTrack">Release Track:</label>
-            <select id="filterReleaseTrack" onchange="applyFilters()">
-              <option value="">All</option>
-              <option value="independent">Independent</option>
-            </select>
-          </div>
-          <div class="filter-group">
             <label for="filterMaturity">Maturity:</label>
             <select id="filterMaturity" onchange="applyFilters()">
               <option value="">All</option>
@@ -314,10 +307,14 @@ tr.not-planned-row:hover td {
 
     const COL_COUNT = 10;
 
+    // Release track display order — update when new meta-releases are added
+    const TRACK_ORDER = ['Spring26', 'Sync26', 'Signal27', 'independent', 'Fall25'];
+
     // Global state
     let allRows = [];
     let filteredRows = [];
     let currentSort = { column: 3, ascending: true }; // Default: sort by Release State
+    let currentTrackFilter = '';
 
     /**
      * Flatten repo-centric progress data to API-centric rows.
@@ -416,16 +413,23 @@ tr.not-planned-row:hover td {
     }
 
     /**
-     * Render simplified header
+     * Update header dynamically based on active track filter.
+     * Shows repo stats when unfiltered, cycle context when a track is selected.
      */
-    function renderHeader(data) {
+    function updateHeader(trackFilter) {
       const headerDiv = document.getElementById('header-metadata');
-      const stats = data.metadata.collection_stats;
-      headerDiv.innerHTML = `Tracked: ${stats.repos_with_plan}/${stats.repos_scanned} repos`;
+      if (trackFilter) {
+        headerDiv.innerHTML = trackFilter === 'independent'
+          ? 'Independent releases'
+          : `${trackFilter} release cycle`;
+      } else {
+        const meta = PROGRESS_DATA.metadata;
+        headerDiv.innerHTML = `Tracked: ${meta.repos_with_plan}/${meta.repos_scanned} repositories`;
+      }
     }
 
     /**
-     * Build release track pills
+     * Build release track pills in TRACK_ORDER priority.
      */
     function buildTrackPills() {
       const container = document.getElementById('trackPills');
@@ -440,20 +444,16 @@ tr.not-planned-row:hover td {
         All<span class="track-pill-count">(${allRows.length})</span>
       </div>`;
 
-      // Meta-releases first (sorted), then Independent last
-      const metaNames = Object.keys(trackCounts).filter(k => k !== 'independent').sort();
+      // Known tracks in priority order, then unknown tracks first (as signal)
+      const orderedTracks = TRACK_ORDER.filter(t => trackCounts[t]);
+      const unknownTracks = Object.keys(trackCounts).filter(t => !TRACK_ORDER.includes(t));
 
-      metaNames.forEach(name => {
+      [...unknownTracks, ...orderedTracks].forEach(name => {
+        const label = name === 'independent' ? 'Independent' : name;
         html += `<div class="category-pill" data-track="${name}" onclick="filterByTrack('${name}')">
-          ${name}<span class="track-pill-count">(${trackCounts[name]})</span>
+          ${label}<span class="track-pill-count">(${trackCounts[name]})</span>
         </div>`;
       });
-
-      if (trackCounts['independent']) {
-        html += `<div class="category-pill" data-track="independent" onclick="filterByTrack('independent')">
-          Independent<span class="track-pill-count">(${trackCounts['independent']})</span>
-        </div>`;
-      }
 
       container.innerHTML = html;
     }
@@ -462,26 +462,17 @@ tr.not-planned-row:hover td {
      * Filter by clicking a track pill
      */
     function filterByTrack(track) {
-      document.getElementById('filterReleaseTrack').value = track;
+      currentTrackFilter = track;
       applyFilters();
     }
 
     /**
-     * Populate Release Track dropdown from data
+     * Track sort key based on TRACK_ORDER priority.
+     * Unknown tracks return -1 (sort first, as signal).
      */
-    function populateReleaseTrackDropdown() {
-      const dropdown = document.getElementById('filterReleaseTrack');
-      const names = new Set();
-      allRows.forEach(row => {
-        if (row.meta_release) names.add(row.meta_release);
-      });
-
-      Array.from(names).sort().forEach(name => {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        dropdown.appendChild(opt);
-      });
+    function trackSortKey(name) {
+      const idx = TRACK_ORDER.indexOf(name);
+      return idx >= 0 ? idx : -1;
     }
 
     /**
@@ -501,12 +492,7 @@ tr.not-planned-row:hover td {
         groups[key].rows.push(row);
       });
 
-      // Meta-releases alphabetically, then Independent last
-      return Object.values(groups).sort((a, b) => {
-        if (a.track === 'independent') return 1;
-        if (b.track === 'independent') return -1;
-        return a.track.localeCompare(b.track);
-      });
+      return Object.values(groups).sort((a, b) => trackSortKey(a.track) - trackSortKey(b.track));
     }
 
     /**
@@ -668,8 +654,7 @@ tr.not-planned-row:hover td {
       const tbody = document.getElementById('tableBody');
       tbody.innerHTML = '';
 
-      const releaseTrackFilter = document.getElementById('filterReleaseTrack').value;
-      const isGrouped = !releaseTrackFilter;
+      const isGrouped = !currentTrackFilter;
 
       if (isGrouped && rows.length > 0) {
         const groups = getGroupedRows(rows);
@@ -684,7 +669,7 @@ tr.not-planned-row:hover td {
       }
 
       updateResultsCounter(rows.length);
-      updateTrackFooter(releaseTrackFilter);
+      updateTrackFooter(currentTrackFilter);
     }
 
     /**
@@ -716,7 +701,6 @@ tr.not-planned-row:hover td {
     function applyFilters() {
       const searchFilter = document.getElementById('filterSearch').value.toLowerCase();
       const stateFilter = document.getElementById('filterState').value;
-      const releaseTrackFilter = document.getElementById('filterReleaseTrack').value;
       const maturityFilter = document.getElementById('filterMaturity').value;
       const warningsFilter = document.getElementById('filterWarnings').checked;
 
@@ -728,11 +712,11 @@ tr.not-planned-row:hover td {
 
         if (stateFilter && row.state !== stateFilter) return false;
 
-        if (releaseTrackFilter) {
-          if (releaseTrackFilter === 'independent') {
+        if (currentTrackFilter) {
+          if (currentTrackFilter === 'independent') {
             if (row.release_track !== 'independent') return false;
           } else {
-            if (row.meta_release !== releaseTrackFilter) return false;
+            if (row.meta_release !== currentTrackFilter) return false;
           }
         }
 
@@ -746,7 +730,8 @@ tr.not-planned-row:hover td {
         return true;
       });
 
-      updateTrackPillStates(releaseTrackFilter);
+      updateTrackPillStates(currentTrackFilter);
+      updateHeader(currentTrackFilter);
       renderTable(filteredRows);
       updateSortIndicators(currentSort.column);
       updateUrlParams();
@@ -881,9 +866,9 @@ tr.not-planned-row:hover td {
     function clearAllFilters() {
       document.getElementById('filterSearch').value = '';
       document.getElementById('filterState').value = '';
-      document.getElementById('filterReleaseTrack').value = '';
       document.getElementById('filterMaturity').value = '';
       document.getElementById('filterWarnings').checked = false;
+      currentTrackFilter = '';
       applyFilters();
     }
 
@@ -895,7 +880,7 @@ tr.not-planned-row:hover td {
 
       if (params.has('search')) document.getElementById('filterSearch').value = params.get('search');
       if (params.has('state')) document.getElementById('filterState').value = params.get('state');
-      if (params.has('release_track')) document.getElementById('filterReleaseTrack').value = params.get('release_track');
+      if (params.has('release_track')) currentTrackFilter = params.get('release_track');
       if (params.has('maturity')) document.getElementById('filterMaturity').value = params.get('maturity');
       if (params.get('warnings') === 'true') document.getElementById('filterWarnings').checked = true;
 
@@ -915,13 +900,12 @@ tr.not-planned-row:hover td {
 
       const search = document.getElementById('filterSearch').value;
       const state = document.getElementById('filterState').value;
-      const releaseTrack = document.getElementById('filterReleaseTrack').value;
       const maturity = document.getElementById('filterMaturity').value;
       const warnings = document.getElementById('filterWarnings').checked;
 
       if (search) params.set('search', search);
       if (state) params.set('state', state);
-      if (releaseTrack) params.set('release_track', releaseTrack);
+      if (currentTrackFilter) params.set('release_track', currentTrackFilter);
       if (maturity) params.set('maturity', maturity);
       if (warnings) params.set('warnings', 'true');
       if (currentSort.column !== 3) params.set('sort', currentSort.column);
@@ -990,16 +974,22 @@ tr.not-planned-row:hover td {
      */
     function renderFooter(data) {
       const footerDiv = document.getElementById('footer-metadata');
-      const updated = new Date(data.metadata.last_updated).toLocaleString('en-US', {
-        year: 'numeric', month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit'
-      });
-      const stats = data.metadata.collection_stats;
-      footerDiv.innerHTML = `
-        Data collected: ${updated} |
-        ${stats.repos_scanned} repos scanned |
-        Schema v${data.metadata.schema_version}
-      `;
+      const fmt = (iso) => {
+        if (!iso) return '\u2014';
+        const d = new Date(iso);
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} (UTC)`;
+      };
+      const meta = data.metadata;
+      const parts = [
+        `Progress last check: ${fmt(meta.last_checked || meta.last_updated)}`,
+        `Progress data updated: ${fmt(meta.last_updated)}`,
+      ];
+      if (meta.releases_master_updated) {
+        parts.push(`Release source data (releases-master.yaml): ${fmt(meta.releases_master_updated)}`);
+      }
+      parts.push(`Schema v${meta.schema_version}`);
+      footerDiv.innerHTML = parts.join(' | ');
     }
 
     // ===== Initialization =====
@@ -1007,14 +997,19 @@ tr.not-planned-row:hover td {
     function initialize() {
       allRows = flattenProgressData(PROGRESS_DATA);
 
-      renderHeader(PROGRESS_DATA);
       renderFooter(PROGRESS_DATA);
 
-      buildTrackPills();
-      populateReleaseTrackDropdown();
-
       parseUrlParams();
-      applyFilters();
+
+      // In iframe with a track param: suppress pills (track can't be changed)
+      const inIframe = ViewerLib.isInIframe();
+      if (!inIframe || !currentTrackFilter) {
+        buildTrackPills();
+      } else {
+        document.getElementById('trackPills').style.display = 'none';
+      }
+
+      applyFilters();           // calls updateHeader(), renderTable(), updateTrackPillStates()
       updateSortIndicators(currentSort.column);
     }
 

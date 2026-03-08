@@ -4,10 +4,10 @@
 # Adds release-plan.yaml to all CAMARA API repositories based on data from
 # releases-master.yaml. Creates PRs for repositories that don't yet have the file.
 #
-# PREREQUISITES:
-# - Secret BULK_CAMPAIGN_TOKEN: Fine-grained PAT with the following permissions:
-#   - Contents: Read and write (create branches, commit changes)
-#   - Pull requests: Read and write (create PRs in target repos)
+# AUTHENTICATION:
+# - select job: uses GITHUB_TOKEN (read-only, public repos)
+# - run job: uses camara-release-automation GitHub App token via create-github-app-token action
+#   Requires org-level variable RELEASE_APP_ID, RELEASE_APP_SLUG and secret RELEASE_APP_PRIVATE_KEY
 #
 # DOCUMENTATION:
 # https://github.com/camaraproject/project-administration/blob/main/campaigns/release-plan-rollout/docs/README.md
@@ -81,7 +81,7 @@ jobs:
         name: Build repo list (from repositories array + include filter + skip existing)
         uses: actions/github-script@v8
         env:
-          GH_TOKEN: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         with:
           script: |
             const fs = require('fs');
@@ -217,6 +217,14 @@ jobs:
         repo: ${{ fromJson(needs.select.outputs.repos) }}
 
     steps:
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
       - name: Checkout admin repo (self)
         uses: actions/checkout@v6
         with:
@@ -228,7 +236,7 @@ jobs:
           repository: ${{ matrix.repo }}
           path: repo
           fetch-depth: 0
-          token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Fetch CODEOWNERS
         id: codeowners
@@ -247,7 +255,7 @@ jobs:
             echo "No CODEOWNERS file found"
           fi
         env:
-          GH_TOKEN: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Generate release-plan.yaml
         id: generate
@@ -305,6 +313,16 @@ jobs:
             echo "::warning::release-plan.yaml was not generated"
           fi
 
+      - name: Configure git identity
+        if: ${{ env.MODE == 'apply' }}
+        run: |
+          BOT="${{ vars.RELEASE_APP_SLUG }}[bot]"
+          BOT_ID=$(gh api /users/$BOT --jq '.id')
+          git -C repo config user.name "$BOT"
+          git -C repo config user.email "${BOT_ID}+${BOT}@users.noreply.github.com"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
       - name: Campaign finalize
         uses: ./admin/actions/campaign-finalize-per-repo
         with:
@@ -315,7 +333,7 @@ jobs:
           pr_base_title: ${{ env.PR_TITLE }}
           pr_body_file: /tmp/pr-body.md
           branch: ${{ env.BRANCH }}
-          github_token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
           target_files: release-plan.yaml
           error_occurred: ${{ steps.validate.outputs.valid != 'true' }}
           error_message: "Validation failed: ${{ steps.validate.outputs.errors }}"
@@ -340,7 +358,7 @@ jobs:
           fi
 
       - name: Download artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: ${{ steps.pattern.outputs.pattern }}
           path: plans
@@ -424,7 +442,7 @@ jobs:
             fs.writeFileSync(`${baseName}.jsonl`, jsonlContent);
 
       - name: Upload merged results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: campaign-${{ steps.pattern.outputs.base_name }}
           path: |

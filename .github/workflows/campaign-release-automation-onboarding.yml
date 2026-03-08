@@ -8,10 +8,10 @@
 #
 # Creates PRs for repositories that have release-plan.yaml but no caller workflow yet.
 #
-# PREREQUISITES:
-# - Secret BULK_CAMPAIGN_TOKEN: Fine-grained PAT with the following permissions:
-#   - Contents: Read and write (create branches, commit changes)
-#   - Pull requests: Read and write (create PRs in target repos)
+# AUTHENTICATION:
+# - select job: uses GITHUB_TOKEN (read-only, public repos)
+# - run job: uses camara-release-automation GitHub App token via create-github-app-token action
+#   Requires org-level variable RELEASE_APP_ID and secret RELEASE_APP_PRIVATE_KEY
 #
 # NOTE: Repository rulesets require admin-level access and are applied separately
 # via the apply-release-rulesets.sh script.
@@ -42,7 +42,7 @@ on:
         description: 'Ref for the caller workflow uses: line (branch or tag in camaraproject/tooling)'
         required: false
         type: string
-        default: 'release-automation'
+        default: 'ra-v1-rc'
 
 concurrency:
   group: campaign-release-automation-onboarding-${{ github.ref }}
@@ -77,7 +77,7 @@ jobs:
         name: Build repo list (has release-plan.yaml on main)
         uses: actions/github-script@v8
         env:
-          GH_TOKEN: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         with:
           script: |
             const { execSync } = require('child_process');
@@ -149,6 +149,14 @@ jobs:
         repo: ${{ fromJson(needs.select.outputs.repos) }}
 
     steps:
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
       - name: Checkout admin repo (self)
         uses: actions/checkout@v6
         with:
@@ -160,7 +168,7 @@ jobs:
           repository: ${{ matrix.repo }}
           path: repo
           fetch-depth: 0
-          token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Fetch caller workflow template from tooling
         id: fetch_caller
@@ -185,7 +193,7 @@ jobs:
           USES_LINE=$(grep 'uses:.*release-automation-reusable' repo/.github/workflows/release-automation.yml || true)
           echo "Uses line: $USES_LINE"
         env:
-          GH_TOKEN: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Create CHANGELOG directory structure
         id: changelog
@@ -280,6 +288,16 @@ jobs:
             git diff --cached --name-only
           fi
 
+      - name: Configure git identity
+        if: ${{ env.MODE == 'apply' }}
+        run: |
+          BOT="${{ vars.RELEASE_APP_SLUG }}[bot]"
+          BOT_ID=$(gh api /users/$BOT --jq '.id')
+          git -C repo config user.name "$BOT"
+          git -C repo config user.email "${BOT_ID}+${BOT}@users.noreply.github.com"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
       - name: Build campaign data JSON
         id: campaign_data
         shell: bash
@@ -360,7 +378,7 @@ jobs:
           pr_base_title: ${{ env.PR_TITLE }}
           pr_body_file: /tmp/pr-body.md
           branch: ${{ env.BRANCH }}
-          github_token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
           target_files: .github/workflows/release-automation.yml CHANGELOG.md CHANGELOG/README.md
           error_occurred: ${{ steps.fetch_caller.outputs.error || 'false' }}
           error_message: "Failed to fetch caller workflow template"
@@ -388,7 +406,7 @@ jobs:
           fi
 
       - name: Download artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: ${{ steps.pattern.outputs.pattern }}
           path: plans
@@ -456,7 +474,7 @@ jobs:
             fs.writeFileSync(`${baseName}.jsonl`, jsonl.join(''));
 
       - name: Upload merged results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: campaign-${{ steps.pattern.outputs.base_name }}
           path: |

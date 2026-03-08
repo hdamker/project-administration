@@ -4,10 +4,9 @@
 # Synchronizes Release Information sections in API repository READMEs based on data
 # from releases-master.yaml. Creates PRs to update release tables across repositories.
 #
-# PREREQUISITES:
-# - Secret BULK_CAMPAIGN_TOKEN: Fine-grained PAT with the following permissions:
-#   - Contents: Read and write (create branches, commit changes)
-#   - Pull requests: Read and write (create PRs in target repos)
+# AUTHENTICATION:
+# - run job: uses camara-release-automation GitHub App token via create-github-app-token action
+#   Requires org-level variable RELEASE_APP_ID, RELEASE_APP_SLUG and secret RELEASE_APP_PRIVATE_KEY
 #
 # CHANGELOG:
 # - 2024-12-17: Standardized header format
@@ -150,6 +149,14 @@ jobs:
         repo: ${{ fromJson(needs.select.outputs.repos) }}
 
     steps:
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
       - name: Checkout admin repo (self)
         uses: actions/checkout@v6
         with:
@@ -161,7 +168,7 @@ jobs:
           repository: ${{ matrix.repo }}
           path: repo
           fetch-depth: 0
-          token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Read release data
         id: data
@@ -325,6 +332,16 @@ jobs:
               core.setOutput('error_step', '');
             }
 
+      - name: Configure git identity
+        if: ${{ env.MODE == 'apply' }}
+        run: |
+          BOT="${{ vars.RELEASE_APP_SLUG }}[bot]"
+          BOT_ID=$(gh api /users/$BOT --jq '.id')
+          git -C repo config user.name "$BOT"
+          git -C repo config user.email "${BOT_ID}+${BOT}@users.noreply.github.com"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
       - name: Finalize campaign per repo
         if: always()
         uses: ./admin/actions/campaign-finalize-per-repo
@@ -336,7 +353,7 @@ jobs:
           pr_base_title: ${{ env.PR_TITLE }}
           pr_body_file: /tmp/pr-body.md
           branch: ${{ env.BRANCH }}
-          github_token: ${{ secrets.BULK_CAMPAIGN_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
           error_occurred: ${{ steps.error.outputs.error_occurred }}
           error_message: ${{ steps.error.outputs.error_message }}
           error_step: ${{ steps.error.outputs.error_step }}
@@ -360,7 +377,7 @@ jobs:
             echo "dir_name=results" >> $GITHUB_OUTPUT
           fi
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           pattern: ${{ steps.pattern.outputs.pattern }}
           path: ${{ steps.pattern.outputs.dir_name }}
@@ -404,7 +421,7 @@ jobs:
             }
             fs.writeFileSync(`${outputName}.md`, md.join('\n'));
             fs.writeFileSync(`${outputName}.jsonl`, lines.join(''));
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.pattern.outputs.output_name }}
           path: |

@@ -100,8 +100,101 @@ def _check_orphaned_snapshot(
     return []
 
 
+def _check_published_not_in_releases_master(
+    entry: ProgressEntry, repo_releases: List[dict]
+) -> List[ProgressWarning]:
+    """W003: State=PUBLISHED but release tag not found in releases-master.yaml.
+
+    When the tag exists and GitHub Release is published (state=PUBLISHED),
+    but the Release Collector hasn't processed it yet, milestone columns
+    (M1/M3/M4) will be empty because the release data is missing from
+    releases-master.yaml.
+    """
+    if entry.state != ProgressState.PUBLISHED:
+        return []
+
+    if not entry.target_release_tag:
+        return []
+
+    for rel in repo_releases:
+        if rel.get("release_tag") == entry.target_release_tag:
+            return []
+
+    return [ProgressWarning(
+        code="W003",
+        message=(
+            f"Release {entry.target_release_tag} is published but not yet "
+            f"in releases-master.yaml \u2014 milestone data may be incomplete"
+        ),
+        severity="warning",
+    )]
+
+
+def _check_meta_release_mismatch(
+    entry: ProgressEntry, repo_releases: List[dict]
+) -> List[ProgressWarning]:
+    """W004: Release found by tag prefix has different meta_release label.
+
+    When tag prefix matching finds releases with a meta_release label that
+    differs from the plan's meta_release, this may indicate a configuration
+    issue (e.g., repo assigned to wrong meta-release cycle).
+
+    Skips releases labeled "None (Sandbox)" — these are repos not yet
+    assigned to a meta-release cycle, which is expected for new repos.
+    """
+    if not entry.meta_release or not entry.target_release_tag:
+        return []
+
+    # Derive the same tag prefix used by milestone_deriver
+    dot_index = entry.target_release_tag.find(".")
+    tag_prefix = (
+        entry.target_release_tag[:dot_index + 1]
+        if dot_index != -1
+        else entry.target_release_tag + "."
+    )
+
+    for rel in repo_releases:
+        rel_tag = rel.get("release_tag") or ""
+        rel_meta = rel.get("meta_release")
+        if (
+            rel_tag.startswith(tag_prefix)
+            and rel_meta
+            and rel_meta != "None (Sandbox)"
+            and rel_meta != entry.meta_release
+        ):
+            return [ProgressWarning(
+                code="W004",
+                message=(
+                    f"Release {rel_tag} has meta-release '{rel_meta}' "
+                    f"in releases-master.yaml but plan specifies "
+                    f"'{entry.meta_release}'"
+                ),
+                severity="warning",
+            )]
+
+    return []
+
+
+def _check_no_caller_workflow(
+    entry: ProgressEntry, repo_releases: List[dict]
+) -> List[ProgressWarning]:
+    """W005: Active release plan but no caller workflow installed."""
+    if entry.state != ProgressState.PLANNED:
+        return []
+    if entry.artifacts.has_caller_workflow is None or entry.artifacts.has_caller_workflow:
+        return []
+    return [ProgressWarning(
+        code="W005",
+        message="Active release plan but no caller workflow installed",
+        severity="warning",
+    )]
+
+
 # Registry of check functions — add new checks here
 CHECKS = [
-    _check_published_plan_diverged,  # W001
-    _check_orphaned_snapshot,        # W002
+    _check_published_plan_diverged,           # W001
+    _check_orphaned_snapshot,                  # W002
+    _check_published_not_in_releases_master,   # W003
+    _check_meta_release_mismatch,              # W004
+    _check_no_caller_workflow,                 # W005
 ]

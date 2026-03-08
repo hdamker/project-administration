@@ -213,22 +213,7 @@ runs:
       shell: bash
       working-directory: repo
       run: |
-        # Derive git user from token identity
-        if ! TOKEN_INFO=$(gh api user --jq '{login: .login, id: .id}' 2>&1); then
-          echo "::error::Failed to get token identity: $TOKEN_INFO"
-          exit 1
-        fi
-        TOKEN_USER=$(echo "$TOKEN_INFO" | jq -r '.login')
-        TOKEN_ID=$(echo "$TOKEN_INFO" | jq -r '.id')
-        if [ -z "$TOKEN_USER" ] || [ "$TOKEN_USER" = "null" ]; then
-          echo "::error::Could not determine token user identity"
-          exit 1
-        fi
-        GIT_USER_NAME="${TOKEN_USER}"
-        GIT_USER_EMAIL="${TOKEN_ID}+${TOKEN_USER}@users.noreply.github.com"
-        echo "Committing as: $GIT_USER_NAME <$GIT_USER_EMAIL>"
-        git config user.name "$GIT_USER_NAME"
-        git config user.email "$GIT_USER_EMAIL"
+        # Git identity must be pre-configured by the calling workflow
         git checkout -B "${{ inputs.branch }}"
         for f in ${{ inputs.target_files }}; do
           if [ -e "$f" ]; then

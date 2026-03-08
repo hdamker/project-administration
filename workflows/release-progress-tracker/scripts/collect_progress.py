@@ -13,9 +13,11 @@ Usage:
 
 import argparse
 import logging
+import os
 import sys
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, List, Optional
 
 import yaml
@@ -23,21 +25,21 @@ import yaml
 from .github_api import GitHubAPI, RateLimitError
 from .milestone_deriver import build_meta_release_summaries, derive_cycle_releases
 from .models import (
+    COLLECTOR_VERSION,
+    SCHEMA_VERSION,
     ApiEntry,
     ArtifactInfo,
     CollectionStats,
     MetaReleaseSummary,
     ProgressData,
     ProgressEntry,
+    ProgressState,
     PublishedContext,
 )
 from .state_deriver import derive_state, find_matching_snapshot
 from .warnings import generate_warnings
 
 logger = logging.getLogger(__name__)
-
-COLLECTOR_VERSION = "1.0.0"
-SCHEMA_VERSION = "1.0.0"
 
 
 def load_releases_master(path: str) -> Dict:
@@ -134,7 +136,8 @@ def collect_repo_progress(
                 entry.artifacts.snapshot_branch = snapshot
         # Cross-reference milestones
         entry.cycle_releases = derive_cycle_releases(
-            repo_name, meta_release, all_releases, planned_api_names,
+            repo_name, target_tag, meta_release, all_releases,
+            planned_api_names,
         )
         # Generate warnings
         repo_releases = [r for r in all_releases if r.get("repository") == repo_name]
@@ -151,6 +154,13 @@ def collect_repo_progress(
         target_type, target_tag, tag_exists,
         snapshot_branches, draft_releases,
     )
+
+    # Check caller workflow only for PLANNED (other states imply it exists)
+    if entry.state == ProgressState.PLANNED:
+        wf = api.get_file_content(
+            repo_name, ".github/workflows/release-automation.yml"
+        )
+        entry.artifacts.has_caller_workflow = wf is not None
 
     # Populate artifacts
     snapshot = find_matching_snapshot(snapshot_branches, target_tag)
@@ -179,7 +189,8 @@ def collect_repo_progress(
 
     # Cross-reference M1/M3/M4 from releases-master
     entry.cycle_releases = derive_cycle_releases(
-        repo_name, meta_release, all_releases, planned_api_names,
+        repo_name, target_tag, meta_release, all_releases,
+        planned_api_names,
     )
 
     # Generate warnings
@@ -189,9 +200,34 @@ def collect_repo_progress(
     return entry
 
 
+def compare_progress_data(new_dict: Dict, existing_dict: Dict) -> bool:
+    """Compare stable data sections between new and existing output.
+
+    Only compares ``progress`` and ``meta_releases`` sections.
+    Metadata fields (timestamps, stats) are excluded because they
+    change on every collection run.
+
+    Returns True if data has changed, False if identical.
+    """
+    def normalize_progress(entries):
+        return sorted(entries, key=lambda e: e.get("repository", ""))
+
+    new_progress = normalize_progress(new_dict.get("progress", []))
+    existing_progress = normalize_progress(existing_dict.get("progress", []))
+
+    if new_progress != existing_progress:
+        return True
+
+    new_meta = new_dict.get("meta_releases", [])
+    existing_meta = existing_dict.get("meta_releases", [])
+
+    return new_meta != existing_meta
+
+
 def collect_all(
     master_path: str,
     output_path: str,
+    existing_path: Optional[str] = None,
     api: Optional[GitHubAPI] = None,
 ) -> ProgressData:
     """Main collection loop.
@@ -199,6 +235,9 @@ def collect_all(
     Args:
         master_path: Path to releases-master.yaml.
         output_path: Path to write releases-progress.yaml.
+        existing_path: Path to existing releases-progress.yaml for comparison.
+            When provided, only signals data_changed=True if progress or
+            meta_releases sections differ from the existing file.
         api: GitHubAPI instance (created from env if not provided).
 
     Returns:
@@ -250,8 +289,15 @@ def collect_all(
     stats.api_calls = api.api_calls
     stats.duration_seconds = time.time() - start_time
 
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    # Read source data freshness from releases-master.yaml metadata
+    master_metadata = master.get("metadata", {})
+    releases_master_updated = master_metadata.get("last_updated", "")
+
     progress_data = ProgressData(
-        last_updated=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        last_checked=now,
+        releases_master_updated=releases_master_updated,
         schema_version=SCHEMA_VERSION,
         collector_version=COLLECTOR_VERSION,
         collection_stats=stats,
@@ -259,16 +305,43 @@ def collect_all(
         progress=entries,
     )
 
-    # Write output
+    # Compare with existing file to determine if data actually changed
+    new_output = progress_data.to_dict()
+    data_changed = True
+
+    if existing_path:
+        existing_file = Path(existing_path)
+        if existing_file.exists():
+            try:
+                with open(existing_file, "r") as f:
+                    existing_data = yaml.safe_load(f) or {}
+                data_changed = compare_progress_data(new_output, existing_data)
+                if not data_changed:
+                    # Carry forward last_updated from existing file
+                    existing_last_updated = existing_data.get("metadata", {}).get(
+                        "last_updated", now
+                    )
+                    progress_data.last_updated = existing_last_updated
+                    logger.info("No data changes detected, carrying forward last_updated")
+            except Exception as e:
+                logger.warning("Failed to read existing file: %s, treating as changed", e)
+                data_changed = True
+
+    if data_changed:
+        progress_data.last_updated = now
+
+    progress_data.data_changed = data_changed
+
+    # Write output (always write — last_checked changes every run for the viewer)
     output = progress_data.to_dict()
     with open(output_path, "w") as f:
         yaml.dump(output, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
     logger.info(
         "Collection complete: %d repos scanned, %d with plan, %d planned, "
-        "%d API calls in %.1fs",
+        "%d API calls in %.1fs, data_changed=%s",
         stats.repos_scanned, stats.repos_with_plan, stats.repos_planned,
-        stats.api_calls, stats.duration_seconds,
+        stats.api_calls, stats.duration_seconds, data_changed,
     )
 
     return progress_data
@@ -288,6 +361,10 @@ def main():
         help="Path to write releases-progress.yaml",
     )
     parser.add_argument(
+        "--existing", required=False, default=None,
+        help="Path to existing releases-progress.yaml for change comparison",
+    )
+    parser.add_argument(
         "--debug", action="store_true",
         help="Enable debug logging",
     )
@@ -299,7 +376,25 @@ def main():
     )
 
     try:
-        collect_all(args.master, args.output)
+        result = collect_all(args.master, args.output, existing_path=args.existing)
+
+        # Output data_changed for workflow consumption
+        github_output = os.environ.get("GITHUB_OUTPUT")
+        if github_output:
+            with open(github_output, "a") as f:
+                f.write(f"data_changed={'true' if result.data_changed else 'false'}\n")
+
+        # Log collection stats for workflow summary
+        stats = result.collection_stats
+        print(f"::group::Collection Statistics")
+        print(f"Repos scanned: {stats.repos_scanned}")
+        print(f"Repos with plan: {stats.repos_with_plan}")
+        print(f"Repos planned: {stats.repos_planned}")
+        print(f"API calls: {stats.api_calls}")
+        print(f"Duration: {stats.duration_seconds:.1f}s")
+        print(f"Data changed: {result.data_changed}")
+        print(f"::endgroup::")
+
     except Exception as e:
         logger.error("Collection failed: %s", e)
         sys.exit(1)
