@@ -84,6 +84,12 @@
   display: block;
 }
 
+/* Flip top-row warning tooltips below the icon so they stay clear of sticky headers */
+.tooltip-below-row .warning-icon .warning-tooltip {
+  bottom: auto;
+  top: calc(100% + 6px);
+}
+
 /* Milestone columns */
 .milestone-cell {
   font-size: 12px;
@@ -667,6 +673,12 @@ tr.not-planned-row:hover td {
         sortData(rows, currentSort.column, currentSort.ascending);
         rows.forEach(row => tbody.appendChild(renderDataRow(row)));
       }
+
+      const dataRows = Array.from(tbody.querySelectorAll('tr'))
+        .filter(row => !row.classList.contains('group-header-row'));
+      dataRows.forEach((row, index) => {
+        row.classList.toggle('tooltip-below-row', index < 2);
+      });
 
       updateResultsCounter(rows.length);
       updateTrackFooter(currentTrackFilter);
