@@ -123,8 +123,8 @@ def _check_published_not_in_releases_master(
     return [ProgressWarning(
         code="W003",
         message=(
-            f"Release {entry.target_release_tag} is published but not yet "
-            f"in releases-master.yaml \u2014 milestone data may be incomplete"
+            f"Release {entry.target_release_tag} has been published. "
+            f"Milestone data will be updated in the next 24 hours."
         ),
         severity="warning",
     )]
