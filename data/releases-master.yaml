@@ -1,5 +1,5 @@
 metadata:
-  last_updated: '2026-03-10T05:33:14.157Z'
+  last_updated: '2026-03-10T09:13:23.423Z'
   workflow_version: 3.0.0
   schema_version: 2.0.0
 releases:
@@ -2266,6 +2266,19 @@ releases:
       - api_name: release-test
         file_name: release-test
         api_version: 1.0.0-rc.1
+        api_title: Release Test
+        commonalities: r4.1
+  - repository: ReleaseTest
+    release_tag: r1.3
+    release_date: '2026-03-10T09:09:24Z'
+    meta_release: None (Sandbox)
+    github_url: https://github.com/camaraproject/ReleaseTest/releases/tag/r1.3
+    release_type: pre-release-rc
+    superseded: true
+    apis:
+      - api_name: release-test
+        file_name: release-test
+        api_version: 1.0.0-rc.2
         api_title: Release Test
         commonalities: r4.1
   - repository: SimpleEdgeDiscovery
