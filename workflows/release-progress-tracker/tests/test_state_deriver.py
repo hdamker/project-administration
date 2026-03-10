@@ -1,8 +1,11 @@
 """Tests for state derivation logic."""
 
-import pytest
-
-from scripts.state_deriver import derive_state, find_matching_snapshot
+from scripts.state_deriver import (
+    derive_state,
+    extract_draft_release_url_from_issue,
+    find_matching_draft_release,
+    find_matching_snapshot,
+)
 from scripts.models import ProgressState
 
 
@@ -43,6 +46,22 @@ class TestDeriveState:
             ["release-snapshot/r4.1-abc123"], []
         )
         assert state == ProgressState.SNAPSHOT_ACTIVE
+
+    def test_release_issue_draft_ready_fallback_returns_draft_ready(self):
+        state = derive_state(
+            "pre-release-rc", "r4.1", False,
+            ["release-snapshot/r4.1-abc123"], [],
+            {
+                "body": (
+                    "<!-- release-automation:release-tag:r4.1 -->\n"
+                    "**State:** `draft-ready`\n"
+                    "**Draft release:** "
+                    "https://github.com/camaraproject/Test/releases/tag/untagged-123"
+                ),
+                "labels": ["release-state:draft-ready"],
+            },
+        )
+        assert state == ProgressState.DRAFT_READY
 
     def test_no_artifacts_returns_planned(self):
         state = derive_state("pre-release-rc", "r4.1", False, [], [])
@@ -93,3 +112,31 @@ class TestFindMatchingSnapshot:
     def test_empty_branches_returns_none(self):
         result = find_matching_snapshot([], "r4.1")
         assert result is None
+
+
+class TestFindMatchingDraftRelease:
+    def test_matches_target_commitish(self):
+        result = find_matching_draft_release(
+            [{
+                "name": "Draft release",
+                "tag_name": "",
+                "target_commitish": "release-snapshot/r4.1-abc123",
+            }],
+            "r4.1",
+            "release-snapshot/r4.1-abc123",
+        )
+        assert result is not None
+
+
+class TestExtractDraftReleaseUrlFromIssue:
+    def test_extracts_plain_url(self):
+        result = extract_draft_release_url_from_issue({
+            "body": (
+                "**State:** `draft-ready`\n\n"
+                "**Draft release:** "
+                "https://github.com/camaraproject/Test/releases/tag/untagged-123"
+            )
+        })
+        assert result == (
+            "https://github.com/camaraproject/Test/releases/tag/untagged-123"
+        )
