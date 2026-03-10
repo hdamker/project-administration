@@ -41,18 +41,29 @@ jobs:
       has_data: ${{ steps.collect.outcome == 'success' }}
       data_changed: ${{ steps.collect.outputs.data_changed }}
     steps:
+      - name: Generate App token
+        id: app-token
+        if: vars.RELEASE_APP_ID != ''
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
       - name: Checkout source repository
         uses: actions/checkout@v6
         with:
           repository: ${{ env.SOURCE_REPO }}
           ref: ${{ env.SOURCE_REF }}
           path: project-admin
+          token: ${{ steps.app-token.outputs.token || github.token }}
 
       - name: Checkout caller repository (for existing data)
         uses: actions/checkout@v6
         with:
           path: caller-repo
           sparse-checkout: data/
+          token: ${{ steps.app-token.outputs.token || github.token }}
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -66,7 +77,7 @@ jobs:
         id: collect
         working-directory: project-admin/workflows/release-progress-tracker
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
         run: |
           EXISTING_ARG=""
           if [ -f "${{ github.workspace }}/caller-repo/data/releases-progress.yaml" ]; then
@@ -172,9 +183,19 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      - name: Generate App token
+        id: app-token
+        if: vars.RELEASE_APP_ID != ''
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
       - name: Checkout caller repository
         uses: actions/checkout@v6
-        # Default: checks out the caller repo (e.g. ReleaseManagement)
+        with:
+          token: ${{ steps.app-token.outputs.token || github.token }}
 
       - name: Download data artifact
         uses: actions/download-artifact@v8
@@ -195,6 +216,7 @@ jobs:
       - name: Create pull request
         uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
         with:
+          token: ${{ steps.app-token.outputs.token || github.token }}
           branch: release-progress-update-${{ github.run_number }}
           title: 'Release Progress: Update releases-progress.yaml'
           labels: release-progress

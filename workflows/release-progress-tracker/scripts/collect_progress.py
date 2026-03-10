@@ -36,7 +36,13 @@ from .models import (
     ProgressState,
     PublishedContext,
 )
-from .state_deriver import derive_state, find_matching_snapshot
+from .state_deriver import (
+    derive_state,
+    extract_draft_release_url_from_issue,
+    find_matching_draft_release,
+    find_matching_snapshot,
+    issue_indicates_draft_ready,
+)
 from .warnings import generate_warnings
 
 logger = logging.getLogger(__name__)
@@ -148,11 +154,12 @@ def collect_repo_progress(
     tag_exists = api.tag_exists(repo_name, target_tag)
     snapshot_branches = api.list_branches(repo_name, prefix="release-snapshot/")
     draft_releases = api.get_draft_releases(repo_name)
+    release_issue = api.find_release_issue(repo_name, target_tag)
 
     # Derive state
     entry.state = derive_state(
         target_type, target_tag, tag_exists,
-        snapshot_branches, draft_releases,
+        snapshot_branches, draft_releases, release_issue,
     )
 
     # Check caller workflow only for PLANNED (other states imply it exists)
@@ -171,21 +178,28 @@ def collect_repo_progress(
         if pr:
             entry.artifacts.release_pr = pr
 
-    # Draft release
-    for dr in draft_releases:
-        name = dr.get("name", "") or ""
-        dr_tag = dr.get("tag_name", "") or ""
-        if target_tag and (target_tag in name or target_tag in dr_tag):
+    matched_draft = find_matching_draft_release(
+        draft_releases, target_tag, snapshot
+    )
+    if matched_draft:
+        entry.artifacts.draft_release = {
+            "name": matched_draft.get("name") or target_tag,
+            "url": matched_draft.get("html_url"),
+        }
+    elif issue_indicates_draft_ready(release_issue, target_tag):
+        draft_url = extract_draft_release_url_from_issue(release_issue)
+        if draft_url:
             entry.artifacts.draft_release = {
-                "name": dr.get("name"),
-                "url": dr.get("html_url"),
+                "name": target_tag,
+                "url": draft_url,
             }
-            break
 
     # Release issue
-    release_issue = api.find_release_issue(repo_name)
     if release_issue:
-        entry.artifacts.release_issue = release_issue
+        entry.artifacts.release_issue = {
+            "number": release_issue.get("number"),
+            "url": release_issue.get("url"),
+        }
 
     # Cross-reference M1/M3/M4 from releases-master
     entry.cycle_releases = derive_cycle_releases(

@@ -116,7 +116,7 @@ class MockGitHubAPI:
         self.api_calls += 1
         return self.draft_releases.get(repo, [])
 
-    def find_release_issue(self, repo):
+    def find_release_issue(self, repo, target_tag=None):
         self.api_calls += 1
         return self.release_issues.get(repo)
 
@@ -211,6 +211,42 @@ class TestCollectRepoProgress:
         )
         assert result.state == ProgressState.DRAFT_READY
         assert result.artifacts.draft_release is not None
+
+    def test_draft_ready_state_from_release_issue_fallback(self):
+        api = MockGitHubAPI(
+            file_contents={"QualityOnDemand/release-plan.yaml": PLAN_RC},
+            branches={"QualityOnDemand": ["release-snapshot/r4.1-abc123"]},
+            release_issues={"QualityOnDemand": {
+                "number": 82,
+                "url": "https://github.com/camaraproject/QualityOnDemand/issues/82",
+                "labels": ["release-issue", "release-state:draft-ready"],
+                "body": (
+                    "<!-- release-automation:workflow-owned -->\n"
+                    "<!-- release-automation:release-tag:r4.1 -->\n"
+                    "**State:** `draft-ready`\n\n"
+                    "**Draft release:** "
+                    "https://github.com/camaraproject/QualityOnDemand/"
+                    "releases/tag/untagged-abc123"
+                ),
+            }},
+        )
+        result = collect_repo_progress(
+            "QualityOnDemand",
+            "https://github.com/camaraproject/QualityOnDemand",
+            api, [], PublishedContext("r3.2", None),
+        )
+        assert result.state == ProgressState.DRAFT_READY
+        assert result.artifacts.draft_release == {
+            "name": "r4.1",
+            "url": (
+                "https://github.com/camaraproject/QualityOnDemand/"
+                "releases/tag/untagged-abc123"
+            ),
+        }
+        assert result.artifacts.release_issue == {
+            "number": 82,
+            "url": "https://github.com/camaraproject/QualityOnDemand/issues/82",
+        }
 
     def test_published_state(self):
         api = MockGitHubAPI(

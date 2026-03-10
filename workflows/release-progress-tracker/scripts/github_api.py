@@ -1,6 +1,7 @@
 """Thin GitHub REST API client for release progress collection.
 
-Uses requests.Session with GITHUB_TOKEN for authentication.
+Uses authenticated requests when available and can fall back to public
+requests for artifacts that do not require repository-scoped access.
 All methods return parsed data or None on 404.
 """
 
@@ -25,16 +26,26 @@ class GitHubAPI:
 
     def __init__(self, token: Optional[str] = None):
         self.session = requests.Session()
+        self.public_session = requests.Session()
         self.token = token or os.environ.get("GITHUB_TOKEN", "")
         if self.token:
             self.session.headers["Authorization"] = f"token {self.token}"
-        self.session.headers["Accept"] = "application/vnd.github+json"
-        self.session.headers["X-GitHub-Api-Version"] = "2022-11-28"
+        for session in (self.session, self.public_session):
+            session.headers["Accept"] = "application/vnd.github+json"
+            session.headers["X-GitHub-Api-Version"] = "2022-11-28"
         self.api_calls = 0
 
-    def _request(self, method: str, url: str, **kwargs) -> Optional[requests.Response]:
+    def _request(
+        self,
+        method: str,
+        url: str,
+        *,
+        public: bool = False,
+        **kwargs,
+    ) -> Optional[requests.Response]:
         """Make an API request with rate limit monitoring."""
-        resp = self.session.request(method, url, **kwargs)
+        session = self.public_session if public or not self.token else self.session
+        resp = session.request(method, url, **kwargs)
         self.api_calls += 1
 
         # Monitor rate limit
@@ -50,10 +61,10 @@ class GitHubAPI:
 
         return resp
 
-    def _get(self, path: str, **kwargs) -> Optional[requests.Response]:
+    def _get(self, path: str, public: bool = False, **kwargs) -> Optional[requests.Response]:
         """GET request to GitHub API."""
         url = f"https://api.github.com{path}"
-        return self._request("GET", url, **kwargs)
+        return self._request("GET", url, public=public, **kwargs)
 
     def get_file_content(
         self, repo: str, path: str, ref: str = "main"
@@ -110,28 +121,50 @@ class GitHubAPI:
         resp.raise_for_status()
         return [r for r in resp.json() if r.get("draft")]
 
-    def find_release_issue(self, repo: str) -> Optional[Dict]:
-        """Find an open release issue (label=release-issue).
+    def find_release_issue(
+        self,
+        repo: str,
+        target_tag: Optional[str] = None,
+    ) -> Optional[Dict]:
+        """Find an open workflow-owned release issue for a release tag."""
+        issue = self._find_release_issue(repo, target_tag, public=False)
+        if issue is None and self.token:
+            issue = self._find_release_issue(repo, target_tag, public=True)
+        return issue
 
-        Returns {number, url} or None.
-        """
+    def _find_release_issue(
+        self,
+        repo: str,
+        target_tag: Optional[str],
+        *,
+        public: bool,
+    ) -> Optional[Dict]:
         resp = self._get(
             f"/repos/{ORG}/{repo}/issues",
             params={
                 "labels": "release-issue",
                 "state": "open",
-                "per_page": 1,
+                "per_page": 20,
             },
+            public=public,
         )
         if resp.status_code == 404:
             return None
         resp.raise_for_status()
         issues = resp.json()
-        if issues:
-            issue = issues[0]
+        for issue in issues:
+            body = issue.get("body", "") or ""
+            if "<!-- release-automation:workflow-owned -->" not in body:
+                continue
+            if target_tag:
+                marker = f"<!-- release-automation:release-tag:{target_tag} -->"
+                if marker not in body:
+                    continue
             return {
                 "number": issue["number"],
                 "url": issue["html_url"],
+                "body": body,
+                "labels": [label.get("name", "") for label in issue.get("labels", [])],
             }
         return None
 
