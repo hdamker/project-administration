@@ -1,28 +1,28 @@
 {
   "metadata": {
-    "generated": "2026-03-10T09:13:23.625Z",
+    "generated": "2026-03-11T05:33:53.368Z",
     "meta_release": "All",
     "source": "Release Collector v3",
     "landscape_version": "1.1.0"
   },
   "statistics": {
     "repositories_count": 46,
-    "api_versions_count": 148,
-    "unique_api_names_count": 65,
-    "unique_apis_count": 64,
+    "api_versions_count": 150,
+    "unique_api_names_count": 66,
+    "unique_apis_count": 65,
     "api_version_maturity": {
       "stable": 28,
       "initial": 119,
-      "rc": 1
+      "rc": 3
     },
     "unique_api_maturity": {
       "stable": 11,
-      "initial": 52,
-      "rc": 1
+      "initial": 51,
+      "rc": 3
     },
     "categories": {
       "Computing Services": 9,
-      "Communication Quality": 34,
+      "Communication Quality": 35,
       "Payments and Charging": 11,
       "Authentication and Fraud Prevention": 46,
       "Service Management": 2,
@@ -34,6 +34,7 @@
       "0.4",
       "0.5",
       "0.6",
+      "0.7",
       "r4.1"
     ],
     "apis_with_previous_names": 4
@@ -461,13 +462,18 @@
     "NetworkSliceBooking": {
       "releases": [
         {
+          "tag": "r2.1",
+          "date": "2026-03-11T02:25:30Z",
+          "apis_count": 2
+        },
+        {
           "tag": "r1.2",
           "date": "2025-09-17T01:33:48Z",
           "apis_count": 1
         }
       ],
-      "total_apis": 1,
-      "unique_apis_count": 1
+      "total_apis": 3,
+      "unique_apis_count": 2
     },
     "NumberRecycling": {
       "releases": [
@@ -2711,6 +2717,46 @@
           "canonical_name": "network-slice-booking",
           "first_release": "Fall25",
           "isNew": true
+        }
+      ]
+    },
+    {
+      "repository": "NetworkSliceBooking",
+      "release_tag": "r2.1",
+      "release_date": "2026-03-11T02:25:30Z",
+      "meta_release": "None (Sandbox)",
+      "github_url": "https://github.com/camaraproject/NetworkSliceBooking/releases/tag/r2.1",
+      "release_type": "pre-release-rc",
+      "apis": [
+        {
+          "api_name": "network-slice-assignment",
+          "file_name": "network-slice-assignment",
+          "api_version": "0.1.0-rc.1",
+          "api_title": "Network Slice Assignment",
+          "commonalities": "0.7",
+          "maturity": "initial",
+          "portfolio_category": null,
+          "website_url": null,
+          "tooltip": null,
+          "display_name": "Network Slice Assignment",
+          "published": true,
+          "canonical_name": "network-slice-assignment",
+          "first_release": "Sandbox"
+        },
+        {
+          "api_name": "network-slice-booking",
+          "file_name": "network-slice-booking",
+          "api_version": "0.2.0-rc.1",
+          "api_title": "Network Slice Booking",
+          "commonalities": "0.7",
+          "maturity": "initial",
+          "portfolio_category": "Communication Quality",
+          "website_url": "https://camaraproject.org/network-slice-booking/",
+          "tooltip": "Reserve, dynamically provision, query, dynamically delete a slice",
+          "display_name": "Network Slice Booking",
+          "published": true,
+          "canonical_name": "network-slice-booking",
+          "first_release": "Fall25"
         }
       ]
     },
@@ -5999,6 +6045,27 @@
       "release_type": "public-release"
     },
     {
+      "api_name": "network-slice-assignment",
+      "file_name": "network-slice-assignment",
+      "api_version": "0.1.0-rc.1",
+      "api_title": "Network Slice Assignment",
+      "commonalities": "0.7",
+      "maturity": "initial",
+      "portfolio_category": null,
+      "website_url": null,
+      "tooltip": null,
+      "display_name": "Network Slice Assignment",
+      "published": true,
+      "canonical_name": "network-slice-assignment",
+      "first_release": "Sandbox",
+      "repository": "NetworkSliceBooking",
+      "release_tag": "r2.1",
+      "release_date": "2026-03-11T02:25:30Z",
+      "meta_release": "None (Sandbox)",
+      "github_url": "https://github.com/camaraproject/NetworkSliceBooking/releases/tag/r2.1",
+      "release_type": "pre-release-rc"
+    },
+    {
       "api_name": "network-slice-booking",
       "file_name": "network-slice-booking",
       "api_version": "0.1.0",
@@ -6019,6 +6086,27 @@
       "meta_release": "Fall25",
       "github_url": "https://github.com/camaraproject/NetworkSliceBooking/releases/tag/r1.2",
       "release_type": "public-release"
+    },
+    {
+      "api_name": "network-slice-booking",
+      "file_name": "network-slice-booking",
+      "api_version": "0.2.0-rc.1",
+      "api_title": "Network Slice Booking",
+      "commonalities": "0.7",
+      "maturity": "initial",
+      "portfolio_category": "Communication Quality",
+      "website_url": "https://camaraproject.org/network-slice-booking/",
+      "tooltip": "Reserve, dynamically provision, query, dynamically delete a slice",
+      "display_name": "Network Slice Booking",
+      "published": true,
+      "canonical_name": "network-slice-booking",
+      "first_release": "Fall25",
+      "repository": "NetworkSliceBooking",
+      "release_tag": "r2.1",
+      "release_date": "2026-03-11T02:25:30Z",
+      "meta_release": "None (Sandbox)",
+      "github_url": "https://github.com/camaraproject/NetworkSliceBooking/releases/tag/r2.1",
+      "release_type": "pre-release-rc"
     },
     {
       "api_name": "number-recycling",
