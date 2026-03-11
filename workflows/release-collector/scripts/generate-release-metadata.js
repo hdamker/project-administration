@@ -3,11 +3,12 @@
 /**
  * Generate Release Metadata Script
  *
- * Generates release-metadata.yaml files for ALL releases.
+ * Generates release-metadata.yaml files for legacy releases only.
+ * Releases with native tag-root release-metadata.yaml are skipped.
  * Conforms to the schema at:
  * upstream/traversals/ReleaseManagement/artifacts/metadata-schemas/schemas/release-metadata-schema.yaml
  *
- * Always regenerates ALL metadata files - git diff shows what changed.
+ * Always regenerates legacy metadata files - git diff shows what changed.
  * No modes needed - idempotent regeneration.
  */
 
@@ -19,6 +20,7 @@ const yaml = require('js-yaml');
 const DATA_DIR = path.join(__dirname, '..', '..', '..', 'data');
 const MASTER_FILE = path.join(DATA_DIR, 'releases-master.yaml');
 const ARTIFACTS_DIR = path.join(DATA_DIR, 'release-artifacts');
+const GITHUB_ORG = process.env.GITHUB_ORG || 'camaraproject';
 
 /**
  * Load the master metadata file
@@ -30,6 +32,43 @@ function loadMaster() {
     process.exit(1);
   }
   return yaml.load(fs.readFileSync(MASTER_FILE, 'utf8'));
+}
+
+/**
+ * Check if a release tag already contains native release-metadata.yaml
+ *
+ * Hotfix note: this probe is intentionally local to the artifact generation
+ * phase to stop redundant generated metadata quickly. The broader native
+ * metadata implementation should move this classification upstream into the
+ * main analysis pipeline so it is computed once and passed forward.
+ *
+ * @param {string} repo - Repository name
+ * @param {string} tag - Release tag
+ * @returns {Promise<boolean>} True if native metadata exists at tag root
+ */
+async function hasNativeReleaseMetadata(repo, tag) {
+  const url = `https://api.github.com/repos/${GITHUB_ORG}/${repo}/contents/release-metadata.yaml?ref=${encodeURIComponent(tag)}`;
+  const headers = {
+    'Accept': 'application/vnd.github+json',
+    'User-Agent': 'camara-release-collector'
+  };
+
+  if (process.env.GITHUB_TOKEN) {
+    headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`;
+  }
+
+  const response = await fetch(url, { headers });
+
+  if (response.status === 200) {
+    return true;
+  }
+
+  if (response.status === 404) {
+    return false;
+  }
+
+  const body = await response.text();
+  throw new Error(`GitHub API ${response.status} while checking native metadata for ${repo}/${tag}: ${body}`);
 }
 
 /**
@@ -101,14 +140,17 @@ function writeMetadataFiles(metadata, repo, tag) {
 
 /**
  * Process all releases
- * @returns {object} Processing results
+ * @returns {Promise<object>} Processing results
  */
-function processReleases() {
+async function processReleases() {
   const master = loadMaster();
   const releases = master.releases || [];
 
+  fs.mkdirSync(ARTIFACTS_DIR, { recursive: true });
+
   const results = {
     processed: 0,
+    skipped_native: 0,
     errors: [],
     files: []
   };
@@ -120,6 +162,13 @@ function processReleases() {
     const tag = release.release_tag;
 
     try {
+      const hasNative = await hasNativeReleaseMetadata(repo, tag);
+      if (hasNative) {
+        console.error(`Skipped native metadata for ${repo}/${tag}`);
+        results.skipped_native++;
+        continue;
+      }
+
       const metadata = toReleaseMetadata(release);
       writeMetadataFiles(metadata, repo, tag);
 
@@ -138,7 +187,7 @@ function processReleases() {
 /**
  * Main execution
  */
-function main() {
+async function main() {
   const args = process.argv.slice(2);
 
   // Check for help
@@ -146,8 +195,9 @@ function main() {
     console.error(`
 Usage: node generate-release-metadata.js
 
-Generates release-metadata.yaml files for ALL releases
-in releases-master.yaml. Always regenerates all files - git diff shows changes.
+Generates release-metadata.yaml files for releases in releases-master.yaml
+that do not already contain native tag-root release-metadata.yaml.
+Always regenerates legacy files - git diff shows changes.
 
 Output directory: data/release-artifacts/{repo}/{tag}/
 `);
@@ -157,12 +207,13 @@ Output directory: data/release-artifacts/{repo}/{tag}/
   console.error('Release Metadata Generator');
   console.error('');
 
-  const results = processReleases();
+  const results = await processReleases();
 
   // Output summary
   console.error('');
   console.error('=== Summary ===');
   console.error(`Processed: ${results.processed}`);
+  console.error(`Skipped native: ${results.skipped_native}`);
   console.error(`Errors: ${results.errors.length}`);
 
   if (results.errors.length > 0) {
@@ -175,6 +226,7 @@ Output directory: data/release-artifacts/{repo}/{tag}/
   // Output JSON summary to stdout for workflow consumption
   console.log(JSON.stringify({
     processed: results.processed,
+    skipped_native: results.skipped_native,
     errors: results.errors.length,
     files: results.files
   }, null, 2));
@@ -187,11 +239,15 @@ Output directory: data/release-artifacts/{repo}/{tag}/
 
 // Run if executed directly
 if (require.main === module) {
-  main();
+  main().catch(error => {
+    console.error('Error:', error.message);
+    process.exit(1);
+  });
 }
 
 module.exports = {
   toReleaseMetadata,
+  hasNativeReleaseMetadata,
   processReleases,
   loadMaster,
   formatReleaseDate
