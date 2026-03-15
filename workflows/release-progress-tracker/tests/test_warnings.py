@@ -134,8 +134,11 @@ class TestW003PublishedNotInReleasesMaster:
         warnings = generate_warnings(entry, releases)
         w003 = [w for w in warnings if w.code == "W003"]
         assert len(w003) == 1
-        assert "r4.1" in w003[0].message
-        assert "releases-master" in w003[0].message
+        assert (
+            w003[0].message
+            == "Release r4.1 has been published. "
+            "Milestone data will be updated in the next 24 hours."
+        )
 
     def test_triggers_with_empty_releases_list(self):
         entry = _make_entry(

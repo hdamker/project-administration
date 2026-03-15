@@ -1,5 +1,5 @@
 metadata:
-  last_updated: '2026-03-06T05:32:48.025Z'
+  last_updated: '2026-03-13T05:33:53.054Z'
   workflow_version: 3.0.0
   schema_version: 2.0.0
 releases:
@@ -373,6 +373,19 @@ releases:
         api_version: 0.1.0-alpha.1
         api_title: Click to Dial Service API
         commonalities: '0.5'
+  - repository: ClickToDial
+    release_tag: r1.2
+    release_date: '2026-03-09T15:09:22Z'
+    meta_release: None (Sandbox)
+    github_url: https://github.com/camaraproject/ClickToDial/releases/tag/r1.2
+    release_type: pre-release-rc
+    superseded: true
+    apis:
+      - api_name: click-to-dial
+        file_name: click-to-dial
+        api_version: 0.1.0-rc.1
+        api_title: Click to Dial Service
+        commonalities: r4.1
   - repository: ConnectedNetworkType
     release_tag: r1.1
     release_date: '2025-07-18T15:40:21Z'
@@ -570,6 +583,19 @@ releases:
         api_version: 0.2.0-rc.1
         api_title: Consent Info
         commonalities: '0.6'
+  - repository: ConsentInfo
+    release_tag: r2.2
+    release_date: '2026-03-12T15:04:24Z'
+    meta_release: None (Sandbox)
+    github_url: https://github.com/camaraproject/ConsentInfo/releases/tag/r2.2
+    release_type: pre-release-rc
+    superseded: true
+    apis:
+      - api_name: consent-info
+        file_name: consent-info
+        api_version: 0.2.0-rc.2
+        api_title: Consent Info
+        commonalities: 0.6.1
   - repository: CustomerInsights
     release_tag: r1.1
     release_date: '2025-02-07T13:08:06Z'
@@ -1611,6 +1637,23 @@ releases:
         api_version: 0.1.0
         api_title: Network Slice Booking
         commonalities: '0.6'
+  - repository: NetworkSliceBooking
+    release_tag: r2.1
+    release_date: '2026-03-11T02:25:30Z'
+    meta_release: None (Sandbox)
+    github_url: https://github.com/camaraproject/NetworkSliceBooking/releases/tag/r2.1
+    release_type: pre-release-rc
+    apis:
+      - api_name: network-slice-assignment
+        file_name: network-slice-assignment
+        api_version: 0.1.0-rc.1
+        api_title: Network Slice Assignment
+        commonalities: '0.7'
+      - api_name: network-slice-booking
+        file_name: network-slice-booking
+        api_version: 0.2.0-rc.1
+        api_title: Network Slice Booking
+        commonalities: '0.7'
   - repository: NumberRecycling
     release_tag: r1.1
     release_date: '2025-02-18T21:33:53Z'
@@ -2253,6 +2296,19 @@ releases:
       - api_name: release-test
         file_name: release-test
         api_version: 1.0.0-rc.1
+        api_title: Release Test
+        commonalities: r4.1
+  - repository: ReleaseTest
+    release_tag: r1.3
+    release_date: '2026-03-10T09:09:24Z'
+    meta_release: None (Sandbox)
+    github_url: https://github.com/camaraproject/ReleaseTest/releases/tag/r1.3
+    release_type: pre-release-rc
+    superseded: true
+    apis:
+      - api_name: release-test
+        file_name: release-test
+        api_version: 1.0.0-rc.2
         api_title: Release Test
         commonalities: r4.1
   - repository: SimpleEdgeDiscovery
@@ -2904,7 +2960,7 @@ repositories:
   - repository: NetworkSliceBooking
     github_url: https://github.com/camaraproject/NetworkSliceBooking
     latest_public_release: r1.2
-    newest_pre_release: null
+    newest_pre_release: r2.1
   - repository: NumberRecycling
     github_url: https://github.com/camaraproject/NumberRecycling
     latest_public_release: r2.2

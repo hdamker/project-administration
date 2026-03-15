@@ -4,7 +4,7 @@ No GitHub API dependency — operates on pre-fetched data only.
 """
 
 import re
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from .models import ProgressState
 
@@ -15,6 +15,7 @@ def derive_state(
     tag_exists: bool,
     snapshot_branches: List[str],
     draft_releases: List[dict],
+    release_issue: Optional[Dict] = None,
 ) -> ProgressState:
     """Derive the progress state from repository artifacts.
 
@@ -33,7 +34,11 @@ def derive_state(
 
     snapshot = find_matching_snapshot(snapshot_branches, target_release_tag)
     if snapshot:
-        if _has_matching_draft(draft_releases, target_release_tag):
+        if find_matching_draft_release(
+            draft_releases, target_release_tag, snapshot
+        ):
+            return ProgressState.DRAFT_READY
+        if issue_indicates_draft_ready(release_issue, target_release_tag):
             return ProgressState.DRAFT_READY
         return ProgressState.SNAPSHOT_ACTIVE
 
@@ -58,19 +63,84 @@ def find_matching_snapshot(
     return None
 
 
-def _has_matching_draft(
-    draft_releases: List[dict], target_tag: Optional[str]
-) -> bool:
-    """Check if any draft release matches the target release tag.
+def find_matching_draft_release(
+    draft_releases: List[dict],
+    target_tag: Optional[str],
+    snapshot_branch: Optional[str] = None,
+) -> Optional[dict]:
+    """Find a draft release matching the target tag or snapshot branch."""
+    if not draft_releases:
+        return None
 
-    Draft release names typically contain the release tag.
-    """
-    if not target_tag or not draft_releases:
+    target_tag = target_tag or ""
+    for release in draft_releases:
+        tag = release.get("tag_name", "") or ""
+        name = release.get("name", "") or ""
+        commitish = release.get("target_commitish", "") or ""
+        html_url = release.get("html_url", "") or ""
+
+        if snapshot_branch and commitish == snapshot_branch:
+            return release
+
+        if target_tag and (
+            tag == target_tag
+            or name == target_tag
+            or target_tag in tag
+            or target_tag in name
+            or html_url.endswith(f"/releases/tag/{target_tag}")
+        ):
+            return release
+
+    return None
+
+
+def issue_indicates_draft_ready(
+    release_issue: Optional[Dict],
+    target_tag: Optional[str],
+) -> bool:
+    """Check whether the release issue already reflects draft-ready state."""
+    if not release_issue or not issue_matches_target_tag(release_issue, target_tag):
         return False
 
-    for release in draft_releases:
-        name = release.get("name", "") or ""
-        tag = release.get("tag_name", "") or ""
-        if target_tag in name or target_tag in tag:
-            return True
-    return False
+    labels = set(release_issue.get("labels", []) or [])
+    if "release-state:draft-ready" in labels:
+        return True
+
+    body = release_issue.get("body", "") or ""
+    if "**State:** `draft-ready`" in body:
+        return True
+
+    return extract_draft_release_url_from_issue(release_issue) is not None
+
+
+def issue_matches_target_tag(
+    release_issue: Optional[Dict],
+    target_tag: Optional[str],
+) -> bool:
+    """Check whether a release issue belongs to the target tag."""
+    if not release_issue:
+        return False
+    if not target_tag:
+        return True
+
+    body = release_issue.get("body", "") or ""
+    marker = f"<!-- release-automation:release-tag:{target_tag} -->"
+    return marker in body
+
+
+def extract_draft_release_url_from_issue(
+    release_issue: Optional[Dict],
+) -> Optional[str]:
+    """Extract a draft release URL from the workflow-owned release issue."""
+    if not release_issue:
+        return None
+
+    body = release_issue.get("body", "") or ""
+    match = re.search(
+        r"\*\*Draft release:\*\*\s*(?:\[[^\]]+\]\()?("
+        r"https://github\.com/[^/\s]+/[^/\s]+/releases/tag/[^\s)]+)",
+        body,
+    )
+    if match:
+        return match.group(1)
+    return None

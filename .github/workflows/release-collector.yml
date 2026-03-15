@@ -384,8 +384,10 @@ jobs:
         run: npm install js-yaml
 
       - name: Generate release metadata files
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          echo "📄 Generating release-metadata files for ALL releases..."
+          echo "📄 Generating release-metadata files for legacy releases..."
 
           node workflows/release-collector/scripts/generate-release-metadata.js
 

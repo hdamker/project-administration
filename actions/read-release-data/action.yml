@@ -20,5 +20,5 @@ outputs:
   summary:
     description: Small JSON with latest_public_release and api_version
 runs:
-  using: node20
+  using: node24
   main: dist/index.js

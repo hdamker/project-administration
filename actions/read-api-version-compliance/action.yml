@@ -30,5 +30,5 @@ outputs:
   feature_files_checked:
     description: 'Number of feature files checked'
 runs:
-  using: node20
+  using: node24
   main: dist/index.js
