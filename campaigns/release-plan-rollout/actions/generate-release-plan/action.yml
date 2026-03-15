@@ -34,5 +34,5 @@ outputs:
   pr_body_template:
     description: Name of PR body template to use (pr-body-with-releases.mustache or pr-body-no-releases.mustache)
 runs:
-  using: node20
+  using: node24
   main: dist/index.js
