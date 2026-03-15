@@ -36,5 +36,5 @@ outputs:
   files_checked:
     description: 'Number of API definition files checked'
 runs:
-  using: node20
+  using: node24
   main: src/index.js
