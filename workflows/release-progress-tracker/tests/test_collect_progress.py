@@ -709,16 +709,40 @@ class TestCheckCompletedState:
         assert result == ProgressState.NOT_PLANNED
 
     def test_most_recent_public_release_used(self):
-        """When multiple public releases exist, the most recent tag must match."""
+        """When multiple public releases exist, any matching tag returns COMPLETED."""
         older = {**PUBLIC_RELEASE, "release_tag": "r3.1",
                  "release_date": "2025-10-01T00:00:00Z"}
         entry = self._make_entry(
             "r3.2",
             [ApiEntry("quality-on-demand", "1.0.0", "stable")],
         )
-        # Most recent is r3.2 (PUBLIC_RELEASE) → matches
+        # r3.2 (PUBLIC_RELEASE) matches exactly
         result = _check_completed_state(entry, [older, PUBLIC_RELEASE])
         assert result == ProgressState.COMPLETED
+
+    def test_maintenance_release_tag_returns_completed(self):
+        """Plan pointing to a maintenance-release tag also counts as COMPLETED."""
+        maintenance = {**PUBLIC_RELEASE, "release_tag": "r3.3",
+                       "release_date": "2025-12-01T00:00:00Z",
+                       "release_type": "maintenance-release"}
+        entry = self._make_entry(
+            "r3.3",
+            [ApiEntry("quality-on-demand", "1.0.0", "stable")],
+        )
+        result = _check_completed_state(entry, [PUBLIC_RELEASE, maintenance])
+        assert result == ProgressState.COMPLETED
+
+    def test_pre_release_tag_not_accepted(self):
+        """Plan pointing to a pre-release tag is NOT counted as COMPLETED."""
+        pre_release = {**PUBLIC_RELEASE, "release_tag": "r3.1",
+                       "release_date": "2025-09-01T00:00:00Z",
+                       "release_type": "pre-release-rc"}
+        entry = self._make_entry(
+            "r3.1",
+            [ApiEntry("quality-on-demand", "1.0.0", "stable")],
+        )
+        result = _check_completed_state(entry, [pre_release])
+        assert result == ProgressState.NOT_PLANNED
 
 
 class TestCollectRepoProgressCompleted:
