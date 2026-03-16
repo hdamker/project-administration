@@ -23,7 +23,11 @@ from typing import Dict, List, Optional
 import yaml
 
 from .github_api import GitHubAPI, RateLimitError
-from .milestone_deriver import build_meta_release_summaries, derive_cycle_releases
+from .milestone_deriver import (
+    build_meta_release_summaries,
+    derive_cycle_releases,
+    derive_last_published,
+)
 from .models import (
     COLLECTOR_VERSION,
     SCHEMA_VERSION,
@@ -140,10 +144,13 @@ def collect_repo_progress(
             snapshot = find_matching_snapshot(branches, target_tag)
             if snapshot:
                 entry.artifacts.snapshot_branch = snapshot
-        # Cross-reference milestones
+        # Cross-reference milestones and last published
         entry.cycle_releases = derive_cycle_releases(
             repo_name, target_tag, meta_release, all_releases,
             planned_api_names,
+        )
+        entry.last_published = derive_last_published(
+            repo_name, target_tag, all_releases, planned_api_names,
         )
         # Generate warnings
         repo_releases = [r for r in all_releases if r.get("repository") == repo_name]
@@ -201,11 +208,59 @@ def collect_repo_progress(
             "url": release_issue.get("url"),
         }
 
-    # Cross-reference M1/M3/M4 from releases-master
+    # Cross-reference M1/M3/M4 and last published from releases-master
     entry.cycle_releases = derive_cycle_releases(
         repo_name, target_tag, meta_release, all_releases,
         planned_api_names,
     )
+    entry.last_published = derive_last_published(
+        repo_name, target_tag, all_releases, planned_api_names,
+    )
+
+    # Read calculated API versions from snapshot's release-metadata.yaml
+    if entry.artifacts.snapshot_branch and entry.state in (
+        ProgressState.SNAPSHOT_ACTIVE, ProgressState.DRAFT_READY,
+        ProgressState.PUBLISHED,
+    ):
+        try:
+            meta_content = api.get_file_content(
+                repo_name, "release-metadata.yaml",
+                ref=entry.artifacts.snapshot_branch,
+            )
+            if meta_content:
+                meta = yaml.safe_load(meta_content)
+                if meta and isinstance(meta.get("apis"), list):
+                    entry.snapshot_api_versions = {
+                        a["api_name"]: a["api_version"]
+                        for a in meta["apis"]
+                        if a.get("api_name") and a.get("api_version")
+                    }
+        except Exception as e:
+            logger.debug(
+                "%s: failed to read release-metadata.yaml from %s: %s",
+                repo_name, entry.artifacts.snapshot_branch, e,
+            )
+
+    # Fallback for PUBLISHED: read from release tag when snapshot branch unavailable
+    if not entry.snapshot_api_versions and entry.state == ProgressState.PUBLISHED and target_tag:
+        try:
+            meta_content = api.get_file_content(
+                repo_name, "release-metadata.yaml",
+                ref=target_tag,
+            )
+            if meta_content:
+                meta = yaml.safe_load(meta_content)
+                if meta and isinstance(meta.get("apis"), list):
+                    entry.snapshot_api_versions = {
+                        a["api_name"]: a["api_version"]
+                        for a in meta["apis"]
+                        if a.get("api_name") and a.get("api_version")
+                    }
+        except Exception as e:
+            logger.debug(
+                "%s: failed to read release-metadata.yaml from tag %s: %s",
+                repo_name, target_tag, e,
+            )
 
     # Generate warnings
     repo_releases = [r for r in all_releases if r.get("repository") == repo_name]
