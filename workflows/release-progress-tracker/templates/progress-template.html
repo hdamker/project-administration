@@ -274,6 +274,12 @@ tr.historical-row:hover td {
               Has warnings
             </label>
           </div>
+          <div class="filter-group">
+            <label>
+              <input type="checkbox" id="filterShowHistory" onchange="applyFilters()" style="margin-right: 4px;" checked>
+              Show history
+            </label>
+          </div>
           <button class="clear-filters-btn" onclick="clearAllFilters()">Clear Filters</button>
         </div>
       </div>
@@ -328,7 +334,7 @@ tr.historical-row:hover td {
     const COL_COUNT = 9;
 
     // Release track display order — update when new meta-releases are added
-    const TRACK_ORDER = ['Spring26', 'Sync26', 'Signal27', 'independent', 'Fall25'];
+    const TRACK_ORDER = ['Spring26', 'Sync26', 'Signal27', 'independent', 'Fall25', 'Spring25', 'Fall24'];
 
     // Global state
     let allRows = [];
@@ -702,6 +708,16 @@ tr.historical-row:hover td {
     }
 
     /**
+     * Strip pre-release extension from a version string.
+     * "1.2.0-alpha.1" → "1.2.0", "1.2.0" → "1.2.0"
+     */
+    function stripVersion(v) {
+      if (!v) return v;
+      const idx = v.indexOf('-');
+      return idx !== -1 ? v.substring(0, idx) : v;
+    }
+
+    /**
      * Render a single data row
      */
     function renderDataRow(row) {
@@ -720,8 +736,8 @@ tr.historical-row:hover td {
         ? `<span style="color:var(--text-secondary);font-style:italic">(${row.repository})</span>`
         : `<span class="api-name-plain">${row.api_name}</span>`;
 
-      // Target API Version
-      const versionCell = row.target_api_version || '&mdash;';
+      // Target API Version (strip pre-release extension for display)
+      const versionCell = stripVersion(row.target_api_version) || '&mdash;';
 
       // Ongoing Release (3-line cell)
       const ongoingCell = renderOngoingReleaseCell(row);
@@ -817,8 +833,11 @@ tr.historical-row:hover td {
       const stateFilter = document.getElementById('filterState').value;
       const maturityFilter = document.getElementById('filterMaturity').value;
       const warningsFilter = document.getElementById('filterWarnings').checked;
+      const showHistoryFilter = document.getElementById('filterShowHistory').checked;
 
       filteredRows = allRows.filter(row => {
+        if (!showHistoryFilter && row.state === 'historical') return false;
+
         if (searchFilter) {
           const haystack = (row.api_name + ' ' + row.repository).toLowerCase();
           if (!haystack.includes(searchFilter)) return false;
@@ -989,6 +1008,7 @@ tr.historical-row:hover td {
       document.getElementById('filterState').value = '';
       document.getElementById('filterMaturity').value = '';
       document.getElementById('filterWarnings').checked = false;
+      document.getElementById('filterShowHistory').checked = true;
       currentTrackFilter = '';
       applyFilters();
     }
@@ -1066,7 +1086,7 @@ tr.historical-row:hover td {
         const ongoingVer = snapVer || row.target_api_version || '';
         return [
           row.api_name || row.repository,
-          row.target_api_version,
+          stripVersion(row.target_api_version),
           row.target_release_tag,
           ongoingVer,
           row.target_api_status,

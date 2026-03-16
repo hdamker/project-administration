@@ -19,6 +19,16 @@ from scripts.collect_progress import (
 from scripts.github_api import GitHubAPI
 from scripts.models import ApiEntry, CycleReleases, ProgressEntry, ProgressState, PublishedContext
 
+SANDBOX_RELEASE = {
+    "repository": "SandboxRepo",
+    "release_tag": "r2.1",
+    "release_date": "2025-11-20T10:00:00Z",
+    "meta_release": "None (Sandbox)",
+    "release_type": "public-release",
+    "github_url": "https://github.com/camaraproject/SandboxRepo/releases/tag/r2.1",
+    "apis": [{"api_name": "sandbox-api", "api_version": "1.0.0"}],
+}
+
 
 # --- Fixtures ---
 
@@ -780,6 +790,45 @@ class TestCollectHistoricalEntries:
         entries = collect_historical_entries([release_no_meta], set(), {})
         assert len(entries) == 0
 
+    def test_sandbox_without_active_creates_independent(self):
+        entries = collect_historical_entries(
+            [SANDBOX_RELEASE], set(),
+            {"SandboxRepo": "https://github.com/camaraproject/SandboxRepo"},
+        )
+        assert len(entries) == 1
+        assert entries[0].release_track == "independent"
+        assert entries[0].meta_release is None
+        assert entries[0].state == ProgressState.HISTORICAL
+
+    def test_sandbox_with_active_same_prefix_skipped(self):
+        active = ProgressEntry(
+            repository="SandboxRepo",
+            github_url="https://github.com/camaraproject/SandboxRepo",
+            target_release_tag="r2.1",
+            state=ProgressState.PLANNED,
+        )
+        entries = collect_historical_entries(
+            [SANDBOX_RELEASE], set(),
+            {"SandboxRepo": "https://github.com/camaraproject/SandboxRepo"},
+            active_entries=[active],
+        )
+        assert len(entries) == 0
+
+    def test_sandbox_with_active_different_prefix_creates_entry(self):
+        active = ProgressEntry(
+            repository="SandboxRepo",
+            github_url="https://github.com/camaraproject/SandboxRepo",
+            target_release_tag="r3.1",  # different cycle prefix (r3. vs r2.)
+            state=ProgressState.PLANNED,
+        )
+        entries = collect_historical_entries(
+            [SANDBOX_RELEASE], set(),
+            {"SandboxRepo": "https://github.com/camaraproject/SandboxRepo"},
+            active_entries=[active],
+        )
+        assert len(entries) == 1
+        assert entries[0].release_track == "independent"
+
 
 class TestCollectAllWithHistorical:
     def test_historical_entries_added_for_repos_without_plan(self, tmp_path):
@@ -800,6 +849,33 @@ class TestCollectAllWithHistorical:
         dev_entry = next(e for e in result.progress if e.repository == "DeviceLocation")
         assert dev_entry.state == ProgressState.HISTORICAL
         assert dev_entry.source == "historical"
+
+    def test_sandbox_repo_appears_as_independent_historical(self, tmp_path):
+        master_with_sandbox = {
+            "metadata": SAMPLE_MASTER["metadata"],
+            "repositories": [
+                {
+                    "repository": "SandboxRepo",
+                    "github_url": "https://github.com/camaraproject/SandboxRepo",
+                    "latest_public_release": "r2.1",
+                    "newest_pre_release": None,
+                },
+            ],
+            "releases": [SANDBOX_RELEASE],
+        }
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(master_with_sandbox))
+
+        api = MockGitHubAPI()  # No release-plan.yaml for SandboxRepo
+        result = collect_all(str(master_file), str(output_file), api=api)
+
+        sandbox_entries = [e for e in result.progress if e.repository == "SandboxRepo"]
+        assert len(sandbox_entries) == 1
+        e = sandbox_entries[0]
+        assert e.state == ProgressState.HISTORICAL
+        assert e.release_track == "independent"
+        assert e.meta_release is None
 
     def test_completed_repo_not_duplicated_as_historical(self, tmp_path):
         master_file = tmp_path / "releases-master.yaml"
