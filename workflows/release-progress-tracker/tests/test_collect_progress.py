@@ -7,15 +7,17 @@ import pytest
 import yaml
 
 from scripts.collect_progress import (
+    _check_completed_state,
     build_published_context_map,
     collect_all,
+    collect_historical_entries,
     collect_repo_progress,
     compare_progress_data,
     load_releases_master,
     parse_release_plan,
 )
 from scripts.github_api import GitHubAPI
-from scripts.models import ProgressState, PublishedContext
+from scripts.models import ApiEntry, CycleReleases, ProgressEntry, ProgressState, PublishedContext
 
 
 # --- Fixtures ---
@@ -436,7 +438,7 @@ class TestCollectAll:
         assert "last_updated" in meta
         assert "last_checked" in meta
         assert "releases_master_updated" in meta
-        assert meta["schema_version"] == "1.3.0"
+        assert meta["schema_version"] == "1.4.0"
         assert "collection_stats" not in meta  # Full stats removed from output
         assert meta["repos_scanned"] == 2      # Stable stats restored
         assert meta["repos_with_plan"] == 2
@@ -575,3 +577,241 @@ class TestCollectAllWithExisting:
             api=self._make_api(),
         )
         assert result.data_changed is True
+
+
+# Fixtures for COMPLETED / HISTORICAL tests
+
+PUBLIC_RELEASE = {
+    "repository": "QualityOnDemand",
+    "release_tag": "r3.2",
+    "release_date": "2025-11-15T10:00:00Z",
+    "meta_release": "Fall25",
+    "release_type": "public-release",
+    "github_url": "https://github.com/camaraproject/QualityOnDemand/releases/tag/r3.2",
+    "apis": [{"api_name": "quality-on-demand", "api_version": "1.0.0"}],
+}
+
+PLAN_COMPLETED = yaml.dump({
+    "repository": {
+        "release_track": "meta-release",
+        "meta_release": "Fall25",
+        "target_release_tag": "r3.2",
+        "target_release_type": "none",
+    },
+    "apis": [{"api_name": "quality-on-demand", "target_api_version": "1.0.0",
+              "target_api_status": "stable"}],
+})
+
+PLAN_NONE_WITH_TAG = yaml.dump({
+    "repository": {
+        "release_track": "meta-release",
+        "meta_release": "Fall25",
+        "target_release_tag": "r3.2",
+        "target_release_type": "none",
+    },
+    "apis": [{"api_name": "quality-on-demand", "target_api_version": "0.9.0",
+              "target_api_status": "stable"}],
+})
+
+HISTORICAL_MASTER = {
+    "metadata": SAMPLE_MASTER["metadata"],
+    "repositories": [
+        {
+            "repository": "QualityOnDemand",
+            "github_url": "https://github.com/camaraproject/QualityOnDemand",
+            "latest_public_release": "r3.2",
+            "newest_pre_release": None,
+        },
+        {
+            "repository": "DeviceLocation",
+            "github_url": "https://github.com/camaraproject/DeviceLocation",
+            "latest_public_release": "r3.1",
+            "newest_pre_release": None,
+        },
+    ],
+    "releases": [
+        PUBLIC_RELEASE,
+        {
+            "repository": "DeviceLocation",
+            "release_tag": "r3.1",
+            "release_date": "2025-11-10T10:00:00Z",
+            "meta_release": "Fall25",
+            "release_type": "public-release",
+            "github_url": "https://github.com/camaraproject/DeviceLocation/releases/tag/r3.1",
+            "apis": [{"api_name": "device-location", "api_version": "2.0.0"}],
+        },
+    ],
+}
+
+
+class TestCheckCompletedState:
+    def _make_entry(self, tag, apis, state=ProgressState.NOT_PLANNED):
+        return ProgressEntry(
+            repository="QualityOnDemand",
+            github_url="https://github.com/camaraproject/QualityOnDemand",
+            target_release_tag=tag,
+            target_release_type="none",
+            apis=apis,
+            state=state,
+        )
+
+    def test_exact_match_returns_completed(self):
+        entry = self._make_entry(
+            "r3.2",
+            [ApiEntry("quality-on-demand", "1.0.0", "stable")],
+        )
+        result = _check_completed_state(entry, [PUBLIC_RELEASE])
+        assert result == ProgressState.COMPLETED
+
+    def test_version_mismatch_returns_not_planned(self):
+        entry = self._make_entry(
+            "r3.2",
+            [ApiEntry("quality-on-demand", "0.9.0", "stable")],
+        )
+        result = _check_completed_state(entry, [PUBLIC_RELEASE])
+        assert result == ProgressState.NOT_PLANNED
+
+    def test_tag_mismatch_returns_not_planned(self):
+        entry = self._make_entry(
+            "r3.1",  # different tag
+            [ApiEntry("quality-on-demand", "1.0.0", "stable")],
+        )
+        result = _check_completed_state(entry, [PUBLIC_RELEASE])
+        assert result == ProgressState.NOT_PLANNED
+
+    def test_no_tag_returns_not_planned(self):
+        entry = self._make_entry(None, [ApiEntry("quality-on-demand", "1.0.0", "stable")])
+        result = _check_completed_state(entry, [PUBLIC_RELEASE])
+        assert result == ProgressState.NOT_PLANNED
+
+    def test_empty_apis_returns_not_planned(self):
+        entry = self._make_entry("r3.2", [])
+        result = _check_completed_state(entry, [PUBLIC_RELEASE])
+        assert result == ProgressState.NOT_PLANNED
+
+    def test_no_public_release_returns_not_planned(self):
+        pre_release = {**PUBLIC_RELEASE, "release_type": "pre-release-rc"}
+        entry = self._make_entry(
+            "r3.2",
+            [ApiEntry("quality-on-demand", "1.0.0", "stable")],
+        )
+        result = _check_completed_state(entry, [pre_release])
+        assert result == ProgressState.NOT_PLANNED
+
+    def test_most_recent_public_release_used(self):
+        """When multiple public releases exist, the most recent tag must match."""
+        older = {**PUBLIC_RELEASE, "release_tag": "r3.1",
+                 "release_date": "2025-10-01T00:00:00Z"}
+        entry = self._make_entry(
+            "r3.2",
+            [ApiEntry("quality-on-demand", "1.0.0", "stable")],
+        )
+        # Most recent is r3.2 (PUBLIC_RELEASE) → matches
+        result = _check_completed_state(entry, [older, PUBLIC_RELEASE])
+        assert result == ProgressState.COMPLETED
+
+
+class TestCollectRepoProgressCompleted:
+    def test_completed_state_when_exact_match(self):
+        api = MockGitHubAPI(
+            file_contents={"QualityOnDemand/release-plan.yaml": PLAN_COMPLETED},
+        )
+        result = collect_repo_progress(
+            "QualityOnDemand",
+            "https://github.com/camaraproject/QualityOnDemand",
+            api, [PUBLIC_RELEASE], PublishedContext("r3.2", None),
+        )
+        assert result.state == ProgressState.COMPLETED
+
+    def test_not_planned_when_version_mismatch(self):
+        api = MockGitHubAPI(
+            file_contents={"QualityOnDemand/release-plan.yaml": PLAN_NONE_WITH_TAG},
+        )
+        result = collect_repo_progress(
+            "QualityOnDemand",
+            "https://github.com/camaraproject/QualityOnDemand",
+            api, [PUBLIC_RELEASE], PublishedContext("r3.2", None),
+        )
+        assert result.state == ProgressState.NOT_PLANNED
+
+
+class TestCollectHistoricalEntries:
+    def test_creates_entry_for_repo_without_plan(self):
+        active = set()  # No active entries
+        repo_url_map = {
+            "QualityOnDemand": "https://github.com/camaraproject/QualityOnDemand",
+        }
+        entries = collect_historical_entries([PUBLIC_RELEASE], active, repo_url_map)
+
+        assert len(entries) == 1
+        e = entries[0]
+        assert e.repository == "QualityOnDemand"
+        assert e.state == ProgressState.HISTORICAL
+        assert e.source == "historical"
+        assert e.meta_release == "Fall25"
+        assert e.target_release_tag is None
+        assert e.target_release_type is None
+
+    def test_skips_repo_already_in_active(self):
+        active = {("QualityOnDemand", "Fall25")}
+        repo_url_map = {"QualityOnDemand": "https://github.com/camaraproject/QualityOnDemand"}
+        entries = collect_historical_entries([PUBLIC_RELEASE], active, repo_url_map)
+        assert len(entries) == 0
+
+    def test_derives_cycle_releases(self):
+        active = set()
+        repo_url_map = {"QualityOnDemand": "https://github.com/camaraproject/QualityOnDemand"}
+        entries = collect_historical_entries([PUBLIC_RELEASE], active, repo_url_map)
+        assert len(entries) == 1
+        cr = entries[0].cycle_releases
+        assert cr.m4 is not None
+        assert cr.m4.release_tag == "r3.2"
+
+    def test_apis_populated_from_best_release(self):
+        active = set()
+        repo_url_map = {"QualityOnDemand": "https://github.com/camaraproject/QualityOnDemand"}
+        entries = collect_historical_entries([PUBLIC_RELEASE], active, repo_url_map)
+        assert len(entries[0].apis) == 1
+        assert entries[0].apis[0].api_name == "quality-on-demand"
+        assert entries[0].apis[0].target_api_version == "1.0.0"
+
+    def test_skips_release_without_meta_release(self):
+        release_no_meta = {**PUBLIC_RELEASE, "meta_release": ""}
+        entries = collect_historical_entries([release_no_meta], set(), {})
+        assert len(entries) == 0
+
+
+class TestCollectAllWithHistorical:
+    def test_historical_entries_added_for_repos_without_plan(self, tmp_path):
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(HISTORICAL_MASTER))
+
+        # Only QoD has a release-plan.yaml (with active plan)
+        api = MockGitHubAPI(
+            file_contents={"QualityOnDemand/release-plan.yaml": PLAN_COMPLETED},
+        )
+        result = collect_all(str(master_file), str(output_file), api=api)
+
+        repos = {e.repository for e in result.progress}
+        # DeviceLocation has no plan → gets a historical entry
+        assert "DeviceLocation" in repos
+
+        dev_entry = next(e for e in result.progress if e.repository == "DeviceLocation")
+        assert dev_entry.state == ProgressState.HISTORICAL
+        assert dev_entry.source == "historical"
+
+    def test_completed_repo_not_duplicated_as_historical(self, tmp_path):
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(HISTORICAL_MASTER))
+
+        # QoD has a plan → should appear once as COMPLETED, not again as HISTORICAL
+        api = MockGitHubAPI(
+            file_contents={"QualityOnDemand/release-plan.yaml": PLAN_COMPLETED},
+        )
+        result = collect_all(str(master_file), str(output_file), api=api)
+
+        qod_entries = [e for e in result.progress if e.repository == "QualityOnDemand"]
+        assert len(qod_entries) == 1
+        assert qod_entries[0].state == ProgressState.COMPLETED

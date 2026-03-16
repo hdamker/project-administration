@@ -9,8 +9,8 @@ from enum import Enum
 from typing import Dict, List, Optional
 
 # Single source of truth for version constants — update here only
-SCHEMA_VERSION = "1.3.0"
-COLLECTOR_VERSION = "1.3.0"
+SCHEMA_VERSION = "1.4.0"
+COLLECTOR_VERSION = "1.4.0"
 
 
 class ProgressState(Enum):
@@ -20,6 +20,8 @@ class ProgressState(Enum):
     SNAPSHOT_ACTIVE = "snapshot_active"
     DRAFT_READY = "draft_ready"
     PUBLISHED = "published"
+    COMPLETED = "completed"    # target_release_type=none, plan exactly matches last public release
+    HISTORICAL = "historical"  # No release-plan.yaml; derived from releases-master.yaml only
 
 
 @dataclass
@@ -148,6 +150,7 @@ class ProgressEntry:
     last_published: Optional['MilestoneRelease'] = None
     snapshot_api_versions: Optional[Dict[str, str]] = None
     warnings: List[ProgressWarning] = field(default_factory=list)
+    source: Optional[str] = None  # "historical" for IMP-074 entries; omitted for active entries
 
     def to_dict(self) -> Dict:
         d = {
@@ -173,6 +176,8 @@ class ProgressEntry:
             d["snapshot_api_versions"] = self.snapshot_api_versions
         if self.warnings:
             d["warnings"] = [w.to_dict() for w in self.warnings]
+        if self.source:
+            d["source"] = self.source
         return d
 
 

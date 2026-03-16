@@ -158,7 +158,7 @@ class TestProgressData:
         )
         d = data.to_dict()
 
-        assert d["metadata"]["schema_version"] == "1.3.0"
+        assert d["metadata"]["schema_version"] == "1.4.0"
         assert d["metadata"]["last_checked"] == "2026-03-15T10:00:00Z"
         assert d["metadata"]["releases_master_updated"] == "2026-03-15T04:35:00Z"
         assert "collection_stats" not in d["metadata"]  # Full stats removed from output
@@ -171,4 +171,38 @@ class TestProgressData:
         # Full YAML round-trip
         yaml_str = yaml.dump(d, default_flow_style=False, sort_keys=False)
         reloaded = yaml.safe_load(yaml_str)
-        assert reloaded["metadata"]["collector_version"] == "1.3.0"
+        assert reloaded["metadata"]["collector_version"] == "1.4.0"
+
+
+class TestNewStates:
+    def test_completed_state_serializes(self):
+        entry = ProgressEntry(
+            repository="FallRepo",
+            github_url="https://github.com/camaraproject/FallRepo",
+            state=ProgressState.COMPLETED,
+            target_release_type="none",
+        )
+        d = entry.to_dict()
+        assert d["state"] == "completed"
+        assert "source" not in d
+
+    def test_historical_state_serializes_with_source(self):
+        entry = ProgressEntry(
+            repository="OldRepo",
+            github_url="https://github.com/camaraproject/OldRepo",
+            state=ProgressState.HISTORICAL,
+            source="historical",
+        )
+        d = entry.to_dict()
+        assert d["state"] == "historical"
+        assert d["source"] == "historical"
+
+    def test_active_entry_omits_source(self):
+        entry = ProgressEntry(
+            repository="ActiveRepo",
+            github_url="https://github.com/camaraproject/ActiveRepo",
+            state=ProgressState.PLANNED,
+            target_release_type="pre-release-alpha",
+        )
+        d = entry.to_dict()
+        assert "source" not in d
