@@ -4,7 +4,9 @@ import pytest
 
 from scripts.milestone_deriver import (
     derive_cycle_releases,
+    derive_last_published,
     build_meta_release_summaries,
+    _get_tag_prefix,
 )
 from scripts.models import (
     ProgressEntry, ProgressState, ApiEntry,
@@ -191,6 +193,88 @@ class TestDeriveCycleReleases:
         )
         assert cr.m1.release_tag == "r1.1"
         assert cr.m1.apis[0].api_version == "0.1.0-alpha.1"
+
+
+class TestGetTagPrefix:
+    """Test tag prefix extraction helper."""
+
+    def test_standard_tag(self):
+        assert _get_tag_prefix("r4.1") == "r4."
+
+    def test_double_digit_major(self):
+        assert _get_tag_prefix("r10.2") == "r10."
+
+    def test_no_dot(self):
+        assert _get_tag_prefix("r4") == "r4."
+
+
+class TestDeriveLastPublished:
+    """Test most-recent-release derivation."""
+
+    def test_finds_most_recent_release(self):
+        """Should return the latest release by date, regardless of type."""
+        result = derive_last_published(
+            "QualityOnDemand", "r4.1", SAMPLE_RELEASES,
+            ["quality-on-demand"],
+        )
+        assert result is not None
+        # r4.2 (2026-03-15) is more recent than r4.1 (2026-02-10)
+        assert result.release_tag == "r4.2"
+        assert result.release_date == "2026-03-15T10:00:00Z"
+        assert result.apis[0].api_version == "1.2.0-rc.1"
+
+    def test_returns_none_when_no_target_tag(self):
+        result = derive_last_published(
+            "QualityOnDemand", None, SAMPLE_RELEASES,
+            ["quality-on-demand"],
+        )
+        assert result is None
+
+    def test_returns_none_when_no_matching_releases(self):
+        result = derive_last_published(
+            "NonExistentRepo", "r1.1", SAMPLE_RELEASES,
+            ["some-api"],
+        )
+        assert result is None
+
+    def test_only_matches_same_tag_prefix(self):
+        """Releases from different cycle (r3.x) should not appear."""
+        result = derive_last_published(
+            "QualityOnDemand", "r3.1", SAMPLE_RELEASES,
+            ["quality-on-demand"],
+        )
+        assert result is not None
+        assert result.release_tag == "r3.5"
+
+    def test_multi_api_versions(self):
+        """Should extract correct per-API version from multi-API release."""
+        releases = [{
+            "repository": "MultiApiRepo",
+            "release_tag": "r1.1",
+            "release_date": "2026-03-01T00:00:00Z",
+            "release_type": "pre-release-alpha",
+            "apis": [
+                {"api_name": "api-a", "api_version": "1.0.0-alpha.1"},
+                {"api_name": "api-b", "api_version": "2.0.0-alpha.1"},
+            ],
+        }]
+        result = derive_last_published(
+            "MultiApiRepo", "r1.1", releases,
+            ["api-a", "api-b", "api-c"],
+        )
+        assert result is not None
+        assert result.apis[0].api_version == "1.0.0-alpha.1"
+        assert result.apis[1].api_version == "2.0.0-alpha.1"
+        assert result.apis[2].api_version is None  # Not in release
+
+    def test_single_release_in_cycle(self):
+        """With only one release, it should be returned as last published."""
+        result = derive_last_published(
+            "DeviceLocation", "r5.1", SAMPLE_RELEASES,
+            ["location-verification"],
+        )
+        assert result is not None
+        assert result.release_tag == "r5.1"
 
 
 class TestBuildMetaReleaseSummaries:

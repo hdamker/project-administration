@@ -86,6 +86,9 @@ class TestProgressEntry:
             state=ProgressState.SNAPSHOT_ACTIVE,
             artifacts=ArtifactInfo(snapshot_branch="release-snapshot/r4.2-abc"),
             published_context=PublishedContext("r3.2", "r4.1"),
+            last_published=MilestoneRelease("r4.1", "2026-02-10T14:30:00Z",
+                [CycleReleaseApi("quality-on-demand", "1.2.0-alpha.1")]),
+            snapshot_api_versions={"quality-on-demand": "1.2.0-rc.1"},
             warnings=[ProgressWarning("W001", "test", "warning")],
         )
         d = entry.to_dict()
@@ -93,6 +96,9 @@ class TestProgressEntry:
         assert d["repository"] == "QualityOnDemand"
         assert d["state"] == "snapshot_active"
         assert d["published_context"]["latest_public_release"] == "r3.2"
+        assert d["last_published"]["release_tag"] == "r4.1"
+        assert d["last_published"]["apis"][0]["api_version"] == "1.2.0-alpha.1"
+        assert d["snapshot_api_versions"]["quality-on-demand"] == "1.2.0-rc.1"
         assert len(d["warnings"]) == 1
         assert d["warnings"][0]["code"] == "W001"
 
@@ -100,7 +106,20 @@ class TestProgressEntry:
         yaml_str = yaml.dump(d, default_flow_style=False)
         reloaded = yaml.safe_load(yaml_str)
         assert reloaded["state"] == "snapshot_active"
+        assert reloaded["last_published"]["release_tag"] == "r4.1"
+        assert reloaded["snapshot_api_versions"]["quality-on-demand"] == "1.2.0-rc.1"
         assert reloaded["warnings"][0]["code"] == "W001"
+
+    def test_no_last_published_omitted(self):
+        entry = ProgressEntry(
+            repository="TestRepo",
+            github_url="https://github.com/camaraproject/TestRepo",
+            target_release_type="pre-release-alpha",
+            state=ProgressState.PLANNED,
+        )
+        d = entry.to_dict()
+        assert "last_published" not in d
+        assert "snapshot_api_versions" not in d
 
     def test_not_planned_entry(self):
         entry = ProgressEntry(
@@ -139,7 +158,7 @@ class TestProgressData:
         )
         d = data.to_dict()
 
-        assert d["metadata"]["schema_version"] == "1.2.0"
+        assert d["metadata"]["schema_version"] == "1.3.0"
         assert d["metadata"]["last_checked"] == "2026-03-15T10:00:00Z"
         assert d["metadata"]["releases_master_updated"] == "2026-03-15T04:35:00Z"
         assert "collection_stats" not in d["metadata"]  # Full stats removed from output
@@ -152,4 +171,4 @@ class TestProgressData:
         # Full YAML round-trip
         yaml_str = yaml.dump(d, default_flow_style=False, sort_keys=False)
         reloaded = yaml.safe_load(yaml_str)
-        assert reloaded["metadata"]["collector_version"] == "1.2.0"
+        assert reloaded["metadata"]["collector_version"] == "1.3.0"

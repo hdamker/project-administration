@@ -9,8 +9,8 @@ from enum import Enum
 from typing import Dict, List, Optional
 
 # Single source of truth for version constants — update here only
-SCHEMA_VERSION = "1.2.0"
-COLLECTOR_VERSION = "1.2.0"
+SCHEMA_VERSION = "1.3.0"
+COLLECTOR_VERSION = "1.3.0"
 
 
 class ProgressState(Enum):
@@ -145,6 +145,8 @@ class ProgressEntry:
         default_factory=lambda: PublishedContext(None, None)
     )
     cycle_releases: CycleReleases = field(default_factory=CycleReleases)
+    last_published: Optional['MilestoneRelease'] = None
+    snapshot_api_versions: Optional[Dict[str, str]] = None
     warnings: List[ProgressWarning] = field(default_factory=list)
 
     def to_dict(self) -> Dict:
@@ -165,6 +167,10 @@ class ProgressEntry:
         d["artifacts"] = self.artifacts.to_dict()
         d["published_context"] = self.published_context.to_dict()
         d["cycle_releases"] = self.cycle_releases.to_dict()
+        if self.last_published:
+            d["last_published"] = self.last_published.to_dict()
+        if self.snapshot_api_versions:
+            d["snapshot_api_versions"] = self.snapshot_api_versions
         if self.warnings:
             d["warnings"] = [w.to_dict() for w in self.warnings]
         return d

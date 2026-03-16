@@ -98,6 +98,13 @@
 
 .milestone-tag {
   font-weight: 500;
+  text-decoration: none;
+  color: inherit;
+}
+
+a.milestone-tag:hover {
+  text-decoration: underline;
+  color: var(--accent-primary);
 }
 
 .milestone-date {
@@ -270,14 +277,13 @@ tr.not-planned-row:hover td {
           <tr>
             <th onclick="sortTable(0)">API Name <span class="sort-arrow"></span></th>
             <th onclick="sortTable(1)">Target API<br>Version <span class="sort-arrow"></span></th>
-            <th onclick="sortTable(2)">Target API<br>Status <span class="sort-arrow"></span></th>
+            <th onclick="sortTable(2)">Ongoing<br>Release <span class="sort-arrow"></span></th>
             <th onclick="sortTable(3)">Release<br>State <span class="sort-arrow"></span></th>
-            <th onclick="sortTable(4)">Release<br>Type <span class="sort-arrow"></span></th>
-            <th onclick="sortTable(5)">Target<br>Release <span class="sort-arrow"></span></th>
-            <th onclick="sortTable(6)">M1<br>(Alpha) <span class="sort-arrow"></span></th>
-            <th onclick="sortTable(7)">M3<br>(RC) <span class="sort-arrow"></span></th>
-            <th onclick="sortTable(8)">M4<br>(Public) <span class="sort-arrow"></span></th>
-            <th onclick="sortTable(9)">Repository <span class="sort-arrow"></span></th>
+            <th onclick="sortTable(4)">Last<br>Published <span class="sort-arrow"></span></th>
+            <th onclick="sortTable(5)">1st Alpha<br>(M1) <span class="sort-arrow"></span></th>
+            <th onclick="sortTable(6)">1st RC<br>(M3) <span class="sort-arrow"></span></th>
+            <th onclick="sortTable(7)">1st Public<br>(M4) <span class="sort-arrow"></span></th>
+            <th onclick="sortTable(8)">Repository <span class="sort-arrow"></span></th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -303,15 +309,7 @@ tr.not-planned-row:hover td {
       'not_planned':     { label: 'Not Planned', color: '#C2C9D1', order: 5 }
     };
 
-    const TYPE_SHORT = {
-      'pre-release-alpha': 'alpha',
-      'pre-release-rc': 'rc',
-      'public-release': 'public',
-      'maintenance-release': 'maint.',
-      'none': ''
-    };
-
-    const COL_COUNT = 10;
+    const COL_COUNT = 9;
 
     // Release track display order — update when new meta-releases are added
     const TRACK_ORDER = ['Spring26', 'Sync26', 'Signal27', 'independent', 'Fall25'];
@@ -348,6 +346,8 @@ tr.not-planned-row:hover td {
             cycle_releases: repo.cycle_releases || {},
             warnings: repo.warnings || [],
             dependencies: repo.dependencies || {},
+            last_published: repo.last_published || null,
+            snapshot_api_versions: repo.snapshot_api_versions || null,
             _is_placeholder: true
           });
         } else {
@@ -369,6 +369,8 @@ tr.not-planned-row:hover td {
               cycle_releases: repo.cycle_releases || {},
               warnings: repo.warnings || [],
               dependencies: repo.dependencies || {},
+              last_published: repo.last_published || null,
+              snapshot_api_versions: repo.snapshot_api_versions || null,
               _is_placeholder: false,
               _is_first_in_repo: idx === 0,
               _repo_api_count: repo.apis.length
@@ -525,7 +527,7 @@ tr.not-planned-row:hover td {
     }
 
     /**
-     * Render state badge with optional artifact link and warning icon
+     * Render state badge with warning icon
      */
     function renderStateCell(row) {
       const cfg = STATE_CONFIG[row.state] || { label: row.state, color: '#666' };
@@ -538,33 +540,108 @@ tr.not-planned-row:hover td {
         html += `<span class="warning-icon">&#9888;<span class="warning-tooltip">${tooltipText}</span></span>`;
       }
 
+      return html;
+    }
+
+    /**
+     * Render Ongoing Release cell (3-line: tag, version, artifact link)
+     */
+    function renderOngoingReleaseCell(row) {
+      const state = row.state;
+      const tag = row.target_release_tag;
       const artifacts = row.artifacts || {};
-      let link = '';
 
-      if (row.state === 'snapshot_active' && artifacts.release_pr) {
-        link = `<a href="${artifacts.release_pr.url}" target="_blank" rel="noopener">PR #${artifacts.release_pr.number}</a>`;
-      } else if (row.state === 'draft_ready' && artifacts.draft_release) {
-        link = `<a href="${artifacts.draft_release.url}" target="_blank" rel="noopener">Draft: ${artifacts.draft_release.name}</a>`;
-      } else if (row.state === 'published' && row.github_url && row.target_release_tag) {
-        link = `<a href="${row.github_url}/releases/tag/${row.target_release_tag}" target="_blank" rel="noopener">${row.target_release_tag}</a>`;
+      // Not Planned: show plan data only if it differs from last published
+      if (state === 'not_planned') {
+        const lp = row.last_published;
+        const hasDifferentPlan = tag && (!lp || lp.release_tag !== tag);
+        if (hasDifferentPlan) {
+          const version = row.target_api_version
+            ? `${row.target_api_version} (${row.target_api_status || ''})`
+            : '';
+          return `<span class="milestone-tag">${tag}</span>`
+            + (version ? `<br><span style="font-size:10px;color:var(--text-secondary)">${version}</span>` : '');
+        }
+        return '<span class="milestone-empty">&mdash;</span>';
       }
 
-      // Fallback: show release issue link when primary artifact link is unavailable
-      if (!link && artifacts.release_issue) {
-        link = `<a href="${artifacts.release_issue.url}" target="_blank" rel="noopener">Issue #${artifacts.release_issue.number}</a>`;
+      if (!tag) return '<span class="milestone-empty">&mdash;</span>';
+
+      // Line 1: release tag (clickable for published state)
+      let line1;
+      if (state === 'published') {
+        line1 = `<a href="${row.github_url}/releases/tag/${tag}" target="_blank" rel="noopener" class="milestone-tag">${tag}</a>`;
+      } else {
+        line1 = `<span class="milestone-tag">${tag}</span>`;
       }
 
-      if (link) {
-        html += `<span class="state-artifact">${link}</span>`;
+      // Line 2: API version — use calculated version from snapshot if available
+      let version = '';
+      const snapVersions = row.snapshot_api_versions;
+      if (snapVersions && row.api_name && snapVersions[row.api_name]) {
+        version = snapVersions[row.api_name];
+      } else if (row.target_api_version) {
+        version = row.target_api_status
+          ? `${row.target_api_version} (${row.target_api_status})`
+          : row.target_api_version;
+      }
+
+      // Line 3: artifact link
+      let line3 = '';
+      if (state === 'snapshot_active' && artifacts.release_pr) {
+        line3 = `<a href="${artifacts.release_pr.url}" target="_blank" rel="noopener">PR #${artifacts.release_pr.number}</a>`;
+      } else if (artifacts.release_issue) {
+        line3 = `<a href="${artifacts.release_issue.url}" target="_blank" rel="noopener">Issue #${artifacts.release_issue.number}</a>`;
+      }
+
+      let html = line1;
+      if (version) {
+        html += `<br><span style="font-size:10px;color:var(--text-secondary)">${version}</span>`;
+      }
+      if (line3) {
+        html += `<span class="milestone-date">${line3}</span>`;
       }
 
       return html;
     }
 
     /**
-     * Render a milestone cell (M1, M3, or M4)
+     * Render Last Published cell (3-line: tag link, version, date)
      */
-    function renderMilestoneCell(cycleReleases, milestoneKey, apiName) {
+    function renderLastPublishedCell(row) {
+      const lp = row.last_published;
+      if (!lp || !lp.release_tag) {
+        return '<span class="milestone-empty">&mdash;</span>';
+      }
+
+      // Line 1: release tag (clickable)
+      const tagUrl = `${row.github_url}/releases/tag/${lp.release_tag}`;
+      let html = `<a href="${tagUrl}" target="_blank" rel="noopener" class="milestone-tag">${lp.release_tag}</a>`;
+
+      // Line 2: API version from that release
+      let apiVersion = '';
+      if (lp.apis && row.api_name) {
+        const apiEntry = lp.apis.find(a => a.api_name === row.api_name);
+        if (apiEntry && apiEntry.api_version) {
+          apiVersion = apiEntry.api_version;
+        }
+      }
+      if (apiVersion) {
+        html += `<br><span style="font-size:10px;color:var(--text-secondary)">${apiVersion}</span>`;
+      }
+
+      // Line 3: release date
+      if (lp.release_date) {
+        html += `<span class="milestone-date">${ViewerLib.formatDate(lp.release_date)}</span>`;
+      }
+
+      return html;
+    }
+
+    /**
+     * Render a milestone cell (M1, M3, or M4) with clickable release tag
+     */
+    function renderMilestoneCell(cycleReleases, milestoneKey, apiName, githubUrl) {
       if (!cycleReleases || !cycleReleases[milestoneKey]) {
         return '<span class="milestone-empty">&mdash;</span>';
       }
@@ -586,7 +663,8 @@ tr.not-planned-row:hover td {
         ? ViewerLib.formatDate(milestone.release_date)
         : '';
 
-      let html = `<span class="milestone-tag">${milestone.release_tag}</span>`;
+      const tagUrl = `${githubUrl}/releases/tag/${milestone.release_tag}`;
+      let html = `<a href="${tagUrl}" target="_blank" rel="noopener" class="milestone-tag">${milestone.release_tag}</a>`;
       if (apiVersion) {
         html += `<br><span style="font-size:10px;color:var(--text-secondary)">${apiVersion}</span>`;
       }
@@ -615,24 +693,19 @@ tr.not-planned-row:hover td {
       // Target API Version
       const versionCell = row.target_api_version || '&mdash;';
 
-      // Target API Status
-      const statusCell = row.target_api_status || '&mdash;';
+      // Ongoing Release (3-line cell)
+      const ongoingCell = renderOngoingReleaseCell(row);
 
       // Release State
       const stateCell = renderStateCell(row);
 
-      // Release Type (plain text with tooltip)
-      const typeText = TYPE_SHORT[row.target_release_type] || row.target_release_type || '';
-      const typeCell = typeText || '&mdash;';
-      const typeTitle = row.target_release_type || '';
+      // Last Published (3-line cell)
+      const lastPubCell = renderLastPublishedCell(row);
 
-      // Target Release
-      const releaseCell = row.target_release_tag || '&mdash;';
-
-      // Milestones
-      const m1Cell = renderMilestoneCell(row.cycle_releases, 'm1', row.api_name);
-      const m3Cell = renderMilestoneCell(row.cycle_releases, 'm3', row.api_name);
-      const m4Cell = renderMilestoneCell(row.cycle_releases, 'm4', row.api_name);
+      // Milestones (with clickable tags)
+      const m1Cell = renderMilestoneCell(row.cycle_releases, 'm1', row.api_name, row.github_url);
+      const m3Cell = renderMilestoneCell(row.cycle_releases, 'm3', row.api_name, row.github_url);
+      const m4Cell = renderMilestoneCell(row.cycle_releases, 'm4', row.api_name, row.github_url);
 
       // Repository (link)
       const repoCell = `<a href="${row.github_url}" target="_blank" rel="noopener">${row.repository}</a>`;
@@ -640,10 +713,9 @@ tr.not-planned-row:hover td {
       tr.innerHTML = `
         <td>${apiNameText}</td>
         <td>${versionCell}</td>
-        <td>${statusCell}</td>
+        <td class="milestone-cell">${ongoingCell}</td>
         <td>${stateCell}</td>
-        <td title="${typeTitle}">${typeCell}</td>
-        <td>${releaseCell}</td>
+        <td class="milestone-cell">${lastPubCell}</td>
         <td class="milestone-cell">${m1Cell}</td>
         <td class="milestone-cell">${m3Cell}</td>
         <td class="milestone-cell">${m4Cell}</td>
@@ -771,14 +843,13 @@ tr.not-planned-row:hover td {
       const sortKeys = [
         r => r.api_name.toLowerCase(),                           // 0: API Name
         r => r.target_api_version,                               // 1: Target API Version
-        r => r.target_api_status || '',                          // 2: Target API Status
+        r => r.target_release_tag || '',                         // 2: Ongoing Release (by tag)
         r => (STATE_CONFIG[r.state] || {}).order ?? 99,          // 3: Release State
-        r => r.target_release_type || '',                        // 4: Release Type
-        r => r.target_release_tag || '',                         // 5: Target Release
-        r => getMilestoneDate(r.cycle_releases, 'm1'),           // 6: M1
-        r => getMilestoneDate(r.cycle_releases, 'm3'),           // 7: M3
-        r => getMilestoneDate(r.cycle_releases, 'm4'),           // 8: M4
-        r => r.repository.toLowerCase(),                         // 9: Repository
+        r => getLastPublishedDate(r),                            // 4: Last Published (by date)
+        r => getMilestoneDate(r.cycle_releases, 'm1'),           // 5: 1st Alpha (M1)
+        r => getMilestoneDate(r.cycle_releases, 'm3'),           // 6: 1st RC (M3)
+        r => getMilestoneDate(r.cycle_releases, 'm4'),           // 7: 1st Public (M4)
+        r => r.repository.toLowerCase(),                         // 8: Repository
       ];
 
       const getKey = sortKeys[columnIndex] || sortKeys[0];
@@ -819,6 +890,14 @@ tr.not-planned-row:hover td {
         return Infinity;
       }
       return new Date(cycleReleases[key].release_date).getTime();
+    }
+
+    /**
+     * Get last published date as sortable value
+     */
+    function getLastPublishedDate(row) {
+      if (!row.last_published || !row.last_published.release_date) return Infinity;
+      return new Date(row.last_published.release_date).getTime();
     }
 
     /**
@@ -935,10 +1014,13 @@ tr.not-planned-row:hover td {
      */
     function exportCSV() {
       const headers = [
-        'API Name', 'Target API Version', 'Target API Status',
-        'Release State', 'Release Type', 'Target Release',
+        'API Name', 'Target API Version',
+        'Ongoing Release Tag', 'Ongoing Release Version', 'Ongoing Release Status',
+        'Release State',
+        'Last Published Tag', 'Last Published Version', 'Last Published Date',
         'Release Track', 'Meta-Release',
-        'M1 Tag', 'M1 Date', 'M3 Tag', 'M3 Date', 'M4 Tag', 'M4 Date',
+        '1st Alpha Tag', '1st Alpha Date', '1st RC Tag', '1st RC Date',
+        '1st Public Tag', '1st Public Date',
         'Repository', 'Warnings'
       ];
 
@@ -946,13 +1028,22 @@ tr.not-planned-row:hover td {
         const m1 = (row.cycle_releases || {}).m1 || {};
         const m3 = (row.cycle_releases || {}).m3 || {};
         const m4 = (row.cycle_releases || {}).m4 || {};
+        const lp = row.last_published || {};
+        const lpApi = (lp.apis || []).find(a => a.api_name === row.api_name);
+        const snapVer = (row.snapshot_api_versions && row.api_name)
+          ? row.snapshot_api_versions[row.api_name] || ''
+          : '';
+        const ongoingVer = snapVer || row.target_api_version || '';
         return [
           row.api_name || row.repository,
           row.target_api_version,
+          row.target_release_tag,
+          ongoingVer,
           row.target_api_status,
           row.state,
-          row.target_release_type,
-          row.target_release_tag,
+          lp.release_tag || '',
+          (lpApi && lpApi.api_version) || '',
+          lp.release_date || '',
           row.release_track,
           row.meta_release,
           m1.release_tag || '',

@@ -219,6 +219,16 @@ properties:
             m4:
               $ref: "#/$defs/milestone_release"
 
+        last_published:
+          $ref: "#/$defs/milestone_release"
+          description: Most recently published release in the current cycle
+
+        snapshot_api_versions:
+          type: object
+          description: Calculated API versions from release-metadata.yaml on snapshot branch
+          additionalProperties:
+            type: string
+
         warnings:
           type: array
           description: Validation warnings for this entry

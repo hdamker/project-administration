@@ -436,7 +436,7 @@ class TestCollectAll:
         assert "last_updated" in meta
         assert "last_checked" in meta
         assert "releases_master_updated" in meta
-        assert meta["schema_version"] == "1.2.0"
+        assert meta["schema_version"] == "1.3.0"
         assert "collection_stats" not in meta  # Full stats removed from output
         assert meta["repos_scanned"] == 2      # Stable stats restored
         assert meta["repos_with_plan"] == 2

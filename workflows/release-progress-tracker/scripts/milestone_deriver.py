@@ -41,13 +41,7 @@ def derive_cycle_releases(
     if not target_release_tag:
         return CycleReleases()
 
-    # Extract cycle prefix: "r1.1" → "r1.", "r10.2" → "r10."
-    dot_index = target_release_tag.find(".")
-    tag_prefix = (
-        target_release_tag[:dot_index + 1]
-        if dot_index != -1
-        else target_release_tag + "."
-    )
+    tag_prefix = _get_tag_prefix(target_release_tag)
 
     # Filter releases for this repo by tag prefix
     cycle_releases = [
@@ -68,6 +62,70 @@ def derive_cycle_releases(
     m4 = _find_earliest_by_type(cycle_releases, "public-release", planned_apis)
 
     return CycleReleases(m1=m1, m3=m3, m4=m4)
+
+
+def derive_last_published(
+    repo_name: str,
+    target_release_tag: Optional[str],
+    all_releases: List[Dict],
+    planned_apis: List[str],
+) -> Optional[MilestoneRelease]:
+    """Find the most recently published release in the current cycle.
+
+    Returns the latest release (by release_date) regardless of type,
+    or None if no releases exist in the cycle.
+    """
+    if not target_release_tag:
+        return None
+
+    tag_prefix = _get_tag_prefix(target_release_tag)
+
+    cycle_releases = [
+        r for r in all_releases
+        if r.get("repository") == repo_name
+        and (r.get("release_tag") or "").startswith(tag_prefix)
+    ]
+
+    if not cycle_releases:
+        return None
+
+    # Sort by release_date descending, take most recent
+    cycle_releases.sort(key=lambda r: r.get("release_date", ""), reverse=True)
+    latest = cycle_releases[0]
+
+    # Build API version map
+    release_api_versions = {}
+    for api in latest.get("apis", []):
+        name = api.get("api_name")
+        if name:
+            release_api_versions[name] = api.get("api_version")
+
+    apis = [
+        CycleReleaseApi(
+            api_name=name,
+            api_version=release_api_versions.get(name),
+        )
+        for name in planned_apis
+    ]
+
+    return MilestoneRelease(
+        release_tag=latest.get("release_tag"),
+        release_date=latest.get("release_date"),
+        apis=apis,
+    )
+
+
+def _get_tag_prefix(target_release_tag: str) -> str:
+    """Extract cycle prefix from a release tag.
+
+    Examples: "r1.1" → "r1.", "r10.2" → "r10."
+    """
+    dot_index = target_release_tag.find(".")
+    return (
+        target_release_tag[:dot_index + 1]
+        if dot_index != -1
+        else target_release_tag + "."
+    )
 
 
 def _find_earliest_by_type(
