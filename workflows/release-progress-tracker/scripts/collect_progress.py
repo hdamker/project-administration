@@ -177,16 +177,22 @@ def collect_historical_entries(
 
         is_sandbox = meta_release in _SANDBOX_META_RELEASES
 
-        # Find best release for deriving the cycle tag and API list
-        # Priority: public-release > pre-release-rc > pre-release-alpha
+        # Find best release for deriving the cycle tag and API list.
+        # target_tag: highest-priority release type wins (public > rc > alpha > maintenance).
+        # apis: same priority, but fall through to lower types if a release has no api data.
         target_tag = None
         apis = []
-        for preferred_type in ("public-release", "pre-release-rc", "pre-release-alpha"):
+        for preferred_type in (
+            "public-release", "pre-release-rc", "pre-release-alpha", "maintenance-release"
+        ):
             candidates = [r for r in repo_releases if r.get("release_type") == preferred_type]
-            if candidates:
-                candidates.sort(key=lambda r: r.get("release_date", ""))
-                best = candidates[0]
+            if not candidates:
+                continue
+            candidates.sort(key=lambda r: r.get("release_date", ""))
+            best = candidates[0]
+            if target_tag is None:
                 target_tag = best.get("release_tag")
+            if not apis:
                 apis = [
                     ApiEntry(
                         api_name=a.get("api_name", ""),
@@ -196,6 +202,7 @@ def collect_historical_entries(
                     for a in best.get("apis", [])
                     if a.get("api_name")
                 ]
+            if target_tag and apis:
                 break
 
         if not target_tag:
