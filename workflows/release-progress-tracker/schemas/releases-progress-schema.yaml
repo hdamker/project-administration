@@ -158,13 +158,25 @@ properties:
             - snapshot_active
             - draft_ready
             - published
+            - completed
+            - historical
           description: |
             Derived from repository artifacts:
-            - not_planned: target_release_type is none
+            - not_planned: target_release_type is none, plan does not match last public release
             - planned: Has plan, no release artifacts
             - snapshot_active: Snapshot branch exists
             - draft_ready: Snapshot branch + draft release exist
             - published: Release tag exists
+            - completed: target_release_type is none, plan exactly matches last public release
+            - historical: No release-plan.yaml; entry derived from releases-master.yaml only
+
+        source:
+          type: string
+          enum:
+            - historical
+          description: |
+            Set to "historical" for entries created from releases-master.yaml without an
+            active release-plan.yaml. Omitted for active (plan-based) entries.
 
         artifacts:
           type: object

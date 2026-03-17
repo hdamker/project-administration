@@ -34,6 +34,7 @@ from .models import (
     ApiEntry,
     ArtifactInfo,
     CollectionStats,
+    CycleReleases,
     MetaReleaseSummary,
     ProgressData,
     ProgressEntry,
@@ -79,6 +80,169 @@ def parse_release_plan(content: str) -> Optional[Dict]:
     except yaml.YAMLError as e:
         logger.warning("Failed to parse release-plan.yaml: %s", e)
         return None
+
+
+def _tag_prefix(release_tag: str) -> str:
+    """Extract cycle prefix from a release tag. E.g. 'r1.1' → 'r1.'"""
+    dot_index = release_tag.find(".")
+    return release_tag[:dot_index + 1] if dot_index != -1 else release_tag + "."
+
+
+def _check_completed_state(entry: ProgressEntry, all_releases: List[Dict]) -> ProgressState:
+    """Upgrade NOT_PLANNED to COMPLETED when release-plan exactly matches a completed release.
+
+    Conditions (all must hold):
+    1. target_release_tag exactly matches a public-release or maintenance-release
+       for this repo in releases-master.yaml (a maintenance-release implies a prior
+       public-release in the same cycle, so both count as completed states).
+    2. Every planned API's target_api_version matches the api_version in that release.
+    3. entry.apis is non-empty (empty API list is not verifiable, stays NOT_PLANNED).
+    """
+    if not entry.target_release_tag or not entry.apis:
+        return ProgressState.NOT_PLANNED
+
+    _TERMINAL_TYPES = {"public-release", "maintenance-release"}
+
+    matched_release = next(
+        (
+            r for r in all_releases
+            if r.get("repository") == entry.repository
+            and r.get("release_tag") == entry.target_release_tag
+            and r.get("release_type") in _TERMINAL_TYPES
+        ),
+        None,
+    )
+
+    if not matched_release:
+        return ProgressState.NOT_PLANNED
+
+    release_api_versions = {
+        a.get("api_name"): a.get("api_version")
+        for a in matched_release.get("apis", [])
+        if a.get("api_name")
+    }
+
+    for api_entry in entry.apis:
+        if release_api_versions.get(api_entry.api_name) != api_entry.target_api_version:
+            return ProgressState.NOT_PLANNED
+
+    return ProgressState.COMPLETED
+
+
+# meta_release values that indicate a sandbox / non-meta-release repo
+_SANDBOX_META_RELEASES = {"None (Sandbox)", "None"}
+
+
+def collect_historical_entries(
+    all_releases: List[Dict],
+    active_repo_meta_releases: set,
+    repo_url_map: Dict[str, str],
+    active_entries: Optional[List[ProgressEntry]] = None,
+) -> List[ProgressEntry]:
+    """Create HISTORICAL entries for repos with cycle releases but no active release-plan.yaml.
+
+    These entries carry M1/M3/M4 and last_published data from releases-master.yaml.
+    No GitHub API calls are made.
+
+    Sandbox repos (meta_release in _SANDBOX_META_RELEASES):
+    - If an active entry covers the same repo/tag-prefix → skip (active entry wins).
+    - Otherwise → create a HISTORICAL entry with release_track="independent".
+    """
+    if active_entries is None:
+        active_entries = []
+
+    # Build (repo, tag_prefix) set from active entries for sandbox resolution
+    active_by_repo_prefix = {
+        (e.repository, _tag_prefix(e.target_release_tag))
+        for e in active_entries
+        if e.target_release_tag
+    }
+
+    # Group releases by (repository, meta_release)
+    groups: Dict[tuple, List[Dict]] = {}
+    for release in all_releases:
+        repo = release.get("repository", "")
+        meta = release.get("meta_release", "")
+        if not repo or not meta:
+            continue
+        key = (repo, meta)
+        if key not in groups:
+            groups[key] = []
+        groups[key].append(release)
+
+    entries = []
+    for (repo, meta_release), repo_releases in sorted(groups.items()):
+        if (repo, meta_release) in active_repo_meta_releases:
+            continue
+
+        is_sandbox = meta_release in _SANDBOX_META_RELEASES
+
+        # Find best release for deriving the cycle tag and API list.
+        # target_tag: highest-priority release type wins (public > rc > alpha > maintenance).
+        # apis: same priority, but fall through to lower types if a release has no api data.
+        target_tag = None
+        apis = []
+        for preferred_type in (
+            "public-release", "pre-release-rc", "pre-release-alpha", "maintenance-release"
+        ):
+            candidates = [r for r in repo_releases if r.get("release_type") == preferred_type]
+            if not candidates:
+                continue
+            candidates.sort(key=lambda r: r.get("release_date", ""))
+            best = candidates[0]
+            if target_tag is None:
+                target_tag = best.get("release_tag")
+            if not apis:
+                apis = [
+                    ApiEntry(
+                        api_name=a.get("api_name", ""),
+                        target_api_version=a.get("api_version", ""),
+                        target_api_status="",
+                    )
+                    for a in best.get("apis", [])
+                    if a.get("api_name")
+                ]
+            if target_tag and apis:
+                break
+
+        if not target_tag:
+            continue
+
+        if is_sandbox:
+            prefix = _tag_prefix(target_tag)
+            if (repo, prefix) in active_by_repo_prefix:
+                continue  # Active entry already covers this repo/cycle
+            entry_release_track = "independent"
+            entry_meta_release = None
+        else:
+            entry_release_track = "meta-release"
+            entry_meta_release = meta_release
+
+        github_url = repo_url_map.get(repo, "")
+        planned_api_names = [a.api_name for a in apis]
+
+        entry = ProgressEntry(
+            repository=repo,
+            github_url=github_url,
+            release_track=entry_release_track,
+            meta_release=entry_meta_release,
+            target_release_tag=None,   # No active plan
+            target_release_type=None,
+            apis=apis,
+            state=ProgressState.HISTORICAL,
+            source="historical",
+        )
+
+        entry.cycle_releases = derive_cycle_releases(
+            repo, target_tag, meta_release, all_releases, planned_api_names,
+        )
+        entry.last_published = derive_last_published(
+            repo, target_tag, all_releases, planned_api_names,
+        )
+
+        entries.append(entry)
+
+    return entries
 
 
 def collect_repo_progress(
@@ -152,6 +316,8 @@ def collect_repo_progress(
         entry.last_published = derive_last_published(
             repo_name, target_tag, all_releases, planned_api_names,
         )
+        # Upgrade to COMPLETED if plan exactly matches last public release
+        entry.state = _check_completed_state(entry, all_releases)
         # Generate warnings
         repo_releases = [r for r in all_releases if r.get("repository") == repo_name]
         entry.warnings = generate_warnings(entry, repo_releases)
@@ -322,6 +488,14 @@ def collect_all(
     all_releases = master.get("releases", [])
 
     context_map = build_published_context_map(repositories)
+    repo_url_map: Dict[str, str] = {
+        r.get("repository", ""): r.get("github_url", "")
+        for r in repositories
+        if r.get("repository")
+    }
+
+    active_states = {ProgressState.PLANNED, ProgressState.SNAPSHOT_ACTIVE,
+                     ProgressState.DRAFT_READY, ProgressState.PUBLISHED}
 
     stats = CollectionStats(repos_scanned=len(repositories))
     entries: List[ProgressEntry] = []
@@ -339,7 +513,7 @@ def collect_all(
             if entry is not None:
                 entries.append(entry)
                 stats.repos_with_plan += 1
-                if entry.state.value != "not_planned":
+                if entry.state in active_states:
                     stats.repos_planned += 1
         except RateLimitError:
             logger.error("Rate limit exhausted, aborting collection")
@@ -347,6 +521,19 @@ def collect_all(
         except Exception as e:
             logger.warning("%s: collection failed: %s", repo_name, e)
             continue
+
+    # Add historical entries for repos with cycle releases but no release-plan.yaml
+    active_repo_meta_releases = {
+        (e.repository, e.meta_release)
+        for e in entries
+        if e.meta_release
+    }
+    historical = collect_historical_entries(
+        all_releases, active_repo_meta_releases, repo_url_map,
+        active_entries=entries,
+    )
+    entries.extend(historical)
+    logger.info("Historical entries added: %d", len(historical))
 
     # Build meta-release summaries
     summary_data = build_meta_release_summaries(entries)
