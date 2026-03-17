@@ -207,11 +207,12 @@ def build_meta_release_summaries(
         s["total_apis"] += len(entry.apis)
 
         cr = entry.cycle_releases
+        n = len(entry.apis)
         if cr.m1 and cr.m1.release_tag:
-            s["m1_achieved"] += len([a for a in cr.m1.apis if a.api_version])
+            s["m1_achieved"] += n
         if cr.m3 and cr.m3.release_tag:
-            s["m3_achieved"] += len([a for a in cr.m3.apis if a.api_version])
+            s["m3_achieved"] += n
         if cr.m4 and cr.m4.release_tag:
-            s["m4_achieved"] += len([a for a in cr.m4.apis if a.api_version])
+            s["m4_achieved"] += n
 
     return summaries
