@@ -121,7 +121,11 @@ runs:
         fi
 
         # Compare against main (stage files first to detect new files)
-        git add ${{ inputs.target_files }} 2>/dev/null || true
+        # Add each file separately — a single git add with a missing pathspec
+        # (e.g. CHANGELOG.md absent) causes an atomic failure that stages nothing
+        for f in ${{ inputs.target_files }}; do
+          git add "$f" 2>/dev/null || true
+        done
         if git diff --cached --quiet -- ${{ inputs.target_files }}; then
           echo "No changes vs main → noop"
           echo "changed=false" >> $GITHUB_OUTPUT

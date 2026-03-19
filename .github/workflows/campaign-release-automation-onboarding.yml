@@ -279,7 +279,11 @@ jobs:
         shell: bash
         working-directory: repo
         run: |
-          git add .github/workflows/release-automation.yml CHANGELOG.md CHANGELOG/README.md 2>/dev/null || true
+          # Add each file separately — a single git add with a missing pathspec
+          # (e.g. CHANGELOG.md absent) causes an atomic failure that stages nothing
+          git add .github/workflows/release-automation.yml 2>/dev/null || true
+          git add CHANGELOG.md 2>/dev/null || true
+          git add CHANGELOG/README.md 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
