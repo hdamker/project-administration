@@ -228,11 +228,12 @@ function updateMaster(master, analysisResults, mode, mappings, archivedRepoNames
       meta_release: metaRelease,
       github_url: result.github_url,
       release_type: releaseType,
+      src_commit_sha: result.src_commit_sha || undefined,  // only present for native metadata
+      dependencies: result.dependencies || undefined,  // only present for native metadata
       superseded: superseded || undefined,  // only present when true
       repository_archived: archivedRepoNames.has(result.repository) || undefined,  // only present when true
       apis: result.apis.map(api => ({
-        api_name: api.api_name,        // Raw API name from server URL
-        file_name: api.file_name,      // Raw filename for reference
+        api_name: api.api_name,
         api_version: api.api_version,
         api_title: api.api_title,
         commonalities: api.commonalities

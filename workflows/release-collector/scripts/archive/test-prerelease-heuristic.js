@@ -60,7 +60,7 @@ function setup() {
         apis: [
           {
             api_name: 'consent-info',
-            file_name: 'consent-info',
+
             api_version: '0.2.0-alpha.1',
             api_title: 'Consent Info',
             commonalities: '0.5'
@@ -78,7 +78,7 @@ function setup() {
         apis: [
           {
             api_name: 'consent-info',
-            file_name: 'consent-info',
+
             api_version: '0.2.0-rc.1',
             api_title: 'Consent Info',
             commonalities: '0.5'
@@ -118,10 +118,12 @@ function runTest() {
       github_url: 'https://github.com/camaraproject/ConsentInfo/releases/tag/r2.3',
       is_prerelease: false,
       release_type: null,  // Non-prerelease: type determined by heuristic in update-master.js
+      src_commit_sha: null,
+      dependencies: null,
+      native_metadata: false,
       apis: [
         {
           api_name: 'consent-info',
-          file_name: 'consent-info',
           api_version: '0.2.0',
           api_title: 'Consent Info',
           commonalities: '0.5'
@@ -184,14 +186,109 @@ function runTest() {
   const consentReleases = updatedMaster.releases.filter(r => r.repository === 'ConsentInfo');
   assert(consentReleases.length === 3,
     `ConsentInfo release count = ${consentReleases.length} (expected 3)`);
+
+  // Test 5: file_name should NOT be present in any API entry (ADR-0004 Decision 6)
+  const hasFileName = updatedMaster.releases.some(r =>
+    r.apis.some(api => 'file_name' in api)
+  );
+  assert(!hasFileName, 'No API entry has file_name (removed per ADR-0004)');
+}
+
+function runNativeMetadataTest() {
+  console.log('\n--- Test: Native Metadata Pass-Through ---\n');
+
+  // Seed master empty
+  const emptyMaster = {
+    metadata: {
+      last_updated: '2026-03-01T00:00:00Z',
+      workflow_version: '3.0.0',
+      schema_version: '2.0.0'
+    },
+    releases: [],
+    repositories: []
+  };
+  fs.writeFileSync(MASTER_FILE, yaml.dump(emptyMaster, { lineWidth: -1 }));
+
+  // Simulate analysis result from native metadata path
+  const analysisResults = [
+    {
+      repository: 'ConsentInfo',
+      release_tag: 'r2.3',
+      release_date: '2026-03-15T16:00:00Z',
+      github_url: 'https://github.com/camaraproject/ConsentInfo/releases/tag/r2.3',
+      is_prerelease: false,
+      release_type: 'public-release',  // Set by native metadata (not heuristic)
+      src_commit_sha: 'abc123def456abc123def456abc123def456abc1',
+      dependencies: {
+        commonalities_release: 'r4.3 (1.3.0)',
+        identity_consent_management_release: 'r4.3 (1.1.0)'
+      },
+      native_metadata: true,
+      apis: [
+        {
+          api_name: 'consent-info',
+          api_version: '0.2.0',
+          api_title: 'Consent Info',
+          commonalities: '1.3.0'  // Derived from dependencies.commonalities_release
+        }
+      ]
+    }
+  ];
+
+  if (!fs.existsSync(TEMP_DIR)) {
+    fs.mkdirSync(TEMP_DIR, { recursive: true });
+  }
+  const testFile = path.join(TEMP_DIR, 'test-prerelease-analysis.json');
+  fs.writeFileSync(testFile, JSON.stringify(analysisResults, null, 2));
+
+  console.log('Running update-master.js with native metadata result...\n');
+  try {
+    const output = execSync(
+      `node ${path.join(__dirname, '..', 'update-master.js')} --mode incremental --input ${testFile}`,
+      { encoding: 'utf8' }
+    );
+    console.log(output);
+  } catch (error) {
+    console.error('Error running update-master:', error.message);
+    if (error.stdout) console.log(error.stdout);
+    if (error.stderr) console.error(error.stderr);
+    return;
+  }
+
+  const updatedMaster = yaml.load(fs.readFileSync(MASTER_FILE, 'utf8'));
+
+  console.log('\n--- Validation ---\n');
+
+  const r23 = updatedMaster.releases.find(r => r.repository === 'ConsentInfo' && r.release_tag === 'r2.3');
+
+  assert(r23 !== undefined, 'r2.3 exists in master');
+  assert(r23?.release_type === 'public-release',
+    `r2.3 release_type = "${r23?.release_type}" (expected "public-release")`);
+  assert(r23?.src_commit_sha === 'abc123def456abc123def456abc123def456abc1',
+    `r2.3 src_commit_sha present (expected 40-char SHA)`);
+  assert(r23?.dependencies?.commonalities_release === 'r4.3 (1.3.0)',
+    `r2.3 dependencies.commonalities_release = "${r23?.dependencies?.commonalities_release}"`);
+  assert(!('file_name' in (r23?.apis?.[0] || {})),
+    'r2.3 API has no file_name field');
+  assert(r23?.apis?.[0]?.commonalities === '1.3.0',
+    `r2.3 API commonalities = "${r23?.apis?.[0]?.commonalities}" (expected "1.3.0")`);
 }
 
 // Main
-console.log('=== Test: Persisted Pre-Release Heuristic Classification ===\n');
+console.log('=== Test 1: Persisted Pre-Release Heuristic Classification ===\n');
 
 try {
   setup();
   runTest();
+} finally {
+  teardown();
+}
+
+console.log('\n=== Test 2: Native Metadata Pass-Through ===');
+
+try {
+  setup();  // reuses setup for backup/restore
+  runNativeMetadataTest();
 } finally {
   teardown();
 }
