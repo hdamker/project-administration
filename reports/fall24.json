@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated": "2026-03-23T18:46:44.427Z",
+    "generated": "2026-03-23T19:28:45.774Z",
     "meta_release": "Fall24",
     "source": "Release Collector v3",
     "landscape_version": "1.1.0"
@@ -28,9 +28,6 @@
       "Device Information": 8,
       "Computing Services": 1
     },
-    "commonalities_versions": [
-      "0.4"
-    ],
     "apis_with_previous_names": 2
   },
   "repositories": {
@@ -225,7 +222,6 @@
       "apis": [
         {
           "api_name": "call-forwarding-signal",
-          "file_name": "call-forwarding-signal",
           "api_version": "0.2.0",
           "api_title": "Call Forwarding Signal",
           "commonalities": "0.4",
@@ -251,7 +247,6 @@
       "apis": [
         {
           "api_name": "carrier-billing-refund",
-          "file_name": "carrier-billing-refund",
           "api_version": "0.1.0",
           "api_title": "Carrier Billing Refunds",
           "commonalities": null,
@@ -267,7 +262,6 @@
         },
         {
           "api_name": "carrier-billing",
-          "file_name": "carrier-billing",
           "api_version": "0.3.0",
           "api_title": "Carrier Billing",
           "commonalities": null,
@@ -293,7 +287,6 @@
       "apis": [
         {
           "api_name": "carrier-billing-refund",
-          "file_name": "carrier-billing-refund",
           "api_version": "0.1.1",
           "api_title": "Carrier Billing Refunds",
           "commonalities": null,
@@ -309,7 +302,6 @@
         },
         {
           "api_name": "carrier-billing",
-          "file_name": "carrier-billing",
           "api_version": "0.3.1",
           "api_title": "Carrier Billing",
           "commonalities": null,
@@ -335,7 +327,6 @@
       "apis": [
         {
           "api_name": "application-profiles",
-          "file_name": "application-profiles",
           "api_version": "0.3.0",
           "api_title": "Connectivity Insights - Application Profiles",
           "commonalities": "0.4",
@@ -351,7 +342,6 @@
         },
         {
           "api_name": "connectivity-insights-subscriptions",
-          "file_name": "connectivity-insights-subscriptions",
           "api_version": "0.4.0",
           "api_title": "Connectivity Insights Subscriptions",
           "commonalities": "0.4",
@@ -367,7 +357,6 @@
         },
         {
           "api_name": "connectivity-insights",
-          "file_name": "connectivity-insights",
           "api_version": "0.4.0",
           "api_title": "Connectivity Insights",
           "commonalities": "0.4",
@@ -393,7 +382,6 @@
       "apis": [
         {
           "api_name": "geofencing-subscriptions",
-          "file_name": "geofencing-subscriptions",
           "api_version": "0.3.0",
           "api_title": "Device Geofencing Subscriptions",
           "commonalities": "0.4",
@@ -409,7 +397,6 @@
         },
         {
           "api_name": "location-retrieval",
-          "file_name": "location-retrieval",
           "api_version": "0.3.0",
           "api_title": "Device Location Retrieval",
           "commonalities": "0.4",
@@ -425,7 +412,6 @@
         },
         {
           "api_name": "location-verification",
-          "file_name": "location-verification",
           "api_version": "1.0.0",
           "api_title": "Device Location Verification",
           "commonalities": "0.4",
@@ -451,7 +437,6 @@
       "apis": [
         {
           "api_name": "device-reachability-status-subscriptions",
-          "file_name": "device-reachability-status-subscriptions",
           "api_version": "0.6.0",
           "api_title": "Device Reachability Status Subscriptions",
           "commonalities": "0.4",
@@ -467,7 +452,6 @@
         },
         {
           "api_name": "device-reachability-status",
-          "file_name": "device-reachability-status",
           "api_version": "0.6.0",
           "api_title": "Device Reachability Status",
           "commonalities": "0.4",
@@ -483,7 +467,6 @@
         },
         {
           "api_name": "device-roaming-status-subscriptions",
-          "file_name": "device-roaming-status-subscriptions",
           "api_version": "0.6.0",
           "api_title": "Device Roaming Status Subscriptions",
           "commonalities": "0.4",
@@ -499,7 +482,6 @@
         },
         {
           "api_name": "device-roaming-status",
-          "file_name": "device-roaming-status",
           "api_version": "0.6.0",
           "api_title": "Device Roaming Status",
           "commonalities": "0.4",
@@ -525,7 +507,6 @@
       "apis": [
         {
           "api_name": "device-reachability-status-subscriptions",
-          "file_name": "device-reachability-status-subscriptions",
           "api_version": "0.6.1",
           "api_title": "Device Reachability Status Subscriptions",
           "commonalities": "0.4",
@@ -541,7 +522,6 @@
         },
         {
           "api_name": "device-reachability-status",
-          "file_name": "device-reachability-status",
           "api_version": "0.6.1",
           "api_title": "Device Reachability Status",
           "commonalities": "0.4",
@@ -557,7 +537,6 @@
         },
         {
           "api_name": "device-roaming-status-subscriptions",
-          "file_name": "device-roaming-status-subscriptions",
           "api_version": "0.6.1",
           "api_title": "Device Roaming Status Subscriptions",
           "commonalities": "0.4",
@@ -573,7 +552,6 @@
         },
         {
           "api_name": "device-roaming-status",
-          "file_name": "device-roaming-status",
           "api_version": "0.6.1",
           "api_title": "Device Roaming Status",
           "commonalities": "0.4",
@@ -600,7 +578,6 @@
       "apis": [
         {
           "api_name": "home-devices-qod",
-          "file_name": "home-devices-qod",
           "api_version": "0.4.0",
           "api_title": "Home Devices QoD",
           "commonalities": "0.4",
@@ -626,7 +603,6 @@
       "apis": [
         {
           "api_name": "kyc-fill-in",
-          "file_name": "kyc-fill-in",
           "api_version": "0.2.0",
           "api_title": "Know Your Customer Fill-in",
           "commonalities": "0.4",
@@ -642,7 +618,6 @@
         },
         {
           "api_name": "kyc-match",
-          "file_name": "kyc-match",
           "api_version": "0.2.1",
           "api_title": "Know Your Customer Match",
           "commonalities": "0.4",
@@ -668,7 +643,6 @@
       "apis": [
         {
           "api_name": "kyc-fill-in",
-          "file_name": "kyc-fill-in",
           "api_version": "0.2.0",
           "api_title": "Know Your Customer Fill-in",
           "commonalities": "0.4",
@@ -684,7 +658,6 @@
         },
         {
           "api_name": "kyc-match",
-          "file_name": "kyc-match",
           "api_version": "0.2.1",
           "api_title": "Know Your Customer Match",
           "commonalities": "0.4",
@@ -710,7 +683,6 @@
       "apis": [
         {
           "api_name": "number-verification",
-          "file_name": "number-verification",
           "api_version": "1.0.0",
           "api_title": "Number Verification",
           "commonalities": "0.4",
@@ -736,7 +708,6 @@
       "apis": [
         {
           "api_name": "number-verification",
-          "file_name": "number-verification",
           "api_version": "1.0.0",
           "api_title": "Number Verification",
           "commonalities": "0.4",
@@ -762,7 +733,6 @@
       "apis": [
         {
           "api_name": "one-time-password-sms",
-          "file_name": "one-time-password-sms",
           "api_version": "1.0.0",
           "api_title": "One Time Password SMS",
           "commonalities": "0.4",
@@ -788,7 +758,6 @@
       "apis": [
         {
           "api_name": "population-density-data",
-          "file_name": "population-density-data",
           "api_version": "0.1.1",
           "api_title": "Population Density Data",
           "commonalities": "0.4",
@@ -814,7 +783,6 @@
       "apis": [
         {
           "api_name": "qod-provisioning",
-          "file_name": "qod-provisioning",
           "api_version": "0.1.0",
           "api_title": "QoD Provisioning API",
           "commonalities": "0.4",
@@ -833,7 +801,6 @@
         },
         {
           "api_name": "qos-profiles",
-          "file_name": "qos-profiles",
           "api_version": "0.11.0",
           "api_title": "QoS Profiles",
           "commonalities": "0.4",
@@ -849,7 +816,6 @@
         },
         {
           "api_name": "quality-on-demand",
-          "file_name": "quality-on-demand",
           "api_version": "0.11.0",
           "api_title": "Quality-On-Demand",
           "commonalities": "0.4",
@@ -875,7 +841,6 @@
       "apis": [
         {
           "api_name": "qod-provisioning",
-          "file_name": "qod-provisioning",
           "api_version": "0.1.1",
           "api_title": "QoD Provisioning API",
           "commonalities": "0.4",
@@ -894,7 +859,6 @@
         },
         {
           "api_name": "qos-profiles",
-          "file_name": "qos-profiles",
           "api_version": "0.11.1",
           "api_title": "QoS Profiles",
           "commonalities": "0.4",
@@ -910,7 +874,6 @@
         },
         {
           "api_name": "quality-on-demand",
-          "file_name": "quality-on-demand",
           "api_version": "0.11.1",
           "api_title": "Quality-On-Demand",
           "commonalities": "0.4",
@@ -936,7 +899,6 @@
       "apis": [
         {
           "api_name": "simple-edge-discovery",
-          "file_name": "simple-edge-discovery",
           "api_version": "1.0.0",
           "api_title": "Simple Edge Discovery",
           "commonalities": "0.4",
@@ -962,7 +924,6 @@
       "apis": [
         {
           "api_name": "sim-swap-subscriptions",
-          "file_name": "sim-swap-subscriptions",
           "api_version": "0.1.0",
           "api_title": "Sim Swap Subscriptions",
           "commonalities": "0.4",
@@ -978,7 +939,6 @@
         },
         {
           "api_name": "sim-swap",
-          "file_name": "sim-swap",
           "api_version": "1.0.0",
           "api_title": "SIM Swap",
           "commonalities": "0.4",
@@ -1004,7 +964,6 @@
       "apis": [
         {
           "api_name": "sim-swap-subscriptions",
-          "file_name": "sim-swap-subscriptions",
           "api_version": "0.1.1",
           "api_title": "Sim Swap Subscriptions",
           "commonalities": "0.4",
@@ -1020,7 +979,6 @@
         },
         {
           "api_name": "sim-swap",
-          "file_name": "sim-swap",
           "api_version": "1.0.0",
           "api_title": "SIM Swap",
           "commonalities": "0.4",
@@ -1046,7 +1004,6 @@
       "apis": [
         {
           "api_name": "sim-swap-subscriptions",
-          "file_name": "sim-swap-subscriptions",
           "api_version": "0.1.2",
           "api_title": "Sim Swap Subscriptions",
           "commonalities": "0.4",
@@ -1062,7 +1019,6 @@
         },
         {
           "api_name": "sim-swap",
-          "file_name": "sim-swap",
           "api_version": "1.0.0",
           "api_title": "SIM Swap",
           "commonalities": "0.4",
@@ -1082,7 +1038,6 @@
   "apis": [
     {
       "api_name": "call-forwarding-signal",
-      "file_name": "call-forwarding-signal",
       "api_version": "0.2.0",
       "api_title": "Call Forwarding Signal",
       "commonalities": "0.4",
@@ -1104,7 +1059,6 @@
     },
     {
       "api_name": "carrier-billing",
-      "file_name": "carrier-billing",
       "api_version": "0.3.0",
       "api_title": "Carrier Billing",
       "commonalities": null,
@@ -1126,7 +1080,6 @@
     },
     {
       "api_name": "carrier-billing",
-      "file_name": "carrier-billing",
       "api_version": "0.3.1",
       "api_title": "Carrier Billing",
       "commonalities": null,
@@ -1148,7 +1101,6 @@
     },
     {
       "api_name": "carrier-billing-refund",
-      "file_name": "carrier-billing-refund",
       "api_version": "0.1.0",
       "api_title": "Carrier Billing Refunds",
       "commonalities": null,
@@ -1170,7 +1122,6 @@
     },
     {
       "api_name": "carrier-billing-refund",
-      "file_name": "carrier-billing-refund",
       "api_version": "0.1.1",
       "api_title": "Carrier Billing Refunds",
       "commonalities": null,
@@ -1192,7 +1143,6 @@
     },
     {
       "api_name": "application-profiles",
-      "file_name": "application-profiles",
       "api_version": "0.3.0",
       "api_title": "Connectivity Insights - Application Profiles",
       "commonalities": "0.4",
@@ -1214,7 +1164,6 @@
     },
     {
       "api_name": "connectivity-insights",
-      "file_name": "connectivity-insights",
       "api_version": "0.4.0",
       "api_title": "Connectivity Insights",
       "commonalities": "0.4",
@@ -1236,7 +1185,6 @@
     },
     {
       "api_name": "connectivity-insights-subscriptions",
-      "file_name": "connectivity-insights-subscriptions",
       "api_version": "0.4.0",
       "api_title": "Connectivity Insights Subscriptions",
       "commonalities": "0.4",
@@ -1258,7 +1206,6 @@
     },
     {
       "api_name": "geofencing-subscriptions",
-      "file_name": "geofencing-subscriptions",
       "api_version": "0.3.0",
       "api_title": "Device Geofencing Subscriptions",
       "commonalities": "0.4",
@@ -1280,7 +1227,6 @@
     },
     {
       "api_name": "location-retrieval",
-      "file_name": "location-retrieval",
       "api_version": "0.3.0",
       "api_title": "Device Location Retrieval",
       "commonalities": "0.4",
@@ -1302,7 +1248,6 @@
     },
     {
       "api_name": "location-verification",
-      "file_name": "location-verification",
       "api_version": "1.0.0",
       "api_title": "Device Location Verification",
       "commonalities": "0.4",
@@ -1324,7 +1269,6 @@
     },
     {
       "api_name": "device-reachability-status",
-      "file_name": "device-reachability-status",
       "api_version": "0.6.0",
       "api_title": "Device Reachability Status",
       "commonalities": "0.4",
@@ -1346,7 +1290,6 @@
     },
     {
       "api_name": "device-reachability-status",
-      "file_name": "device-reachability-status",
       "api_version": "0.6.1",
       "api_title": "Device Reachability Status",
       "commonalities": "0.4",
@@ -1368,7 +1311,6 @@
     },
     {
       "api_name": "device-reachability-status-subscriptions",
-      "file_name": "device-reachability-status-subscriptions",
       "api_version": "0.6.0",
       "api_title": "Device Reachability Status Subscriptions",
       "commonalities": "0.4",
@@ -1390,7 +1332,6 @@
     },
     {
       "api_name": "device-reachability-status-subscriptions",
-      "file_name": "device-reachability-status-subscriptions",
       "api_version": "0.6.1",
       "api_title": "Device Reachability Status Subscriptions",
       "commonalities": "0.4",
@@ -1412,7 +1353,6 @@
     },
     {
       "api_name": "device-roaming-status",
-      "file_name": "device-roaming-status",
       "api_version": "0.6.0",
       "api_title": "Device Roaming Status",
       "commonalities": "0.4",
@@ -1434,7 +1374,6 @@
     },
     {
       "api_name": "device-roaming-status",
-      "file_name": "device-roaming-status",
       "api_version": "0.6.1",
       "api_title": "Device Roaming Status",
       "commonalities": "0.4",
@@ -1456,7 +1395,6 @@
     },
     {
       "api_name": "device-roaming-status-subscriptions",
-      "file_name": "device-roaming-status-subscriptions",
       "api_version": "0.6.0",
       "api_title": "Device Roaming Status Subscriptions",
       "commonalities": "0.4",
@@ -1478,7 +1416,6 @@
     },
     {
       "api_name": "device-roaming-status-subscriptions",
-      "file_name": "device-roaming-status-subscriptions",
       "api_version": "0.6.1",
       "api_title": "Device Roaming Status Subscriptions",
       "commonalities": "0.4",
@@ -1500,7 +1437,6 @@
     },
     {
       "api_name": "home-devices-qod",
-      "file_name": "home-devices-qod",
       "api_version": "0.4.0",
       "api_title": "Home Devices QoD",
       "commonalities": "0.4",
@@ -1523,7 +1459,6 @@
     },
     {
       "api_name": "kyc-fill-in",
-      "file_name": "kyc-fill-in",
       "api_version": "0.2.0",
       "api_title": "Know Your Customer Fill-in",
       "commonalities": "0.4",
@@ -1545,7 +1480,6 @@
     },
     {
       "api_name": "kyc-fill-in",
-      "file_name": "kyc-fill-in",
       "api_version": "0.2.0",
       "api_title": "Know Your Customer Fill-in",
       "commonalities": "0.4",
@@ -1567,7 +1501,6 @@
     },
     {
       "api_name": "kyc-match",
-      "file_name": "kyc-match",
       "api_version": "0.2.1",
       "api_title": "Know Your Customer Match",
       "commonalities": "0.4",
@@ -1589,7 +1522,6 @@
     },
     {
       "api_name": "kyc-match",
-      "file_name": "kyc-match",
       "api_version": "0.2.1",
       "api_title": "Know Your Customer Match",
       "commonalities": "0.4",
@@ -1611,7 +1543,6 @@
     },
     {
       "api_name": "number-verification",
-      "file_name": "number-verification",
       "api_version": "1.0.0",
       "api_title": "Number Verification",
       "commonalities": "0.4",
@@ -1633,7 +1564,6 @@
     },
     {
       "api_name": "number-verification",
-      "file_name": "number-verification",
       "api_version": "1.0.0",
       "api_title": "Number Verification",
       "commonalities": "0.4",
@@ -1655,7 +1585,6 @@
     },
     {
       "api_name": "one-time-password-sms",
-      "file_name": "one-time-password-sms",
       "api_version": "1.0.0",
       "api_title": "One Time Password SMS",
       "commonalities": "0.4",
@@ -1677,7 +1606,6 @@
     },
     {
       "api_name": "population-density-data",
-      "file_name": "population-density-data",
       "api_version": "0.1.1",
       "api_title": "Population Density Data",
       "commonalities": "0.4",
@@ -1699,7 +1627,6 @@
     },
     {
       "api_name": "qos-profiles",
-      "file_name": "qos-profiles",
       "api_version": "0.11.0",
       "api_title": "QoS Profiles",
       "commonalities": "0.4",
@@ -1721,7 +1648,6 @@
     },
     {
       "api_name": "qos-profiles",
-      "file_name": "qos-profiles",
       "api_version": "0.11.1",
       "api_title": "QoS Profiles",
       "commonalities": "0.4",
@@ -1743,7 +1669,6 @@
     },
     {
       "api_name": "qod-provisioning",
-      "file_name": "qod-provisioning",
       "api_version": "0.1.0",
       "api_title": "QoD Provisioning API",
       "commonalities": "0.4",
@@ -1768,7 +1693,6 @@
     },
     {
       "api_name": "qod-provisioning",
-      "file_name": "qod-provisioning",
       "api_version": "0.1.1",
       "api_title": "QoD Provisioning API",
       "commonalities": "0.4",
@@ -1793,7 +1717,6 @@
     },
     {
       "api_name": "quality-on-demand",
-      "file_name": "quality-on-demand",
       "api_version": "0.11.0",
       "api_title": "Quality-On-Demand",
       "commonalities": "0.4",
@@ -1815,7 +1738,6 @@
     },
     {
       "api_name": "quality-on-demand",
-      "file_name": "quality-on-demand",
       "api_version": "0.11.1",
       "api_title": "Quality-On-Demand",
       "commonalities": "0.4",
@@ -1837,7 +1759,6 @@
     },
     {
       "api_name": "simple-edge-discovery",
-      "file_name": "simple-edge-discovery",
       "api_version": "1.0.0",
       "api_title": "Simple Edge Discovery",
       "commonalities": "0.4",
@@ -1859,7 +1780,6 @@
     },
     {
       "api_name": "sim-swap",
-      "file_name": "sim-swap",
       "api_version": "1.0.0",
       "api_title": "SIM Swap",
       "commonalities": "0.4",
@@ -1881,7 +1801,6 @@
     },
     {
       "api_name": "sim-swap",
-      "file_name": "sim-swap",
       "api_version": "1.0.0",
       "api_title": "SIM Swap",
       "commonalities": "0.4",
@@ -1903,7 +1822,6 @@
     },
     {
       "api_name": "sim-swap",
-      "file_name": "sim-swap",
       "api_version": "1.0.0",
       "api_title": "SIM Swap",
       "commonalities": "0.4",
@@ -1925,7 +1843,6 @@
     },
     {
       "api_name": "sim-swap-subscriptions",
-      "file_name": "sim-swap-subscriptions",
       "api_version": "0.1.0",
       "api_title": "Sim Swap Subscriptions",
       "commonalities": "0.4",
@@ -1947,7 +1864,6 @@
     },
     {
       "api_name": "sim-swap-subscriptions",
-      "file_name": "sim-swap-subscriptions",
       "api_version": "0.1.1",
       "api_title": "Sim Swap Subscriptions",
       "commonalities": "0.4",
@@ -1969,7 +1885,6 @@
     },
     {
       "api_name": "sim-swap-subscriptions",
-      "file_name": "sim-swap-subscriptions",
       "api_version": "0.1.2",
       "api_title": "Sim Swap Subscriptions",
       "commonalities": "0.4",

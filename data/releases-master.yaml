@@ -1,7 +1,7 @@
 metadata:
-  last_updated: '2026-03-23T18:46:44.296Z'
+  last_updated: '2026-03-23T19:28:45.630Z'
   workflow_version: 3.0.0
-  schema_version: 2.0.0
+  schema_version: 3.0.0
 releases:
   - repository: ApplicationEndpointDiscovery
     release_tag: r1.1
@@ -12,7 +12,6 @@ releases:
     superseded: true
     apis:
       - api_name: application-endpoint-discovery
-        file_name: application-endpoint-discovery
         api_version: 0.1.0-rc.1
         api_title: Application Endpoint Discovery
         commonalities: '0.6'
@@ -24,7 +23,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: application-endpoint-discovery
-        file_name: application-endpoint-discovery
         api_version: 0.1.0
         api_title: Application Endpoint Discovery
         commonalities: '0.6'
@@ -37,7 +35,6 @@ releases:
     superseded: true
     apis:
       - api_name: application-endpoint-registration
-        file_name: application-endpoint-registration
         api_version: 0.1.0-rc.1
         api_title: Application Endpoints Registration
         commonalities: '0.6'
@@ -49,7 +46,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: application-endpoint-registration
-        file_name: application-endpoint-registration
         api_version: 0.1.0
         api_title: Application Endpoints Registration
         commonalities: '0.6'
@@ -62,7 +58,6 @@ releases:
     superseded: true
     apis:
       - api_name: application-profiles
-        file_name: application-profiles
         api_version: 0.5.0-rc.1
         api_title: Connectivity Insights - Application Profiles
         commonalities: '0.6'
@@ -74,7 +69,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: application-profiles
-        file_name: application-profiles
         api_version: 0.5.0
         api_title: Connectivity Insights - Application Profiles
         commonalities: '0.6'
@@ -87,7 +81,6 @@ releases:
     superseded: true
     apis:
       - api_name: blockchain-public-address
-        file_name: blockchain-public-address
         api_version: 0.2.0-rc.1
         api_title: Blockchain Public Address
         commonalities: '0.5'
@@ -99,7 +92,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: blockchain-public-address
-        file_name: blockchain-public-address
         api_version: 0.2.0
         api_title: Blockchain Public Address
         commonalities: '0.5'
@@ -112,12 +104,10 @@ releases:
     superseded: true
     apis:
       - api_name: blockchain-public-address-validation
-        file_name: blockchain-public-address-validation
         api_version: 0.1.0-rc.1
         api_title: Blockchain Public Address Validation
         commonalities: '0.6'
       - api_name: blockchain-public-address
-        file_name: blockchain-public-address
         api_version: 0.3.0-rc.1
         api_title: Blockchain Public Address
         commonalities: '0.6'
@@ -129,12 +119,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: blockchain-public-address-validation
-        file_name: blockchain-public-address-validation
         api_version: 0.1.0
         api_title: Blockchain Public Address Validation
         commonalities: '0.6'
       - api_name: blockchain-public-address
-        file_name: blockchain-public-address
         api_version: 0.3.0
         api_title: Blockchain Public Address
         commonalities: '0.6'
@@ -147,7 +135,6 @@ releases:
     superseded: true
     apis:
       - api_name: call-forwarding-signal
-        file_name: Call_Forwarding_Signal
         api_version: 0.2.0-rc.1
         api_title: Call Forwarding Signal API
         commonalities: null
@@ -160,7 +147,6 @@ releases:
     superseded: true
     apis:
       - api_name: call-forwarding-signal
-        file_name: Call_Forwarding_Signal
         api_version: 0.2.0-rc.2
         api_title: Call Forwarding Signal
         commonalities: 0.4.0-rc.2
@@ -172,7 +158,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: call-forwarding-signal
-        file_name: call-forwarding-signal
         api_version: 0.2.0
         api_title: Call Forwarding Signal
         commonalities: '0.4'
@@ -185,7 +170,6 @@ releases:
     superseded: true
     apis:
       - api_name: call-forwarding-signal
-        file_name: call-forwarding-signal
         api_version: 0.3.0-rc.1
         api_title: Call Forwarding Signal
         commonalities: '0.5'
@@ -197,7 +181,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: call-forwarding-signal
-        file_name: call-forwarding-signal
         api_version: 0.3.0
         api_title: Call Forwarding Signal
         commonalities: '0.5'
@@ -210,7 +193,6 @@ releases:
     superseded: true
     apis:
       - api_name: call-forwarding-signal
-        file_name: call-forwarding-signal
         api_version: 0.4.0-alpha.1
         api_title: Call Forwarding Signal
         commonalities: '0.5'
@@ -223,7 +205,6 @@ releases:
     superseded: true
     apis:
       - api_name: call-forwarding-signal
-        file_name: call-forwarding-signal
         api_version: 0.4.0-rc.1
         api_title: Call Forwarding Signal
         commonalities: '0.6'
@@ -235,7 +216,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: call-forwarding-signal
-        file_name: call-forwarding-signal
         api_version: 0.4.0
         api_title: Call Forwarding Signal
         commonalities: '0.6'
@@ -248,12 +228,10 @@ releases:
     superseded: true
     apis:
       - api_name: carrier-billing
-        file_name: carrier_billing
         api_version: 0.3.0-rc.1
         api_title: Carrier Billing
         commonalities: null
       - api_name: carrier-billing-refund
-        file_name: carrier_billing_refund
         api_version: 0.1.0-rc.1
         api_title: Carrier Billing Refunds
         commonalities: null
@@ -265,12 +243,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: carrier-billing-refund
-        file_name: carrier-billing-refund
         api_version: 0.1.0
         api_title: Carrier Billing Refunds
         commonalities: null
       - api_name: carrier-billing
-        file_name: carrier-billing
         api_version: 0.3.0
         api_title: Carrier Billing
         commonalities: null
@@ -282,12 +258,10 @@ releases:
     release_type: maintenance-release
     apis:
       - api_name: carrier-billing-refund
-        file_name: carrier-billing-refund
         api_version: 0.1.1
         api_title: Carrier Billing Refunds
         commonalities: null
       - api_name: carrier-billing
-        file_name: carrier-billing
         api_version: 0.3.1
         api_title: Carrier Billing
         commonalities: null
@@ -300,12 +274,10 @@ releases:
     superseded: true
     apis:
       - api_name: carrier-billing-refund
-        file_name: carrier-billing-refund
         api_version: 0.2.0-rc.1
         api_title: Carrier Billing Refunds
         commonalities: null
       - api_name: carrier-billing
-        file_name: carrier-billing
         api_version: 0.4.0-rc.1
         api_title: Carrier Billing
         commonalities: null
@@ -317,12 +289,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: carrier-billing-refund
-        file_name: carrier-billing-refund
         api_version: 0.2.0
         api_title: Carrier Billing Refunds
         commonalities: '0.5'
       - api_name: carrier-billing
-        file_name: carrier-billing
         api_version: 0.4.0
         api_title: Carrier Billing
         commonalities: '0.5'
@@ -335,12 +305,10 @@ releases:
     superseded: true
     apis:
       - api_name: carrier-billing-refund
-        file_name: carrier-billing-refund
         api_version: 0.3.0-rc.1
         api_title: Carrier Billing Refund
         commonalities: '0.6'
       - api_name: carrier-billing
-        file_name: carrier-billing
         api_version: 0.5.0-rc.1
         api_title: Carrier Billing
         commonalities: '0.6'
@@ -352,12 +320,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: carrier-billing-refund
-        file_name: carrier-billing-refund
         api_version: 0.3.0
         api_title: Carrier Billing Refund
         commonalities: '0.6'
       - api_name: carrier-billing
-        file_name: carrier-billing
         api_version: 0.5.0
         api_title: Carrier Billing
         commonalities: '0.6'
@@ -369,7 +335,6 @@ releases:
     release_type: pre-release-alpha
     apis:
       - api_name: click-to-dial
-        file_name: click-to-dial
         api_version: 0.1.0-alpha.1
         api_title: Click to Dial Service API
         commonalities: '0.5'
@@ -379,13 +344,15 @@ releases:
     meta_release: None (Sandbox)
     github_url: https://github.com/camaraproject/ClickToDial/releases/tag/r1.2
     release_type: pre-release-rc
-    superseded: true
+    src_commit_sha: 1ee48531b20738474525542f03be987b7c02b2b8
+    dependencies:
+      commonalities_release: r4.1
+      identity_consent_management_release: r4.1
     apis:
       - api_name: click-to-dial
-        file_name: click-to-dial
         api_version: 0.1.0-rc.1
         api_title: Click to Dial Service
-        commonalities: r4.1
+        commonalities: null
   - repository: ConnectedNetworkType
     release_tag: r1.1
     release_date: '2025-07-18T15:40:21Z'
@@ -395,12 +362,10 @@ releases:
     superseded: true
     apis:
       - api_name: connected-network-type-subscriptions
-        file_name: connected-network-type-subscriptions
         api_version: 0.2.0-rc.1
         api_title: Connected Network Type Subscriptions
         commonalities: '0.6'
       - api_name: connected-network-type
-        file_name: connected-network-type
         api_version: 0.2.0-rc.1
         api_title: Connected Network Type
         commonalities: '0.6'
@@ -412,12 +377,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: connected-network-type-subscriptions
-        file_name: connected-network-type-subscriptions
         api_version: 0.2.0
         api_title: Connected Network Type Subscriptions
         commonalities: '0.6'
       - api_name: connected-network-type
-        file_name: connected-network-type
         api_version: 0.2.0
         api_title: Connected Network Type
         commonalities: '0.6'
@@ -430,17 +393,14 @@ releases:
     superseded: true
     apis:
       - api_name: application-profiles
-        file_name: application-profiles
         api_version: 0.3.0-rc.1
         api_title: Connectivity Insights - Application Profiles
         commonalities: '0.4'
       - api_name: v0.4rc1
-        file_name: connectivity-insights-subscriptions
         api_version: 0.4.0-rc.1
         api_title: Connectivity Insights
         commonalities: '0.4'
       - api_name: connectivity-insights
-        file_name: connectivity-insights
         api_version: 0.4.0-rc.1
         api_title: Connectivity Insights
         commonalities: '0.4'
@@ -452,17 +412,14 @@ releases:
     release_type: public-release
     apis:
       - api_name: application-profiles
-        file_name: application-profiles
         api_version: 0.3.0
         api_title: Connectivity Insights - Application Profiles
         commonalities: '0.4'
       - api_name: connectivity-insights-subscriptions
-        file_name: connectivity-insights-subscriptions
         api_version: 0.4.0
         api_title: Connectivity Insights Subscriptions
         commonalities: '0.4'
       - api_name: connectivity-insights
-        file_name: connectivity-insights
         api_version: 0.4.0
         api_title: Connectivity Insights
         commonalities: '0.4'
@@ -475,17 +432,14 @@ releases:
     superseded: true
     apis:
       - api_name: application-profiles
-        file_name: application-profiles
         api_version: 0.4.0-rc.1
         api_title: Connectivity Insights - Application Profiles
         commonalities: '0.5'
       - api_name: connectivity-insights-subscriptions
-        file_name: connectivity-insights-subscriptions
         api_version: 0.5.0-rc.1
         api_title: Connectivity Insights
         commonalities: '0.5'
       - api_name: connectivity-insights
-        file_name: connectivity-insights
         api_version: 0.5.0-rc.1
         api_title: Connectivity Insights
         commonalities: '0.5'
@@ -497,17 +451,14 @@ releases:
     release_type: public-release
     apis:
       - api_name: application-profiles
-        file_name: application-profiles
         api_version: 0.4.0
         api_title: Connectivity Insights - Application Profiles
         commonalities: '0.5'
       - api_name: connectivity-insights-subscriptions
-        file_name: connectivity-insights-subscriptions
         api_version: 0.5.0
         api_title: Connectivity Insights Subscriptions
         commonalities: '0.5'
       - api_name: connectivity-insights
-        file_name: connectivity-insights
         api_version: 0.5.0
         api_title: Connectivity Insights
         commonalities: '0.5'
@@ -520,12 +471,10 @@ releases:
     superseded: true
     apis:
       - api_name: connectivity-insights-subscriptions
-        file_name: connectivity-insights-subscriptions
         api_version: 0.6.0-rc.1
         api_title: Connectivity Insights Subscriptions
         commonalities: '0.6'
       - api_name: connectivity-insights
-        file_name: connectivity-insights
         api_version: 0.6.0-rc.1
         api_title: Connectivity Insights
         commonalities: '0.6'
@@ -537,12 +486,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: connectivity-insights-subscriptions
-        file_name: connectivity-insights-subscriptions
         api_version: 0.6.0
         api_title: Connectivity Insights Subscriptions
         commonalities: '0.6'
       - api_name: connectivity-insights
-        file_name: connectivity-insights
         api_version: 0.6.0
         api_title: Connectivity Insights
         commonalities: '0.6'
@@ -555,7 +502,6 @@ releases:
     superseded: true
     apis:
       - api_name: consent-info
-        file_name: consent-info
         api_version: 0.1.0-rc.1
         api_title: Consent Info
         commonalities: '0.6'
@@ -567,7 +513,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: consent-info
-        file_name: consent-info
         api_version: 0.1.0
         api_title: Consent Info
         commonalities: '0.6'
@@ -577,23 +522,25 @@ releases:
     meta_release: None (Sandbox)
     github_url: https://github.com/camaraproject/ConsentInfo/releases/tag/r2.1
     release_type: pre-release-rc
+    superseded: true
     apis:
       - api_name: consent-info
-        file_name: consent-info
         api_version: 0.2.0-rc.1
         api_title: Consent Info
         commonalities: '0.6'
-    superseded: true
   - repository: ConsentInfo
     release_tag: r2.2
     release_date: '2026-03-12T15:04:24Z'
     meta_release: None (Sandbox)
     github_url: https://github.com/camaraproject/ConsentInfo/releases/tag/r2.2
     release_type: pre-release-rc
+    src_commit_sha: 6a47a397f74e446c1b74fe96b7133fc1b37758e3
+    dependencies:
+      commonalities_release: r3.4 (0.6.1)
+      identity_consent_management_release: r3.3 (0.4.0)
     superseded: true
     apis:
       - api_name: consent-info
-        file_name: consent-info
         api_version: 0.2.0-rc.2
         api_title: Consent Info
         commonalities: 0.6.1
@@ -603,9 +550,12 @@ releases:
     meta_release: None (Sandbox)
     github_url: https://github.com/camaraproject/ConsentInfo/releases/tag/r2.3
     release_type: public-release
+    src_commit_sha: 7fba564095861bf91d380760e2b3479bf5e36d03
+    dependencies:
+      commonalities_release: r3.4 (0.6.1)
+      identity_consent_management_release: r3.3 (0.4.0)
     apis:
       - api_name: consent-info
-        file_name: consent-info
         api_version: 0.2.0
         api_title: Consent Info
         commonalities: 0.6.1
@@ -618,7 +568,6 @@ releases:
     superseded: true
     apis:
       - api_name: customer-insights
-        file_name: customer-insights
         api_version: 0.1.0-rc.1
         api_title: Customer Insights
         commonalities: null
@@ -630,7 +579,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: customer-insights
-        file_name: customer-insights
         api_version: 0.1.0
         api_title: Customer Insights
         commonalities: '0.5'
@@ -642,7 +590,6 @@ releases:
     release_type: maintenance-release
     apis:
       - api_name: customer-insights
-        file_name: customer-insights
         api_version: 0.1.1
         api_title: Customer Insights
         commonalities: '0.5'
@@ -655,7 +602,6 @@ releases:
     superseded: true
     apis:
       - api_name: customer-insights
-        file_name: customer-insights
         api_version: 0.2.0-rc.1
         api_title: Customer Insights
         commonalities: '0.6'
@@ -667,7 +613,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: customer-insights
-        file_name: customer-insights
         api_version: 0.2.0
         api_title: Customer Insights
         commonalities: '0.6'
@@ -680,17 +625,14 @@ releases:
     superseded: true
     apis:
       - api_name: dedicated-network-accesses
-        file_name: dedicated-network-accesses
         api_version: 0.1.0-rc.1
         api_title: Dedicated Network - Accesses
         commonalities: '0.6'
       - api_name: dedicated-network-profiles
-        file_name: dedicated-network-profiles
         api_version: 0.1.0-rc.1
         api_title: Dedicated Network - Network Profiles
         commonalities: '0.6'
       - api_name: dedicated-network
-        file_name: dedicated-network
         api_version: 0.1.0-rc.1
         api_title: Dedicated Network - Networks
         commonalities: '0.6'
@@ -702,17 +644,14 @@ releases:
     release_type: public-release
     apis:
       - api_name: dedicated-network-accesses
-        file_name: dedicated-network-accesses
         api_version: 0.1.0
         api_title: Dedicated Network - Accesses
         commonalities: '0.6'
       - api_name: dedicated-network-profiles
-        file_name: dedicated-network-profiles
         api_version: 0.1.0
         api_title: Dedicated Network - Network Profiles
         commonalities: '0.6'
       - api_name: dedicated-network
-        file_name: dedicated-network
         api_version: 0.1.0
         api_title: Dedicated Network - Networks
         commonalities: '0.6'
@@ -725,12 +664,10 @@ releases:
     superseded: true
     apis:
       - api_name: device-data-volume-subscriptions
-        file_name: device-data-volume-subscriptions
         api_version: 0.1.0-alpha.1
         api_title: Device Data Volume Subscriptions
         commonalities: '0.5'
       - api_name: device-data-volume
-        file_name: device-data-volume
         api_version: 0.1.0-alpha.1
         api_title: Device Data Volume
         commonalities: '0.5'
@@ -743,12 +680,10 @@ releases:
     superseded: true
     apis:
       - api_name: device-data-volume-subscriptions
-        file_name: device-data-volume-subscriptions
         api_version: 0.1.0-rc.1
         api_title: Device Data Volume Subscriptions
         commonalities: '0.6'
       - api_name: device-data-volume
-        file_name: device-data-volume
         api_version: 0.1.0-rc.1
         api_title: Device Data Volume
         commonalities: '0.6'
@@ -760,12 +695,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: device-data-volume-subscriptions
-        file_name: device-data-volume-subscriptions
         api_version: 0.1.0
         api_title: Device Data Volume Subscriptions
         commonalities: '0.6'
       - api_name: device-data-volume
-        file_name: device-data-volume
         api_version: 0.1.0
         api_title: Device Data Volume
         commonalities: '0.6'
@@ -778,7 +711,6 @@ releases:
     superseded: true
     apis:
       - api_name: device-identifier
-        file_name: device-identifier
         api_version: 0.2.0-alpha.1
         api_title: CAMARA Mobile Device Identifier
         commonalities: '0.4'
@@ -791,7 +723,6 @@ releases:
     superseded: true
     apis:
       - api_name: device-identifier
-        file_name: device-identifier
         api_version: 0.2.0-rc.1
         api_title: CAMARA Mobile Device Identifier
         commonalities: '0.5'
@@ -803,7 +734,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: device-identifier
-        file_name: device-identifier
         api_version: 0.2.0
         api_title: CAMARA Mobile Device Identifier
         commonalities: '0.5'
@@ -816,7 +746,6 @@ releases:
     superseded: true
     apis:
       - api_name: device-identifier
-        file_name: device-identifier
         api_version: 0.3.0-rc.1
         api_title: Device Identifier
         commonalities: '0.6'
@@ -828,7 +757,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: device-identifier
-        file_name: device-identifier
         api_version: 0.3.0
         api_title: Device Identifier
         commonalities: '0.6'
@@ -841,17 +769,14 @@ releases:
     superseded: true
     apis:
       - api_name: geofencing-subscriptions
-        file_name: geofencing-subscriptions
         api_version: 0.3.0-rc.1
         api_title: Device Geofencing Subscriptions
         commonalities: '0.4'
       - api_name: location-retrieval
-        file_name: location-retrieval
         api_version: 0.3.0-rc.1
         api_title: Device Location Retrieval
         commonalities: '0.4'
       - api_name: location-verification
-        file_name: location-verification
         api_version: 1.0.0-rc.1
         api_title: Device Location Verification
         commonalities: '0.4'
@@ -863,17 +788,14 @@ releases:
     release_type: public-release
     apis:
       - api_name: geofencing-subscriptions
-        file_name: geofencing-subscriptions
         api_version: 0.3.0
         api_title: Device Geofencing Subscriptions
         commonalities: '0.4'
       - api_name: location-retrieval
-        file_name: location-retrieval
         api_version: 0.3.0
         api_title: Device Location Retrieval
         commonalities: '0.4'
       - api_name: location-verification
-        file_name: location-verification
         api_version: 1.0.0
         api_title: Device Location Verification
         commonalities: '0.4'
@@ -886,17 +808,14 @@ releases:
     superseded: true
     apis:
       - api_name: geofencing-subscriptions
-        file_name: geofencing-subscriptions
         api_version: 0.4.0-rc.1
         api_title: Device Geofencing Subscriptions
         commonalities: '0.5'
       - api_name: location-retrieval
-        file_name: location-retrieval
         api_version: 0.4.0-rc.1
         api_title: Device Location Retrieval
         commonalities: '0.5'
       - api_name: location-verification
-        file_name: location-verification
         api_version: 2.0.0-rc.1
         api_title: Device Location Verification
         commonalities: '0.5'
@@ -908,17 +827,14 @@ releases:
     release_type: public-release
     apis:
       - api_name: geofencing-subscriptions
-        file_name: geofencing-subscriptions
         api_version: 0.4.0
         api_title: Device Geofencing Subscriptions
         commonalities: '0.5'
       - api_name: location-retrieval
-        file_name: location-retrieval
         api_version: 0.4.0
         api_title: Device Location Retrieval
         commonalities: '0.5'
       - api_name: location-verification
-        file_name: location-verification
         api_version: 2.0.0
         api_title: Device Location Verification
         commonalities: '0.5'
@@ -931,17 +847,14 @@ releases:
     superseded: true
     apis:
       - api_name: geofencing-subscriptions
-        file_name: geofencing-subscriptions
         api_version: 0.5.0-rc.1
         api_title: Device Geofencing Subscriptions
         commonalities: '0.6'
       - api_name: location-retrieval
-        file_name: location-retrieval
         api_version: 0.5.0-rc.1
         api_title: Device Location Retrieval
         commonalities: '0.6'
       - api_name: location-verification
-        file_name: location-verification
         api_version: 3.0.0-rc.1
         api_title: Device Location Verification
         commonalities: '0.6'
@@ -953,17 +866,14 @@ releases:
     release_type: public-release
     apis:
       - api_name: geofencing-subscriptions
-        file_name: geofencing-subscriptions
         api_version: 0.5.0
         api_title: Device Geofencing Subscriptions
         commonalities: '0.6'
       - api_name: location-retrieval
-        file_name: location-retrieval
         api_version: 0.5.0
         api_title: Device Location Retrieval
         commonalities: '0.6'
       - api_name: location-verification
-        file_name: location-verification
         api_version: 3.0.0
         api_title: Device Location Verification
         commonalities: '0.6'
@@ -976,12 +886,10 @@ releases:
     superseded: true
     apis:
       - api_name: device-reachability-status-subscriptions
-        file_name: device-reachability-status-subscriptions
         api_version: 0.8.0-rc.1
         api_title: Device Reachability Status Subscriptions
         commonalities: '0.6'
       - api_name: device-reachability-status
-        file_name: device-reachability-status
         api_version: 1.1.0-rc.2
         api_title: Device Reachability Status
         commonalities: '0.6'
@@ -993,12 +901,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: device-reachability-status-subscriptions
-        file_name: device-reachability-status-subscriptions
         api_version: 0.8.0
         api_title: Device Reachability Status Subscriptions
         commonalities: '0.6'
       - api_name: device-reachability-status
-        file_name: device-reachability-status
         api_version: 1.1.0
         api_title: Device Reachability Status
         commonalities: '0.6'
@@ -1011,12 +917,10 @@ releases:
     superseded: true
     apis:
       - api_name: device-roaming-status-subscriptions
-        file_name: device-roaming-status-subscriptions
         api_version: 0.8.0-rc.1
         api_title: Device Roaming Status Subscriptions
         commonalities: '0.6'
       - api_name: device-roaming-status
-        file_name: device-roaming-status
         api_version: 1.1.0-rc.2
         api_title: Device Roaming Status
         commonalities: '0.6'
@@ -1028,12 +932,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: device-roaming-status-subscriptions
-        file_name: device-roaming-status-subscriptions
         api_version: 0.8.0
         api_title: Device Roaming Status Subscriptions
         commonalities: '0.6'
       - api_name: device-roaming-status
-        file_name: device-roaming-status
         api_version: 1.1.0
         api_title: Device Roaming Status
         commonalities: '0.6'
@@ -1046,22 +948,18 @@ releases:
     superseded: true
     apis:
       - api_name: device-reachability-status-subscriptions
-        file_name: device-reachability-status-subscriptions
         api_version: 0.6.0-rc.1
         api_title: Device Reachability Status Subscriptions
         commonalities: '0.4'
       - api_name: device-reachability-status
-        file_name: device-reachability-status
         api_version: 0.6.0-rc.1
         api_title: Device Reachability Status
         commonalities: '0.4'
       - api_name: device-roaming-status-subscriptions
-        file_name: device-roaming-status-subscriptions
         api_version: 0.6.0-rc.1
         api_title: Device Roaming Status Subscriptions
         commonalities: '0.4'
       - api_name: device-roaming-status
-        file_name: device-roaming-status
         api_version: 0.6.0-rc.1
         api_title: Device Roaming Status
         commonalities: '0.4'
@@ -1073,22 +971,18 @@ releases:
     release_type: public-release
     apis:
       - api_name: device-reachability-status-subscriptions
-        file_name: device-reachability-status-subscriptions
         api_version: 0.6.0
         api_title: Device Reachability Status Subscriptions
         commonalities: '0.4'
       - api_name: device-reachability-status
-        file_name: device-reachability-status
         api_version: 0.6.0
         api_title: Device Reachability Status
         commonalities: '0.4'
       - api_name: device-roaming-status-subscriptions
-        file_name: device-roaming-status-subscriptions
         api_version: 0.6.0
         api_title: Device Roaming Status Subscriptions
         commonalities: '0.4'
       - api_name: device-roaming-status
-        file_name: device-roaming-status
         api_version: 0.6.0
         api_title: Device Roaming Status
         commonalities: '0.4'
@@ -1100,22 +994,18 @@ releases:
     release_type: maintenance-release
     apis:
       - api_name: device-reachability-status-subscriptions
-        file_name: device-reachability-status-subscriptions
         api_version: 0.6.1
         api_title: Device Reachability Status Subscriptions
         commonalities: '0.4'
       - api_name: device-reachability-status
-        file_name: device-reachability-status
         api_version: 0.6.1
         api_title: Device Reachability Status
         commonalities: '0.4'
       - api_name: device-roaming-status-subscriptions
-        file_name: device-roaming-status-subscriptions
         api_version: 0.6.1
         api_title: Device Roaming Status Subscriptions
         commonalities: '0.4'
       - api_name: device-roaming-status
-        file_name: device-roaming-status
         api_version: 0.6.1
         api_title: Device Roaming Status
         commonalities: '0.4'
@@ -1128,32 +1018,26 @@ releases:
     superseded: true
     apis:
       - api_name: connected-network-type-subscriptions
-        file_name: connected-network-type-subscriptions
         api_version: 0.1.0-rc.1
         api_title: Connected Network Type Subscriptions
         commonalities: '0.5'
       - api_name: connected-network-type
-        file_name: connected-network-type
         api_version: 0.1.0-rc.1
         api_title: Connected Network Type
         commonalities: '0.5'
       - api_name: device-reachability-status-subscriptions
-        file_name: device-reachability-status-subscriptions
         api_version: 0.7.0-rc.1
         api_title: Device Reachability Status Subscriptions
         commonalities: '0.5'
       - api_name: device-reachability-status
-        file_name: device-reachability-status
         api_version: 1.0.0-rc.1
         api_title: Device Reachability Status
         commonalities: '0.5'
       - api_name: device-roaming-status-subscriptions
-        file_name: device-roaming-status-subscriptions
         api_version: 0.7.0-rc.1
         api_title: Device Roaming Status Subscriptions
         commonalities: '0.5'
       - api_name: device-roaming-status
-        file_name: device-roaming-status
         api_version: 1.0.0-rc.1
         api_title: Device Roaming Status
         commonalities: '0.5'
@@ -1165,32 +1049,26 @@ releases:
     release_type: public-release
     apis:
       - api_name: connected-network-type-subscriptions
-        file_name: connected-network-type-subscriptions
         api_version: 0.1.0
         api_title: Connected Network Type Subscriptions
         commonalities: '0.5'
       - api_name: connected-network-type
-        file_name: connected-network-type
         api_version: 0.1.0
         api_title: Connected Network Type
         commonalities: '0.5'
       - api_name: device-reachability-status-subscriptions
-        file_name: device-reachability-status-subscriptions
         api_version: 0.7.0
         api_title: Device Reachability Status Subscriptions
         commonalities: '0.5'
       - api_name: device-reachability-status
-        file_name: device-reachability-status
         api_version: 1.0.0
         api_title: Device Reachability Status
         commonalities: '0.5'
       - api_name: device-roaming-status-subscriptions
-        file_name: device-roaming-status-subscriptions
         api_version: 0.7.0
         api_title: Device Roaming Status Subscriptions
         commonalities: '0.5'
       - api_name: device-roaming-status
-        file_name: device-roaming-status
         api_version: 1.0.0
         api_title: Device Roaming Status
         commonalities: '0.5'
@@ -1203,7 +1081,6 @@ releases:
     superseded: true
     apis:
       - api_name: device-swap
-        file_name: device-swap
         api_version: 0.1.0-rc.1
         api_title: Device Swap
         commonalities: '0.4'
@@ -1215,7 +1092,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: device-swap
-        file_name: device-swap
         api_version: 0.1.0
         api_title: Device Swap
         commonalities: '0.4'
@@ -1228,7 +1104,6 @@ releases:
     superseded: true
     apis:
       - api_name: device-swap
-        file_name: device-swap
         api_version: 0.2.0-rc.1
         api_title: Device Swap
         commonalities: '0.5'
@@ -1240,7 +1115,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: device-swap
-        file_name: device-swap
         api_version: 0.2.0
         api_title: Device Swap
         commonalities: '0.5'
@@ -1253,7 +1127,6 @@ releases:
     superseded: true
     apis:
       - api_name: device-swap
-        file_name: device-swap
         api_version: 1.0.0-rc.1
         api_title: Device Swap
         commonalities: '0.6'
@@ -1265,7 +1138,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: device-swap
-        file_name: device-swap
         api_version: 1.0.0
         api_title: Device Swap
         commonalities: '0.6'
@@ -1278,7 +1150,6 @@ releases:
     superseded: true
     apis:
       - api_name: energy-footprint-notification
-        file_name: energy-footprint-notification
         api_version: 0.1.0-alpha.1
         api_title: Energy Footprint Notification
         commonalities: '0.5'
@@ -1291,7 +1162,6 @@ releases:
     superseded: true
     apis:
       - api_name: energy-footprint
-        file_name: energy-footprint-notification
         api_version: 0.1.0-rc.1
         api_title: Energy Footprint
         commonalities: '0.6'
@@ -1303,7 +1173,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: energy-footprint-notification
-        file_name: energy-footprint-notification
         api_version: 0.1.0
         api_title: Energy Footprint Notification
         commonalities: '0.6'
@@ -1317,7 +1186,6 @@ releases:
     repository_archived: true
     apis:
       - api_name: home-devices-qod
-        file_name: home_devices_qod
         api_version: 0.4.0-rc.1
         api_title: Home Devices QoD
         commonalities: '0.4'
@@ -1330,7 +1198,6 @@ releases:
     repository_archived: true
     apis:
       - api_name: home-devices-qod
-        file_name: home-devices-qod
         api_version: 0.4.0
         api_title: Home Devices QoD
         commonalities: '0.4'
@@ -1342,7 +1209,6 @@ releases:
     release_type: pre-release-alpha
     apis:
       - api_name: iot-network-optimization
-        file_name: iot-network-optimization
         api_version: 0.1.0-alpha.1
         api_title: IoT Network Optimization API
         commonalities: '0.5'
@@ -1355,12 +1221,10 @@ releases:
     superseded: true
     apis:
       - api_name: kyc-fill-in
-        file_name: kyc-fill-in
         api_version: 0.2.0-rc.1
         api_title: Know Your Customer Fill-in
         commonalities: '0.4'
       - api_name: kyc-match
-        file_name: kyc-match
         api_version: 0.2.0-rc.1
         api_title: Know Your Customer Match
         commonalities: '0.4'
@@ -1372,12 +1236,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: kyc-fill-in
-        file_name: kyc-fill-in
         api_version: 0.2.0
         api_title: Know Your Customer Fill-in
         commonalities: '0.4'
       - api_name: kyc-match
-        file_name: kyc-match
         api_version: 0.2.1
         api_title: Know Your Customer Match
         commonalities: '0.4'
@@ -1389,12 +1251,10 @@ releases:
     release_type: maintenance-release
     apis:
       - api_name: kyc-fill-in
-        file_name: kyc-fill-in
         api_version: 0.2.0
         api_title: Know Your Customer Fill-in
         commonalities: '0.4'
       - api_name: kyc-match
-        file_name: kyc-match
         api_version: 0.2.1
         api_title: Know Your Customer Match
         commonalities: '0.4'
@@ -1407,17 +1267,14 @@ releases:
     superseded: true
     apis:
       - api_name: kyc-age-verification
-        file_name: kyc-age-verification
         api_version: 0.1.0-rc.1
         api_title: Know Your Customer Age Verification
         commonalities: '0.5'
       - api_name: kyc-fill-in
-        file_name: kyc-fill-in
         api_version: 0.3.0-rc.1
         api_title: Know Your Customer Fill-in
         commonalities: '0.5'
       - api_name: kyc-match
-        file_name: kyc-match
         api_version: 0.3.0-rc.1
         api_title: Know Your Customer Match
         commonalities: '0.5'
@@ -1429,17 +1286,14 @@ releases:
     release_type: public-release
     apis:
       - api_name: kyc-age-verification
-        file_name: kyc-age-verification
         api_version: 0.1.0
         api_title: Know Your Customer Age Verification
         commonalities: '0.5'
       - api_name: kyc-fill-in
-        file_name: kyc-fill-in
         api_version: 0.3.0
         api_title: Know Your Customer Fill-in
         commonalities: '0.5'
       - api_name: kyc-match
-        file_name: kyc-match
         api_version: 0.3.0
         api_title: Know Your Customer Match
         commonalities: '0.5'
@@ -1452,7 +1306,6 @@ releases:
     superseded: true
     apis:
       - api_name: kyc-age-verification
-        file_name: kyc-age-verification
         api_version: 0.2.1-rc.2
         api_title: Know Your Customer Age Verification
         commonalities: '0.6'
@@ -1464,7 +1317,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: kyc-age-verification
-        file_name: kyc-age-verification
         api_version: 0.2.1
         api_title: Know Your Customer Age Verification
         commonalities: '0.6'
@@ -1477,7 +1329,6 @@ releases:
     superseded: true
     apis:
       - api_name: kyc-fill-in
-        file_name: kyc-fill-in
         api_version: 0.4.0-rc.1
         api_title: Know Your Customer Fill-in
         commonalities: '0.6'
@@ -1489,7 +1340,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: kyc-fill-in
-        file_name: kyc-fill-in
         api_version: 0.4.0
         api_title: Know Your Customer Fill-in
         commonalities: '0.6'
@@ -1501,7 +1351,6 @@ releases:
     release_type: maintenance-release
     apis:
       - api_name: kyc-fill-in
-        file_name: kyc-fill-in
         api_version: 0.4.1
         api_title: Know Your Customer Fill-in
         commonalities: '0.6'
@@ -1514,7 +1363,6 @@ releases:
     superseded: true
     apis:
       - api_name: kyc-match
-        file_name: kyc-match
         api_version: 0.4.0-rc.1
         api_title: Know Your Customer Match
         commonalities: '0.6'
@@ -1526,7 +1374,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: kyc-match
-        file_name: kyc-match
         api_version: 0.4.0
         api_title: Know Your Customer Match
         commonalities: '0.6'
@@ -1539,17 +1386,14 @@ releases:
     superseded: true
     apis:
       - api_name: knowledge-base
-        file_name: knowledge-base
         api_version: 0.1.0-rc.1
         api_title: Knowledge Base
         commonalities: '0.6'
       - api_name: qa-assistant-manage
-        file_name: qa-assistant-manage
         api_version: 0.1.0-rc.1
         api_title: Q&A Assistant - Manage
         commonalities: '0.6'
       - api_name: qa-assistant-service
-        file_name: qa-assistant-service
         api_version: 0.1.0-rc.1
         api_title: Q&A Assistant - Service
         commonalities: '0.6'
@@ -1561,17 +1405,14 @@ releases:
     release_type: public-release
     apis:
       - api_name: knowledge-base
-        file_name: knowledge-base
         api_version: 0.1.0
         api_title: Knowledge Base
         commonalities: '0.6'
       - api_name: qa-assistant-manage
-        file_name: qa-assistant-manage
         api_version: 0.1.0
         api_title: Q&A Assistant - Manage
         commonalities: '0.6'
       - api_name: qa-assistant-service
-        file_name: qa-assistant-service
         api_version: 0.1.0
         api_title: Q&A Assistant - Service
         commonalities: '0.6'
@@ -1584,7 +1425,6 @@ releases:
     superseded: true
     apis:
       - api_name: most-frequent-location
-        file_name: most-frequent-location
         api_version: 0.1.0-rc.1
         api_title: Most Frequent Location
         commonalities: null
@@ -1596,7 +1436,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: most-frequent-location
-        file_name: most-frequent-location
         api_version: 0.1.0
         api_title: Most Frequent Location
         commonalities: '0.4'
@@ -1609,7 +1448,6 @@ releases:
     superseded: true
     apis:
       - api_name: most-frequent-location
-        file_name: most-frequent-location
         api_version: 0.2.0-rc.1
         api_title: Most Frequent Location
         commonalities: '0.6'
@@ -1621,7 +1459,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: most-frequent-location
-        file_name: most-frequent-location
         api_version: 0.2.0
         api_title: Most Frequent Location
         commonalities: '0.6'
@@ -1634,7 +1471,6 @@ releases:
     superseded: true
     apis:
       - api_name: network-slice-booking
-        file_name: network-slice-booking
         api_version: 0.1.0-rc.1
         api_title: Network Slice Booking
         commonalities: '0.6'
@@ -1646,7 +1482,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: network-slice-booking
-        file_name: network-slice-booking
         api_version: 0.1.0
         api_title: Network Slice Booking
         commonalities: '0.6'
@@ -1658,12 +1493,10 @@ releases:
     release_type: pre-release-rc
     apis:
       - api_name: network-slice-assignment
-        file_name: network-slice-assignment
         api_version: 0.1.0-rc.1
         api_title: Network Slice Assignment
         commonalities: '0.7'
       - api_name: network-slice-booking
-        file_name: network-slice-booking
         api_version: 0.2.0-rc.1
         api_title: Network Slice Booking
         commonalities: '0.7'
@@ -1676,7 +1509,6 @@ releases:
     superseded: true
     apis:
       - api_name: number-recycling
-        file_name: number-recycling
         api_version: 0.1.0-rc.1
         api_title: Number Recycling
         commonalities: '0.5'
@@ -1688,7 +1520,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: number-recycling
-        file_name: number-recycling
         api_version: 0.1.0
         api_title: Number Recycling
         commonalities: '0.5'
@@ -1700,7 +1531,6 @@ releases:
     release_type: maintenance-release
     apis:
       - api_name: number-recycling
-        file_name: number-recycling
         api_version: 0.1.1
         api_title: Number Recycling
         commonalities: '0.5'
@@ -1713,7 +1543,6 @@ releases:
     superseded: true
     apis:
       - api_name: number-recycling
-        file_name: number-recycling
         api_version: 0.2.0-rc.1
         api_title: Number Recycling
         commonalities: '0.6'
@@ -1725,7 +1554,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: number-recycling
-        file_name: number-recycling
         api_version: 0.2.0
         api_title: Number Recycling
         commonalities: '0.6'
@@ -1738,7 +1566,6 @@ releases:
     superseded: true
     apis:
       - api_name: number-verification
-        file_name: number_verification
         api_version: 1.0.0-rc.1
         api_title: Number Verification
         commonalities: '0.4'
@@ -1750,7 +1577,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: number-verification
-        file_name: number-verification
         api_version: 1.0.0
         api_title: Number Verification
         commonalities: '0.4'
@@ -1762,7 +1588,6 @@ releases:
     release_type: maintenance-release
     apis:
       - api_name: number-verification
-        file_name: number-verification
         api_version: 1.0.0
         api_title: Number Verification
         commonalities: '0.4'
@@ -1775,7 +1600,6 @@ releases:
     superseded: true
     apis:
       - api_name: number-verification
-        file_name: number-verification
         api_version: 1.1.0-rc.1
         api_title: Number Verification
         commonalities: '0.5'
@@ -1788,7 +1612,6 @@ releases:
     superseded: true
     apis:
       - api_name: number-verification
-        file_name: number-verification
         api_version: 1.1.0-rc.2
         api_title: Number Verification
         commonalities: '0.5'
@@ -1800,7 +1623,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: number-verification
-        file_name: number-verification
         api_version: 2.0.0
         api_title: Number Verification
         commonalities: '0.5'
@@ -1813,7 +1635,6 @@ releases:
     superseded: true
     apis:
       - api_name: number-verification
-        file_name: number-verification
         api_version: 2.1.0-rc.1
         api_title: Number Verification
         commonalities: '0.6'
@@ -1825,7 +1646,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: number-verification
-        file_name: number-verification
         api_version: 2.1.0
         api_title: Number Verification
         commonalities: '0.6'
@@ -1838,7 +1658,6 @@ releases:
     superseded: true
     apis:
       - api_name: optimal-edge-discovery
-        file_name: optimal-edge-discovery
         api_version: 0.1.0-rc.1
         api_title: Optimal Edge Discovery
         commonalities: '0.6'
@@ -1850,7 +1669,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: optimal-edge-discovery
-        file_name: optimal-edge-discovery
         api_version: 0.1.0
         api_title: Optimal Edge Discovery
         commonalities: '0.6'
@@ -1863,7 +1681,6 @@ releases:
     superseded: true
     apis:
       - api_name: one-time-password-sms
-        file_name: one-time-password-sms
         api_version: 1.0.0-rc.1
         api_title: One Time Password SMS
         commonalities: '0.4'
@@ -1875,7 +1692,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: one-time-password-sms
-        file_name: one-time-password-sms
         api_version: 1.0.0
         api_title: One Time Password SMS
         commonalities: '0.4'
@@ -1888,7 +1704,6 @@ releases:
     superseded: true
     apis:
       - api_name: one-time-password-sms
-        file_name: one-time-password-sms
         api_version: 1.1.0-rc.1
         api_title: One Time Password SMS
         commonalities: 0.5.0
@@ -1901,7 +1716,6 @@ releases:
     superseded: true
     apis:
       - api_name: one-time-password-sms
-        file_name: one-time-password-sms
         api_version: 1.1.0-rc.2
         api_title: One Time Password SMS
         commonalities: '0.5'
@@ -1913,7 +1727,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: one-time-password-sms
-        file_name: one-time-password-sms
         api_version: 1.1.0
         api_title: One Time Password SMS
         commonalities: '0.5'
@@ -1926,7 +1739,6 @@ releases:
     superseded: true
     apis:
       - api_name: one-time-password-sms
-        file_name: one-time-password-sms
         api_version: 1.1.1-rc.3
         api_title: One Time Password SMS
         commonalities: '0.6'
@@ -1938,7 +1750,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: one-time-password-sms
-        file_name: one-time-password-sms
         api_version: 1.1.1
         api_title: One Time Password SMS
         commonalities: '0.6'
@@ -1951,7 +1762,6 @@ releases:
     superseded: true
     apis:
       - api_name: population-density-data
-        file_name: population-density-data
         api_version: 0.1.1-rc.1
         api_title: Population Density Data
         commonalities: '0.4'
@@ -1963,7 +1773,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: population-density-data
-        file_name: population-density-data
         api_version: 0.1.1
         api_title: Population Density Data
         commonalities: '0.4'
@@ -1976,7 +1785,6 @@ releases:
     superseded: true
     apis:
       - api_name: population-density-data
-        file_name: population-density-data
         api_version: 0.2.0-rc.1
         api_title: Population Density Data
         commonalities: '0.5'
@@ -1988,7 +1796,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: population-density-data
-        file_name: population-density-data
         api_version: 0.2.0
         api_title: Population Density Data
         commonalities: '0.5'
@@ -2001,7 +1808,6 @@ releases:
     superseded: true
     apis:
       - api_name: population-density-data
-        file_name: population-density-data
         api_version: 0.3.0-rc.1
         api_title: Population Density Data
         commonalities: '0.6'
@@ -2013,7 +1819,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: population-density-data
-        file_name: population-density-data
         api_version: 0.3.0
         api_title: Population Density Data
         commonalities: '0.6'
@@ -2026,7 +1831,6 @@ releases:
     superseded: true
     apis:
       - api_name: predictive-connectivity-data
-        file_name: predictive-connectivity-data
         api_version: 0.1.0-rc.1
         api_title: Predictive Connectivity Data
         commonalities: '0.6'
@@ -2038,7 +1842,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: predictive-connectivity-data
-        file_name: predictive-connectivity-data
         api_version: 0.1.0
         api_title: Predictive Connectivity Data
         commonalities: '0.6'
@@ -2051,12 +1854,10 @@ releases:
     superseded: true
     apis:
       - api_name: qos-booking-and-assignment
-        file_name: qos-booking-and-assignment
         api_version: 0.1.0-rc.1
         api_title: QoS Booking and Assignment
         commonalities: '0.6'
       - api_name: qos-booking
-        file_name: qos-booking
         api_version: 0.1.0-rc.1
         api_title: QoS Booking
         commonalities: '0.6'
@@ -2068,12 +1869,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: qos-booking-and-assignment
-        file_name: qos-booking-and-assignment
         api_version: 0.1.0
         api_title: QoS Booking and Assignment
         commonalities: '0.6'
       - api_name: qos-booking
-        file_name: qos-booking
         api_version: 0.1.0
         api_title: QoS Booking
         commonalities: '0.6'
@@ -2086,17 +1885,14 @@ releases:
     superseded: true
     apis:
       - api_name: qod-provisioning
-        file_name: qod-provisioning
         api_version: 0.1.0-rc.1
         api_title: QoD Provisioning API
         commonalities: 0.4.0-rc.1
       - api_name: qos-profiles
-        file_name: qos-profiles
         api_version: 0.11.0-rc.1
         api_title: QoS Profiles
         commonalities: 0.4.0-rc.1
       - api_name: quality-on-demand
-        file_name: quality-on-demand
         api_version: 0.11.0-rc.1
         api_title: Quality-On-Demand
         commonalities: 0.4.0-rc.1
@@ -2108,17 +1904,14 @@ releases:
     release_type: public-release
     apis:
       - api_name: qod-provisioning
-        file_name: qod-provisioning
         api_version: 0.1.0
         api_title: QoD Provisioning API
         commonalities: '0.4'
       - api_name: qos-profiles
-        file_name: qos-profiles
         api_version: 0.11.0
         api_title: QoS Profiles
         commonalities: '0.4'
       - api_name: quality-on-demand
-        file_name: quality-on-demand
         api_version: 0.11.0
         api_title: Quality-On-Demand
         commonalities: '0.4'
@@ -2130,17 +1923,14 @@ releases:
     release_type: maintenance-release
     apis:
       - api_name: qod-provisioning
-        file_name: qod-provisioning
         api_version: 0.1.1
         api_title: QoD Provisioning API
         commonalities: '0.4'
       - api_name: qos-profiles
-        file_name: qos-profiles
         api_version: 0.11.1
         api_title: QoS Profiles
         commonalities: '0.4'
       - api_name: quality-on-demand
-        file_name: quality-on-demand
         api_version: 0.11.1
         api_title: Quality-On-Demand
         commonalities: '0.4'
@@ -2153,17 +1943,14 @@ releases:
     superseded: true
     apis:
       - api_name: qod-provisioning
-        file_name: qod-provisioning
         api_version: 0.2.0-rc.1
         api_title: QoD Provisioning API
         commonalities: '0.5'
       - api_name: qos-profiles
-        file_name: qos-profiles
         api_version: 1.0.0-rc.1
         api_title: QoS Profiles
         commonalities: '0.5'
       - api_name: quality-on-demand
-        file_name: quality-on-demand
         api_version: 1.0.0-rc.1
         api_title: Quality-On-Demand
         commonalities: '0.5'
@@ -2175,17 +1962,14 @@ releases:
     release_type: public-release
     apis:
       - api_name: qod-provisioning
-        file_name: qod-provisioning
         api_version: 0.2.0
         api_title: QoD Provisioning API
         commonalities: '0.5'
       - api_name: qos-profiles
-        file_name: qos-profiles
         api_version: 1.0.0
         api_title: QoS Profiles
         commonalities: '0.5'
       - api_name: quality-on-demand
-        file_name: quality-on-demand
         api_version: 1.0.0
         api_title: Quality-On-Demand
         commonalities: '0.5'
@@ -2198,17 +1982,14 @@ releases:
     superseded: true
     apis:
       - api_name: qos-profiles
-        file_name: qos-profiles
         api_version: 1.1.0-rc.2
         api_title: QoS Profiles
         commonalities: '0.6'
       - api_name: qos-provisioning
-        file_name: qos-provisioning
         api_version: 0.3.0-rc.1
         api_title: QoS Provisioning
         commonalities: '0.6'
       - api_name: quality-on-demand
-        file_name: quality-on-demand
         api_version: 1.1.0-rc.2
         api_title: Quality-On-Demand
         commonalities: '0.6'
@@ -2220,17 +2001,14 @@ releases:
     release_type: public-release
     apis:
       - api_name: qos-profiles
-        file_name: qos-profiles
         api_version: 1.1.0
         api_title: QoS Profiles
         commonalities: '0.6'
       - api_name: qos-provisioning
-        file_name: qos-provisioning
         api_version: 0.3.0
         api_title: QoS Provisioning
         commonalities: '0.6'
       - api_name: quality-on-demand
-        file_name: quality-on-demand
         api_version: 1.1.0
         api_title: Quality-On-Demand
         commonalities: '0.6'
@@ -2257,7 +2035,6 @@ releases:
     release_type: maintenance-release
     apis:
       - api_name: region-device-count
-        file_name: region-device-count
         api_version: 0.1.0
         api_title: Region Device Count
         commonalities: '0.5'
@@ -2270,7 +2047,6 @@ releases:
     superseded: true
     apis:
       - api_name: region-device-count
-        file_name: region-device-count
         api_version: 0.2.0-rc.1
         api_title: Region Device Count
         commonalities: '0.6'
@@ -2282,7 +2058,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: region-device-count
-        file_name: region-device-count
         api_version: 0.2.0
         api_title: Region Device Count
         commonalities: '0.6'
@@ -2292,38 +2067,45 @@ releases:
     meta_release: None (Sandbox)
     github_url: https://github.com/camaraproject/ReleaseTest/releases/tag/r1.1
     release_type: pre-release-alpha
+    src_commit_sha: 85b9b5e1ff44d8d87f597d361b5af510a8f710f9
+    dependencies:
+      commonalities_release: r4.1
+      identity_consent_management_release: r4.1
     apis:
       - api_name: release-test
-        file_name: release-test
         api_version: 1.0.0-alpha.1
         api_title: Release Test
-        commonalities: r4.1
+        commonalities: null
   - repository: ReleaseTest
     release_tag: r1.2
     release_date: '2026-03-05T15:48:16Z'
     meta_release: None (Sandbox)
     github_url: https://github.com/camaraproject/ReleaseTest/releases/tag/r1.2
     release_type: pre-release-rc
-    superseded: true
+    src_commit_sha: b0b92904bc412e2f5ea59630f79ac64073cd5f24
+    dependencies:
+      commonalities_release: r4.1
+      identity_consent_management_release: r4.1
     apis:
       - api_name: release-test
-        file_name: release-test
         api_version: 1.0.0-rc.1
         api_title: Release Test
-        commonalities: r4.1
+        commonalities: null
   - repository: ReleaseTest
     release_tag: r1.3
     release_date: '2026-03-10T09:09:24Z'
     meta_release: None (Sandbox)
     github_url: https://github.com/camaraproject/ReleaseTest/releases/tag/r1.3
     release_type: pre-release-rc
-    superseded: true
+    src_commit_sha: 8715f8498e469a31b35f680335c81bd392f48b44
+    dependencies:
+      commonalities_release: r4.1
+      identity_consent_management_release: r4.1
     apis:
       - api_name: release-test
-        file_name: release-test
         api_version: 1.0.0-rc.2
         api_title: Release Test
-        commonalities: r4.1
+        commonalities: null
   - repository: SimpleEdgeDiscovery
     release_tag: r1.1
     release_date: '2024-07-30T17:33:27Z'
@@ -2333,7 +2115,6 @@ releases:
     superseded: true
     apis:
       - api_name: simple-edge-discovery
-        file_name: simple-edge-discovery
         api_version: 0.11.0-rc.1
         api_title: Simple Edge Discovery API
         commonalities: '0.4'
@@ -2346,7 +2127,6 @@ releases:
     superseded: true
     apis:
       - api_name: simple-edge-discovery
-        file_name: simple-edge-discovery
         api_version: 0.11.0-rc.2
         api_title: Simple Edge Discovery API
         commonalities: '0.4'
@@ -2358,7 +2138,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: simple-edge-discovery
-        file_name: simple-edge-discovery
         api_version: 1.0.0
         api_title: Simple Edge Discovery
         commonalities: '0.4'
@@ -2371,7 +2150,6 @@ releases:
     superseded: true
     apis:
       - api_name: simple-edge-discovery
-        file_name: simple-edge-discovery
         api_version: 2.0.0-rc.1
         api_title: Simple Edge Discovery
         commonalities: '0.6'
@@ -2383,7 +2161,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: simple-edge-discovery
-        file_name: simple-edge-discovery
         api_version: 2.0.0
         api_title: Simple Edge Discovery
         commonalities: '0.6'
@@ -2396,12 +2173,10 @@ releases:
     superseded: true
     apis:
       - api_name: sim-swap-subscriptions
-        file_name: sim-swap-subscriptions
         api_version: 0.1.0-alpha.1
         api_title: Sim Swap Subscriptions
         commonalities: '0.4'
       - api_name: sim-swap
-        file_name: sim_swap
         api_version: 1.0.0-rc.1
         api_title: SIM Swap
         commonalities: '0.4'
@@ -2413,12 +2188,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: sim-swap-subscriptions
-        file_name: sim-swap-subscriptions
         api_version: 0.1.0
         api_title: Sim Swap Subscriptions
         commonalities: '0.4'
       - api_name: sim-swap
-        file_name: sim-swap
         api_version: 1.0.0
         api_title: SIM Swap
         commonalities: '0.4'
@@ -2430,12 +2203,10 @@ releases:
     release_type: maintenance-release
     apis:
       - api_name: sim-swap-subscriptions
-        file_name: sim-swap-subscriptions
         api_version: 0.1.1
         api_title: Sim Swap Subscriptions
         commonalities: '0.4'
       - api_name: sim-swap
-        file_name: sim-swap
         api_version: 1.0.0
         api_title: SIM Swap
         commonalities: '0.4'
@@ -2447,12 +2218,10 @@ releases:
     release_type: maintenance-release
     apis:
       - api_name: sim-swap-subscriptions
-        file_name: sim-swap-subscriptions
         api_version: 0.1.2
         api_title: Sim Swap Subscriptions
         commonalities: '0.4'
       - api_name: sim-swap
-        file_name: sim-swap
         api_version: 1.0.0
         api_title: SIM Swap
         commonalities: '0.4'
@@ -2465,12 +2234,10 @@ releases:
     superseded: true
     apis:
       - api_name: sim-swap-subscriptions
-        file_name: sim-swap-subscriptions
         api_version: 0.2.0-rc.1
         api_title: Sim Swap Subscriptions
         commonalities: '0.5'
       - api_name: sim-swap
-        file_name: sim-swap
         api_version: 2.0.0-rc.1
         api_title: SIM Swap
         commonalities: '0.5'
@@ -2482,12 +2249,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: sim-swap-subscriptions
-        file_name: sim-swap-subscriptions
         api_version: 0.2.0
         api_title: Sim Swap Subscriptions
         commonalities: '0.5'
       - api_name: sim-swap
-        file_name: sim-swap
         api_version: 2.0.0
         api_title: SIM Swap
         commonalities: '0.5'
@@ -2500,12 +2265,10 @@ releases:
     superseded: true
     apis:
       - api_name: sim-swap-subscriptions
-        file_name: sim-swap-subscriptions
         api_version: 0.3.0-rc.1
         api_title: Sim Swap Subscriptions
         commonalities: '0.6'
       - api_name: sim-swap
-        file_name: sim-swap
         api_version: 2.1.0-rc.2
         api_title: SIM Swap
         commonalities: '0.6'
@@ -2517,12 +2280,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: sim-swap-subscriptions
-        file_name: sim-swap-subscriptions
         api_version: 0.3.0
         api_title: Sim Swap Subscriptions
         commonalities: '0.6'
       - api_name: sim-swap
-        file_name: sim-swap
         api_version: 2.1.0
         api_title: SIM Swap
         commonalities: '0.6'
@@ -2534,12 +2295,10 @@ releases:
     release_type: maintenance-release
     apis:
       - api_name: sim-swap-subscriptions
-        file_name: sim-swap-subscriptions
         api_version: 0.3.0
         api_title: Sim Swap Subscriptions
         commonalities: '0.6'
       - api_name: sim-swap
-        file_name: sim-swap
         api_version: 2.1.0
         api_title: SIM Swap
         commonalities: '0.6'
@@ -2552,7 +2311,6 @@ releases:
     superseded: true
     apis:
       - api_name: subscription-status
-        file_name: subscription-status
         api_version: 0.1.0-rc.1
         api_title: SubscriptionStatus
         commonalities: '0.6'
@@ -2564,7 +2322,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: subscription-status
-        file_name: subscription-status
         api_version: 0.1.0
         api_title: SubscriptionStatus
         commonalities: '0.6'
@@ -2577,7 +2334,6 @@ releases:
     superseded: true
     apis:
       - api_name: kyc-tenure
-        file_name: kyc-tenure
         api_version: 0.1.0-rc.1
         api_title: CAMARA KYC Tenure
         commonalities: '0.5'
@@ -2589,7 +2345,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: kyc-tenure
-        file_name: kyc-tenure
         api_version: 0.1.0
         api_title: KYC Tenure
         commonalities: '0.5'
@@ -2602,7 +2357,6 @@ releases:
     superseded: true
     apis:
       - api_name: kyc-tenure
-        file_name: kyc-tenure
         api_version: 0.2.0-rc.1
         api_title: KYC Tenure
         commonalities: '0.6'
@@ -2614,7 +2368,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: kyc-tenure
-        file_name: kyc-tenure
         api_version: 0.2.0
         api_title: KYC Tenure
         commonalities: '0.6'
@@ -2627,7 +2380,6 @@ releases:
     superseded: true
     apis:
       - api_name: traffic-influence
-        file_name: traffic_influence
         api_version: 0.9.0-alpha.1
         api_title: Traffic Influence API
         commonalities: 0.5.0
@@ -2640,7 +2392,6 @@ releases:
     superseded: true
     apis:
       - api_name: traffic-influence
-        file_name: traffic-influence
         api_version: 0.10.0-rc.1
         api_title: Traffic Influence
         commonalities: '0.6'
@@ -2652,7 +2403,6 @@ releases:
     release_type: public-release
     apis:
       - api_name: traffic-influence
-        file_name: traffic-influence
         api_version: 0.10.0
         api_title: Traffic Influence
         commonalities: '0.6'
@@ -2665,12 +2415,10 @@ releases:
     superseded: true
     apis:
       - api_name: brand-registration
-        file_name: brand-registration
         api_version: 0.1.0-rc.1
         api_title: Brand Registration
         commonalities: '0.6'
       - api_name: verified-caller
-        file_name: verified-caller
         api_version: 0.1.0-rc.1
         api_title: Verified Caller Pre-announcement
         commonalities: '0.6'
@@ -2683,12 +2431,10 @@ releases:
     superseded: true
     apis:
       - api_name: brand-registration
-        file_name: brand-registration
         api_version: 0.1.0-rc.1
         api_title: Brand Registration
         commonalities: '0.6'
       - api_name: verified-caller
-        file_name: verified-caller
         api_version: 0.1.0-rc.2
         api_title: Verified Caller
         commonalities: '0.6'
@@ -2700,12 +2446,10 @@ releases:
     release_type: public-release
     apis:
       - api_name: brand-registration
-        file_name: brand-registration
         api_version: 0.1.0
         api_title: Brand Registration
         commonalities: '0.6'
       - api_name: verified-caller
-        file_name: verified-caller
         api_version: 0.1.0
         api_title: Verified Caller
         commonalities: '0.6'
@@ -2718,22 +2462,18 @@ releases:
     superseded: true
     apis:
       - api_name: webrtc-call-handling
-        file_name: webrtc-call-handling
         api_version: 0.2.0-rc.1
         api_title: WebRTC Call Handling API
         commonalities: '0.5'
       - api_name: webrtc-events
-        file_name: webrtc-events
         api_version: 0.1.0-rc.1
         api_title: WebRTC Event Subscription
         commonalities: '0.5'
       - api_name: vwip
-        file_name: webrtc-notification-channel
         api_version: 0.1.1
         api_title: WebRTC Notification Channel API
         commonalities: null
       - api_name: webrtc-registration
-        file_name: webrtc-registration
         api_version: 0.2.0-rc.1
         api_title: WebRTC Registration Service API
         commonalities: '0.5'
@@ -2745,17 +2485,14 @@ releases:
     release_type: public-release
     apis:
       - api_name: webrtc-call-handling
-        file_name: webrtc-call-handling
         api_version: 0.2.0
         api_title: WebRTC Call Handling API
         commonalities: '0.5'
       - api_name: webrtc-events
-        file_name: webrtc-events-subscription
         api_version: 0.1.0
         api_title: WebRTC Event Subscription
         commonalities: '0.5'
       - api_name: webrtc-registration
-        file_name: webrtc-registration
         api_version: 0.2.0
         api_title: WebRTC Registration Service API
         commonalities: '0.5'
@@ -2768,17 +2505,14 @@ releases:
     superseded: true
     apis:
       - api_name: webrtc-call-handling
-        file_name: webrtc-call-handling
         api_version: 0.3.0-rc.1
         api_title: WebRTC Call Handling
         commonalities: '0.6'
       - api_name: webrtc-events
-        file_name: webrtc-events
         api_version: 0.2.0-rc.1
         api_title: WebRTC Events
         commonalities: '0.6'
       - api_name: webrtc-registration
-        file_name: webrtc-registration
         api_version: 0.3.0-rc.1
         api_title: WebRTC Registration Service
         commonalities: '0.6'
@@ -2790,17 +2524,14 @@ releases:
     release_type: public-release
     apis:
       - api_name: webrtc-call-handling
-        file_name: webrtc-call-handling
         api_version: 0.3.0
         api_title: WebRTC Call Handling
         commonalities: '0.6'
       - api_name: webrtc-events
-        file_name: webrtc-events
         api_version: 0.2.0
         api_title: WebRTC Events
         commonalities: '0.6'
       - api_name: webrtc-registration
-        file_name: webrtc-registration
         api_version: 0.3.0
         api_title: WebRTC Registration Service
         commonalities: '0.6'
@@ -2836,7 +2567,7 @@ repositories:
   - repository: ClickToDial
     github_url: https://github.com/camaraproject/ClickToDial
     latest_public_release: null
-    newest_pre_release: r1.1
+    newest_pre_release: r1.2
   - repository: ConnectedNetworkType
     github_url: https://github.com/camaraproject/ConnectedNetworkType
     latest_public_release: r1.2
@@ -3017,7 +2748,7 @@ repositories:
   - repository: ReleaseTest
     github_url: https://github.com/camaraproject/ReleaseTest
     latest_public_release: null
-    newest_pre_release: r1.1
+    newest_pre_release: r1.3
   - repository: SessionInsights
     github_url: https://github.com/camaraproject/SessionInsights
     latest_public_release: null
