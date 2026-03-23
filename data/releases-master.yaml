@@ -1,7 +1,7 @@
 metadata:
-  last_updated: '2026-03-23T19:28:45.630Z'
+  last_updated: '2026-03-23T21:37:46.224Z'
   workflow_version: 3.0.0
-  schema_version: 3.0.0
+  schema_version: 3.1.0
 releases:
   - repository: ApplicationEndpointDiscovery
     release_tag: r1.1
@@ -330,7 +330,7 @@ releases:
   - repository: ClickToDial
     release_tag: r1.1
     release_date: '2025-05-15T14:04:29Z'
-    meta_release: None (Sandbox)
+    meta_release: Independent
     github_url: https://github.com/camaraproject/ClickToDial/releases/tag/r1.1
     release_type: pre-release-alpha
     apis:
@@ -341,7 +341,7 @@ releases:
   - repository: ClickToDial
     release_tag: r1.2
     release_date: '2026-03-09T15:09:22Z'
-    meta_release: None (Sandbox)
+    meta_release: Independent
     github_url: https://github.com/camaraproject/ClickToDial/releases/tag/r1.2
     release_type: pre-release-rc
     src_commit_sha: 1ee48531b20738474525542f03be987b7c02b2b8
@@ -519,7 +519,7 @@ releases:
   - repository: ConsentInfo
     release_tag: r2.1
     release_date: '2026-02-05T10:25:58Z'
-    meta_release: None (Sandbox)
+    meta_release: Independent
     github_url: https://github.com/camaraproject/ConsentInfo/releases/tag/r2.1
     release_type: pre-release-rc
     superseded: true
@@ -531,7 +531,7 @@ releases:
   - repository: ConsentInfo
     release_tag: r2.2
     release_date: '2026-03-12T15:04:24Z'
-    meta_release: None (Sandbox)
+    meta_release: Independent
     github_url: https://github.com/camaraproject/ConsentInfo/releases/tag/r2.2
     release_type: pre-release-rc
     src_commit_sha: 6a47a397f74e446c1b74fe96b7133fc1b37758e3
@@ -547,7 +547,7 @@ releases:
   - repository: ConsentInfo
     release_tag: r2.3
     release_date: '2026-03-23T12:56:54Z'
-    meta_release: None (Sandbox)
+    meta_release: Independent
     github_url: https://github.com/camaraproject/ConsentInfo/releases/tag/r2.3
     release_type: public-release
     src_commit_sha: 7fba564095861bf91d380760e2b3479bf5e36d03
@@ -1075,7 +1075,7 @@ releases:
   - repository: DeviceSwap
     release_tag: r1.1
     release_date: '2024-10-30T11:19:23Z'
-    meta_release: None (Sandbox)
+    meta_release: Independent
     github_url: https://github.com/camaraproject/DeviceSwap/releases/tag/r1.1
     release_type: pre-release-rc
     superseded: true
@@ -1087,7 +1087,7 @@ releases:
   - repository: DeviceSwap
     release_tag: r1.2
     release_date: '2024-12-12T16:40:48Z'
-    meta_release: None (Sandbox)
+    meta_release: Independent
     github_url: https://github.com/camaraproject/DeviceSwap/releases/tag/r1.2
     release_type: public-release
     apis:
@@ -1204,7 +1204,7 @@ releases:
   - repository: IoTNetworkOptimization
     release_tag: r1.1
     release_date: '2025-12-11T13:11:28Z'
-    meta_release: None (Sandbox)
+    meta_release: Independent
     github_url: https://github.com/camaraproject/IoTNetworkOptimization/releases/tag/r1.1
     release_type: pre-release-alpha
     apis:
@@ -1419,7 +1419,7 @@ releases:
   - repository: MostFrequentLocation
     release_tag: r1.1
     release_date: '2024-12-11T09:41:11Z'
-    meta_release: None (Sandbox)
+    meta_release: Independent
     github_url: https://github.com/camaraproject/MostFrequentLocation/releases/tag/r1.1
     release_type: pre-release-rc
     superseded: true
@@ -1431,7 +1431,7 @@ releases:
   - repository: MostFrequentLocation
     release_tag: r1.2
     release_date: '2025-01-30T15:13:30Z'
-    meta_release: None (Sandbox)
+    meta_release: Independent
     github_url: https://github.com/camaraproject/MostFrequentLocation/releases/tag/r1.2
     release_type: public-release
     apis:
@@ -1488,7 +1488,7 @@ releases:
   - repository: NetworkSliceBooking
     release_tag: r2.1
     release_date: '2026-03-11T02:25:30Z'
-    meta_release: None (Sandbox)
+    meta_release: Independent
     github_url: https://github.com/camaraproject/NetworkSliceBooking/releases/tag/r2.1
     release_type: pre-release-rc
     apis:
@@ -2064,7 +2064,7 @@ releases:
   - repository: ReleaseTest
     release_tag: r1.1
     release_date: '2026-03-01T16:00:48Z'
-    meta_release: None (Sandbox)
+    meta_release: Independent
     github_url: https://github.com/camaraproject/ReleaseTest/releases/tag/r1.1
     release_type: pre-release-alpha
     src_commit_sha: 85b9b5e1ff44d8d87f597d361b5af510a8f710f9
@@ -2079,7 +2079,7 @@ releases:
   - repository: ReleaseTest
     release_tag: r1.2
     release_date: '2026-03-05T15:48:16Z'
-    meta_release: None (Sandbox)
+    meta_release: Independent
     github_url: https://github.com/camaraproject/ReleaseTest/releases/tag/r1.2
     release_type: pre-release-rc
     src_commit_sha: b0b92904bc412e2f5ea59630f79ac64073cd5f24
@@ -2094,7 +2094,7 @@ releases:
   - repository: ReleaseTest
     release_tag: r1.3
     release_date: '2026-03-10T09:09:24Z'
-    meta_release: None (Sandbox)
+    meta_release: Independent
     github_url: https://github.com/camaraproject/ReleaseTest/releases/tag/r1.3
     release_type: pre-release-rc
     src_commit_sha: 8715f8498e469a31b35f680335c81bd392f48b44
