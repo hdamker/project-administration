@@ -41,7 +41,7 @@ function loadMaster() {
       metadata: {
         last_updated: null,
         workflow_version: "3.0.0",
-        schema_version: "2.1.0"
+        schema_version: "3.0.0"
       },
       releases: [],
       repositories: []
@@ -53,7 +53,7 @@ function loadMaster() {
     master.repositories = [];
   }
   // Update schema version if needed
-  master.metadata.schema_version = "2.0.0";
+  master.metadata.schema_version = "3.0.0";
   return master;
 }
 
