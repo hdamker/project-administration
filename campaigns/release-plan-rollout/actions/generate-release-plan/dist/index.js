@@ -5044,7 +5044,7 @@ function generateApiEntry(api) {
         if (hasReleases) {
             // Case 1: Repository WITH releases
             const release = targetRelease;
-            const releaseTrack = release.meta_release && !release.meta_release.includes('Sandbox')
+            const releaseTrack = release.meta_release && !['Independent', 'None (Sandbox)'].includes(release.meta_release)
                 ? 'meta-release'
                 : 'independent';
             // Template data

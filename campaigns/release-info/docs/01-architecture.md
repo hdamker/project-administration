@@ -39,7 +39,7 @@ Executes in parallel for each repository from the matrix.
 2. **Read release data:**
    - Parse releases-master.yaml
    - Filter by repository name
-   - Exclude sandbox releases
+   - Exclude independent releases
    - Sort by semver to find latest public release
    - Output JSON for templating
 

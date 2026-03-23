@@ -129,8 +129,9 @@ def _check_completed_state(entry: ProgressEntry, all_releases: List[Dict]) -> Pr
     return ProgressState.COMPLETED
 
 
-# meta_release values that indicate a sandbox / non-meta-release repo
-_SANDBOX_META_RELEASES = {"None (Sandbox)", "None"}
+# meta_release values that indicate an independent / non-meta-release repo
+# Includes legacy "None (Sandbox)" for backward compatibility with old releases-master.yaml data
+_INDEPENDENT_META_RELEASES = {"Independent", "None (Sandbox)", "None"}
 
 
 def collect_historical_entries(
@@ -144,14 +145,14 @@ def collect_historical_entries(
     These entries carry M1/M3/M4 and last_published data from releases-master.yaml.
     No GitHub API calls are made.
 
-    Sandbox repos (meta_release in _SANDBOX_META_RELEASES):
+    Independent repos (meta_release in _INDEPENDENT_META_RELEASES):
     - If an active entry covers the same repo/tag-prefix → skip (active entry wins).
     - Otherwise → create a HISTORICAL entry with release_track="independent".
     """
     if active_entries is None:
         active_entries = []
 
-    # Build (repo, tag_prefix) set from active entries for sandbox resolution
+    # Build (repo, tag_prefix) set from active entries for independent release resolution
     active_by_repo_prefix = {
         (e.repository, _tag_prefix(e.target_release_tag))
         for e in active_entries
@@ -175,7 +176,7 @@ def collect_historical_entries(
         if (repo, meta_release) in active_repo_meta_releases:
             continue
 
-        is_sandbox = meta_release in _SANDBOX_META_RELEASES
+        is_independent = meta_release in _INDEPENDENT_META_RELEASES
 
         # Find best release for deriving the cycle tag and API list.
         # target_tag: highest-priority release type wins (public > rc > alpha > maintenance).
@@ -208,7 +209,7 @@ def collect_historical_entries(
         if not target_tag:
             continue
 
-        if is_sandbox:
+        if is_independent:
             prefix = _tag_prefix(target_tag)
             if (repo, prefix) in active_by_repo_prefix:
                 continue  # Active entry already covers this repo/cycle

@@ -23,7 +23,7 @@ Parses `data/releases-master.yaml` to extract release information for a specific
 **Logic:**
 1. Load YAML file
 2. Filter releases by repository name
-3. Exclude sandbox releases (`meta_release` contains "Sandbox")
+3. Exclude independent releases (`meta_release` is "Independent")
 4. Sort by semver (extract from `release_tag` like "r3.2")
 5. Select latest (highest version)
 6. Output all APIs from that release

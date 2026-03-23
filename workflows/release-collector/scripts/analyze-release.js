@@ -259,7 +259,7 @@ function getMetaRelease(repository, releaseTag, mappings) {
     }
   }
 
-  return 'None (Sandbox)';  // rX.Y format but not mapped
+  return 'Independent';  // rX.Y format but not mapped
 }
 
 /**

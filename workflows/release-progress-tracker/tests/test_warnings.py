@@ -214,8 +214,23 @@ class TestW004MetaReleaseMismatch:
         w004 = [w for w in warnings if w.code == "W004"]
         assert len(w004) == 0
 
-    def test_no_trigger_when_release_meta_is_sandbox(self):
-        """Sandbox repos with 'None (Sandbox)' label should not trigger W004."""
+    def test_no_trigger_when_release_meta_is_independent(self):
+        """Independent releases should not trigger W004."""
+        entry = _make_entry(
+            state=ProgressState.SNAPSHOT_ACTIVE,
+            meta_release="Sync26",
+            target_release_tag="r1.1",
+        )
+        releases = [{
+            "release_tag": "r1.0",
+            "meta_release": "Independent",
+        }]
+        warnings = generate_warnings(entry, releases)
+        w004 = [w for w in warnings if w.code == "W004"]
+        assert len(w004) == 0
+
+    def test_no_trigger_when_release_meta_is_legacy_sandbox(self):
+        """Legacy 'None (Sandbox)' label should not trigger W004 (backward compat)."""
         entry = _make_entry(
             state=ProgressState.SNAPSHOT_ACTIVE,
             meta_release="Sync26",
