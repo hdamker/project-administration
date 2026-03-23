@@ -290,7 +290,7 @@
       background-color: rgba(139, 92, 246, 0.08);
     }
 
-    .sandbox-row {
+    .independent-row {
       background-color: rgba(251, 146, 60, 0.1);
     }
 
@@ -455,7 +455,7 @@
       background: #f59e0b;
     }
 
-    .status-sandbox {
+    .status-independent {
       background: var(--warning-color);
     }
 
@@ -669,7 +669,7 @@
               <option value="Fall24">Fall24</option>
               <option value="Spring25">Spring25</option>
               <option value="Fall25">Fall25</option>
-              <option value="None (Sandbox)">Sandbox</option>
+              <option value="Independent">Independent</option>
             </select>
           </div>
           <button class="clear-filters-btn" onclick="clearAllFilters()">Clear Filters</button>
@@ -848,13 +848,13 @@
       const rcCount = data.apis.filter(a => a.release_type === 'pre-release-rc').length;
       const publicCount = data.apis.filter(a => a.release_type === 'public-release' || !a.release_type).length;
       const maintenanceCount = data.apis.filter(a => a.release_type === 'maintenance-release').length;
-      const sandboxCount = data.apis.filter(a => a.meta_release === 'None (Sandbox)').length;
+      const independentCount = data.apis.filter(a => a.meta_release === 'Independent').length;
 
       footerDiv.innerHTML = `
         Report generated: ${generated} |
         Total: ${totalAPIs} |
         Alpha: ${alphaCount} | RC: ${rcCount} | Public: ${publicCount} | Maint: ${maintenanceCount} |
-        Sandbox: ${sandboxCount}
+        Independent: ${independentCount}
       `;
 
       buildCategoryPills();
@@ -1074,8 +1074,8 @@
         if (releaseType.startsWith('pre-release')) {
           row.classList.add('prerelease-row');
         }
-        if (api.meta_release === 'None (Sandbox)') {
-          row.classList.add('sandbox-row');
+        if (api.meta_release === 'Independent') {
+          row.classList.add('independent-row');
         }
 
         if (api.repository_archived) {
@@ -1087,7 +1087,7 @@
           releaseType === 'pre-release-alpha' ? 'status-prerelease-alpha' :
           releaseType === 'pre-release-rc' ? 'status-prerelease-rc' :
           releaseType === 'maintenance-release' ? 'status-maintenance' :
-          api.meta_release === 'None (Sandbox)' ? 'status-sandbox' :
+          api.meta_release === 'Independent' ? 'status-independent' :
             'status-public';
 
         // Release type display
@@ -1105,7 +1105,7 @@
           <td><a href="${api.github_url.replace(/\/releases\/tag\/.*$/, '')}" target="_blank">${api.repository}</a>${archivedBadge}</td>
           <td><a href="${api.github_url}" target="_blank">${api.release_tag}</a></td>
           <td>${releaseTypeLabel}</td>
-          <td>${api.meta_release === 'None (Sandbox)' ? 'Sandbox' : api.meta_release}</td>
+          <td>${api.meta_release}</td>
           <td>${api.first_release || '-'}</td>
           <td><button class="debug-btn" onclick='showDebug(${JSON.stringify(api.api_name)}, ${JSON.stringify(api.api_version)}, ${JSON.stringify(api.release_tag)})'>🔍</button></td>
         `;
@@ -1178,7 +1178,7 @@
           const rowClasses = [];
           const releaseType = api.release_type || 'public-release';
           if (releaseType.startsWith('pre-release')) rowClasses.push('prerelease-row');
-          if (api.meta_release === 'None (Sandbox)') rowClasses.push('sandbox-row');
+          if (api.meta_release === 'Independent') rowClasses.push('independent-row');
           rowClasses.push('repo-row');
 
           const releaseTypeLabel = releaseType === 'pre-release-alpha' ? 'Alpha' :
@@ -1194,7 +1194,7 @@
               <td>${api.portfolio_category || '-'}</td>
               <td><a href="${api.github_url}" target="_blank">${api.release_tag}</a></td>
               <td>${releaseTypeLabel}</td>
-              <td>${api.meta_release === 'None (Sandbox)' ? 'Sandbox' : api.meta_release}</td>
+              <td>${api.meta_release}</td>
             </tr>
           `;
         });

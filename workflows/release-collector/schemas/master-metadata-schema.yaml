@@ -1,6 +1,10 @@
 # Master Metadata Schema
 # Schema for releases-master.yaml containing GitHub facts with format corrections only
-# Version: 3.0.0
+# Version: 3.1.0
+#
+# Changes in 3.1.0:
+# - Renamed meta_release value "None (Sandbox)" to "Independent" for releases outside
+#   meta-release cycles
 #
 # Changes in 3.0.0 (ADR-0004: Native Release Metadata Adoption):
 # - Removed apis[].file_name (no downstream consumers, not in native metadata)
@@ -89,7 +93,7 @@ properties:
         meta_release:
           type: string
           description: Assigned meta-release cycle from configuration
-          examples: ["Fall24", "Spring25", "Fall25", "Sandbox", "None"]
+          examples: ["Fall24", "Spring25", "Fall25", "Independent", "None"]
 
         github_url:
           type: string

@@ -135,7 +135,7 @@
       border-color: #0092f5;
     }
 
-    .timeline-item.sandbox {
+    .timeline-item.independent {
       border-color: #f5a742;
       background: #fff8ed;
     }
@@ -267,7 +267,7 @@
       border-color: var(--border-light);
     }
 
-    html[data-theme="dark"] .timeline-item.sandbox {
+    html[data-theme="dark"] .timeline-item.independent {
       background: rgba(245, 167, 66, 0.1);
       border-color: var(--warning-color);
     }
@@ -362,7 +362,7 @@
         </table>
         <div class="footer-note"
           style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 13px; color: #666;">
-          Note: This table shows only meta-releases (Fall24, Spring25, Fall25). Sandbox releases are shown in API
+          Note: This table shows only meta-releases (Fall24, Spring25, Fall25). Independent releases are shown in API
           Evolution and Repository views.
         </div>
       </div>
@@ -398,7 +398,7 @@
 
     // Meta-release constants
     const META_RELEASES = ['Fall24', 'Spring25', 'Fall25'];
-    const SANDBOX_RELEASE = 'None (Sandbox)';
+    const INDEPENDENT_RELEASE = 'Independent';
 
     /**
      * Initialize iframe detection
@@ -514,7 +514,7 @@
         const firstAPI = versions[0];
         const latestAPI = versions[versions.length - 1];
 
-        // Only include meta-releases (exclude Sandbox)
+        // Only include meta-releases (exclude Independent)
         let metaVersions = versions.filter(v =>
           META_RELEASES.includes(v.meta_release)
         );
@@ -770,7 +770,7 @@
     }
 
     /**
-     * Render meta-release table (excludes Sandbox)
+     * Render meta-release table (excludes Independent)
      */
     function renderMetaReleaseTable() {
       const tableData = createMetaReleaseTableData(filteredData);
@@ -844,7 +844,7 @@
     }
 
     /**
-     * Render API evolution view (includes Sandbox)
+     * Render API evolution view (includes Independent)
      */
     function renderAPIEvolution() {
       let grouped = groupAPIsByName(filteredData);
@@ -896,12 +896,12 @@
           }
 
           const item = document.createElement('div');
-          const isSandbox = version.meta_release === SANDBOX_RELEASE;
-          item.className = `timeline-item ${isSandbox ? 'sandbox' : 'meta-release'}`;
+          const isIndependent = version.meta_release === INDEPENDENT_RELEASE;
+          item.className = `timeline-item ${isIndependent ? 'independent' : 'meta-release'}`;
 
           item.innerHTML = `
             <div>
-              <div class="release-label">${isSandbox ? 'Sandbox' : version.meta_release}</div>
+              <div class="release-label">${version.meta_release}</div>
               <div class="release-version">${version.api_version}</div>
               ${ViewerLib.renderMaturityBadge(version.maturity)}
             </div>
@@ -919,7 +919,7 @@
     }
 
     /**
-     * Render repository view (includes Sandbox)
+     * Render repository view (includes Independent)
      */
     function renderRepositoryView() {
       let grouped = groupAPIsByRepository(filteredData);
@@ -972,9 +972,7 @@
           apiItem.className = 'repo-api-item';
 
           const releaseInfo = versions.map(v => {
-            const isSandbox = v.meta_release === SANDBOX_RELEASE;
-            const label = isSandbox ? 'Sandbox' : v.meta_release;
-            return `${label}: ${v.api_version}`;
+            return `${v.meta_release}: ${v.api_version}`;
           }).join(' → ');
 
           apiItem.innerHTML = `

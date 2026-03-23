@@ -139,8 +139,8 @@ def _check_meta_release_mismatch(
     differs from the plan's meta_release, this may indicate a configuration
     issue (e.g., repo assigned to wrong meta-release cycle).
 
-    Skips releases labeled "None (Sandbox)" — these are repos not yet
-    assigned to a meta-release cycle, which is expected for new repos.
+    Skips releases labeled "Independent" (or legacy "None (Sandbox)") — these
+    are repos not assigned to a meta-release cycle, which is expected.
     """
     if not entry.meta_release or not entry.target_release_tag:
         return []
@@ -159,7 +159,7 @@ def _check_meta_release_mismatch(
         if (
             rel_tag.startswith(tag_prefix)
             and rel_meta
-            and rel_meta != "None (Sandbox)"
+            and rel_meta not in ("Independent", "None (Sandbox)")
             and rel_meta != entry.meta_release
         ):
             return [ProgressWarning(

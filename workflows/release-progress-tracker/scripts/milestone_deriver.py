@@ -23,8 +23,8 @@ def derive_cycle_releases(
     """Derive M1/M3/M4 milestone releases for a repo in a release cycle.
 
     Matches releases by tag prefix (e.g., "r1." matches r1.1, r1.2, etc.)
-    rather than meta_release label, so repos with "None (Sandbox)" in
-    releases-master.yaml still get milestone data.
+    rather than meta_release label, so repos with "Independent" (or legacy
+    "None (Sandbox)") in releases-master.yaml still get milestone data.
 
     Args:
         repo_name: Repository name to filter releases for.

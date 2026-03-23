@@ -175,21 +175,21 @@ class TestDeriveCycleReleases:
         assert cr.m1.release_tag == "r2.1"
         assert cr.m3.release_tag == "r2.2"
 
-    def test_sandbox_repo_matched_by_tag_prefix(self):
-        """Repos with meta_release='None (Sandbox)' in releases-master
+    def test_independent_repo_matched_by_tag_prefix(self):
+        """Repos with meta_release='Independent' in releases-master
         should still be matched via tag prefix."""
         releases = [
             {
-                "repository": "NewSandboxRepo",
+                "repository": "IndependentRepo",
                 "release_tag": "r1.1",
                 "release_date": "2026-01-15T00:00:00Z",
-                "meta_release": "None (Sandbox)",
+                "meta_release": "Independent",
                 "release_type": "pre-release-alpha",
-                "apis": [{"api_name": "sandbox-api", "api_version": "0.1.0-alpha.1"}],
+                "apis": [{"api_name": "independent-api", "api_version": "0.1.0-alpha.1"}],
             },
         ]
         cr = derive_cycle_releases(
-            "NewSandboxRepo", "r1.2", "Sync26", releases, ["sandbox-api"],
+            "IndependentRepo", "r1.2", "Sync26", releases, ["independent-api"],
         )
         assert cr.m1.release_tag == "r1.1"
         assert cr.m1.apis[0].api_version == "0.1.0-alpha.1"
