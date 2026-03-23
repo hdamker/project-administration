@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated": "2026-03-23T18:46:44.430Z",
+    "generated": "2026-03-23T19:28:45.777Z",
     "meta_release": "Fall25",
     "source": "Release Collector v3",
     "landscape_version": "1.1.0"
@@ -30,9 +30,6 @@
       "Location Services": 6,
       "Communication Services": 5
     },
-    "commonalities_versions": [
-      "0.6"
-    ],
     "apis_with_previous_names": 1
   },
   "repositories": {
@@ -498,7 +495,6 @@
       "apis": [
         {
           "api_name": "application-endpoint-discovery",
-          "file_name": "application-endpoint-discovery",
           "api_version": "0.1.0",
           "api_title": "Application Endpoint Discovery",
           "commonalities": "0.6",
@@ -524,7 +520,6 @@
       "apis": [
         {
           "api_name": "application-endpoint-registration",
-          "file_name": "application-endpoint-registration",
           "api_version": "0.1.0",
           "api_title": "Application Endpoints Registration",
           "commonalities": "0.6",
@@ -550,7 +545,6 @@
       "apis": [
         {
           "api_name": "application-profiles",
-          "file_name": "application-profiles",
           "api_version": "0.5.0",
           "api_title": "Connectivity Insights - Application Profiles",
           "commonalities": "0.6",
@@ -576,7 +570,6 @@
       "apis": [
         {
           "api_name": "blockchain-public-address-validation",
-          "file_name": "blockchain-public-address-validation",
           "api_version": "0.1.0",
           "api_title": "Blockchain Public Address Validation",
           "commonalities": "0.6",
@@ -592,7 +585,6 @@
         },
         {
           "api_name": "blockchain-public-address",
-          "file_name": "blockchain-public-address",
           "api_version": "0.3.0",
           "api_title": "Blockchain Public Address",
           "commonalities": "0.6",
@@ -618,7 +610,6 @@
       "apis": [
         {
           "api_name": "call-forwarding-signal",
-          "file_name": "call-forwarding-signal",
           "api_version": "0.4.0",
           "api_title": "Call Forwarding Signal",
           "commonalities": "0.6",
@@ -644,7 +635,6 @@
       "apis": [
         {
           "api_name": "carrier-billing-refund",
-          "file_name": "carrier-billing-refund",
           "api_version": "0.3.0",
           "api_title": "Carrier Billing Refund",
           "commonalities": "0.6",
@@ -660,7 +650,6 @@
         },
         {
           "api_name": "carrier-billing",
-          "file_name": "carrier-billing",
           "api_version": "0.5.0",
           "api_title": "Carrier Billing",
           "commonalities": "0.6",
@@ -686,7 +675,6 @@
       "apis": [
         {
           "api_name": "connected-network-type-subscriptions",
-          "file_name": "connected-network-type-subscriptions",
           "api_version": "0.2.0",
           "api_title": "Connected Network Type Subscriptions",
           "commonalities": "0.6",
@@ -702,7 +690,6 @@
         },
         {
           "api_name": "connected-network-type",
-          "file_name": "connected-network-type",
           "api_version": "0.2.0",
           "api_title": "Connected Network Type",
           "commonalities": "0.6",
@@ -728,7 +715,6 @@
       "apis": [
         {
           "api_name": "connectivity-insights-subscriptions",
-          "file_name": "connectivity-insights-subscriptions",
           "api_version": "0.6.0",
           "api_title": "Connectivity Insights Subscriptions",
           "commonalities": "0.6",
@@ -744,7 +730,6 @@
         },
         {
           "api_name": "connectivity-insights",
-          "file_name": "connectivity-insights",
           "api_version": "0.6.0",
           "api_title": "Connectivity Insights",
           "commonalities": "0.6",
@@ -770,7 +755,6 @@
       "apis": [
         {
           "api_name": "consent-info",
-          "file_name": "consent-info",
           "api_version": "0.1.0",
           "api_title": "Consent Info",
           "commonalities": "0.6",
@@ -796,7 +780,6 @@
       "apis": [
         {
           "api_name": "customer-insights",
-          "file_name": "customer-insights",
           "api_version": "0.2.0",
           "api_title": "Customer Insights",
           "commonalities": "0.6",
@@ -822,7 +805,6 @@
       "apis": [
         {
           "api_name": "dedicated-network-accesses",
-          "file_name": "dedicated-network-accesses",
           "api_version": "0.1.0",
           "api_title": "Dedicated Network - Accesses",
           "commonalities": "0.6",
@@ -838,7 +820,6 @@
         },
         {
           "api_name": "dedicated-network-profiles",
-          "file_name": "dedicated-network-profiles",
           "api_version": "0.1.0",
           "api_title": "Dedicated Network - Network Profiles",
           "commonalities": "0.6",
@@ -854,7 +835,6 @@
         },
         {
           "api_name": "dedicated-network",
-          "file_name": "dedicated-network",
           "api_version": "0.1.0",
           "api_title": "Dedicated Network - Networks",
           "commonalities": "0.6",
@@ -880,7 +860,6 @@
       "apis": [
         {
           "api_name": "device-data-volume-subscriptions",
-          "file_name": "device-data-volume-subscriptions",
           "api_version": "0.1.0",
           "api_title": "Device Data Volume Subscriptions",
           "commonalities": "0.6",
@@ -896,7 +875,6 @@
         },
         {
           "api_name": "device-data-volume",
-          "file_name": "device-data-volume",
           "api_version": "0.1.0",
           "api_title": "Device Data Volume",
           "commonalities": "0.6",
@@ -922,7 +900,6 @@
       "apis": [
         {
           "api_name": "device-identifier",
-          "file_name": "device-identifier",
           "api_version": "0.3.0",
           "api_title": "Device Identifier",
           "commonalities": "0.6",
@@ -948,7 +925,6 @@
       "apis": [
         {
           "api_name": "geofencing-subscriptions",
-          "file_name": "geofencing-subscriptions",
           "api_version": "0.5.0",
           "api_title": "Device Geofencing Subscriptions",
           "commonalities": "0.6",
@@ -964,7 +940,6 @@
         },
         {
           "api_name": "location-retrieval",
-          "file_name": "location-retrieval",
           "api_version": "0.5.0",
           "api_title": "Device Location Retrieval",
           "commonalities": "0.6",
@@ -980,7 +955,6 @@
         },
         {
           "api_name": "location-verification",
-          "file_name": "location-verification",
           "api_version": "3.0.0",
           "api_title": "Device Location Verification",
           "commonalities": "0.6",
@@ -1006,7 +980,6 @@
       "apis": [
         {
           "api_name": "device-reachability-status-subscriptions",
-          "file_name": "device-reachability-status-subscriptions",
           "api_version": "0.8.0",
           "api_title": "Device Reachability Status Subscriptions",
           "commonalities": "0.6",
@@ -1022,7 +995,6 @@
         },
         {
           "api_name": "device-reachability-status",
-          "file_name": "device-reachability-status",
           "api_version": "1.1.0",
           "api_title": "Device Reachability Status",
           "commonalities": "0.6",
@@ -1048,7 +1020,6 @@
       "apis": [
         {
           "api_name": "device-roaming-status-subscriptions",
-          "file_name": "device-roaming-status-subscriptions",
           "api_version": "0.8.0",
           "api_title": "Device Roaming Status Subscriptions",
           "commonalities": "0.6",
@@ -1064,7 +1035,6 @@
         },
         {
           "api_name": "device-roaming-status",
-          "file_name": "device-roaming-status",
           "api_version": "1.1.0",
           "api_title": "Device Roaming Status",
           "commonalities": "0.6",
@@ -1090,7 +1060,6 @@
       "apis": [
         {
           "api_name": "device-swap",
-          "file_name": "device-swap",
           "api_version": "1.0.0",
           "api_title": "Device Swap",
           "commonalities": "0.6",
@@ -1116,7 +1085,6 @@
       "apis": [
         {
           "api_name": "energy-footprint-notification",
-          "file_name": "energy-footprint-notification",
           "api_version": "0.1.0",
           "api_title": "Energy Footprint Notification",
           "commonalities": "0.6",
@@ -1142,7 +1110,6 @@
       "apis": [
         {
           "api_name": "kyc-age-verification",
-          "file_name": "kyc-age-verification",
           "api_version": "0.2.1",
           "api_title": "Know Your Customer Age Verification",
           "commonalities": "0.6",
@@ -1168,7 +1135,6 @@
       "apis": [
         {
           "api_name": "kyc-fill-in",
-          "file_name": "kyc-fill-in",
           "api_version": "0.4.0",
           "api_title": "Know Your Customer Fill-in",
           "commonalities": "0.6",
@@ -1194,7 +1160,6 @@
       "apis": [
         {
           "api_name": "kyc-fill-in",
-          "file_name": "kyc-fill-in",
           "api_version": "0.4.1",
           "api_title": "Know Your Customer Fill-in",
           "commonalities": "0.6",
@@ -1220,7 +1185,6 @@
       "apis": [
         {
           "api_name": "kyc-match",
-          "file_name": "kyc-match",
           "api_version": "0.4.0",
           "api_title": "Know Your Customer Match",
           "commonalities": "0.6",
@@ -1246,7 +1210,6 @@
       "apis": [
         {
           "api_name": "knowledge-base",
-          "file_name": "knowledge-base",
           "api_version": "0.1.0",
           "api_title": "Knowledge Base",
           "commonalities": "0.6",
@@ -1262,7 +1225,6 @@
         },
         {
           "api_name": "qa-assistant-manage",
-          "file_name": "qa-assistant-manage",
           "api_version": "0.1.0",
           "api_title": "Q&A Assistant - Manage",
           "commonalities": "0.6",
@@ -1278,7 +1240,6 @@
         },
         {
           "api_name": "qa-assistant-service",
-          "file_name": "qa-assistant-service",
           "api_version": "0.1.0",
           "api_title": "Q&A Assistant - Service",
           "commonalities": "0.6",
@@ -1304,7 +1265,6 @@
       "apis": [
         {
           "api_name": "most-frequent-location",
-          "file_name": "most-frequent-location",
           "api_version": "0.2.0",
           "api_title": "Most Frequent Location",
           "commonalities": "0.6",
@@ -1330,7 +1290,6 @@
       "apis": [
         {
           "api_name": "network-slice-booking",
-          "file_name": "network-slice-booking",
           "api_version": "0.1.0",
           "api_title": "Network Slice Booking",
           "commonalities": "0.6",
@@ -1356,7 +1315,6 @@
       "apis": [
         {
           "api_name": "number-recycling",
-          "file_name": "number-recycling",
           "api_version": "0.2.0",
           "api_title": "Number Recycling",
           "commonalities": "0.6",
@@ -1382,7 +1340,6 @@
       "apis": [
         {
           "api_name": "number-verification",
-          "file_name": "number-verification",
           "api_version": "2.1.0",
           "api_title": "Number Verification",
           "commonalities": "0.6",
@@ -1408,7 +1365,6 @@
       "apis": [
         {
           "api_name": "optimal-edge-discovery",
-          "file_name": "optimal-edge-discovery",
           "api_version": "0.1.0",
           "api_title": "Optimal Edge Discovery",
           "commonalities": "0.6",
@@ -1434,7 +1390,6 @@
       "apis": [
         {
           "api_name": "one-time-password-sms",
-          "file_name": "one-time-password-sms",
           "api_version": "1.1.1",
           "api_title": "One Time Password SMS",
           "commonalities": "0.6",
@@ -1460,7 +1415,6 @@
       "apis": [
         {
           "api_name": "population-density-data",
-          "file_name": "population-density-data",
           "api_version": "0.3.0",
           "api_title": "Population Density Data",
           "commonalities": "0.6",
@@ -1486,7 +1440,6 @@
       "apis": [
         {
           "api_name": "predictive-connectivity-data",
-          "file_name": "predictive-connectivity-data",
           "api_version": "0.1.0",
           "api_title": "Predictive Connectivity Data",
           "commonalities": "0.6",
@@ -1512,7 +1465,6 @@
       "apis": [
         {
           "api_name": "qos-booking-and-assignment",
-          "file_name": "qos-booking-and-assignment",
           "api_version": "0.1.0",
           "api_title": "QoS Booking and Assignment",
           "commonalities": "0.6",
@@ -1528,7 +1480,6 @@
         },
         {
           "api_name": "qos-booking",
-          "file_name": "qos-booking",
           "api_version": "0.1.0",
           "api_title": "QoS Booking",
           "commonalities": "0.6",
@@ -1554,7 +1505,6 @@
       "apis": [
         {
           "api_name": "qos-profiles",
-          "file_name": "qos-profiles",
           "api_version": "1.1.0",
           "api_title": "QoS Profiles",
           "commonalities": "0.6",
@@ -1570,7 +1520,6 @@
         },
         {
           "api_name": "qos-provisioning",
-          "file_name": "qos-provisioning",
           "api_version": "0.3.0",
           "api_title": "QoS Provisioning",
           "commonalities": "0.6",
@@ -1589,7 +1538,6 @@
         },
         {
           "api_name": "quality-on-demand",
-          "file_name": "quality-on-demand",
           "api_version": "1.1.0",
           "api_title": "Quality-On-Demand",
           "commonalities": "0.6",
@@ -1615,7 +1563,6 @@
       "apis": [
         {
           "api_name": "region-device-count",
-          "file_name": "region-device-count",
           "api_version": "0.2.0",
           "api_title": "Region Device Count",
           "commonalities": "0.6",
@@ -1641,7 +1588,6 @@
       "apis": [
         {
           "api_name": "simple-edge-discovery",
-          "file_name": "simple-edge-discovery",
           "api_version": "2.0.0",
           "api_title": "Simple Edge Discovery",
           "commonalities": "0.6",
@@ -1667,7 +1613,6 @@
       "apis": [
         {
           "api_name": "sim-swap-subscriptions",
-          "file_name": "sim-swap-subscriptions",
           "api_version": "0.3.0",
           "api_title": "Sim Swap Subscriptions",
           "commonalities": "0.6",
@@ -1683,7 +1628,6 @@
         },
         {
           "api_name": "sim-swap",
-          "file_name": "sim-swap",
           "api_version": "2.1.0",
           "api_title": "SIM Swap",
           "commonalities": "0.6",
@@ -1709,7 +1653,6 @@
       "apis": [
         {
           "api_name": "sim-swap-subscriptions",
-          "file_name": "sim-swap-subscriptions",
           "api_version": "0.3.0",
           "api_title": "Sim Swap Subscriptions",
           "commonalities": "0.6",
@@ -1725,7 +1668,6 @@
         },
         {
           "api_name": "sim-swap",
-          "file_name": "sim-swap",
           "api_version": "2.1.0",
           "api_title": "SIM Swap",
           "commonalities": "0.6",
@@ -1751,7 +1693,6 @@
       "apis": [
         {
           "api_name": "subscription-status",
-          "file_name": "subscription-status",
           "api_version": "0.1.0",
           "api_title": "SubscriptionStatus",
           "commonalities": "0.6",
@@ -1777,7 +1718,6 @@
       "apis": [
         {
           "api_name": "kyc-tenure",
-          "file_name": "kyc-tenure",
           "api_version": "0.2.0",
           "api_title": "KYC Tenure",
           "commonalities": "0.6",
@@ -1803,7 +1743,6 @@
       "apis": [
         {
           "api_name": "traffic-influence",
-          "file_name": "traffic-influence",
           "api_version": "0.10.0",
           "api_title": "Traffic Influence",
           "commonalities": "0.6",
@@ -1829,7 +1768,6 @@
       "apis": [
         {
           "api_name": "brand-registration",
-          "file_name": "brand-registration",
           "api_version": "0.1.0",
           "api_title": "Brand Registration",
           "commonalities": "0.6",
@@ -1845,7 +1783,6 @@
         },
         {
           "api_name": "verified-caller",
-          "file_name": "verified-caller",
           "api_version": "0.1.0",
           "api_title": "Verified Caller",
           "commonalities": "0.6",
@@ -1871,7 +1808,6 @@
       "apis": [
         {
           "api_name": "webrtc-call-handling",
-          "file_name": "webrtc-call-handling",
           "api_version": "0.3.0",
           "api_title": "WebRTC Call Handling",
           "commonalities": "0.6",
@@ -1887,7 +1823,6 @@
         },
         {
           "api_name": "webrtc-events",
-          "file_name": "webrtc-events",
           "api_version": "0.2.0",
           "api_title": "WebRTC Events",
           "commonalities": "0.6",
@@ -1903,7 +1838,6 @@
         },
         {
           "api_name": "webrtc-registration",
-          "file_name": "webrtc-registration",
           "api_version": "0.3.0",
           "api_title": "WebRTC Registration Service",
           "commonalities": "0.6",
@@ -1923,7 +1857,6 @@
   "apis": [
     {
       "api_name": "application-endpoint-discovery",
-      "file_name": "application-endpoint-discovery",
       "api_version": "0.1.0",
       "api_title": "Application Endpoint Discovery",
       "commonalities": "0.6",
@@ -1945,7 +1878,6 @@
     },
     {
       "api_name": "application-endpoint-registration",
-      "file_name": "application-endpoint-registration",
       "api_version": "0.1.0",
       "api_title": "Application Endpoints Registration",
       "commonalities": "0.6",
@@ -1967,7 +1899,6 @@
     },
     {
       "api_name": "application-profiles",
-      "file_name": "application-profiles",
       "api_version": "0.5.0",
       "api_title": "Connectivity Insights - Application Profiles",
       "commonalities": "0.6",
@@ -1989,7 +1920,6 @@
     },
     {
       "api_name": "blockchain-public-address",
-      "file_name": "blockchain-public-address",
       "api_version": "0.3.0",
       "api_title": "Blockchain Public Address",
       "commonalities": "0.6",
@@ -2011,7 +1941,6 @@
     },
     {
       "api_name": "blockchain-public-address-validation",
-      "file_name": "blockchain-public-address-validation",
       "api_version": "0.1.0",
       "api_title": "Blockchain Public Address Validation",
       "commonalities": "0.6",
@@ -2033,7 +1962,6 @@
     },
     {
       "api_name": "call-forwarding-signal",
-      "file_name": "call-forwarding-signal",
       "api_version": "0.4.0",
       "api_title": "Call Forwarding Signal",
       "commonalities": "0.6",
@@ -2055,7 +1983,6 @@
     },
     {
       "api_name": "carrier-billing",
-      "file_name": "carrier-billing",
       "api_version": "0.5.0",
       "api_title": "Carrier Billing",
       "commonalities": "0.6",
@@ -2077,7 +2004,6 @@
     },
     {
       "api_name": "carrier-billing-refund",
-      "file_name": "carrier-billing-refund",
       "api_version": "0.3.0",
       "api_title": "Carrier Billing Refund",
       "commonalities": "0.6",
@@ -2099,7 +2025,6 @@
     },
     {
       "api_name": "connected-network-type",
-      "file_name": "connected-network-type",
       "api_version": "0.2.0",
       "api_title": "Connected Network Type",
       "commonalities": "0.6",
@@ -2121,7 +2046,6 @@
     },
     {
       "api_name": "connected-network-type-subscriptions",
-      "file_name": "connected-network-type-subscriptions",
       "api_version": "0.2.0",
       "api_title": "Connected Network Type Subscriptions",
       "commonalities": "0.6",
@@ -2143,7 +2067,6 @@
     },
     {
       "api_name": "connectivity-insights",
-      "file_name": "connectivity-insights",
       "api_version": "0.6.0",
       "api_title": "Connectivity Insights",
       "commonalities": "0.6",
@@ -2165,7 +2088,6 @@
     },
     {
       "api_name": "connectivity-insights-subscriptions",
-      "file_name": "connectivity-insights-subscriptions",
       "api_version": "0.6.0",
       "api_title": "Connectivity Insights Subscriptions",
       "commonalities": "0.6",
@@ -2187,7 +2109,6 @@
     },
     {
       "api_name": "consent-info",
-      "file_name": "consent-info",
       "api_version": "0.1.0",
       "api_title": "Consent Info",
       "commonalities": "0.6",
@@ -2209,7 +2130,6 @@
     },
     {
       "api_name": "customer-insights",
-      "file_name": "customer-insights",
       "api_version": "0.2.0",
       "api_title": "Customer Insights",
       "commonalities": "0.6",
@@ -2231,7 +2151,6 @@
     },
     {
       "api_name": "dedicated-network",
-      "file_name": "dedicated-network",
       "api_version": "0.1.0",
       "api_title": "Dedicated Network - Networks",
       "commonalities": "0.6",
@@ -2253,7 +2172,6 @@
     },
     {
       "api_name": "dedicated-network-accesses",
-      "file_name": "dedicated-network-accesses",
       "api_version": "0.1.0",
       "api_title": "Dedicated Network - Accesses",
       "commonalities": "0.6",
@@ -2275,7 +2193,6 @@
     },
     {
       "api_name": "dedicated-network-profiles",
-      "file_name": "dedicated-network-profiles",
       "api_version": "0.1.0",
       "api_title": "Dedicated Network - Network Profiles",
       "commonalities": "0.6",
@@ -2297,7 +2214,6 @@
     },
     {
       "api_name": "device-data-volume",
-      "file_name": "device-data-volume",
       "api_version": "0.1.0",
       "api_title": "Device Data Volume",
       "commonalities": "0.6",
@@ -2319,7 +2235,6 @@
     },
     {
       "api_name": "device-data-volume-subscriptions",
-      "file_name": "device-data-volume-subscriptions",
       "api_version": "0.1.0",
       "api_title": "Device Data Volume Subscriptions",
       "commonalities": "0.6",
@@ -2341,7 +2256,6 @@
     },
     {
       "api_name": "device-identifier",
-      "file_name": "device-identifier",
       "api_version": "0.3.0",
       "api_title": "Device Identifier",
       "commonalities": "0.6",
@@ -2363,7 +2277,6 @@
     },
     {
       "api_name": "geofencing-subscriptions",
-      "file_name": "geofencing-subscriptions",
       "api_version": "0.5.0",
       "api_title": "Device Geofencing Subscriptions",
       "commonalities": "0.6",
@@ -2385,7 +2298,6 @@
     },
     {
       "api_name": "location-retrieval",
-      "file_name": "location-retrieval",
       "api_version": "0.5.0",
       "api_title": "Device Location Retrieval",
       "commonalities": "0.6",
@@ -2407,7 +2319,6 @@
     },
     {
       "api_name": "location-verification",
-      "file_name": "location-verification",
       "api_version": "3.0.0",
       "api_title": "Device Location Verification",
       "commonalities": "0.6",
@@ -2429,7 +2340,6 @@
     },
     {
       "api_name": "device-reachability-status",
-      "file_name": "device-reachability-status",
       "api_version": "1.1.0",
       "api_title": "Device Reachability Status",
       "commonalities": "0.6",
@@ -2451,7 +2361,6 @@
     },
     {
       "api_name": "device-reachability-status-subscriptions",
-      "file_name": "device-reachability-status-subscriptions",
       "api_version": "0.8.0",
       "api_title": "Device Reachability Status Subscriptions",
       "commonalities": "0.6",
@@ -2473,7 +2382,6 @@
     },
     {
       "api_name": "device-roaming-status",
-      "file_name": "device-roaming-status",
       "api_version": "1.1.0",
       "api_title": "Device Roaming Status",
       "commonalities": "0.6",
@@ -2495,7 +2403,6 @@
     },
     {
       "api_name": "device-roaming-status-subscriptions",
-      "file_name": "device-roaming-status-subscriptions",
       "api_version": "0.8.0",
       "api_title": "Device Roaming Status Subscriptions",
       "commonalities": "0.6",
@@ -2517,7 +2424,6 @@
     },
     {
       "api_name": "device-swap",
-      "file_name": "device-swap",
       "api_version": "1.0.0",
       "api_title": "Device Swap",
       "commonalities": "0.6",
@@ -2539,7 +2445,6 @@
     },
     {
       "api_name": "energy-footprint-notification",
-      "file_name": "energy-footprint-notification",
       "api_version": "0.1.0",
       "api_title": "Energy Footprint Notification",
       "commonalities": "0.6",
@@ -2561,7 +2466,6 @@
     },
     {
       "api_name": "kyc-age-verification",
-      "file_name": "kyc-age-verification",
       "api_version": "0.2.1",
       "api_title": "Know Your Customer Age Verification",
       "commonalities": "0.6",
@@ -2583,7 +2487,6 @@
     },
     {
       "api_name": "kyc-fill-in",
-      "file_name": "kyc-fill-in",
       "api_version": "0.4.0",
       "api_title": "Know Your Customer Fill-in",
       "commonalities": "0.6",
@@ -2605,7 +2508,6 @@
     },
     {
       "api_name": "kyc-fill-in",
-      "file_name": "kyc-fill-in",
       "api_version": "0.4.1",
       "api_title": "Know Your Customer Fill-in",
       "commonalities": "0.6",
@@ -2627,7 +2529,6 @@
     },
     {
       "api_name": "kyc-match",
-      "file_name": "kyc-match",
       "api_version": "0.4.0",
       "api_title": "Know Your Customer Match",
       "commonalities": "0.6",
@@ -2649,7 +2550,6 @@
     },
     {
       "api_name": "knowledge-base",
-      "file_name": "knowledge-base",
       "api_version": "0.1.0",
       "api_title": "Knowledge Base",
       "commonalities": "0.6",
@@ -2671,7 +2571,6 @@
     },
     {
       "api_name": "qa-assistant-manage",
-      "file_name": "qa-assistant-manage",
       "api_version": "0.1.0",
       "api_title": "Q&A Assistant - Manage",
       "commonalities": "0.6",
@@ -2693,7 +2592,6 @@
     },
     {
       "api_name": "qa-assistant-service",
-      "file_name": "qa-assistant-service",
       "api_version": "0.1.0",
       "api_title": "Q&A Assistant - Service",
       "commonalities": "0.6",
@@ -2715,7 +2613,6 @@
     },
     {
       "api_name": "most-frequent-location",
-      "file_name": "most-frequent-location",
       "api_version": "0.2.0",
       "api_title": "Most Frequent Location",
       "commonalities": "0.6",
@@ -2737,7 +2634,6 @@
     },
     {
       "api_name": "network-slice-booking",
-      "file_name": "network-slice-booking",
       "api_version": "0.1.0",
       "api_title": "Network Slice Booking",
       "commonalities": "0.6",
@@ -2759,7 +2655,6 @@
     },
     {
       "api_name": "number-recycling",
-      "file_name": "number-recycling",
       "api_version": "0.2.0",
       "api_title": "Number Recycling",
       "commonalities": "0.6",
@@ -2781,7 +2676,6 @@
     },
     {
       "api_name": "number-verification",
-      "file_name": "number-verification",
       "api_version": "2.1.0",
       "api_title": "Number Verification",
       "commonalities": "0.6",
@@ -2803,7 +2697,6 @@
     },
     {
       "api_name": "optimal-edge-discovery",
-      "file_name": "optimal-edge-discovery",
       "api_version": "0.1.0",
       "api_title": "Optimal Edge Discovery",
       "commonalities": "0.6",
@@ -2825,7 +2718,6 @@
     },
     {
       "api_name": "one-time-password-sms",
-      "file_name": "one-time-password-sms",
       "api_version": "1.1.1",
       "api_title": "One Time Password SMS",
       "commonalities": "0.6",
@@ -2847,7 +2739,6 @@
     },
     {
       "api_name": "population-density-data",
-      "file_name": "population-density-data",
       "api_version": "0.3.0",
       "api_title": "Population Density Data",
       "commonalities": "0.6",
@@ -2869,7 +2760,6 @@
     },
     {
       "api_name": "predictive-connectivity-data",
-      "file_name": "predictive-connectivity-data",
       "api_version": "0.1.0",
       "api_title": "Predictive Connectivity Data",
       "commonalities": "0.6",
@@ -2891,7 +2781,6 @@
     },
     {
       "api_name": "qos-booking",
-      "file_name": "qos-booking",
       "api_version": "0.1.0",
       "api_title": "QoS Booking",
       "commonalities": "0.6",
@@ -2913,7 +2802,6 @@
     },
     {
       "api_name": "qos-booking-and-assignment",
-      "file_name": "qos-booking-and-assignment",
       "api_version": "0.1.0",
       "api_title": "QoS Booking and Assignment",
       "commonalities": "0.6",
@@ -2935,7 +2823,6 @@
     },
     {
       "api_name": "qos-profiles",
-      "file_name": "qos-profiles",
       "api_version": "1.1.0",
       "api_title": "QoS Profiles",
       "commonalities": "0.6",
@@ -2957,7 +2844,6 @@
     },
     {
       "api_name": "qos-provisioning",
-      "file_name": "qos-provisioning",
       "api_version": "0.3.0",
       "api_title": "QoS Provisioning",
       "commonalities": "0.6",
@@ -2982,7 +2868,6 @@
     },
     {
       "api_name": "quality-on-demand",
-      "file_name": "quality-on-demand",
       "api_version": "1.1.0",
       "api_title": "Quality-On-Demand",
       "commonalities": "0.6",
@@ -3004,7 +2889,6 @@
     },
     {
       "api_name": "region-device-count",
-      "file_name": "region-device-count",
       "api_version": "0.2.0",
       "api_title": "Region Device Count",
       "commonalities": "0.6",
@@ -3026,7 +2910,6 @@
     },
     {
       "api_name": "simple-edge-discovery",
-      "file_name": "simple-edge-discovery",
       "api_version": "2.0.0",
       "api_title": "Simple Edge Discovery",
       "commonalities": "0.6",
@@ -3048,7 +2931,6 @@
     },
     {
       "api_name": "sim-swap",
-      "file_name": "sim-swap",
       "api_version": "2.1.0",
       "api_title": "SIM Swap",
       "commonalities": "0.6",
@@ -3070,7 +2952,6 @@
     },
     {
       "api_name": "sim-swap",
-      "file_name": "sim-swap",
       "api_version": "2.1.0",
       "api_title": "SIM Swap",
       "commonalities": "0.6",
@@ -3092,7 +2973,6 @@
     },
     {
       "api_name": "sim-swap-subscriptions",
-      "file_name": "sim-swap-subscriptions",
       "api_version": "0.3.0",
       "api_title": "Sim Swap Subscriptions",
       "commonalities": "0.6",
@@ -3114,7 +2994,6 @@
     },
     {
       "api_name": "sim-swap-subscriptions",
-      "file_name": "sim-swap-subscriptions",
       "api_version": "0.3.0",
       "api_title": "Sim Swap Subscriptions",
       "commonalities": "0.6",
@@ -3136,7 +3015,6 @@
     },
     {
       "api_name": "subscription-status",
-      "file_name": "subscription-status",
       "api_version": "0.1.0",
       "api_title": "SubscriptionStatus",
       "commonalities": "0.6",
@@ -3158,7 +3036,6 @@
     },
     {
       "api_name": "kyc-tenure",
-      "file_name": "kyc-tenure",
       "api_version": "0.2.0",
       "api_title": "KYC Tenure",
       "commonalities": "0.6",
@@ -3180,7 +3057,6 @@
     },
     {
       "api_name": "traffic-influence",
-      "file_name": "traffic-influence",
       "api_version": "0.10.0",
       "api_title": "Traffic Influence",
       "commonalities": "0.6",
@@ -3202,7 +3078,6 @@
     },
     {
       "api_name": "brand-registration",
-      "file_name": "brand-registration",
       "api_version": "0.1.0",
       "api_title": "Brand Registration",
       "commonalities": "0.6",
@@ -3224,7 +3099,6 @@
     },
     {
       "api_name": "verified-caller",
-      "file_name": "verified-caller",
       "api_version": "0.1.0",
       "api_title": "Verified Caller",
       "commonalities": "0.6",
@@ -3246,7 +3120,6 @@
     },
     {
       "api_name": "webrtc-call-handling",
-      "file_name": "webrtc-call-handling",
       "api_version": "0.3.0",
       "api_title": "WebRTC Call Handling",
       "commonalities": "0.6",
@@ -3268,7 +3141,6 @@
     },
     {
       "api_name": "webrtc-events",
-      "file_name": "webrtc-events",
       "api_version": "0.2.0",
       "api_title": "WebRTC Events",
       "commonalities": "0.6",
@@ -3290,7 +3162,6 @@
     },
     {
       "api_name": "webrtc-registration",
-      "file_name": "webrtc-registration",
       "api_version": "0.3.0",
       "api_title": "WebRTC Registration Service",
       "commonalities": "0.6",
