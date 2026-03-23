@@ -99,7 +99,7 @@ function shouldIncludePrerelease(prerelease, allReleases) {
   const hasPublicRelease = allReleases.some(r =>
     r.repository === prerelease.repository &&
     r.release_tag.startsWith(cycle + '.') &&
-    !r.is_prerelease
+    !r.release_type?.startsWith('pre-release-')
   );
 
   return !hasPublicRelease;
@@ -119,7 +119,7 @@ function determineNonPrereleaseType(release, allReleases) {
     .filter(r =>
       r.repository === release.repository &&
       r.release_tag.startsWith(cycle + '.') &&
-      !r.is_prerelease
+      !r.release_type?.startsWith('pre-release-')
     )
     .sort((a, b) => {
       const aMatch = a.release_tag.match(/r\d+\.(\d+)/);
