@@ -235,7 +235,6 @@ function generateEnrichedStatistics(releases) {
     },
     latest_versions: new Map(),  // Track latest version per canonical API
     categories: {},
-    commonalities_versions: new Set(),
     apis_with_renames: 0
   };
 
@@ -278,10 +277,6 @@ function generateEnrichedStatistics(releases) {
           (stats.categories[api.portfolio_category] || 0) + 1;
       }
 
-      // Track commonalities versions
-      if (api.commonalities) {
-        stats.commonalities_versions.add(api.commonalities);
-      }
     }
   }
 
@@ -304,7 +299,6 @@ function generateEnrichedStatistics(releases) {
     api_version_maturity: stats.api_maturity,  // Maturity count by version (not unique APIs)
     unique_api_maturity: stats.unique_api_maturity,  // Maturity based on latest version per API
     categories: stats.categories,
-    commonalities_versions: Array.from(stats.commonalities_versions).sort(),
     apis_with_previous_names: stats.apis_with_renames
   };
 }

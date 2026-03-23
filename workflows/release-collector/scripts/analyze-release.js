@@ -154,6 +154,95 @@ function applyFormatCorrections(api) {
 }
 
 /**
+ * Extract Commonalities semantic version from a dependency string.
+ * Input format: "r4.2 (1.2.0-rc.1)" or null
+ * Returns: "1.2.0-rc.1" or null
+ */
+function extractCommonalitiesVersion(depString) {
+  if (!depString) return null;
+  const match = depString.match(/\(([^)]+)\)/);
+  return match ? match[1] : null;
+}
+
+/**
+ * Fetch native release-metadata.yaml from a release tag tree via GitHub API.
+ * Returns parsed metadata object if found, null if not present (404).
+ *
+ * @param {string} repo - Repository name
+ * @param {string} tag - Release tag
+ * @returns {Promise<object|null>} Parsed metadata or null
+ */
+async function fetchNativeReleaseMetadata(repo, tag) {
+  const url = `https://api.github.com/repos/${GITHUB_ORG}/${repo}/contents/release-metadata.yaml?ref=${encodeURIComponent(tag)}`;
+  const headers = {
+    'Accept': 'application/vnd.github+json',
+    'User-Agent': 'camara-release-collector'
+  };
+
+  if (process.env.GITHUB_TOKEN) {
+    headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`;
+  }
+
+  const response = await fetch(url, { headers });
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (response.status !== 200) {
+    const body = await response.text();
+    throw new Error(`GitHub API ${response.status} while fetching native metadata for ${repo}/${tag}: ${body}`);
+  }
+
+  const data = await response.json();
+  const content = Buffer.from(data.content, 'base64').toString('utf8');
+  return yaml.load(content);
+}
+
+/**
+ * Build analysis result from native release-metadata.yaml.
+ * Maps native metadata fields to the collector's analysis result format.
+ *
+ * @param {object} metadata - Parsed native release-metadata.yaml
+ * @param {object} release - GitHub release object (for date, URL, prerelease flag)
+ * @param {string} repository - Repository name
+ * @returns {object} Analysis result in collector format
+ */
+function buildResultFromNativeMetadata(metadata, release, repository) {
+  const repo = metadata.repository || {};
+  const releaseType = repo.release_type || null;
+  const isPrerelease = releaseType ? releaseType.startsWith('pre-release-') : release.prerelease;
+
+  // Derive per-API commonalities from release-level dependency (ADR-0004 Decision 7)
+  const commonalitiesVersion = extractCommonalitiesVersion(
+    metadata.dependencies?.commonalities_release
+  );
+
+  const apis = (metadata.apis || []).map(api => {
+    const apiData = {
+      api_name: api.api_name,
+      api_version: api.api_version || 'unknown',
+      api_title: api.api_title || 'Untitled',
+      commonalities: commonalitiesVersion
+    };
+    return applyFormatCorrections(apiData);
+  });
+
+  return {
+    repository: repository,
+    release_tag: repo.release_tag || release.tag_name,
+    release_date: release.published_at,
+    github_url: release.html_url,
+    is_prerelease: isPrerelease,
+    release_type: releaseType,
+    src_commit_sha: repo.src_commit_sha || null,
+    dependencies: metadata.dependencies || null,
+    native_metadata: true,
+    apis: apis
+  };
+}
+
+/**
  * Determine meta-release for a repository and release tag
  */
 function getMetaRelease(repository, releaseTag, mappings) {
@@ -211,7 +300,6 @@ async function analyzeLocalRelease(repoPath, releaseTag, isPrerelease = false) {
       if (spec && spec.info) {
         const apiData = {
           api_name: apiName || fileName,        // Use filename as fallback for legacy releases
-          file_name: fileName,                  // Filename for consistency check
           api_version: spec.info.version || 'unknown',
           api_title: spec.info.title || 'Untitled',
           commonalities: spec.info['x-camara-commonalities'] || null
@@ -222,14 +310,14 @@ async function analyzeLocalRelease(repoPath, releaseTag, isPrerelease = false) {
 
         // Repository/release-specific corrections
         if (repoName === 'ConnectivityInsights' && releaseTag === 'r1.2' &&
-            correctedApi.api_name === 'v0.4' && correctedApi.file_name === 'connectivity-insights-subscriptions') {
+            correctedApi.api_name === 'v0.4') {
           console.error(`Applying correction: ConnectivityInsights r1.2 - mapping 'v0.4' to 'connectivity-insights-subscriptions'`);
           correctedApi.api_name = 'connectivity-insights-subscriptions';
         }
 
         // Fix incorrect api_title for connectivity-insights-subscriptions in r1.2 and r2.2
         if (repoName === 'ConnectivityInsights' && (releaseTag === 'r1.2' || releaseTag === 'r2.2') &&
-            correctedApi.file_name === 'connectivity-insights-subscriptions' && correctedApi.api_title === 'Connectivity Insights') {
+            correctedApi.api_name === 'connectivity-insights-subscriptions' && correctedApi.api_title === 'Connectivity Insights') {
           console.error(`Applying correction: ConnectivityInsights ${releaseTag} - fixing api_title to 'Connectivity Insights Subscriptions'`);
           correctedApi.api_title = 'Connectivity Insights Subscriptions';
         }
@@ -266,6 +354,9 @@ async function analyzeLocalRelease(repoPath, releaseTag, isPrerelease = false) {
     github_url: `https://github.com/${GITHUB_ORG}/${repoName}/releases/tag/${releaseTag}`,
     is_prerelease: isPrerelease,
     release_type: releaseType,  // null for non-prereleases, determined in update-master.js
+    src_commit_sha: null,
+    dependencies: null,
+    native_metadata: false,
     apis: apis
   };
 }
@@ -283,7 +374,19 @@ async function analyzeGitHubRelease(repository, releaseTag) {
     tag: releaseTag
   });
 
-  // Get tree for the release tag
+  // Check for native release-metadata.yaml (ADR-0004: native metadata is authoritative)
+  try {
+    const nativeMetadata = await fetchNativeReleaseMetadata(repository, releaseTag);
+    if (nativeMetadata) {
+      console.error(`  → Native release-metadata.yaml found, using as authoritative source`);
+      return buildResultFromNativeMetadata(nativeMetadata, release, repository);
+    }
+    console.error(`  → No native metadata, falling back to OpenAPI analysis`);
+  } catch (error) {
+    console.error(`  → Error checking native metadata, falling back to OpenAPI analysis: ${error.message}`);
+  }
+
+  // Legacy path: analyze OpenAPI specs from tag tree
   const { data: ref } = await octokit.git.getRef({
     owner: GITHUB_ORG,
     repo: repository,
@@ -326,7 +429,6 @@ async function analyzeGitHubRelease(repository, releaseTag) {
       if (spec && spec.info) {
         const apiData = {
           api_name: apiName || fileName,        // Use filename as fallback for legacy releases
-          file_name: fileName,                  // Filename for consistency check
           api_version: spec.info.version || 'unknown',
           api_title: spec.info.title || 'Untitled',
           commonalities: spec.info['x-camara-commonalities'] || null
@@ -337,14 +439,14 @@ async function analyzeGitHubRelease(repository, releaseTag) {
 
         // Repository/release-specific corrections
         if (repository === 'ConnectivityInsights' && releaseTag === 'r1.2' &&
-            correctedApi.api_name === 'v0.4' && correctedApi.file_name === 'connectivity-insights-subscriptions') {
+            correctedApi.api_name === 'v0.4') {
           console.error(`Applying correction: ConnectivityInsights r1.2 - mapping 'v0.4' to 'connectivity-insights-subscriptions'`);
           correctedApi.api_name = 'connectivity-insights-subscriptions';
         }
 
         // Fix incorrect api_title for connectivity-insights-subscriptions in r1.2 and r2.2
         if (repository === 'ConnectivityInsights' && (releaseTag === 'r1.2' || releaseTag === 'r2.2') &&
-            correctedApi.file_name === 'connectivity-insights-subscriptions' && correctedApi.api_title === 'Connectivity Insights') {
+            correctedApi.api_name === 'connectivity-insights-subscriptions' && correctedApi.api_title === 'Connectivity Insights') {
           console.error(`Applying correction: ConnectivityInsights ${releaseTag} - fixing api_title to 'Connectivity Insights Subscriptions'`);
           correctedApi.api_title = 'Connectivity Insights Subscriptions';
         }
@@ -372,6 +474,9 @@ async function analyzeGitHubRelease(repository, releaseTag) {
     github_url: release.html_url,
     is_prerelease: release.prerelease,
     release_type: releaseType,  // null for non-prereleases, determined in update-master.js
+    src_commit_sha: null,
+    dependencies: null,
+    native_metadata: false,
     apis: apis
   };
 }
