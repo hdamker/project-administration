@@ -454,7 +454,12 @@ tr.historical-row:hover td {
           : `${trackFilter} release cycle`;
       } else {
         const meta = PROGRESS_DATA.metadata;
-        headerDiv.innerHTML = `Tracked: ${meta.repos_with_plan}/${meta.repos_scanned} repositories`;
+        headerDiv.innerHTML = [
+          `${meta.repos_scanned} repos`,
+          `${meta.repos_with_plan} with release-plan`,
+          `${meta.repos_fully_onboarded || 0} with ra workflow`,
+          `${meta.repos_with_release_issue || 0} with active release issue`,
+        ].join(' \u00b7 ');
       }
     }
 
@@ -654,7 +659,11 @@ tr.historical-row:hover td {
       let apiVersion = '';
       if (lp.apis && row.api_name) {
         const apiEntry = lp.apis.find(a => a.api_name === row.api_name);
-        if (apiEntry && apiEntry.api_version) {
+        if (!apiEntry) {
+          // API was not part of this release — show dash
+          return '<span class="milestone-empty">&mdash;</span>';
+        }
+        if (apiEntry.api_version) {
           apiVersion = apiEntry.api_version;
         }
       }
@@ -686,7 +695,11 @@ tr.historical-row:hover td {
       let apiVersion = '';
       if (milestone.apis && apiName) {
         const apiEntry = milestone.apis.find(a => a.api_name === apiName);
-        if (apiEntry && apiEntry.api_version) {
+        if (!apiEntry) {
+          // API was not part of this release — show dash
+          return '<span class="milestone-empty">&mdash;</span>';
+        }
+        if (apiEntry.api_version) {
           apiVersion = apiEntry.api_version;
         }
       }

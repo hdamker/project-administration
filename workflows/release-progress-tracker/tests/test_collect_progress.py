@@ -448,10 +448,12 @@ class TestCollectAll:
         assert "last_updated" in meta
         assert "last_checked" in meta
         assert "releases_master_updated" in meta
-        assert meta["schema_version"] == "1.4.0"
+        assert meta["schema_version"] == "1.5.0"
         assert "collection_stats" not in meta  # Full stats removed from output
         assert meta["repos_scanned"] == 2      # Stable stats restored
         assert meta["repos_with_plan"] == 2
+        assert meta["repos_fully_onboarded"] == 0  # No caller workflow or active state
+        assert meta["repos_with_release_issue"] == 0  # No release issues mocked
 
     def test_collection_handles_api_errors(self, tmp_path):
         """Repos with API errors should be skipped gracefully."""
@@ -915,3 +917,97 @@ class TestCollectAllWithHistorical:
         qod_entries = [e for e in result.progress if e.repository == "QualityOnDemand"]
         assert len(qod_entries) == 1
         assert qod_entries[0].state == ProgressState.COMPLETED
+
+
+class TestKPIStatistics:
+    """Test PA#198 KPI cascade statistics."""
+
+    def test_planned_with_caller_workflow_is_fully_onboarded(self, tmp_path):
+        """PLANNED repo with caller workflow counts as fully onboarded."""
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(SAMPLE_MASTER))
+
+        api = MockGitHubAPI(
+            file_contents={
+                "QualityOnDemand/release-plan.yaml": PLAN_RC,
+                "QualityOnDemand/.github/workflows/release-automation.yml": "name: RA",
+                "InactiveRepo/release-plan.yaml": PLAN_NONE,
+            },
+        )
+        result = collect_all(str(master_file), str(output_file), api=api)
+        assert result.collection_stats.repos_fully_onboarded == 1
+
+    def test_planned_without_caller_workflow_not_fully_onboarded(self, tmp_path):
+        """PLANNED repo without caller workflow is not fully onboarded."""
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(SAMPLE_MASTER))
+
+        api = MockGitHubAPI(
+            file_contents={
+                "QualityOnDemand/release-plan.yaml": PLAN_RC,
+                "InactiveRepo/release-plan.yaml": PLAN_NONE,
+            },
+        )
+        result = collect_all(str(master_file), str(output_file), api=api)
+        assert result.collection_stats.repos_fully_onboarded == 0
+
+    def test_snapshot_active_implies_fully_onboarded(self, tmp_path):
+        """SNAPSHOT_ACTIVE state implies caller workflow exists."""
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(SAMPLE_MASTER))
+
+        api = MockGitHubAPI(
+            file_contents={
+                "QualityOnDemand/release-plan.yaml": PLAN_RC,
+                "InactiveRepo/release-plan.yaml": PLAN_NONE,
+            },
+            branches={"QualityOnDemand": ["release-snapshot/r4.1-abc123"]},
+        )
+        result = collect_all(str(master_file), str(output_file), api=api)
+        assert result.collection_stats.repos_fully_onboarded == 1
+
+    def test_release_issue_counted(self, tmp_path):
+        """Repos with release issues are counted."""
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(SAMPLE_MASTER))
+
+        api = MockGitHubAPI(
+            file_contents={
+                "QualityOnDemand/release-plan.yaml": PLAN_RC,
+                "InactiveRepo/release-plan.yaml": PLAN_NONE,
+            },
+            release_issues={
+                "QualityOnDemand": {
+                    "number": 42,
+                    "url": "https://github.com/camaraproject/QualityOnDemand/issues/42",
+                    "labels": ["release-issue"],
+                    "body": "<!-- release-automation:release-tag:r4.1 -->",
+                },
+            },
+        )
+        result = collect_all(str(master_file), str(output_file), api=api)
+        assert result.collection_stats.repos_with_release_issue == 1
+
+    def test_kpi_fields_in_metadata_output(self, tmp_path):
+        """New KPI fields must appear in serialized metadata."""
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(SAMPLE_MASTER))
+
+        api = MockGitHubAPI(
+            file_contents={
+                "QualityOnDemand/release-plan.yaml": PLAN_RC,
+                "InactiveRepo/release-plan.yaml": PLAN_NONE,
+            },
+        )
+        result = collect_all(str(master_file), str(output_file), api=api)
+        output = yaml.safe_load(output_file.read_text())
+        meta = output["metadata"]
+        assert "repos_fully_onboarded" in meta
+        assert "repos_with_release_issue" in meta
+        assert isinstance(meta["repos_fully_onboarded"], int)
+        assert isinstance(meta["repos_with_release_issue"], int)
