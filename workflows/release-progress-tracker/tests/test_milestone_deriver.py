@@ -64,7 +64,6 @@ class TestDeriveCycleReleases:
     def test_m1_alpha_detected(self):
         cr = derive_cycle_releases(
             "QualityOnDemand", "r4.1", "Sync26", SAMPLE_RELEASES,
-            ["quality-on-demand"],
         )
         assert cr.m1 is not None
         assert cr.m1.release_tag == "r4.1"
@@ -74,7 +73,6 @@ class TestDeriveCycleReleases:
     def test_m3_rc_detected(self):
         cr = derive_cycle_releases(
             "QualityOnDemand", "r4.1", "Sync26", SAMPLE_RELEASES,
-            ["quality-on-demand"],
         )
         assert cr.m3 is not None
         assert cr.m3.release_tag == "r4.2"
@@ -82,17 +80,15 @@ class TestDeriveCycleReleases:
     def test_m4_not_achieved(self):
         cr = derive_cycle_releases(
             "QualityOnDemand", "r4.1", "Sync26", SAMPLE_RELEASES,
-            ["quality-on-demand"],
         )
         assert cr.m4 is not None
         assert cr.m4.release_tag is None
-        assert cr.m4.apis[0].api_version is None
+        assert cr.m4.apis == []  # Unachieved milestone has no API entries
 
     def test_filters_by_repo_and_tag_prefix(self):
         """Should not include DeviceLocation releases for QualityOnDemand."""
         cr = derive_cycle_releases(
             "QualityOnDemand", "r4.1", "Sync26", SAMPLE_RELEASES,
-            ["quality-on-demand"],
         )
         # M1 should be QoD's alpha, not DeviceLocation's
         assert cr.m1.release_tag == "r4.1"
@@ -101,7 +97,6 @@ class TestDeriveCycleReleases:
         """Releases with different tag prefix should not appear in cycle."""
         cr = derive_cycle_releases(
             "QualityOnDemand", "r4.1", "Sync26", SAMPLE_RELEASES,
-            ["quality-on-demand"],
         )
         # M4 should be unachieved (r3.5 has different prefix r3.)
         assert cr.m4.release_tag is None
@@ -118,24 +113,24 @@ class TestDeriveCycleReleases:
         }]
         cr = derive_cycle_releases(
             "QualityOnDemand", "r4.1", "Sync26", releases,
-            ["quality-on-demand"],
         )
         assert cr.m1.release_tag == "r4.0"  # Earlier date
 
     def test_no_releases_returns_empty_milestones(self):
         cr = derive_cycle_releases(
             "NewRepo", "r1.1", "Sync26", SAMPLE_RELEASES,
-            ["new-api"],
         )
         assert cr.m1.release_tag is None
+        assert cr.m1.apis == []
         assert cr.m3.release_tag is None
+        assert cr.m3.apis == []
         assert cr.m4.release_tag is None
+        assert cr.m4.apis == []
 
     def test_no_target_tag_returns_empty(self):
         """When target_release_tag is None, return empty CycleReleases."""
         cr = derive_cycle_releases(
             "QualityOnDemand", None, "Sync26", SAMPLE_RELEASES,
-            ["quality-on-demand"],
         )
         assert cr.m1 is None
         assert cr.m3 is None
@@ -144,7 +139,6 @@ class TestDeriveCycleReleases:
         """Independent repos (no target_release_tag) get empty CycleReleases."""
         cr = derive_cycle_releases(
             "QualityOnDemand", None, None, SAMPLE_RELEASES,
-            ["quality-on-demand"],
         )
         assert cr.m1 is None
         assert cr.m3 is None
@@ -170,7 +164,7 @@ class TestDeriveCycleReleases:
             },
         ]
         cr = derive_cycle_releases(
-            "TestRepo", "r2.3", "Sync26", releases, ["test-api"],
+            "TestRepo", "r2.3", "Sync26", releases,
         )
         assert cr.m1.release_tag == "r2.1"
         assert cr.m3.release_tag == "r2.2"
@@ -189,10 +183,27 @@ class TestDeriveCycleReleases:
             },
         ]
         cr = derive_cycle_releases(
-            "IndependentRepo", "r1.2", "Sync26", releases, ["independent-api"],
+            "IndependentRepo", "r1.2", "Sync26", releases,
         )
         assert cr.m1.release_tag == "r1.1"
         assert cr.m1.apis[0].api_version == "0.1.0-alpha.1"
+
+    def test_api_not_in_release_excluded(self):
+        """APIs added to plan after a release should not appear in milestone."""
+        releases = [{
+            "repository": "TestRepo",
+            "release_tag": "r1.1",
+            "release_date": "2026-01-10T00:00:00Z",
+            "release_type": "pre-release-alpha",
+            "meta_release": "Sync26",
+            "apis": [{"api_name": "original-api", "api_version": "1.0.0-alpha.1"}],
+        }]
+        cr = derive_cycle_releases(
+            "TestRepo", "r1.1", "Sync26", releases,
+        )
+        assert cr.m1 is not None
+        assert len(cr.m1.apis) == 1
+        assert cr.m1.apis[0].api_name == "original-api"
 
 
 class TestGetTagPrefix:
@@ -215,7 +226,6 @@ class TestDeriveLastPublished:
         """Should return the latest release by date, regardless of type."""
         result = derive_last_published(
             "QualityOnDemand", "r4.1", SAMPLE_RELEASES,
-            ["quality-on-demand"],
         )
         assert result is not None
         # r4.2 (2026-03-15) is more recent than r4.1 (2026-02-10)
@@ -226,14 +236,12 @@ class TestDeriveLastPublished:
     def test_returns_none_when_no_target_tag(self):
         result = derive_last_published(
             "QualityOnDemand", None, SAMPLE_RELEASES,
-            ["quality-on-demand"],
         )
         assert result is None
 
     def test_returns_none_when_no_matching_releases(self):
         result = derive_last_published(
             "NonExistentRepo", "r1.1", SAMPLE_RELEASES,
-            ["some-api"],
         )
         assert result is None
 
@@ -241,13 +249,16 @@ class TestDeriveLastPublished:
         """Releases from different cycle (r3.x) should not appear."""
         result = derive_last_published(
             "QualityOnDemand", "r3.1", SAMPLE_RELEASES,
-            ["quality-on-demand"],
         )
         assert result is not None
         assert result.release_tag == "r3.5"
 
     def test_multi_api_versions(self):
-        """Should extract correct per-API version from multi-API release."""
+        """Should extract correct per-API version from multi-API release.
+
+        Only APIs actually present in the release should appear — APIs
+        added to the plan later are excluded (PA#197 fix).
+        """
         releases = [{
             "repository": "MultiApiRepo",
             "release_tag": "r1.1",
@@ -260,18 +271,18 @@ class TestDeriveLastPublished:
         }]
         result = derive_last_published(
             "MultiApiRepo", "r1.1", releases,
-            ["api-a", "api-b", "api-c"],
         )
         assert result is not None
+        assert len(result.apis) == 2  # Only APIs in the release
+        assert result.apis[0].api_name == "api-a"
         assert result.apis[0].api_version == "1.0.0-alpha.1"
+        assert result.apis[1].api_name == "api-b"
         assert result.apis[1].api_version == "2.0.0-alpha.1"
-        assert result.apis[2].api_version is None  # Not in release
 
     def test_single_release_in_cycle(self):
         """With only one release, it should be returned as last published."""
         result = derive_last_published(
             "DeviceLocation", "r5.1", SAMPLE_RELEASES,
-            ["location-verification"],
         )
         assert result is not None
         assert result.release_tag == "r5.1"
@@ -290,8 +301,7 @@ class TestBuildMetaReleaseSummaries:
                 cycle_releases=CycleReleases(
                     m1=MilestoneRelease("r4.1", "2026-02-10T14:30:00Z",
                         [CycleReleaseApi("quality-on-demand", "1.2.0-alpha.1")]),
-                    m3=MilestoneRelease(None, None,
-                        [CycleReleaseApi("quality-on-demand", None)]),
+                    m3=MilestoneRelease(None, None, []),
                 ),
             ),
         ]

@@ -43,6 +43,12 @@ properties:
       repos_with_plan:
         type: integer
         description: Repositories with release-plan.yaml
+      repos_fully_onboarded:
+        type: integer
+        description: Repositories with release-plan.yaml and caller workflow (explicit or implied by state)
+      repos_with_release_issue:
+        type: integer
+        description: Repositories with an open release issue
 
   meta_releases:
     type: array

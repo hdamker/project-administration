@@ -9,8 +9,8 @@ from enum import Enum
 from typing import Dict, List, Optional
 
 # Single source of truth for version constants — update here only
-SCHEMA_VERSION = "1.4.0"
-COLLECTOR_VERSION = "1.4.0"
+SCHEMA_VERSION = "1.5.0"
+COLLECTOR_VERSION = "1.5.0"
 
 
 class ProgressState(Enum):
@@ -206,6 +206,8 @@ class CollectionStats:
     repos_scanned: int = 0
     repos_with_plan: int = 0
     repos_planned: int = 0
+    repos_fully_onboarded: int = 0
+    repos_with_release_issue: int = 0
     api_calls: int = 0
     duration_seconds: float = 0.0
 
@@ -214,6 +216,8 @@ class CollectionStats:
             "repos_scanned": self.repos_scanned,
             "repos_with_plan": self.repos_with_plan,
             "repos_planned": self.repos_planned,
+            "repos_fully_onboarded": self.repos_fully_onboarded,
+            "repos_with_release_issue": self.repos_with_release_issue,
             "api_calls": self.api_calls,
             "duration_seconds": round(self.duration_seconds, 1),
         }
@@ -242,6 +246,8 @@ class ProgressData:
                 "collector_version": self.collector_version,
                 "repos_scanned": self.collection_stats.repos_scanned,
                 "repos_with_plan": self.collection_stats.repos_with_plan,
+                "repos_fully_onboarded": self.collection_stats.repos_fully_onboarded,
+                "repos_with_release_issue": self.collection_stats.repos_with_release_issue,
             },
             "meta_releases": [m.to_dict() for m in self.meta_releases],
             "progress": [e.to_dict() for e in self.progress],

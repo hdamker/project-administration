@@ -220,8 +220,6 @@ def collect_historical_entries(
             entry_meta_release = meta_release
 
         github_url = repo_url_map.get(repo, "")
-        planned_api_names = [a.api_name for a in apis]
-
         entry = ProgressEntry(
             repository=repo,
             github_url=github_url,
@@ -235,10 +233,10 @@ def collect_historical_entries(
         )
 
         entry.cycle_releases = derive_cycle_releases(
-            repo, target_tag, meta_release, all_releases, planned_api_names,
+            repo, target_tag, meta_release, all_releases,
         )
         entry.last_published = derive_last_published(
-            repo, target_tag, all_releases, planned_api_names,
+            repo, target_tag, all_releases,
         )
 
         entries.append(entry)
@@ -285,8 +283,6 @@ def collect_repo_progress(
             main_contacts=api_data.get("main_contacts", []),
         ))
 
-    planned_api_names = [a.api_name for a in apis]
-
     # Build base entry
     entry = ProgressEntry(
         repository=repo_name,
@@ -312,10 +308,9 @@ def collect_repo_progress(
         # Cross-reference milestones and last published
         entry.cycle_releases = derive_cycle_releases(
             repo_name, target_tag, meta_release, all_releases,
-            planned_api_names,
         )
         entry.last_published = derive_last_published(
-            repo_name, target_tag, all_releases, planned_api_names,
+            repo_name, target_tag, all_releases,
         )
         # Upgrade to COMPLETED if plan exactly matches last public release
         entry.state = _check_completed_state(entry, all_releases)
@@ -378,10 +373,9 @@ def collect_repo_progress(
     # Cross-reference M1/M3/M4 and last published from releases-master
     entry.cycle_releases = derive_cycle_releases(
         repo_name, target_tag, meta_release, all_releases,
-        planned_api_names,
     )
     entry.last_published = derive_last_published(
-        repo_name, target_tag, all_releases, planned_api_names,
+        repo_name, target_tag, all_releases,
     )
 
     # Read calculated API versions from snapshot's release-metadata.yaml
@@ -516,6 +510,15 @@ def collect_all(
                 stats.repos_with_plan += 1
                 if entry.state in active_states:
                     stats.repos_planned += 1
+                # Fully onboarded: has caller workflow (explicit or implied by state)
+                if entry.artifacts.has_caller_workflow or entry.state in {
+                    ProgressState.SNAPSHOT_ACTIVE,
+                    ProgressState.DRAFT_READY,
+                    ProgressState.PUBLISHED,
+                }:
+                    stats.repos_fully_onboarded += 1
+                if entry.artifacts.release_issue:
+                    stats.repos_with_release_issue += 1
         except RateLimitError:
             logger.error("Rate limit exhausted, aborting collection")
             break

@@ -18,13 +18,16 @@ def derive_cycle_releases(
     target_release_tag: Optional[str],
     meta_release: Optional[str],
     all_releases: List[Dict],
-    planned_apis: List[str],
 ) -> CycleReleases:
     """Derive M1/M3/M4 milestone releases for a repo in a release cycle.
 
     Matches releases by tag prefix (e.g., "r1." matches r1.1, r1.2, etc.)
     rather than meta_release label, so repos with "Independent" (or legacy
     "None (Sandbox)") in releases-master.yaml still get milestone data.
+
+    API lists are built from the actual release data, not from the current
+    release plan. This ensures historical milestones only show APIs that
+    were part of that release. (Fixes PA#197)
 
     Args:
         repo_name: Repository name to filter releases for.
@@ -33,7 +36,6 @@ def derive_cycle_releases(
         meta_release: Meta-release label (e.g., "Sync26"). Kept for W004
             mismatch detection, not used for filtering.
         all_releases: Full releases[] array from releases-master.yaml.
-        planned_apis: List of api_name strings from the release plan.
 
     Returns:
         CycleReleases with M1/M3/M4 populated (or None if not found).
@@ -52,14 +54,14 @@ def derive_cycle_releases(
 
     if not cycle_releases:
         return CycleReleases(
-            m1=_empty_milestone(planned_apis),
-            m3=_empty_milestone(planned_apis),
-            m4=_empty_milestone(planned_apis),
+            m1=_empty_milestone(),
+            m3=_empty_milestone(),
+            m4=_empty_milestone(),
         )
 
-    m1 = _find_earliest_by_type(cycle_releases, "pre-release-alpha", planned_apis)
-    m3 = _find_earliest_by_type(cycle_releases, "pre-release-rc", planned_apis)
-    m4 = _find_earliest_by_type(cycle_releases, "public-release", planned_apis)
+    m1 = _find_earliest_by_type(cycle_releases, "pre-release-alpha")
+    m3 = _find_earliest_by_type(cycle_releases, "pre-release-rc")
+    m4 = _find_earliest_by_type(cycle_releases, "public-release")
 
     return CycleReleases(m1=m1, m3=m3, m4=m4)
 
@@ -68,12 +70,13 @@ def derive_last_published(
     repo_name: str,
     target_release_tag: Optional[str],
     all_releases: List[Dict],
-    planned_apis: List[str],
 ) -> Optional[MilestoneRelease]:
     """Find the most recently published release in the current cycle.
 
     Returns the latest release (by release_date) regardless of type,
     or None if no releases exist in the cycle.
+
+    API list is built from the actual release data only. (Fixes PA#197)
     """
     if not target_release_tag:
         return None
@@ -93,19 +96,14 @@ def derive_last_published(
     cycle_releases.sort(key=lambda r: r.get("release_date", ""), reverse=True)
     latest = cycle_releases[0]
 
-    # Build API version map
-    release_api_versions = {}
-    for api in latest.get("apis", []):
-        name = api.get("api_name")
-        if name:
-            release_api_versions[name] = api.get("api_version")
-
+    # Build API list from actual release data only
     apis = [
         CycleReleaseApi(
-            api_name=name,
-            api_version=release_api_versions.get(name),
+            api_name=a.get("api_name"),
+            api_version=a.get("api_version"),
         )
-        for name in planned_apis
+        for a in latest.get("apis", [])
+        if a.get("api_name")
     ]
 
     return MilestoneRelease(
@@ -131,12 +129,11 @@ def _get_tag_prefix(target_release_tag: str) -> str:
 def _find_earliest_by_type(
     cycle_releases: List[Dict],
     release_type: str,
-    planned_apis: List[str],
 ) -> MilestoneRelease:
     """Find the earliest release of a given type in the cycle.
 
-    Returns a MilestoneRelease with API versions extracted from the release,
-    or an empty milestone if no matching release exists.
+    Returns a MilestoneRelease with API versions extracted from the actual
+    release data, or an empty milestone if no matching release exists.
     """
     matching = [
         r for r in cycle_releases
@@ -144,25 +141,20 @@ def _find_earliest_by_type(
     ]
 
     if not matching:
-        return _empty_milestone(planned_apis)
+        return _empty_milestone()
 
     # Sort by release_date, take earliest
     matching.sort(key=lambda r: r.get("release_date", ""))
     earliest = matching[0]
 
-    # Build API version map from the release
-    release_api_versions = {}
-    for api in earliest.get("apis", []):
-        name = api.get("api_name")
-        if name:
-            release_api_versions[name] = api.get("api_version")
-
+    # Build API list from actual release data only
     apis = [
         CycleReleaseApi(
-            api_name=name,
-            api_version=release_api_versions.get(name),
+            api_name=a.get("api_name"),
+            api_version=a.get("api_version"),
         )
-        for name in planned_apis
+        for a in earliest.get("apis", [])
+        if a.get("api_name")
     ]
 
     return MilestoneRelease(
@@ -172,12 +164,12 @@ def _find_earliest_by_type(
     )
 
 
-def _empty_milestone(planned_apis: List[str]) -> MilestoneRelease:
+def _empty_milestone() -> MilestoneRelease:
     """Create an unachieved milestone with null values."""
     return MilestoneRelease(
         release_tag=None,
         release_date=None,
-        apis=[CycleReleaseApi(api_name=n, api_version=None) for n in planned_apis],
+        apis=[],
     )
 
 

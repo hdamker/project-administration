@@ -454,7 +454,12 @@ tr.historical-row:hover td {
           : `${trackFilter} release cycle`;
       } else {
         const meta = PROGRESS_DATA.metadata;
-        headerDiv.innerHTML = `Tracked: ${meta.repos_with_plan}/${meta.repos_scanned} repositories`;
+        headerDiv.innerHTML = [
+          `${meta.repos_scanned} repos`,
+          `${meta.repos_with_plan} onboarded`,
+          `${meta.repos_fully_onboarded || 0} with workflow`,
+          `${meta.repos_with_release_issue || 0} active issue`,
+        ].join(' \u00b7 ');
       }
     }
 
