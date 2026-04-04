@@ -1093,6 +1093,10 @@ tr.historical-row:hover td {
         const m4 = (row.cycle_releases || {}).m4 || {};
         const lp = row.last_published || {};
         const lpApi = (lp.apis || []).find(a => a.api_name === row.api_name);
+        // Only show milestone if the API was part of that release
+        const m1Api = (m1.apis || []).find(a => a.api_name === row.api_name);
+        const m3Api = (m3.apis || []).find(a => a.api_name === row.api_name);
+        const m4Api = (m4.apis || []).find(a => a.api_name === row.api_name);
         const snapVer = (row.snapshot_api_versions && row.api_name)
           ? row.snapshot_api_versions[row.api_name] || ''
           : '';
@@ -1104,17 +1108,17 @@ tr.historical-row:hover td {
           ongoingVer,
           row.target_api_status,
           row.state,
-          lp.release_tag || '',
+          lpApi ? (lp.release_tag || '') : '',
           (lpApi && lpApi.api_version) || '',
-          lp.release_date || '',
+          lpApi ? (lp.release_date || '') : '',
           row.release_track,
           row.meta_release,
-          m1.release_tag || '',
-          m1.release_date || '',
-          m3.release_tag || '',
-          m3.release_date || '',
-          m4.release_tag || '',
-          m4.release_date || '',
+          m1Api ? (m1.release_tag || '') : '',
+          m1Api ? (m1.release_date || '') : '',
+          m3Api ? (m3.release_tag || '') : '',
+          m3Api ? (m3.release_date || '') : '',
+          m4Api ? (m4.release_tag || '') : '',
+          m4Api ? (m4.release_date || '') : '',
           row.repository,
           (row.warnings || []).map(w => w.code + ': ' + w.message).join('; ')
         ];
