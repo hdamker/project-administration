@@ -1,5 +1,5 @@
 metadata:
-  last_updated: '2026-03-23T21:37:46.224Z'
+  last_updated: '2026-04-08T06:06:39.141Z'
   workflow_version: 3.0.0
   schema_version: 3.1.0
 releases:
@@ -2630,6 +2630,10 @@ repositories:
     newest_pre_release: null
   - repository: DeviceVisitLocation
     github_url: https://github.com/camaraproject/DeviceVisitLocation
+    latest_public_release: null
+    newest_pre_release: null
+  - repository: EdgeApplicationManagement
+    github_url: https://github.com/camaraproject/EdgeApplicationManagement
     latest_public_release: null
     newest_pre_release: null
   - repository: EnergyFootprintNotification
