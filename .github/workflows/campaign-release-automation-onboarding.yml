@@ -1,12 +1,15 @@
 # =========================================================================================
-# CAMARA Project - Campaign: Release Automation Onboarding
+# CAMARA Project - Campaign: Release Automation + Validation Onboarding
 #
-# Onboards API repositories to the CAMARA release automation by:
-# - Adding caller workflow (.github/workflows/release-automation.yml)
-# - Adding CHANGELOG directory structure (CHANGELOG/README.md)
-# - Removing unchanged template CHANGELOG.md or adding forward-reference note to real ones
+# Onboards API repositories to the CAMARA release automation and installs the
+# CAMARA Validation workflow alongside it:
+# - Release automation caller (.github/workflows/release-automation.yml)
+# - CAMARA Validation caller  (.github/workflows/camara-validation.yml)
+# - CHANGELOG directory structure (CHANGELOG/README.md)
+# - Removes unchanged template CHANGELOG.md or adds forward-reference note to real ones
 #
-# Creates PRs for repositories that have release-plan.yaml but no caller workflow yet.
+# Creates PRs for repositories that have release-plan.yaml. Already-onboarded
+# repos are handled idempotently: change detection skips unchanged files.
 #
 # AUTHENTICATION:
 # - select job: uses GITHUB_TOKEN (read-only, public repos)
@@ -20,7 +23,7 @@
 # See release_automation/docs/repository-setup.md in camaraproject/tooling
 # =========================================================================================
 
-name: Campaign - Release Automation Onboarding
+name: Campaign - Release Automation + Validation Onboarding
 
 on:
   workflow_dispatch:
@@ -39,10 +42,15 @@ on:
         type: string
         default: ''
       caller_ref:
-        description: 'Ref for the caller workflow uses: line (branch or tag in camaraproject/tooling)'
+        description: 'Ref for the release automation caller workflow (branch or tag in camaraproject/tooling)'
         required: false
         type: string
-        default: 'ra-v1-rc'
+        default: 'v1-rc'
+      validation_ref:
+        description: 'Ref for the CAMARA Validation caller workflow (branch or tag in camaraproject/tooling)'
+        required: false
+        type: string
+        default: 'v1-rc'
 
 concurrency:
   group: campaign-release-automation-onboarding-${{ github.ref }}
@@ -53,10 +61,12 @@ env:
   ORG: camaraproject
   INCLUDE: ${{ inputs.include }}
   CALLER_REF: ${{ inputs.caller_ref }}
+  VALIDATION_REF: ${{ inputs.validation_ref }}
   BRANCH: bulk/release-automation-onboarding-${{ github.run_id }}
-  PR_TITLE: "[bulk] Enable release automation process"
-  # Source location of the caller workflow template in camaraproject/tooling
+  PR_TITLE: "[bulk] Enable release automation and validation"
+  # Source location of the caller workflow templates in camaraproject/tooling
   CALLER_TEMPLATE_PATH: release_automation/workflows/release-automation-caller.yml
+  VALIDATION_TEMPLATE_PATH: validation/workflows/validation-caller.yml
 
 permissions:
   contents: write
@@ -135,7 +145,7 @@ jobs:
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Job 2: Per-repo onboarding (matrix)
-  # Adds caller workflow, CHANGELOG structure
+  # Adds release automation caller, CAMARA Validation caller, CHANGELOG structure
   # ─────────────────────────────────────────────────────────────────────────────
   run:
     needs: select
@@ -191,6 +201,31 @@ jobs:
 
           # Verify the uses: line references the correct ref
           USES_LINE=$(grep 'uses:.*release-automation-reusable' repo/.github/workflows/release-automation.yml || true)
+          echo "Uses line: $USES_LINE"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Fetch CAMARA Validation caller workflow template from tooling
+        id: fetch_validation
+        shell: bash
+        run: |
+          VALIDATION_CONTENT=$(gh api \
+            "repos/${{ env.ORG }}/tooling/contents/${{ env.VALIDATION_TEMPLATE_PATH }}?ref=${{ env.VALIDATION_REF }}" \
+            --jq '.content' | base64 -d)
+
+          if [ -z "$VALIDATION_CONTENT" ]; then
+            echo "::error::Failed to fetch CAMARA Validation caller workflow template from tooling@${{ env.VALIDATION_REF }}"
+            echo "error=true" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Write to target location
+          mkdir -p repo/.github/workflows
+          echo "$VALIDATION_CONTENT" > repo/.github/workflows/camara-validation.yml
+          echo "Fetched CAMARA Validation caller workflow template ($(wc -l < repo/.github/workflows/camara-validation.yml) lines)"
+
+          # Verify the uses: line references the correct ref
+          USES_LINE=$(grep 'uses:.*validation.yml' repo/.github/workflows/camara-validation.yml || true)
           echo "Uses line: $USES_LINE"
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -282,6 +317,7 @@ jobs:
           # Add each file separately — a single git add with a missing pathspec
           # (e.g. CHANGELOG.md absent) causes an atomic failure that stages nothing
           git add .github/workflows/release-automation.yml 2>/dev/null || true
+          git add .github/workflows/camara-validation.yml 2>/dev/null || true
           git add CHANGELOG.md 2>/dev/null || true
           git add CHANGELOG/README.md 2>/dev/null || true
           if git diff --cached --quiet; then
@@ -346,6 +382,7 @@ jobs:
             --arg name "$REPO_NAME" \
             --arg org "${{ env.ORG }}" \
             --arg caller_ref "${{ env.CALLER_REF }}" \
+            --arg validation_ref "${{ env.VALIDATION_REF }}" \
             --arg changelog_root_status "$CHANGELOG_ROOT_STATUS" \
             --arg changelog_dir_status "$CHANGELOG_DIR_STATUS" \
             --argjson has_warnings "$HAS_WARNINGS" \
@@ -355,6 +392,7 @@ jobs:
               name: $name,
               org: $org,
               caller_ref: $caller_ref,
+              validation_ref: $validation_ref,
               changelog_root_status: $changelog_root_status,
               changelog_dir_status: $changelog_dir_status,
               has_warnings: $has_warnings,
@@ -383,10 +421,10 @@ jobs:
           pr_body_file: /tmp/pr-body.md
           branch: ${{ env.BRANCH }}
           github_token: ${{ steps.app-token.outputs.token }}
-          target_files: .github/workflows/release-automation.yml CHANGELOG.md CHANGELOG/README.md
-          error_occurred: ${{ steps.fetch_caller.outputs.error || 'false' }}
-          error_message: "Failed to fetch caller workflow template"
-          error_step: fetch_caller
+          target_files: .github/workflows/release-automation.yml .github/workflows/camara-validation.yml CHANGELOG.md CHANGELOG/README.md
+          error_occurred: ${{ steps.fetch_caller.outputs.error || steps.fetch_validation.outputs.error || 'false' }}
+          error_message: "Failed to fetch caller workflow template (release-automation or validation)"
+          error_step: ${{ steps.fetch_caller.outputs.error && 'fetch_caller' || (steps.fetch_validation.outputs.error && 'fetch_validation' || '') }}
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Job 3: Aggregate results
@@ -426,11 +464,12 @@ jobs:
             const baseName = '${{ steps.pattern.outputs.base_name }}';
 
             const header = [
-              '# Release Automation Onboarding Campaign - Summary',
+              '# Release Automation + Validation Onboarding Campaign - Summary',
               '',
               `Generated: ${new Date().toISOString()}`,
               `Mode: ${mode}`,
               `Caller ref: ${{ inputs.caller_ref }}`,
+              `Validation ref: ${{ inputs.validation_ref }}`,
               ''
             ];
 
@@ -487,6 +526,6 @@ jobs:
 
       - name: Add workflow summary
         run: |
-          echo "## Release Automation Onboarding Campaign - Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Release Automation + Validation Onboarding Campaign - Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat ${{ steps.pattern.outputs.base_name }}.md >> $GITHUB_STEP_SUMMARY
