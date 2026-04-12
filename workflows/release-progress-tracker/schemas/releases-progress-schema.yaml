@@ -39,7 +39,15 @@ properties:
         pattern: "^\\d+\\.\\d+\\.\\d+$"
       repos_scanned:
         type: integer
-        description: Total repositories checked
+        description: |
+          Active API repositories checked — total minus archived
+          (repository_archived) and minus umbrella repos that were split
+          into sub-APIs.
+      repos_new:
+        type: integer
+        description: |
+          Active repositories with no release (latest_public_release and
+          newest_pre_release both null) and no release-plan.yaml.
       repos_with_plan:
         type: integer
         description: Repositories with release-plan.yaml

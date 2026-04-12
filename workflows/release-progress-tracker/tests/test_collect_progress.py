@@ -1011,3 +1011,148 @@ class TestKPIStatistics:
         assert "repos_with_release_issue" in meta
         assert isinstance(meta["repos_fully_onboarded"], int)
         assert isinstance(meta["repos_with_release_issue"], int)
+
+
+class TestExcludeArchivedAndSplit:
+    """PA#201: archived and split umbrella repos must not inflate the active count."""
+
+    def _master(self):
+        return {
+            "metadata": SAMPLE_MASTER["metadata"],
+            "repositories": [
+                {
+                    "repository": "ActivePlanned",
+                    "github_url": "https://github.com/camaraproject/ActivePlanned",
+                    "latest_public_release": "r3.2",
+                    "newest_pre_release": None,
+                },
+                {
+                    "repository": "BrandNew",
+                    "github_url": "https://github.com/camaraproject/BrandNew",
+                    "latest_public_release": None,
+                    "newest_pre_release": None,
+                },
+                {
+                    "repository": "ArchivedWithHistory",
+                    "github_url": "https://github.com/camaraproject/ArchivedWithHistory",
+                    "repository_archived": True,
+                    "latest_public_release": "r1.2",
+                    "newest_pre_release": None,
+                },
+                {
+                    "repository": "ArchivedEmpty",
+                    "github_url": "https://github.com/camaraproject/ArchivedEmpty",
+                    "repository_archived": True,
+                    "latest_public_release": None,
+                    "newest_pre_release": None,
+                },
+                {
+                    # In SPLIT_REPOSITORIES → excluded from active count
+                    "repository": "DeviceStatus",
+                    "github_url": "https://github.com/camaraproject/DeviceStatus",
+                    "latest_public_release": "r2.2",
+                    "newest_pre_release": None,
+                },
+            ],
+            "releases": [
+                {
+                    "repository": "ActivePlanned",
+                    "release_tag": "r3.2",
+                    "release_date": "2025-11-15T10:00:00Z",
+                    "meta_release": "Fall25",
+                    "release_type": "public-release",
+                    "github_url": "https://github.com/camaraproject/ActivePlanned/releases/tag/r3.2",
+                    "apis": [{"api_name": "active-planned", "api_version": "1.0.0"}],
+                },
+                {
+                    "repository": "ArchivedWithHistory",
+                    "release_tag": "r1.2",
+                    "release_date": "2024-10-15T10:00:00Z",
+                    "meta_release": "Fall24",
+                    "release_type": "public-release",
+                    "github_url": "https://github.com/camaraproject/ArchivedWithHistory/releases/tag/r1.2",
+                    "apis": [{"api_name": "archived-api", "api_version": "1.0.0"}],
+                },
+                {
+                    "repository": "DeviceStatus",
+                    "release_tag": "r2.2",
+                    "release_date": "2025-03-14T11:49:32Z",
+                    "meta_release": "Spring25",
+                    "release_type": "public-release",
+                    "github_url": "https://github.com/camaraproject/DeviceStatus/releases/tag/r2.2",
+                    "apis": [{"api_name": "device-reachability-status", "api_version": "1.0.0"}],
+                },
+            ],
+        }
+
+    def test_scanned_count_excludes_archived_and_split(self, tmp_path):
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(self._master()))
+
+        api = MockGitHubAPI(
+            file_contents={"ActivePlanned/release-plan.yaml": PLAN_RC},
+        )
+        result = collect_all(str(master_file), str(output_file), api=api)
+
+        # 5 repos in master; 2 archived + 1 split → 2 active
+        assert result.collection_stats.repos_scanned == 2
+        assert result.collection_stats.repos_with_plan == 1
+
+    def test_brand_new_counted(self, tmp_path):
+        """Active repos with no release and no plan count as 'new'."""
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(self._master()))
+
+        api = MockGitHubAPI(
+            file_contents={"ActivePlanned/release-plan.yaml": PLAN_RC},
+        )
+        result = collect_all(str(master_file), str(output_file), api=api)
+
+        # BrandNew has no plan and no releases → +1 new
+        # ActivePlanned has a plan → not new
+        # Archived/split repos are filtered out entirely
+        assert result.collection_stats.repos_new == 1
+
+    def test_historical_releases_preserved_for_excluded_repos(self, tmp_path):
+        """Archived and split repos still contribute historical entries."""
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(self._master()))
+
+        api = MockGitHubAPI(
+            file_contents={"ActivePlanned/release-plan.yaml": PLAN_RC},
+        )
+        result = collect_all(str(master_file), str(output_file), api=api)
+
+        repos_in_progress = {e.repository for e in result.progress}
+        assert "ArchivedWithHistory" in repos_in_progress
+        assert "DeviceStatus" in repos_in_progress
+        # No releases → no historical entry
+        assert "ArchivedEmpty" not in repos_in_progress
+
+        archived_entry = next(
+            e for e in result.progress if e.repository == "ArchivedWithHistory"
+        )
+        assert archived_entry.state == ProgressState.HISTORICAL
+        split_entry = next(
+            e for e in result.progress if e.repository == "DeviceStatus"
+        )
+        assert split_entry.state == ProgressState.HISTORICAL
+
+    def test_repos_new_in_serialized_metadata(self, tmp_path):
+        master_file = tmp_path / "releases-master.yaml"
+        output_file = tmp_path / "releases-progress.yaml"
+        master_file.write_text(yaml.dump(self._master()))
+
+        api = MockGitHubAPI(
+            file_contents={"ActivePlanned/release-plan.yaml": PLAN_RC},
+        )
+        collect_all(str(master_file), str(output_file), api=api)
+
+        output = yaml.safe_load(output_file.read_text())
+        meta = output["metadata"]
+        assert meta["repos_scanned"] == 2
+        assert meta["repos_new"] == 1
+        assert isinstance(meta["repos_new"], int)
