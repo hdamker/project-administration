@@ -208,6 +208,7 @@ class CollectionStats:
     repos_planned: int = 0
     repos_fully_onboarded: int = 0
     repos_with_release_issue: int = 0
+    repos_new: int = 0
     api_calls: int = 0
     duration_seconds: float = 0.0
 
@@ -218,6 +219,7 @@ class CollectionStats:
             "repos_planned": self.repos_planned,
             "repos_fully_onboarded": self.repos_fully_onboarded,
             "repos_with_release_issue": self.repos_with_release_issue,
+            "repos_new": self.repos_new,
             "api_calls": self.api_calls,
             "duration_seconds": round(self.duration_seconds, 1),
         }
@@ -245,6 +247,7 @@ class ProgressData:
                 "schema_version": self.schema_version,
                 "collector_version": self.collector_version,
                 "repos_scanned": self.collection_stats.repos_scanned,
+                "repos_new": self.collection_stats.repos_new,
                 "repos_with_plan": self.collection_stats.repos_with_plan,
                 "repos_fully_onboarded": self.collection_stats.repos_fully_onboarded,
                 "repos_with_release_issue": self.collection_stats.repos_with_release_issue,

@@ -454,12 +454,12 @@ tr.historical-row:hover td {
           : `${trackFilter} release cycle`;
       } else {
         const meta = PROGRESS_DATA.metadata;
-        headerDiv.innerHTML = [
-          `${meta.repos_scanned} repos`,
-          `${meta.repos_with_plan} with release-plan`,
-          `${meta.repos_fully_onboarded || 0} with ra workflow`,
-          `${meta.repos_with_release_issue || 0} with active release issue`,
-        ].join(' \u00b7 ');
+        headerDiv.innerHTML =
+          `automation progress: ${meta.repos_scanned} active` +
+          ` (${meta.repos_new || 0} new) \u00b7 ` +
+          `${meta.repos_with_plan} release-plan ` +
+          `(${meta.repos_fully_onboarded || 0} release automation` +
+          ` \u00b7 ${meta.repos_with_release_issue || 0} release issue)`;
       }
     }
 

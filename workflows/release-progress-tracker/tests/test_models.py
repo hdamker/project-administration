@@ -141,7 +141,7 @@ class TestProgressData:
             last_checked="2026-03-15T10:00:00Z",
             releases_master_updated="2026-03-15T04:35:00Z",
             collection_stats=CollectionStats(
-                repos_scanned=63, repos_with_plan=45,
+                repos_scanned=62, repos_new=9, repos_with_plan=45,
                 repos_planned=38, api_calls=200, duration_seconds=95.3,
             ),
             meta_releases=[
@@ -162,7 +162,8 @@ class TestProgressData:
         assert d["metadata"]["last_checked"] == "2026-03-15T10:00:00Z"
         assert d["metadata"]["releases_master_updated"] == "2026-03-15T04:35:00Z"
         assert "collection_stats" not in d["metadata"]  # Full stats removed from output
-        assert d["metadata"]["repos_scanned"] == 63     # Stable stats restored
+        assert d["metadata"]["repos_scanned"] == 62     # Stable stats restored
+        assert d["metadata"]["repos_new"] == 9
         assert d["metadata"]["repos_with_plan"] == 45
         assert len(d["meta_releases"]) == 1
         assert d["meta_releases"][0]["name"] == "Sync26"

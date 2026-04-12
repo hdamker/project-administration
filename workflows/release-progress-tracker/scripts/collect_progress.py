@@ -52,6 +52,16 @@ from .warnings import generate_warnings
 
 logger = logging.getLogger(__name__)
 
+# Repositories that have been split into sub-APIs and will not receive new
+# release-plan.yaml entries. Historical releases remain visible in the table
+# because they flow through all_releases, not the filtered repositories list.
+# EdgeCloud is listed defensively — it is not currently in releases-master.yaml.
+SPLIT_REPOSITORIES = frozenset({
+    "EdgeCloud",
+    "DeviceStatus",
+    "KnowYourCustomer",
+})
+
 
 def load_releases_master(path: str) -> Dict:
     """Load releases-master.yaml from disk."""
@@ -479,8 +489,23 @@ def collect_all(
         api = GitHubAPI()
 
     master = load_releases_master(master_path)
-    repositories = master.get("repositories", [])
+    all_repositories = master.get("repositories", [])
     all_releases = master.get("releases", [])
+
+    def _is_active(repo: Dict) -> bool:
+        if repo.get("repository_archived", False):
+            return False
+        if repo.get("repository", "") in SPLIT_REPOSITORIES:
+            return False
+        return True
+
+    repositories = [r for r in all_repositories if _is_active(r)]
+    excluded_count = len(all_repositories) - len(repositories)
+    if excluded_count:
+        logger.info(
+            "Excluded %d repositories from active count (archived or split)",
+            excluded_count,
+        )
 
     context_map = build_published_context_map(repositories)
     repo_url_map: Dict[str, str] = {
@@ -525,6 +550,16 @@ def collect_all(
         except Exception as e:
             logger.warning("%s: collection failed: %s", repo_name, e)
             continue
+
+    # Count active repos that have no release-plan.yaml AND no published/pre releases.
+    # These are freshly-created repos not yet onboarded.
+    plan_repo_names = {e.repository for e in entries}
+    stats.repos_new = sum(
+        1 for r in repositories
+        if r.get("repository", "") not in plan_repo_names
+        and r.get("latest_public_release") is None
+        and r.get("newest_pre_release") is None
+    )
 
     # Add historical entries for repos with cycle releases but no release-plan.yaml
     active_repo_meta_releases = {
@@ -598,10 +633,10 @@ def collect_all(
         yaml.dump(output, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
     logger.info(
-        "Collection complete: %d repos scanned, %d with plan, %d planned, "
+        "Collection complete: %d repos scanned, %d new, %d with plan, %d planned, "
         "%d API calls in %.1fs, data_changed=%s",
-        stats.repos_scanned, stats.repos_with_plan, stats.repos_planned,
-        stats.api_calls, stats.duration_seconds, data_changed,
+        stats.repos_scanned, stats.repos_new, stats.repos_with_plan,
+        stats.repos_planned, stats.api_calls, stats.duration_seconds, data_changed,
     )
 
     return progress_data
