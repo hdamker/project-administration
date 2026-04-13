@@ -62,7 +62,7 @@ jobs:
       total_api_repos: ${{ steps.generate-report.outputs.total_api_repos }}
     steps:
       - name: Initialize Repository Overview Report
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.CAMARA_REPORT_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -75,7 +75,7 @@ jobs:
             console.log('⚙️ Configuration:', { includeArchived, detailedActivity, checkTemplateCompliance });
 
       - name: Fetch All Repositories
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.CAMARA_REPORT_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -122,7 +122,7 @@ jobs:
             }));
 
       - name: Process Repository Data
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.CAMARA_REPORT_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -255,7 +255,7 @@ jobs:
 
       - name: Check Template Compliance
         if: github.event.inputs.template_compliance == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.CAMARA_REPORT_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -498,7 +498,7 @@ jobs:
 
       - name: Generate Final Report
         id: generate-report
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');

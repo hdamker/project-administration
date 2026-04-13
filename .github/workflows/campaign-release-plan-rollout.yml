@@ -79,7 +79,7 @@ jobs:
 
       - id: sel
         name: Build repo list (from repositories array + include filter + skip existing)
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           GH_TOKEN: ${{ github.token }}
         with:
@@ -364,7 +364,7 @@ jobs:
           path: plans
 
       - name: Merge plan files
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');

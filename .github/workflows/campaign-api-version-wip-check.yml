@@ -61,7 +61,7 @@ jobs:
     steps:
       - name: Build repo list from GitHub API
         id: sel
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const org = process.env.ORG;
@@ -149,7 +149,7 @@ jobs:
       - name: Format file lists
         id: format
         if: steps.check.outputs.is_compliant == 'false'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           CHECK_JSON: ${{ steps.check.outputs.json }}
         with:
@@ -237,7 +237,7 @@ jobs:
           path: ${{ steps.pattern.outputs.dir_name }}
 
       - name: Merge artifacts
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
