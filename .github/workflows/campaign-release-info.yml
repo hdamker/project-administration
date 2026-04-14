@@ -89,7 +89,7 @@ jobs:
 
       - id: sel
         name: Build repo list (from releases-master.yaml with category filtering)
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -179,7 +179,7 @@ jobs:
 
       - name: Format API lines
         id: format
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const data = JSON.parse(`${{ steps.data.outputs.json }}`);
@@ -270,7 +270,7 @@ jobs:
       - name: Detect changes with git diff
         id: diff
         if: steps.ensure.outcome == 'success'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { execSync } = require('child_process');
@@ -317,7 +317,7 @@ jobs:
       - name: Capture error state
         id: error
         if: always()
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const ensureOutcome = '${{ steps.ensure.outcome }}';
@@ -383,7 +383,7 @@ jobs:
           path: ${{ steps.pattern.outputs.dir_name }}
 
       - name: Merge artifacts
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
