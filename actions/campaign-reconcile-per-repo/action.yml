@@ -272,20 +272,45 @@ runs:
         if git diff --cached --quiet; then
           echo "Nothing to commit after rebuilding branch from main — skipping push."
           echo "pushed=false" >> $GITHUB_OUTPUT
+          echo "tree_match=false" >> $GITHUB_OUTPUT
           exit 0
         fi
 
         git commit -m "${{ inputs.pr_title }}"
 
+        # Avoid churning an existing PR's head SHA (and thus dismissing codeowner
+        # approvals) when the rebuilt content matches what's already on the
+        # remote branch. Tree equality is the right check: same tree means same
+        # content even though the commit SHA differs (author timestamp changes).
+        BRANCH_EXISTS=false
+        TREE_MATCH=false
+        if git ls-remote --exit-code --heads origin "${{ inputs.branch }}" >/dev/null 2>&1; then
+          BRANCH_EXISTS=true
+          git fetch origin "${{ inputs.branch }}"
+          LOCAL_TREE=$(git rev-parse "HEAD^{tree}")
+          REMOTE_TREE=$(git rev-parse "origin/${{ inputs.branch }}^{tree}")
+          if [ "$LOCAL_TREE" = "$REMOTE_TREE" ]; then
+            TREE_MATCH=true
+          fi
+        fi
+
+        if [ "$TREE_MATCH" = "true" ]; then
+          echo "Remote branch already has this tree ($LOCAL_TREE) — skipping push to preserve existing PR approvals."
+          echo "pushed=false" >> $GITHUB_OUTPUT
+          echo "tree_match=true" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
         # Use --force-with-lease to abort on concurrent remote changes.
         # If the branch doesn't exist yet on origin, fall back to a regular push.
-        if git ls-remote --exit-code --heads origin "${{ inputs.branch }}" >/dev/null 2>&1; then
+        if [ "$BRANCH_EXISTS" = "true" ]; then
           git push --force-with-lease origin "${{ inputs.branch }}"
         else
           git push origin "${{ inputs.branch }}"
         fi
 
         echo "pushed=true" >> $GITHUB_OUTPUT
+        echo "tree_match=false" >> $GITHUB_OUTPUT
       env:
         GH_TOKEN: ${{ inputs.github_token }}
 
@@ -350,6 +375,7 @@ runs:
         INPUT_MODE: ${{ inputs.mode }}
         INPUT_CAMPAIGN_DATA: ${{ inputs.campaign_data }}
         INPUT_PR_STATUS: ${{ steps.pr_status.outputs.pr_status }}
+        INPUT_TREE_MATCH: ${{ steps.push.outputs.tree_match }}
         INPUT_PR_NUMBER: ${{ steps.detect.outputs.pr_number }}
         INPUT_PR_URL: ${{ steps.pr_create.outputs.created_pr_url || steps.detect.outputs.pr_url }}
         INPUT_NON_BOT_SHAS: ${{ steps.verify_authorship.outputs.non_bot_shas }}

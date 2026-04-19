@@ -9,10 +9,11 @@ try {
   const repo = getInput('repo');
   const mode = getInput('mode');
   const campaignDataStr = getInput('campaign_data') || '{}';
-  const prStatus = getInput('pr_status');
+  let prStatus = getInput('pr_status');
   const prNumber = getInput('pr_number');
   const prUrl = getInput('pr_url');
   const nonBotShas = getInput('non_bot_shas').trim();
+  const treeMatch = getInput('tree_match') === 'true';
   const errorOccurred = getInput('error_occurred') === 'true';
   const errorMessage = getInput('error_message');
   const errorStep = getInput('error_step');
@@ -20,13 +21,21 @@ try {
   const campaignData = JSON.parse(campaignDataStr);
   const outputName = mode === 'plan' ? 'plan' : 'results';
 
+  // When we rebuild the branch and the resulting tree is identical to what's
+  // already on the remote branch, the force-push is skipped. Reflect that in
+  // the outcome so runs don't report "updated existing PR" when nothing moved.
+  if (prStatus === 'will_update_existing' && treeMatch) {
+    prStatus = 'no_change_vs_existing_pr';
+  }
+
   // Map pr_status → reason + human-readable status
   const statusMap = {
-    will_create:          { reason: 'new_changes',  human: 'New PR would be created on stable branch' },
-    will_update_existing: { reason: 'new_changes',  human: 'Existing PR would be updated (force-push)' },
-    will_close_stale:     { reason: 'in_sync',      human: 'Stale PR would be closed (repo in sync)' },
-    no_change:            { reason: 'in_sync',      human: 'No changes needed' },
-    aborted:              { reason: 'non_bot_commits_on_branch', human: 'Aborted — non-bot commits on stable branch' },
+    will_create:              { reason: 'new_changes',  human: 'New PR would be created on stable branch' },
+    will_update_existing:     { reason: 'new_changes',  human: 'Existing PR would be updated (force-push)' },
+    no_change_vs_existing_pr: { reason: 'in_sync_with_existing_pr', human: 'No change vs existing PR — push skipped to preserve approvals' },
+    will_close_stale:         { reason: 'in_sync',      human: 'Stale PR would be closed (repo in sync)' },
+    no_change:                { reason: 'in_sync',      human: 'No changes needed' },
+    aborted:                  { reason: 'non_bot_commits_on_branch', human: 'Aborted — non-bot commits on stable branch' },
   };
 
   const record = {
@@ -48,6 +57,7 @@ try {
     record.pr_would_be_updated = prStatus === 'will_update_existing';
     record.pr_would_be_closed = prStatus === 'will_close_stale';
     record.aborted = prStatus === 'aborted';
+    if (treeMatch) record.tree_match = true;
 
     if (prNumber) record.pr_number = parseInt(prNumber, 10);
     if (prUrl) record.pr_url = prUrl;
