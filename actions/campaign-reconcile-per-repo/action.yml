@@ -1,0 +1,390 @@
+# =========================================================================================
+# CAMARA Project - Action: Campaign Reconcile Per Repo
+#
+# Per-repo finalization for reconciliation campaigns. Reconciles a canonical
+# template (already built into the `repo/` working tree by earlier campaign
+# steps) with the target repository on a STABLE branch. Idempotent: reruns
+# force-push updates to the same branch and PR, no churn of fresh PRs.
+#
+# Behaviour vs. the adjacent campaign-finalize-per-repo action:
+# - Stable branch + stable PR title (caller-provided; no date / run-id suffix)
+# - No "existing PR → skip" — a stale PR on the stable branch is UPDATED
+#   via force-push, not superseded with a new one
+# - Non-bot commits on the stable branch abort the run (safety guard)
+# - When the template matches main (no diff), any open PR on the stable
+#   branch is closed with a comment — the repo is in sync
+#
+# Intended for ongoing caller-template rollout (initial onboarding is just
+# a big first diff) and future template bumps.
+# =========================================================================================
+name: 'Campaign Reconcile Per Repo'
+description: 'Reconciliation finalize for campaign workflows: stable branch, force-push, no-op close'
+inputs:
+  mode:
+    description: 'Workflow mode (plan or apply)'
+    required: true
+  repo:
+    description: 'Repository slug (org/repo)'
+    required: true
+  campaign_data:
+    description: 'JSON with campaign-specific data (same schema as finalize action)'
+    required: false
+    default: '{}'
+  pr_title:
+    description: 'Stable PR title (reused across runs for idempotent detection)'
+    required: true
+  pr_body_file:
+    description: 'Path to rendered PR body file (apply mode only)'
+    required: false
+    default: ''
+  branch:
+    description: 'Stable branch name (reused across runs; force-push target)'
+    required: true
+  github_token:
+    description: 'GitHub token for PR + branch operations (apply mode only)'
+    required: false
+    default: ''
+  target_files:
+    description: 'Files to reconcile (space-separated; built into repo/ by the caller)'
+    required: false
+    default: 'README.md'
+  label_name:
+    description: 'GitHub label for campaign PRs'
+    required: false
+    default: 'automated'
+  label_color:
+    description: 'Label color (hex without #)'
+    required: false
+    default: 'd1d5db'
+  label_description:
+    description: 'Label description'
+    required: false
+    default: 'Automated bulk operations from project-administration'
+  bot_email_pattern:
+    description: 'Regex matching the bot author email on allowed branch commits. Commits whose author email does NOT match abort the run.'
+    required: false
+    default: '^[0-9]+\+.*\[bot\]@users\.noreply\.github\.com$'
+  error_occurred:
+    description: 'Whether an error occurred in a prior workflow step'
+    required: false
+    default: 'false'
+  error_message:
+    description: 'Error message if error occurred'
+    required: false
+    default: ''
+  error_step:
+    description: 'Step where error occurred'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    # ─────────────────────────────────────────────────────────────────────
+    # 1. Detect existing PR on the stable branch
+    # ─────────────────────────────────────────────────────────────────────
+    - name: Detect existing PR on stable branch
+      id: detect
+      if: ${{ inputs.error_occurred != 'true' }}
+      shell: bash
+      working-directory: repo
+      run: |
+        PR_JSON=$(gh pr list \
+          --head "${{ inputs.branch }}" \
+          --state open \
+          --json number,url,headRefName,headRefOid \
+          --jq '.[0] // {}')
+
+        PR_NUMBER=$(echo "$PR_JSON" | jq -r '.number // empty')
+        PR_URL=$(echo "$PR_JSON" | jq -r '.url // empty')
+        PR_HEAD_SHA=$(echo "$PR_JSON" | jq -r '.headRefOid // empty')
+
+        if [ -n "$PR_NUMBER" ]; then
+          echo "pr_exists=true" >> $GITHUB_OUTPUT
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "pr_head_sha=$PR_HEAD_SHA" >> $GITHUB_OUTPUT
+          echo "Existing PR #$PR_NUMBER on branch '${{ inputs.branch }}': $PR_URL (head $PR_HEAD_SHA)"
+        else
+          echo "pr_exists=false" >> $GITHUB_OUTPUT
+          echo "No existing PR on branch '${{ inputs.branch }}'"
+        fi
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 2. Verify existing branch commits are bot-authored
+    # Aborts if the stable branch has commits from a human author — the
+    # codeowner may be iterating on the PR and force-pushing would overwrite
+    # their work. Operator closes or merges the PR, then reruns.
+    # ─────────────────────────────────────────────────────────────────────
+    - name: Verify branch commits are bot-authored
+      id: verify_authorship
+      if: ${{ inputs.error_occurred != 'true' && steps.detect.outputs.pr_exists == 'true' }}
+      shell: bash
+      working-directory: repo
+      run: |
+        PATTERN='${{ inputs.bot_email_pattern }}'
+        # Fetch just the branch tip + its path back to main
+        git fetch origin "${{ inputs.branch }}" || true
+        MERGE_BASE=$(git merge-base "origin/${{ inputs.branch }}" "origin/main" 2>/dev/null || true)
+        if [ -z "$MERGE_BASE" ]; then
+          echo "aborted=false" >> $GITHUB_OUTPUT
+          echo "non_bot_shas=" >> $GITHUB_OUTPUT
+          echo "No merge-base between branch and main; treating as bot-authored (fresh branch)."
+          exit 0
+        fi
+
+        NON_BOT_SHAS=$(git log --format='%H|%ae' "$MERGE_BASE..origin/${{ inputs.branch }}" \
+          | awk -F'|' -v pat="$PATTERN" '$2 !~ pat { print $1 }' \
+          | tr '\n' ' ')
+
+        if [ -n "${NON_BOT_SHAS// /}" ]; then
+          echo "aborted=true" >> $GITHUB_OUTPUT
+          echo "non_bot_shas=$NON_BOT_SHAS" >> $GITHUB_OUTPUT
+          echo "::warning::Non-bot commits on '${{ inputs.branch }}': $NON_BOT_SHAS"
+          echo "::warning::Reconciliation aborted for ${{ inputs.repo }} — close or merge PR #${{ steps.detect.outputs.pr_number }} first."
+        else
+          echo "aborted=false" >> $GITHUB_OUTPUT
+          echo "non_bot_shas=" >> $GITHUB_OUTPUT
+          echo "All branch commits are bot-authored; safe to force-push."
+        fi
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 3. Change detection vs main (source of truth)
+    # The caller has already built target_files into the working tree.
+    # ─────────────────────────────────────────────────────────────────────
+    - name: Detect changes vs main
+      id: change_check
+      if: ${{ inputs.error_occurred != 'true' && steps.verify_authorship.outputs.aborted != 'true' }}
+      shell: bash
+      working-directory: repo
+      run: |
+        for f in ${{ inputs.target_files }}; do
+          git add "$f" 2>/dev/null || true
+        done
+        if git diff --cached --quiet -- ${{ inputs.target_files }}; then
+          echo "changed=false" >> $GITHUB_OUTPUT
+          echo "reason=in_sync" >> $GITHUB_OUTPUT
+          echo "No diff vs main — repo is in sync with template."
+        else
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "reason=content_changed" >> $GITHUB_OUTPUT
+          echo "Diff vs main detected:"
+          git diff --cached --name-only
+        fi
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 4. Determine resulting pr_status (for outcome recording)
+    # ─────────────────────────────────────────────────────────────────────
+    - name: Determine PR status
+      id: pr_status
+      if: ${{ inputs.error_occurred != 'true' }}
+      shell: bash
+      run: |
+        ABORTED="${{ steps.verify_authorship.outputs.aborted }}"
+        CHANGED="${{ steps.change_check.outputs.changed }}"
+        PR_EXISTS="${{ steps.detect.outputs.pr_exists }}"
+
+        if [ "$ABORTED" = "true" ]; then
+          STATUS="aborted"
+        elif [ "$CHANGED" = "true" ] && [ "$PR_EXISTS" = "true" ]; then
+          STATUS="will_update_existing"
+        elif [ "$CHANGED" = "true" ]; then
+          STATUS="will_create"
+        elif [ "$CHANGED" = "false" ] && [ "$PR_EXISTS" = "true" ]; then
+          STATUS="will_close_stale"
+        else
+          STATUS="no_change"
+        fi
+
+        echo "pr_status=$STATUS" >> $GITHUB_OUTPUT
+        echo "Resolved pr_status=$STATUS"
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 5. APPLY — ensure campaign label
+    # ─────────────────────────────────────────────────────────────────────
+    - name: APPLY - Ensure campaign label exists
+      if: |
+        inputs.mode == 'apply'
+        && inputs.error_occurred != 'true'
+        && steps.verify_authorship.outputs.aborted != 'true'
+        && (steps.change_check.outputs.changed == 'true'
+            || steps.detect.outputs.pr_exists == 'true')
+      shell: bash
+      working-directory: repo
+      run: |
+        if ! gh label list --json name --jq '.[].name' | grep -q "^${{ inputs.label_name }}$"; then
+          gh label create "${{ inputs.label_name }}" \
+            --description "${{ inputs.label_description }}" \
+            --color "${{ inputs.label_color }}"
+          echo "Label '${{ inputs.label_name }}' created"
+        else
+          echo "Label '${{ inputs.label_name }}' already exists"
+        fi
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 6. APPLY — push updated content to the stable branch (force-with-lease)
+    # Rebuild branch from origin/main + the in-tree target_files.
+    # ─────────────────────────────────────────────────────────────────────
+    - name: APPLY - Force-push stable branch
+      id: push
+      if: |
+        inputs.mode == 'apply'
+        && inputs.error_occurred != 'true'
+        && steps.verify_authorship.outputs.aborted != 'true'
+        && steps.change_check.outputs.changed == 'true'
+      shell: bash
+      working-directory: repo
+      run: |
+        # Git identity is pre-configured by the caller workflow.
+        # Snapshot built target_files (working tree), then reset branch to main.
+        TMP_DIR="$(mktemp -d)"
+        for f in ${{ inputs.target_files }}; do
+          if [ -e "$f" ]; then
+            mkdir -p "$TMP_DIR/$(dirname "$f")"
+            cp "$f" "$TMP_DIR/$f"
+          fi
+        done
+
+        git fetch origin main
+        git checkout -B "${{ inputs.branch }}" origin/main
+
+        # Re-apply snapshot
+        for f in ${{ inputs.target_files }}; do
+          if [ -e "$TMP_DIR/$f" ]; then
+            mkdir -p "$(dirname "$f")"
+            cp "$TMP_DIR/$f" "$f"
+            git add "$f"
+          else
+            git rm -f --ignore-unmatch "$f"
+          fi
+        done
+
+        if git diff --cached --quiet; then
+          echo "Nothing to commit after rebuilding branch from main — skipping push."
+          echo "pushed=false" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        git commit -m "${{ inputs.pr_title }}"
+
+        # Use --force-with-lease to abort on concurrent remote changes.
+        # If the branch doesn't exist yet on origin, fall back to a regular push.
+        if git ls-remote --exit-code --heads origin "${{ inputs.branch }}" >/dev/null 2>&1; then
+          git push --force-with-lease origin "${{ inputs.branch }}"
+        else
+          git push origin "${{ inputs.branch }}"
+        fi
+
+        echo "pushed=true" >> $GITHUB_OUTPUT
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 7. APPLY — create PR (only if no PR on stable branch yet)
+    # Force-push on an existing PR updates it automatically.
+    # ─────────────────────────────────────────────────────────────────────
+    - name: APPLY - Create PR
+      id: pr_create
+      if: |
+        inputs.mode == 'apply'
+        && inputs.error_occurred != 'true'
+        && steps.verify_authorship.outputs.aborted != 'true'
+        && steps.change_check.outputs.changed == 'true'
+        && steps.push.outputs.pushed == 'true'
+        && steps.detect.outputs.pr_exists != 'true'
+      shell: bash
+      working-directory: repo
+      run: |
+        PR_URL=$(gh pr create \
+          --title "${{ inputs.pr_title }}" \
+          --body-file "${{ inputs.pr_body_file }}" \
+          --head "${{ inputs.branch }}" \
+          --base main \
+          --label "${{ inputs.label_name }}")
+        echo "created_pr_url=$PR_URL" >> $GITHUB_OUTPUT
+        echo "Created PR: $PR_URL"
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 8. APPLY — close stale PR when content is in sync
+    # ─────────────────────────────────────────────────────────────────────
+    - name: APPLY - Close stale PR (repo in sync)
+      id: pr_close
+      if: |
+        inputs.mode == 'apply'
+        && inputs.error_occurred != 'true'
+        && steps.verify_authorship.outputs.aborted != 'true'
+        && steps.change_check.outputs.changed == 'false'
+        && steps.detect.outputs.pr_exists == 'true'
+      shell: bash
+      working-directory: repo
+      run: |
+        gh pr comment "${{ steps.detect.outputs.pr_number }}" \
+          --body "Closing automatically — ${{ inputs.repo }} main is now in sync with the canonical template (reconciliation run detected no diff)."
+        gh pr close "${{ steps.detect.outputs.pr_number }}"
+        echo "Closed PR #${{ steps.detect.outputs.pr_number }} (repo in sync)"
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 9. Record outcome (markdown + jsonl artifact row)
+    # ─────────────────────────────────────────────────────────────────────
+    - name: Record outcome
+      if: always()
+      shell: bash
+      run: |
+        node ${{ github.action_path }}/dist/index.js
+      env:
+        INPUT_REPO: ${{ inputs.repo }}
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_CAMPAIGN_DATA: ${{ inputs.campaign_data }}
+        INPUT_PR_STATUS: ${{ steps.pr_status.outputs.pr_status }}
+        INPUT_PR_NUMBER: ${{ steps.detect.outputs.pr_number }}
+        INPUT_PR_URL: ${{ steps.pr_create.outputs.created_pr_url || steps.detect.outputs.pr_url }}
+        INPUT_NON_BOT_SHAS: ${{ steps.verify_authorship.outputs.non_bot_shas }}
+        INPUT_ERROR_OCCURRED: ${{ inputs.error_occurred }}
+        INPUT_ERROR_MESSAGE: ${{ inputs.error_message }}
+        INPUT_ERROR_STEP: ${{ inputs.error_step }}
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 10. PLAN mode — copy generated target files for plan artifact
+    # ─────────────────────────────────────────────────────────────────────
+    - name: Copy generated files for plan artifact
+      if: ${{ inputs.mode == 'plan' }}
+      shell: bash
+      run: |
+        mkdir -p plan-files
+        for file in ${{ inputs.target_files }}; do
+          if [ -f "repo/$file" ]; then
+            mkdir -p "plan-files/$(dirname "$file")"
+            cp "repo/$file" "plan-files/$file"
+          fi
+        done
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 11. PLAN mode — reset working tree
+    # ─────────────────────────────────────────────────────────────────────
+    - name: Reset repo (plan mode)
+      if: ${{ inputs.mode == 'plan' }}
+      shell: bash
+      working-directory: repo
+      run: |
+        git reset --hard
+        git clean -fd
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 12. Upload artifacts (plan.md/jsonl or results.md/jsonl + plan-files)
+    # ─────────────────────────────────────────────────────────────────────
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.mode == 'plan' && format('plan-{0}-{1}', github.run_id, strategy.job-index) || format('results-{0}-{1}', github.run_id, strategy.job-index) }}
+        path: |
+          ${{ inputs.mode == 'plan' && 'plan' || 'results' }}.md
+          ${{ inputs.mode == 'plan' && 'plan' || 'results' }}.jsonl
+          ${{ inputs.mode == 'plan' && 'plan-files/**' || '' }}
