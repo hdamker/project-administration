@@ -123,8 +123,14 @@ runs:
       if: ${{ inputs.error_occurred != 'true' && steps.detect.outputs.pr_exists == 'true' }}
       shell: bash
       working-directory: repo
+      env:
+        # Passing the regex via ENVIRON[] (instead of awk -v) preserves backslash
+        # escapes intact. awk's -v option applies its own escape-processing pass,
+        # which silently corrupts patterns like `\+`, `\[`, `\.` — making the
+        # non-bot guard match nothing (or flag every commit, depending on the
+        # regex). ENVIRON[] hands awk the literal string.
+        BOT_EMAIL_PATTERN: ${{ inputs.bot_email_pattern }}
       run: |
-        PATTERN='${{ inputs.bot_email_pattern }}'
         # Fetch just the branch tip + its path back to main
         git fetch origin "${{ inputs.branch }}" || true
         MERGE_BASE=$(git merge-base "origin/${{ inputs.branch }}" "origin/main" 2>/dev/null || true)
@@ -136,7 +142,7 @@ runs:
         fi
 
         NON_BOT_SHAS=$(git log --format='%H|%ae' "$MERGE_BASE..origin/${{ inputs.branch }}" \
-          | awk -F'|' -v pat="$PATTERN" '$2 !~ pat { print $1 }' \
+          | awk -F'|' 'BEGIN{pat=ENVIRON["BOT_EMAIL_PATTERN"]} $2 !~ pat { print $1 }' \
           | tr '\n' ' ')
 
         if [ -n "${NON_BOT_SHAS// /}" ]; then
