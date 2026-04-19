@@ -14,7 +14,7 @@
 # AUTHENTICATION:
 # - select job: uses GITHUB_TOKEN (read-only, public repos)
 # - run job: uses camara-release-automation GitHub App token via create-github-app-token action
-#   Requires org-level variable RELEASE_APP_ID and secret RELEASE_APP_PRIVATE_KEY
+#   Requires org-level variable RELEASE_APP_CLIENT_ID and secret RELEASE_APP_PRIVATE_KEY
 #
 # NOTE: Repository rulesets require admin-level access and are applied separately
 # via the apply-release-rulesets.sh script.
@@ -163,7 +163,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ vars.RELEASE_APP_ID }}
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
 

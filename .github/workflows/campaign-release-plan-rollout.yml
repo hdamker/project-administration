@@ -7,7 +7,7 @@
 # AUTHENTICATION:
 # - select job: uses GITHUB_TOKEN (read-only, public repos)
 # - run job: uses camara-release-automation GitHub App token via create-github-app-token action
-#   Requires org-level variable RELEASE_APP_ID, RELEASE_APP_SLUG and secret RELEASE_APP_PRIVATE_KEY
+#   Requires org-level variable RELEASE_APP_CLIENT_ID, RELEASE_APP_SLUG and secret RELEASE_APP_PRIVATE_KEY
 #
 # DOCUMENTATION:
 # https://github.com/camaraproject/project-administration/blob/main/campaigns/release-plan-rollout/docs/README.md
@@ -221,7 +221,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ vars.RELEASE_APP_ID }}
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
 
