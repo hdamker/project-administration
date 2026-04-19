@@ -1,0 +1,45 @@
+## Update release-automation + validation callers for {{name}}
+
+**TL;DR:** This PR updates the **release automation** and **CAMARA Validation** workflows in **{{name}}** to the latest version from [`camaraproject/tooling`](https://github.com/camaraproject/tooling) (`@{{caller_ref}}` / `@{{validation_ref}}`).
+
+### Reminder: what release automation does
+
+The release automation workflow enables slash commands on **Release Issues** to manage your release lifecycle. Post these as comments on the Release Issue:
+- `/create-snapshot` — create a snapshot branch (updates versions, changelog entries, and release metadata automatically)
+- `/discard-snapshot <reason>` — discard a snapshot and return to planned state
+- `/delete-draft` — delete a draft release
+- `/publish-release --confirm rX.Y` — publish the release
+
+### Refs applied
+
+| Caller | Pinned to |
+|--------|-----------|
+| `.github/workflows/release-automation.yml` | `@{{caller_ref}}` |
+| `.github/workflows/camara-validation.yml` | `@{{validation_ref}}` |
+
+### Changes
+
+```
+{{change_stat}}
+```
+
+See the PR's Files changed tab for the full diff.
+{{#has_warnings}}
+
+### Warnings
+
+{{warnings}}
+{{/has_warnings}}
+
+### What to do next
+
+1. **Review** the changes above
+2. **Merge** this PR
+3. **Trigger the workflow manually once** to make sure all changes are applied:
+   - Go to **Actions → [Release Automation](https://github.com/{{org}}/{{name}}/actions/workflows/release-automation.yml) → Run workflow**
+
+### Documentation
+
+:book: [Release Management Documentation](https://github.com/camaraproject/ReleaseManagement/tree/main/documentation)
+:book: [Release Lifecycle](https://github.com/camaraproject/ReleaseManagement/blob/main/documentation/release-process/lifecycle.md)
+:book: [The release-plan.yaml File](https://github.com/camaraproject/ReleaseManagement/blob/main/documentation/metadata/release-plan.md)

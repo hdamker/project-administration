@@ -1,15 +1,17 @@
 # =========================================================================================
-# CAMARA Project - Campaign: Release Automation + Validation Onboarding
+# CAMARA Project - Campaign: Release Automation + Validation Reconciliation
 #
-# Onboards API repositories to the CAMARA release automation and installs the
-# CAMARA Validation workflow alongside it:
+# Reconciles API repositories with the canonical release-automation and
+# CAMARA Validation caller workflows hosted in camaraproject/tooling:
 # - Release automation caller (.github/workflows/release-automation.yml)
 # - CAMARA Validation caller  (.github/workflows/camara-validation.yml)
 # - CHANGELOG directory structure (CHANGELOG/README.md)
 # - Removes unchanged template CHANGELOG.md or adds forward-reference note to real ones
 #
-# Creates PRs for repositories that have release-plan.yaml. Already-onboarded
-# repos are handled idempotently: change detection skips unchanged files.
+# Covers both initial onboarding (fresh install) and ongoing caller updates
+# on a STABLE branch per repo. Idempotent: reruns force-push updates to the
+# same branch/PR, close the PR when the repo is in sync, or abort on non-bot
+# commits. See actions/campaign-reconcile-per-repo/README.md for details.
 #
 # AUTHENTICATION:
 # - select job: uses GITHUB_TOKEN (read-only, public repos)
@@ -23,7 +25,7 @@
 # See release_automation/docs/repository-setup.md in camaraproject/tooling
 # =========================================================================================
 
-name: Campaign - Release Automation + Validation Onboarding
+name: Campaign - Release Automation + Validation Reconciliation
 
 on:
   workflow_dispatch:
@@ -53,7 +55,7 @@ on:
         default: 'v1-rc'
 
 concurrency:
-  group: campaign-release-automation-onboarding-${{ github.ref }}
+  group: campaign-release-automation-reconciliation-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -62,8 +64,10 @@ env:
   INCLUDE: ${{ inputs.include }}
   CALLER_REF: ${{ inputs.caller_ref }}
   VALIDATION_REF: ${{ inputs.validation_ref }}
-  BRANCH: bulk/release-automation-onboarding-${{ github.run_id }}
-  PR_TITLE: "[bulk] Enable release automation and validation"
+  # Stable branch — reconcile action reuses it across dispatches.
+  # PR title is decided per-repo (initial onboarding vs caller update) in
+  # the mode_state step.
+  BRANCH: camara/release-automation-update
   # Source location of the caller workflow templates in camaraproject/tooling
   CALLER_TEMPLATE_PATH: release_automation/workflows/release-automation-caller.yml
   VALIDATION_TEMPLATE_PATH: validation/workflows/validation-caller.yml
@@ -144,8 +148,10 @@ jobs:
             core.setOutput('repos', JSON.stringify(eligible));
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Job 2: Per-repo onboarding (matrix)
-  # Adds release automation caller, CAMARA Validation caller, CHANGELOG structure
+  # Job 2: Per-repo reconciliation (matrix)
+  # Builds the target template state (release-automation caller, validation
+  # caller, CHANGELOG structure) into repo/, then delegates to the
+  # campaign-reconcile-per-repo action for branch/PR handling.
   # ─────────────────────────────────────────────────────────────────────────────
   run:
     needs: select
@@ -179,6 +185,24 @@ jobs:
           path: repo
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
+
+      - name: Detect initial onboarding vs caller update
+        id: mode_state
+        shell: bash
+        run: |
+          # Classify the run: initial onboarding if the release-automation
+          # caller doesn't yet exist on main, otherwise a caller update.
+          if [ -f repo/.github/workflows/release-automation.yml ]; then
+            echo "is_initial=false" >> $GITHUB_OUTPUT
+            echo "pr_title=[bulk] Update release-automation + validation callers" >> $GITHUB_OUTPUT
+            echo "pr_body_template=admin/campaigns/release-automation-onboarding/templates/pr-body-update.mustache" >> $GITHUB_OUTPUT
+            echo "Repo already onboarded — this is a caller-update run."
+          else
+            echo "is_initial=true" >> $GITHUB_OUTPUT
+            echo "pr_title=[bulk] Enable release automation and validation" >> $GITHUB_OUTPUT
+            echo "pr_body_template=admin/campaigns/release-automation-onboarding/templates/pr-body.mustache" >> $GITHUB_OUTPUT
+            echo "Repo not yet onboarded — this is an initial onboarding run."
+          fi
 
       - name: Fetch caller workflow template from tooling
         id: fetch_caller
@@ -309,24 +333,31 @@ jobs:
             echo "warning=No README.md found" >> $GITHUB_OUTPUT
           fi
 
-      - name: Detect changes
-        id: changes
+      - name: Generate change summary (caller update variant)
+        id: change_summary
+        if: ${{ steps.mode_state.outputs.is_initial == 'false' }}
         shell: bash
         working-directory: repo
         run: |
-          # Add each file separately — a single git add with a missing pathspec
-          # (e.g. CHANGELOG.md absent) causes an atomic failure that stages nothing
-          git add .github/workflows/release-automation.yml 2>/dev/null || true
-          git add .github/workflows/camara-validation.yml 2>/dev/null || true
-          git add CHANGELOG.md 2>/dev/null || true
-          git add CHANGELOG/README.md 2>/dev/null || true
-          if git diff --cached --quiet; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Changes detected:"
-            git diff --cached --name-only
-          fi
+          # Stage target files and capture a compact diff stat for the PR body.
+          # Only fires on the update variant — the initial onboarding body has
+          # its own static "Changes" table. Full diff is available on the PR's
+          # Files changed tab, so we don't thread it into the body.
+          for f in .github/workflows/release-automation.yml \
+                   .github/workflows/camara-validation.yml \
+                   CHANGELOG.md \
+                   CHANGELOG/README.md; do
+            git add "$f" 2>/dev/null || true
+          done
+
+          {
+            echo 'stat<<EOF'
+            git diff --cached --stat || true
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+
+          echo "Caller update diff stat:"
+          git diff --cached --stat || true
 
       - name: Configure git identity
         if: ${{ env.MODE == 'apply' }}
@@ -341,6 +372,9 @@ jobs:
       - name: Build campaign data JSON
         id: campaign_data
         shell: bash
+        env:
+          IS_INITIAL: ${{ steps.mode_state.outputs.is_initial }}
+          CHANGE_STAT: ${{ steps.change_summary.outputs.stat }}
         run: |
           REPO_NAME=$(echo "${{ matrix.repo }}" | cut -d'/' -f2)
           README_WARNING="${{ steps.readme_check.outputs.warning }}"
@@ -377,6 +411,9 @@ jobs:
             HAS_WARNINGS="true"
           fi
 
+          # IS_INITIAL / CHANGE_STAT are injected via env (see above)
+          # so quote characters in the diff cannot break shell parsing.
+
           JSON=$(jq -n \
             --arg repo "${{ matrix.repo }}" \
             --arg name "$REPO_NAME" \
@@ -387,6 +424,8 @@ jobs:
             --arg changelog_dir_status "$CHANGELOG_DIR_STATUS" \
             --argjson has_warnings "$HAS_WARNINGS" \
             --arg warnings "$WARNINGS" \
+            --argjson is_initial "$IS_INITIAL" \
+            --arg change_stat "$CHANGE_STAT" \
             '{
               repo: $repo,
               name: $name,
@@ -396,7 +435,9 @@ jobs:
               changelog_root_status: $changelog_root_status,
               changelog_dir_status: $changelog_dir_status,
               has_warnings: $has_warnings,
-              warnings: $warnings
+              warnings: $warnings,
+              is_initial: $is_initial,
+              change_stat: $change_stat
             }')
           echo "json<<EOF" >> $GITHUB_OUTPUT
           echo "$JSON" >> $GITHUB_OUTPUT
@@ -406,18 +447,17 @@ jobs:
         id: pr_body
         uses: ./admin/actions/render-mustache
         with:
-          template: admin/campaigns/release-automation-onboarding/templates/pr-body.mustache
+          template: ${{ steps.mode_state.outputs.pr_body_template }}
           data_json: ${{ steps.campaign_data.outputs.json }}
           out_file: /tmp/pr-body.md
 
-      - name: Campaign finalize
-        uses: ./admin/actions/campaign-finalize-per-repo
+      - name: Campaign reconcile
+        uses: ./admin/actions/campaign-reconcile-per-repo
         with:
           mode: ${{ env.MODE }}
-          changed: ${{ steps.changes.outputs.changed }}
           repo: ${{ matrix.repo }}
           campaign_data: ${{ steps.campaign_data.outputs.json }}
-          pr_base_title: ${{ env.PR_TITLE }}
+          pr_title: ${{ steps.mode_state.outputs.pr_title }}
           pr_body_file: /tmp/pr-body.md
           branch: ${{ env.BRANCH }}
           github_token: ${{ steps.app-token.outputs.token }}
@@ -464,7 +504,7 @@ jobs:
             const baseName = '${{ steps.pattern.outputs.base_name }}';
 
             const header = [
-              '# Release Automation + Validation Onboarding Campaign - Summary',
+              '# Release Automation + Validation Reconciliation Campaign - Summary',
               '',
               `Generated: ${new Date().toISOString()}`,
               `Mode: ${mode}`,
@@ -526,6 +566,6 @@ jobs:
 
       - name: Add workflow summary
         run: |
-          echo "## Release Automation + Validation Onboarding Campaign - Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Release Automation + Validation Reconciliation Campaign - Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat ${{ steps.pattern.outputs.base_name }}.md >> $GITHUB_STEP_SUMMARY
