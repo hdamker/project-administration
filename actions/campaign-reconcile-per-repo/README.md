@@ -17,7 +17,8 @@ takes it from there.
 | In sync (no diff vs main) | no  | No-op. |
 | In sync (no diff vs main) | yes | Close the PR with a comment — repo is now in sync. |
 | Drift vs main | no  | Push a fresh branch built from main + template, open PR with stable title. |
-| Drift vs main | yes, branch HEAD is bot-authored | Rebuild branch from main + template, `git push --force-with-lease`. Existing PR updates automatically; no second PR. |
+| Drift vs main | yes, bot-authored, rebuild tree matches PR branch tip | No-op push (tree equality check) — existing PR left untouched, codeowner approvals preserved. |
+| Drift vs main | yes, bot-authored, rebuild tree differs from PR branch tip | Rebuild branch from main + template, `git push --force-with-lease`. Existing PR updates automatically; no second PR. |
 | Drift vs main | yes, branch HEAD has **non-bot** commits | Abort. Operator merges or closes the PR first. Next run either reconciles cleanly (if merged to main) or waits for the branch to be reclaimed. |
 
 The stable **branch name** and **PR title** are inputs — reusable for any
@@ -71,8 +72,9 @@ See `action.yml` for the full schema. Key fields:
 
 Each per-repo run records a JSONL row with:
 
-- `pr_status`: `will_create` | `will_update_existing` | `will_close_stale` | `no_change` | `aborted`
-- `reason`: `new_changes` | `in_sync` | `non_bot_commits_on_branch` | `error`
+- `pr_status`: `will_create` | `will_update_existing` | `no_change_vs_existing_pr` | `will_close_stale` | `no_change` | `aborted`
+- `reason`: `new_changes` | `in_sync_with_existing_pr` | `in_sync` | `non_bot_commits_on_branch` | `error`
+- `tree_match`: `true` when the rebuilt tree matches the existing PR branch tip (push was skipped)
 - `pr_number`, `pr_url` (if applicable)
 - `non_bot_shas` (only on abort)
 - Any campaign-specific fields threaded through `campaign_data`
