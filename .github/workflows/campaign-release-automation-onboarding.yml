@@ -98,11 +98,13 @@ jobs:
             const org = process.env.ORG;
             const include = (process.env.INCLUDE || '').split(',').map(s => s.trim()).filter(Boolean);
 
-            // List all repositories in the organization
+            // List all non-archived repositories in the organization
+            // (PRs cannot be created against archived repos — same filter as
+            // the sibling campaign-release-plan-rollout workflow)
             let repos;
             try {
               const result = execSync(
-                `gh api --paginate "orgs/${org}/repos" --jq '.[].name'`,
+                `gh api --paginate "orgs/${org}/repos" --jq '.[] | select(.archived == false) | .name'`,
                 { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 }
               );
               repos = result.trim().split('\n').filter(Boolean);
@@ -111,7 +113,7 @@ jobs:
               return;
             }
 
-            console.log(`Found ${repos.length} repositories in ${org}`);
+            console.log(`Found ${repos.length} non-archived repositories in ${org}`);
 
             // Apply include filter
             if (include.length) {
