@@ -604,6 +604,19 @@ tr.historical-row:hover td {
 
       if (!tag) return '<span class="milestone-empty">&mdash;</span>';
 
+      // Published and the same tag is already shown in Last Published (per-row,
+      // honoring the API filter): swap to em-dash to avoid showing the same tag twice.
+      if (state === 'published') {
+        const lp = row.last_published;
+        if (lp && lp.release_tag === tag) {
+          const apiInLastPublished = !lp.apis || !row.api_name
+            || lp.apis.some(a => a.api_name === row.api_name);
+          if (apiInLastPublished) {
+            return '<span class="milestone-empty">&mdash;</span>';
+          }
+        }
+      }
+
       // Line 1: release tag (clickable for published state)
       let line1;
       if (state === 'published') {
