@@ -1,24 +1,24 @@
 {
   "metadata": {
-    "generated": "2026-04-25T05:01:25.767Z",
+    "generated": "2026-04-27T05:41:17.126Z",
     "meta_release": "All",
     "source": "Release Collector v3",
     "landscape_version": "1.1.0"
   },
   "statistics": {
-    "repositories_count": 47,
-    "api_versions_count": 159,
-    "unique_api_names_count": 70,
-    "unique_apis_count": 69,
+    "repositories_count": 48,
+    "api_versions_count": 161,
+    "unique_api_names_count": 72,
+    "unique_apis_count": 71,
     "api_version_maturity": {
       "stable": 28,
       "initial": 128,
-      "rc": 3
+      "rc": 5
     },
     "unique_api_maturity": {
       "stable": 10,
       "initial": 56,
-      "rc": 3
+      "rc": 5
     },
     "categories": {
       "Computing Services": 10,
@@ -370,6 +370,17 @@
       ],
       "total_apis": 1,
       "unique_apis_count": 1
+    },
+    "IoTSIMFraudPrevention": {
+      "releases": [
+        {
+          "tag": "r1.1",
+          "date": "2026-04-27T01:17:04Z",
+          "apis_count": 2
+        }
+      ],
+      "total_apis": 2,
+      "unique_apis_count": 2
     },
     "KnowYourCustomer": {
       "releases": [
@@ -2315,6 +2326,49 @@
           "display_name": "IoT Network Optimization API",
           "published": true,
           "canonical_name": "iot-network-optimization",
+          "first_release": "Sandbox"
+        }
+      ]
+    },
+    {
+      "repository": "IoTSIMFraudPrevention",
+      "release_tag": "r1.1",
+      "release_date": "2026-04-27T01:17:04Z",
+      "meta_release": "Independent",
+      "github_url": "https://github.com/camaraproject/IoTSIMFraudPrevention/releases/tag/r1.1",
+      "release_type": "pre-release-rc",
+      "src_commit_sha": "b7773ee01b6fd233ad07897b227db0ca0347ae80",
+      "dependencies": {
+        "commonalities_release": "r3.4 (0.6.1)",
+        "identity_consent_management_release": "r3.3 (0.4.0)"
+      },
+      "apis": [
+        {
+          "api_name": "iot-sim-fraud-prevention",
+          "api_version": "0.1.0-rc.1",
+          "api_title": "IoT SIM Fraud Prevention",
+          "commonalities": "0.6.1",
+          "maturity": "initial",
+          "portfolio_category": null,
+          "website_url": null,
+          "tooltip": null,
+          "display_name": "IoT SIM Fraud Prevention",
+          "published": true,
+          "canonical_name": "iot-sim-fraud-prevention",
+          "first_release": "Sandbox"
+        },
+        {
+          "api_name": "iot-sim-fraud-prevention-subscriptions",
+          "api_version": "0.1.0-rc.1",
+          "api_title": "IoT SIM Fraud Prevention Subscriptions",
+          "commonalities": "0.6.1",
+          "maturity": "initial",
+          "portfolio_category": null,
+          "website_url": null,
+          "tooltip": null,
+          "display_name": "IoT SIM Fraud Prevention Subscriptions",
+          "published": true,
+          "canonical_name": "iot-sim-fraud-prevention-subscriptions",
           "first_release": "Sandbox"
         }
       ]
@@ -5705,6 +5759,46 @@
       "meta_release": "Independent",
       "github_url": "https://github.com/camaraproject/IoTNetworkOptimization/releases/tag/r1.1",
       "release_type": "pre-release-alpha"
+    },
+    {
+      "api_name": "iot-sim-fraud-prevention",
+      "api_version": "0.1.0-rc.1",
+      "api_title": "IoT SIM Fraud Prevention",
+      "commonalities": "0.6.1",
+      "maturity": "initial",
+      "portfolio_category": null,
+      "website_url": null,
+      "tooltip": null,
+      "display_name": "IoT SIM Fraud Prevention",
+      "published": true,
+      "canonical_name": "iot-sim-fraud-prevention",
+      "first_release": "Sandbox",
+      "repository": "IoTSIMFraudPrevention",
+      "release_tag": "r1.1",
+      "release_date": "2026-04-27T01:17:04Z",
+      "meta_release": "Independent",
+      "github_url": "https://github.com/camaraproject/IoTSIMFraudPrevention/releases/tag/r1.1",
+      "release_type": "pre-release-rc"
+    },
+    {
+      "api_name": "iot-sim-fraud-prevention-subscriptions",
+      "api_version": "0.1.0-rc.1",
+      "api_title": "IoT SIM Fraud Prevention Subscriptions",
+      "commonalities": "0.6.1",
+      "maturity": "initial",
+      "portfolio_category": null,
+      "website_url": null,
+      "tooltip": null,
+      "display_name": "IoT SIM Fraud Prevention Subscriptions",
+      "published": true,
+      "canonical_name": "iot-sim-fraud-prevention-subscriptions",
+      "first_release": "Sandbox",
+      "repository": "IoTSIMFraudPrevention",
+      "release_tag": "r1.1",
+      "release_date": "2026-04-27T01:17:04Z",
+      "meta_release": "Independent",
+      "github_url": "https://github.com/camaraproject/IoTSIMFraudPrevention/releases/tag/r1.1",
+      "release_type": "pre-release-rc"
     },
     {
       "api_name": "kyc-age-verification",

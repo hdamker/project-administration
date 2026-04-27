@@ -1,5 +1,5 @@
 metadata:
-  last_updated: '2026-04-25T05:01:25.648Z'
+  last_updated: '2026-04-27T05:41:17.014Z'
   workflow_version: 3.0.0
   schema_version: 3.1.0
 releases:
@@ -1212,6 +1212,25 @@ releases:
         api_version: 0.1.0-alpha.1
         api_title: IoT Network Optimization API
         commonalities: '0.5'
+  - repository: IoTSIMFraudPrevention
+    release_tag: r1.1
+    release_date: '2026-04-27T01:17:04Z'
+    meta_release: Independent
+    github_url: https://github.com/camaraproject/IoTSIMFraudPrevention/releases/tag/r1.1
+    release_type: pre-release-rc
+    src_commit_sha: b7773ee01b6fd233ad07897b227db0ca0347ae80
+    dependencies:
+      commonalities_release: r3.4 (0.6.1)
+      identity_consent_management_release: r3.3 (0.4.0)
+    apis:
+      - api_name: iot-sim-fraud-prevention
+        api_version: 0.1.0-rc.1
+        api_title: IoT SIM Fraud Prevention
+        commonalities: 0.6.1
+      - api_name: iot-sim-fraud-prevention-subscriptions
+        api_version: 0.1.0-rc.1
+        api_title: IoT SIM Fraud Prevention Subscriptions
+        commonalities: 0.6.1
   - repository: KnowYourCustomer
     release_tag: r1.1
     release_date: '2024-08-13T10:09:52Z'
@@ -2703,7 +2722,7 @@ repositories:
   - repository: IoTSIMFraudPrevention
     github_url: https://github.com/camaraproject/IoTSIMFraudPrevention
     latest_public_release: null
-    newest_pre_release: null
+    newest_pre_release: r1.1
   - repository: KnowYourCustomer
     github_url: https://github.com/camaraproject/KnowYourCustomer
     latest_public_release: r2.2
