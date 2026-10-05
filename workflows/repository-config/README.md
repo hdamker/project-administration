@@ -8,11 +8,11 @@ All declarations live in [config/](../../config/):
 
 | File | Content |
 |---|---|
-| `repositories.yaml` | One entry per organisation repository: `class`, `single_codeowner`, `archived` |
-| `repository-classes.yaml` | Which rulesets each class carries, the `main` rulesets, the retired ruleset names |
+| `repositories.yaml` | One entry per organisation repository: `ruleset_class`, `single_codeowner`, `archived` |
+| `ruleset-classes.yaml` | Which rulesets each ruleset class carries, the `main` rulesets, the retired ruleset names |
 | `rulesets/<name>.json` | The ruleset as GitHub returns it, without the fields GitHub sets itself |
 
-Classes:
+Ruleset classes:
 
 - `api-repository`: the release rulesets, `release-tag-protection` and the two `main` rulesets.
 - `non-api`: the two `main` rulesets.
@@ -38,9 +38,9 @@ Per repository, rulesets are matched by name:
 
 | Live ruleset | Action |
 |---|---|
-| declared for the class, missing | `create` |
-| declared for the class, content differs | `update`, with a diff |
-| declared for another class, or retired | `remove` |
+| declared for the ruleset class, missing | `create` |
+| declared for the ruleset class, content differs | `update`, with a diff |
+| declared for another ruleset class, or retired | `remove` |
 | any other name | `unmanaged`, listed and left alone |
 
 Classic branch protection on the default branch is reported as `remove-classic-protection`. `apply` removes it only after the declared `main` rulesets are confirmed `active` on that repository.

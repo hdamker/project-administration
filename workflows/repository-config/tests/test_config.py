@@ -13,8 +13,8 @@ def write_config(tmp_path, classes=None, repositories=None, rulesets=None):
     (tmp_path / "rulesets").mkdir()
     for name, body in (rulesets or {"a": {"name": "a", "rules": [], "bypass_actors": []}}).items():
         (tmp_path / "rulesets" / f"{name}.json").write_text(json.dumps(body))
-    (tmp_path / "repository-classes.yaml").write_text(textwrap.dedent(classes or """
-        classes:
+    (tmp_path / "ruleset-classes.yaml").write_text(textwrap.dedent(classes or """
+        ruleset_classes:
           api-repository:
             rulesets: [a]
         main_rulesets: [a]
@@ -24,9 +24,9 @@ def write_config(tmp_path, classes=None, repositories=None, rulesets=None):
     (tmp_path / "repositories.yaml").write_text(textwrap.dedent(repositories or """
         repositories:
           R1:
-            class: api-repository
+            ruleset_class: api-repository
           R2:
-            class: unmanaged
+            ruleset_class: unmanaged
     """))
     return tmp_path
 
@@ -34,9 +34,9 @@ def write_config(tmp_path, classes=None, repositories=None, rulesets=None):
 def test_loads_rulesets_classes_and_registry(tmp_path):
     cfg = load_config(write_config(tmp_path))
     assert cfg.rulesets["a"]["name"] == "a"
-    assert cfg.classes == {"api-repository": ["a"]}
+    assert cfg.ruleset_classes == {"api-repository": ["a"]}
     assert cfg.retired == ["old"]
-    assert cfg.registry["R1"].cls == "api-repository"
+    assert cfg.registry["R1"].ruleset_class == "api-repository"
     assert cfg.registry["R1"].single_codeowner is False
     assert cfg.registry["R1"].archived is False
 
@@ -44,7 +44,7 @@ def test_loads_rulesets_classes_and_registry(tmp_path):
 def test_registry_flags(tmp_path):
     cfg = load_config(write_config(tmp_path, repositories="""
         repositories:
-          R1: {class: api-repository, single_codeowner: true, archived: true}
+          R1: {ruleset_class: api-repository, single_codeowner: true, archived: true}
     """))
     assert cfg.registry["R1"].single_codeowner is True
     assert cfg.registry["R1"].archived is True
@@ -57,14 +57,14 @@ def test_declared_rulesets_are_normalised(tmp_path):
 
 
 def test_unknown_class_in_registry(tmp_path):
-    with pytest.raises(ConfigError, match="R1.*unknown class"):
-        load_config(write_config(tmp_path, repositories="repositories:\n  R1: {class: nope}\n"))
+    with pytest.raises(ConfigError, match="R1.*unknown ruleset_class"):
+        load_config(write_config(tmp_path, repositories="repositories:\n  R1: {ruleset_class: nope}\n"))
 
 
 def test_class_references_missing_ruleset_file(tmp_path):
     with pytest.raises(ConfigError, match="missing.*no file"):
         load_config(write_config(tmp_path, classes="""
-            classes:
+            ruleset_classes:
               api-repository:
                 rulesets: [missing]
             main_rulesets: []
@@ -81,7 +81,7 @@ def test_ruleset_name_must_match_filename(tmp_path):
 def test_declared_ruleset_cannot_be_retired(tmp_path):
     with pytest.raises(ConfigError, match="retired"):
         load_config(write_config(tmp_path, classes="""
-            classes:
+            ruleset_classes:
               api-repository:
                 rulesets: [a]
             main_rulesets: []
@@ -100,5 +100,5 @@ def test_shipped_config_loads():
     from scripts.config import DEFAULT_CONFIG_DIR
 
     cfg = load_config(DEFAULT_CONFIG_DIR)
-    assert "release-tag-protection" in cfg.classes["api-repository"]
-    assert "release-tag-protection" not in cfg.classes["non-api"]
+    assert "release-tag-protection" in cfg.ruleset_classes["api-repository"]
+    assert "release-tag-protection" not in cfg.ruleset_classes["non-api"]

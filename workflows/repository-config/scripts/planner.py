@@ -68,14 +68,14 @@ def plan_repo(api, cfg: Config, org: str, entry: RepoEntry, gh_repo: Dict[str, A
     if gh_repo.get("archived"):
         plan.skipped = "archived"
         return plan
-    if entry.cls == UNMANAGED:
+    if entry.ruleset_class == UNMANAGED:
         plan.skipped = UNMANAGED
         return plan
 
     _check_single_codeowner(api, org, entry, plan)
 
     desired = cfg.desired_rulesets(entry)
-    declared_names = {n for names in cfg.classes.values() for n in names}
+    declared_names = {n for names in cfg.ruleset_classes.values() for n in names}
     removable = (declared_names - set(desired)) | set(cfg.retired)
 
     live_by_name: Dict[str, List[Dict[str, Any]]] = {}

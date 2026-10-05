@@ -1,6 +1,6 @@
 # Repository registry: one entry per organisation repository, keyed by name.
 #
-# class: api-repository | non-api | unmanaged (see repository-classes.yaml)
+# ruleset_class: api-repository | non-api | unmanaged (see ruleset-classes.yaml)
 # single_codeowner: true when the default branch's CODEOWNERS `*` line names one user;
 #   `plan` cross-checks the flag against CODEOWNERS.
 # archived: true for archived repositories (rulesets are skipped).
@@ -8,305 +8,305 @@
 
 repositories:
   .github:
-    class: unmanaged
+    ruleset_class: unmanaged
 
   APIBacklog:
-    class: non-api
+    ruleset_class: non-api
 
   ApplicationEndpointDiscovery:
-    class: api-repository
+    ruleset_class: api-repository
 
   ApplicationEndpointRegistration:
-    class: api-repository
+    ruleset_class: api-repository
 
   ApplicationProfiles:
-    class: api-repository
+    ruleset_class: api-repository
 
   BlockchainPublicAddress:
-    class: api-repository
+    ruleset_class: api-repository
 
   CallForwardingSignal:
-    class: api-repository
+    ruleset_class: api-repository
 
   camara-landscape:
-    class: unmanaged
+    ruleset_class: unmanaged
 
   camaraproject.github.io:
-    class: unmanaged
+    ruleset_class: unmanaged
 
   CapabilitiesAndRuntimeRestrictions:
-    class: api-repository
+    ruleset_class: api-repository
 
   CarrierBillingCheckOut:
-    class: api-repository
+    ruleset_class: api-repository
 
   ClickToDial:
-    class: api-repository
+    ruleset_class: api-repository
 
   Commonalities:
-    class: non-api
+    ruleset_class: non-api
 
   CommonalitiesTest:
-    class: api-repository
+    ruleset_class: api-repository
 
   ConnectedNetworkType:
-    class: api-repository
+    ruleset_class: api-repository
 
   ConnectivityInsights:
-    class: api-repository
+    ruleset_class: api-repository
 
   ConnectivityQualityManagement:
-    class: non-api
+    ruleset_class: non-api
 
   ConsentInfo:
-    class: api-repository
+    ruleset_class: api-repository
 
   ConsentManagement:
-    class: api-repository
+    ruleset_class: api-repository
 
   CustomerInsights:
-    class: api-repository
+    ruleset_class: api-repository
 
   DedicatedNetworks:
-    class: api-repository
+    ruleset_class: api-repository
 
   DeviceAuthenticity:
-    class: api-repository
+    ruleset_class: api-repository
 
   DeviceDataVolume:
-    class: api-repository
+    ruleset_class: api-repository
 
   DeviceIdentifier:
-    class: api-repository
+    ruleset_class: api-repository
 
   DeviceLocation:
-    class: api-repository
+    ruleset_class: api-repository
 
   DeviceMediaStreamingRate:
-    class: api-repository
+    ruleset_class: api-repository
 
   DeviceReachabilityStatus:
-    class: api-repository
+    ruleset_class: api-repository
 
   DeviceRoamingStatus:
-    class: api-repository
+    ruleset_class: api-repository
 
   DeviceStatus:
-    class: api-repository
+    ruleset_class: api-repository
 
   DeviceSwap:
-    class: api-repository
+    ruleset_class: api-repository
 
   DeviceVisitLocation:
-    class: api-repository
+    ruleset_class: api-repository
 
   EasyCLA:
-    class: unmanaged
+    ruleset_class: unmanaged
 
   EdgeApplicationManagement:
-    class: api-repository
+    ruleset_class: api-repository
 
   EdgeCloud:
-    class: non-api
+    ruleset_class: non-api
 
   EnergyFootprintNotification:
-    class: api-repository
+    ruleset_class: api-repository
     single_codeowner: true
 
   EnergyFootprintNotification_PI:
-    class: non-api
+    ruleset_class: non-api
     single_codeowner: true
 
   eSimRemoteManagement:
-    class: api-repository
+    ruleset_class: api-repository
 
   Governance:
-    class: non-api
+    ruleset_class: non-api
 
   HighThroughputElasticNetworks:
-    class: api-repository
+    ruleset_class: api-repository
     single_codeowner: true
 
   HomeDevicesQoD:
-    class: api-repository
+    ruleset_class: api-repository
     archived: true
 
   IdentityAndConsentManagement:
-    class: non-api
+    ruleset_class: non-api
 
   InHomeDeviceManagement:
-    class: api-repository
+    ruleset_class: api-repository
 
   IoTDeviceManagement:
-    class: api-repository
+    ruleset_class: api-repository
 
   IoTNetworkOptimization:
-    class: api-repository
+    ruleset_class: api-repository
 
   IoTNetworkOptimization_PI:
-    class: non-api
+    ruleset_class: non-api
     single_codeowner: true
 
   IoTSIMFraudPrevention:
-    class: api-repository
+    ruleset_class: api-repository
 
   KnowYourCustomer:
-    class: api-repository
+    ruleset_class: api-repository
 
   KnowYourCustomerAgeVerification:
-    class: api-repository
+    ruleset_class: api-repository
 
   KnowYourCustomerFill-in:
-    class: api-repository
+    ruleset_class: api-repository
 
   KnowYourCustomerMatch:
-    class: api-repository
+    ruleset_class: api-repository
 
   Marketing:
-    class: non-api
+    ruleset_class: non-api
 
   MCPEnablement_PI1:
-    class: non-api
+    ruleset_class: non-api
 
   ModelAsAService:
-    class: api-repository
+    ruleset_class: api-repository
     single_codeowner: true
 
   MostFrequentLocation:
-    class: api-repository
+    ruleset_class: api-repository
 
   MultiPointVPN:
-    class: api-repository
+    ruleset_class: api-repository
 
   NetworkAccessManagement:
-    class: api-repository
+    ruleset_class: api-repository
 
   NetworkInsights:
-    class: api-repository
+    ruleset_class: api-repository
 
   NetworkServiceAreas:
-    class: api-repository
+    ruleset_class: api-repository
 
   NetworkSliceBooking:
-    class: api-repository
+    ruleset_class: api-repository
 
   NumberRecycling:
-    class: api-repository
+    ruleset_class: api-repository
 
   NumberVerification:
-    class: api-repository
+    ruleset_class: api-repository
 
   OptimalEdgeDiscovery:
-    class: api-repository
+    ruleset_class: api-repository
 
   OTPValidation:
-    class: api-repository
+    ruleset_class: api-repository
 
   PopulationDensityData:
-    class: api-repository
+    ruleset_class: api-repository
 
   PredictiveConnectivityData:
-    class: api-repository
+    ruleset_class: api-repository
 
   project-administration:
-    class: non-api
+    ruleset_class: non-api
 
   QoSBooking:
-    class: api-repository
+    ruleset_class: api-repository
 
   QoSProfiles:
-    class: api-repository
+    ruleset_class: api-repository
 
   QualityOnDemand:
-    class: api-repository
+    ruleset_class: api-repository
 
   QualityOnDemand_PI1:
-    class: non-api
+    ruleset_class: non-api
 
   QualityOnDemand_PI2:
-    class: non-api
+    ruleset_class: non-api
 
   QualityOnDemand_PI3:
-    class: non-api
+    ruleset_class: non-api
     single_codeowner: true
 
   RainfallIntensity:
-    class: api-repository
+    ruleset_class: api-repository
     single_codeowner: true
 
   RegionDeviceCount:
-    class: api-repository
+    ruleset_class: api-repository
 
   ReleaseManagement:
-    class: non-api
+    ruleset_class: non-api
 
   ReleaseTest:
-    class: api-repository
+    ruleset_class: api-repository
     single_codeowner: true
 
   SessionInsights:
-    class: api-repository
+    ruleset_class: api-repository
 
   ShortMessageService:
-    class: api-repository
+    ruleset_class: api-repository
     archived: true
 
   SimpleEdgeDiscovery:
-    class: api-repository
+    ruleset_class: api-repository
 
   SimSwap:
-    class: api-repository
+    ruleset_class: api-repository
 
   SiteToCloudVPN:
-    class: api-repository
+    ruleset_class: api-repository
     archived: true
 
   SponsoredData:
-    class: api-repository
+    ruleset_class: api-repository
     single_codeowner: true
 
   SubscriptionStatus:
-    class: api-repository
+    ruleset_class: api-repository
 
   Template_API_Repository:
-    class: api-repository
+    ruleset_class: api-repository
 
   Template_PI_Repository:
-    class: non-api
+    ruleset_class: non-api
 
   Tenure:
-    class: api-repository
+    ruleset_class: api-repository
 
   test-repo-w-linting:
-    class: unmanaged
+    ruleset_class: unmanaged
 
   test-repo-wo-linting:
-    class: unmanaged
+    ruleset_class: unmanaged
 
   TestRepo:
-    class: unmanaged
+    ruleset_class: unmanaged
     archived: true
 
   tooling:
-    class: non-api
+    ruleset_class: non-api
 
   TrafficInfluence:
-    class: api-repository
+    ruleset_class: api-repository
 
   VerifiedCaller:
-    class: api-repository
+    ruleset_class: api-repository
 
   VoiceNotification:
-    class: api-repository
+    ruleset_class: api-repository
     single_codeowner: true
 
   VoiceVerificationCode:
-    class: api-repository
+    ruleset_class: api-repository
     single_codeowner: true
 
   WebRTC:
-    class: api-repository
+    ruleset_class: api-repository
 
   WorkingGroups:
-    class: non-api
+    ruleset_class: non-api
     archived: true

@@ -89,7 +89,7 @@ Automates setup of new API repositories from [Template_API_Repository](https://g
 Declares repository rulesets and `main` branch protection once and reports drift per repository.
 
 * **Location**: [workflows/repository-config/](workflows/repository-config/)
-* **Declarations**: [config/repositories.yaml](config/repositories.yaml), [config/repository-classes.yaml](config/repository-classes.yaml), [config/rulesets/](config/rulesets/)
+* **Declarations**: [config/repositories.yaml](config/repositories.yaml), [config/ruleset-classes.yaml](config/ruleset-classes.yaml), [config/rulesets/](config/rulesets/)
 * **Documentation**: [workflows/repository-config/README.md](workflows/repository-config/README.md)
 * **Workflows**: `repository-config-plan.yml` (weekly plan), `repository-config-tests.yml`
 
@@ -125,7 +125,7 @@ project-administration/
 │   ├── api-landscape.yaml       # API portfolio metadata
 │   ├── meta-release-mappings.yaml
 │   ├── repositories.yaml        # Repository registry
-│   ├── repository-classes.yaml  # Rulesets per repository class
+│   ├── ruleset-classes.yaml     # Rulesets per ruleset class
 │   └── rulesets/                # Declared rulesets (JSON)
 ├── data/                        # Release Collector outputs (master data)
 │   └── releases-master.yaml     # Master release metadata

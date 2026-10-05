@@ -1,10 +1,10 @@
-# Repository classes: which declared rulesets a repository carries.
+# Ruleset classes: which declared rulesets a repository carries.
 #
-# Ruleset bodies live in config/rulesets/<name>.json; the class of each
-# repository is set in config/repositories.yaml. The tool is
+# Ruleset bodies live in config/rulesets/<name>.json; the ruleset_class
+# of each repository is set in config/repositories.yaml. The tool is
 # workflows/repository-config/.
 
-classes:
+ruleset_classes:
   # Automated releases: release rulesets, tag protection and main protection.
   api-repository:
     rulesets:
@@ -31,7 +31,7 @@ main_rulesets:
 single_codeowner_excludes:
   - Codeowner_review_required
 
-# Removed wherever found, in every class.
+# Removed wherever found, in every ruleset class.
 retired:
   - code-owner-review-required-or-sole-codeowner
   - release-review-protection

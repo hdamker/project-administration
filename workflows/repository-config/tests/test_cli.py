@@ -25,8 +25,8 @@ def run(tmp_path, argv, repos, registry, inputs=(), extra_repos=()):
     return code, "\n".join(lines), api
 
 
-CLEAN_REGISTRY = "repositories:\n  HomeDevicesQoD: {class: api-repository, archived: true}\n"
-DRIFT_REGISTRY = "repositories:\n  ConnectedNetworkType: {class: api-repository}\n"
+CLEAN_REGISTRY = "repositories:\n  HomeDevicesQoD: {ruleset_class: api-repository, archived: true}\n"
+DRIFT_REGISTRY = "repositories:\n  ConnectedNetworkType: {ruleset_class: api-repository}\n"
 
 
 def test_plan_exit_0_when_clean(tmp_path):
@@ -51,7 +51,7 @@ def test_plan_exit_1_on_error(tmp_path):
 
 
 def test_plan_repos_filter(tmp_path):
-    registry = DRIFT_REGISTRY + "  HomeDevicesQoD: {class: api-repository, archived: true}\n"
+    registry = DRIFT_REGISTRY + "  HomeDevicesQoD: {ruleset_class: api-repository, archived: true}\n"
     code, text, _ = run(tmp_path, ["plan", "--repos", "HomeDevicesQoD"], ["ConnectedNetworkType", "HomeDevicesQoD"], registry)
     assert code == 0
     assert "ConnectedNetworkType" not in text
