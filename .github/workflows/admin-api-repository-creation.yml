@@ -14,7 +14,7 @@
 #   - Administration: Read and write (for repo settings, team setup)
 #   Organization permissions:
 #   - Members: Read and write (for team creation, management, and user invitations)
-# - Entry for the new repository in config/repositories.yaml with `class: api-repository`
+# - Entry for the new repository in config/repositories.yaml with `ruleset_class: api-repository`
 #   (and `single_codeowner: true` for a single initial codeowner), merged before the run.
 #   Rulesets are applied from config/rulesets/ by workflows/repository-config.
 #
@@ -203,7 +203,7 @@ jobs:
           REPO_NAME: ${{ github.event.inputs.repo_name }}
           INITIAL_CODEOWNERS: ${{ github.event.inputs.initial_codeowners }}
         run: |
-          python -m scripts.cli check-entry --repo "$REPO_NAME" --class api-repository --codeowners "$INITIAL_CODEOWNERS"
+          python -m scripts.cli check-entry --repo "$REPO_NAME" --ruleset-class api-repository --codeowners "$INITIAL_CODEOWNERS"
 
       - name: Create new repository and set variables
         if: ${{ github.event.inputs.dry_run != 'true' }}
@@ -569,7 +569,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_REPO_CREATE_TOKEN }}
         run: |
-          echo "📏 Applying declared rulesets for class api-repository..."
+          echo "📏 Applying declared rulesets for ruleset class api-repository..."
           python -m scripts.cli apply --repos "$REPO_NAME" --yes
           # Fails the run if the new repository still differs from the declared state
           python -m scripts.cli plan --repos "$REPO_NAME"
@@ -707,7 +707,7 @@ jobs:
 
           ### 🔐 Security & Permissions
 
-          - Repository rulesets applied from \`config/rulesets/\` (class \`api-repository\`)
+          - Repository rulesets applied from \`config/rulesets/\` (ruleset class \`api-repository\`)
           - Team permissions assigned appropriately
           - CODEOWNERS file enforces code review requirements
 
@@ -821,7 +821,7 @@ jobs:
           ## 🛡️ Security & Permissions
 
           - Registry entry checked in `config/repositories.yaml`
-          - Repository rulesets applied from `config/rulesets/` (class `api-repository`)
+          - Repository rulesets applied from `config/rulesets/` (ruleset class `api-repository`)
           - Template files cleaned up after setup
 
           ---

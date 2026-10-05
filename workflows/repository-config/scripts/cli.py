@@ -42,7 +42,7 @@ def build_parser() -> argparse.ArgumentParser:
     check = sub.add_parser("check-entry", parents=[common],
                            help="check the registry entry of a repository about to be created")
     check.add_argument("--repo", required=True)
-    check.add_argument("--class", dest="cls", required=True, help="expected class")
+    check.add_argument("--ruleset-class", required=True, help="expected ruleset_class")
     check.add_argument("--codeowners", required=True, help="space-separated initial codeowners")
 
     export = sub.add_parser("export", parents=[common], help="write a live ruleset as a declared file")
@@ -98,8 +98,8 @@ def _check_entry(args, cfg, out) -> int:
         out(f"{args.repo}: no entry in repositories.yaml; add it by PR before creating the repository")
         return 1
     errors = []
-    if entry.cls != args.cls:
-        errors.append(f"class is '{entry.cls}', expected '{args.cls}'")
+    if entry.ruleset_class != args.ruleset_class:
+        errors.append(f"ruleset_class is '{entry.ruleset_class}', expected '{args.ruleset_class}'")
     single = is_single_codeowner(f"* {args.codeowners}\n")
     if single is not None and single != entry.single_codeowner:
         errors.append(
@@ -109,7 +109,7 @@ def _check_entry(args, cfg, out) -> int:
     for error in errors:
         out(f"{args.repo}: {error}")
     if not errors:
-        out(f"{args.repo}: registry entry ok (class {entry.cls})")
+        out(f"{args.repo}: registry entry ok (ruleset_class {entry.ruleset_class})")
     return 1 if errors else 0
 
 

@@ -106,34 +106,34 @@ def check_entry(tmp_path, registry, *args):
     return code, "\n".join(lines)
 
 
-NEW_REPO = "repositories:\n  NewApi: {class: api-repository}\n  SoloApi: {class: api-repository, single_codeowner: true}\n"
+NEW_REPO = "repositories:\n  NewApi: {ruleset_class: api-repository}\n  SoloApi: {ruleset_class: api-repository, single_codeowner: true}\n"
 
 
 def test_check_entry_passes_for_matching_entry(tmp_path):
-    code, text = check_entry(tmp_path, NEW_REPO, "--repo", "NewApi", "--class", "api-repository",
+    code, text = check_entry(tmp_path, NEW_REPO, "--repo", "NewApi", "--ruleset-class", "api-repository",
                              "--codeowners", "@alice @bob")
     assert code == 0, text
 
 
 def test_check_entry_single_codeowner(tmp_path):
-    code, _ = check_entry(tmp_path, NEW_REPO, "--repo", "SoloApi", "--class", "api-repository", "--codeowners", "@alice")
+    code, _ = check_entry(tmp_path, NEW_REPO, "--repo", "SoloApi", "--ruleset-class", "api-repository", "--codeowners", "@alice")
     assert code == 0
-    code, text = check_entry(tmp_path, NEW_REPO, "--repo", "NewApi", "--class", "api-repository", "--codeowners", "@alice")
+    code, text = check_entry(tmp_path, NEW_REPO, "--repo", "NewApi", "--ruleset-class", "api-repository", "--codeowners", "@alice")
     assert code == 1
     assert "single_codeowner" in text
 
 
 def test_check_entry_missing_entry(tmp_path):
-    code, text = check_entry(tmp_path, NEW_REPO, "--repo", "Other", "--class", "api-repository", "--codeowners", "@a @b")
+    code, text = check_entry(tmp_path, NEW_REPO, "--repo", "Other", "--ruleset-class", "api-repository", "--codeowners", "@a @b")
     assert code == 1
     assert "no entry" in text
 
 
 def test_check_entry_wrong_class(tmp_path):
-    registry = "repositories:\n  NewApi: {class: non-api}\n"
-    code, text = check_entry(tmp_path, registry, "--repo", "NewApi", "--class", "api-repository", "--codeowners", "@a @b")
+    registry = "repositories:\n  NewApi: {ruleset_class: non-api}\n"
+    code, text = check_entry(tmp_path, registry, "--repo", "NewApi", "--ruleset-class", "api-repository", "--codeowners", "@a @b")
     assert code == 1
-    assert "class" in text
+    assert "ruleset_class" in text
 
 
 def test_export_writes_normalised_file(tmp_path):

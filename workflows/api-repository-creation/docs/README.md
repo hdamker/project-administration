@@ -40,7 +40,7 @@ To automate the initial setup of a new repository using the `Template_API_Reposi
 - Setting metadata and repository settings
 - Creating teams and assigning permissions (if in an organization)
 - Adding CODEOWNERS based on a template
-- Applying the declared rulesets of the `api-repository` class
+- Applying the declared rulesets of the `api-repository` ruleset class
 - Posting issues with initial checklists
 - Cleaning up setup artifacts (workflow + templates)
 - **Comprehensive verification** of the setup
@@ -66,7 +66,7 @@ Before running this workflow, ensure you have:
 3. **FGPAT token** with required scopes (see [Requirements](#-requirements))
 4. **Environment setup** in the `project-administration` repository (see [Environment Restrictions](#-environment-restrictions))
 5. **Template repository** (`Template_API_Repository`) must exist and be accessible
-6. **Registry entry** for the new repository in [config/repositories.yaml](../../../config/repositories.yaml), merged to `main` by PR before the run: `class: api-repository`, plus `single_codeowner: true` if there is only one initial codeowner. The workflow stops before creating anything if the entry is missing or does not match.
+6. **Registry entry** for the new repository in [config/repositories.yaml](../../../config/repositories.yaml), merged to `main` by PR before the run: `ruleset_class: api-repository`, plus `single_codeowner: true` if there is only one initial codeowner. The workflow stops before creating anything if the entry is missing or does not match.
 
 ---
 
@@ -196,7 +196,7 @@ dry_run: false  # Default - creates the repository immediately
 
 ### ✅ Rulesets
 
-- **Applies the declared rulesets** of the `api-repository` class from [config/rulesets/](../../../config/rulesets/) with the [repository-config](../../repository-config/README.md) tool, then runs `plan` for the new repository and fails if it still differs
+- **Applies the declared rulesets** of the `api-repository` ruleset class from [config/rulesets/](../../../config/rulesets/) with the [repository-config](../../repository-config/README.md) tool, then runs `plan` for the new repository and fails if it still differs
 - **Applied after template cleanup** to prevent conflicts with direct file operations
 
 **Note**: The cleanup-then-rulesets order is crucial - applying branch protection rules before cleanup would prevent direct file deletion and cause HTTP 409 errors.
@@ -393,7 +393,7 @@ A: Dry run (when enabled) validates inputs and shows what would be created witho
 A: Edit files in the `Template_API_Repository`, not in the `tooling` repository. The workflow syncs from the template.
 
 **Q: Can I add custom branch protection rules?**  
-A: Rulesets are declared in [config/rulesets/](../../../config/rulesets/) and attached to a class in [config/repository-classes.yaml](../../../config/repository-classes.yaml). Rulesets on `Template_API_Repository` are not copied.
+A: Rulesets are declared in [config/rulesets/](../../../config/rulesets/) and attached to a ruleset class in [config/ruleset-classes.yaml](../../../config/ruleset-classes.yaml). Rulesets on `Template_API_Repository` are not copied.
 
 **Q: What happens if the workflow fails partway through?**  
 A: The repository will be created but may be incomplete. Check the verification output and complete setup manually, or run the workflow again.
@@ -420,7 +420,7 @@ A: The workflow is designed for API repositories but can be adapted. You may wan
 5. **Additional file processing**: Add new steps similar to the README and config file updates
 6. **Custom team structure**: Modify the team creation sections in the workflow
 7. **Custom cleanup logic**: Modify the cleanup steps (executed before ruleset application)
-8. **Custom rulesets**: Add or modify rulesets in `config/rulesets/` and `config/repository-classes.yaml` (applied after cleanup)
+8. **Custom rulesets**: Add or modify rulesets in `config/rulesets/` and `config/ruleset-classes.yaml` (applied after cleanup)
 
 ### Template Repository Structure
 
