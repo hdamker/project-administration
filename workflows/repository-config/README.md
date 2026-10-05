@@ -55,10 +55,12 @@ Run from this directory. Authentication is `GITHUB_TOKEN`, or the `gh` login if 
 python -m scripts.cli plan [--repos A,B] [--verbose]
 python -m scripts.cli apply --repos A,B [--yes]
 python -m scripts.cli export --repo A --ruleset NAME
+python -m scripts.cli check-entry --repo A --class api-repository --codeowners "@a @b"
 ```
 
 - `plan` exits 0 without drift, 2 with drift, 1 on error.
 - `apply` needs a repository list, re-plans each repository, shows the plan and asks before changing anything. Order: create and update, then remove, then classic protection.
+- `check-entry` is used by the repository creation workflow: the entry must exist, have the expected class and a `single_codeowner` flag that matches the initial codeowners.
 - `export` writes a live ruleset to `config/rulesets/NAME.json`. Reading `bypass_actors` needs write access to the ruleset.
 
 The workflow [repository-config-plan.yml](../../.github/workflows/repository-config-plan.yml) runs `plan` weekly and on dispatch with the `camara-repository-config` GitHub App and fails on drift. `apply` runs from the command line only.

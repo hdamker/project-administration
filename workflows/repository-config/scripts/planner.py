@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 
 from .codeowners import is_single_codeowner
 from .config import UNMANAGED, Config, RepoEntry
-from .github_api import GitHubError
+from .github_api import GitHubError, RepoNotFound
 from .normalise import normalise
 
 CREATE = "create"
@@ -127,8 +127,18 @@ def _check_single_codeowner(api, org: str, entry: RepoEntry, plan: RepoPlan) -> 
 
 
 def plan_all(api, cfg: Config, org: str, only: Optional[List[str]] = None) -> List[RepoPlan]:
-    gh_repos = {r["name"]: r for r in api.list_org_repos(org)}
-    names = list(only) if only else sorted(set(cfg.registry) | set(gh_repos))
+    if only:
+        # Look up named repositories directly: a just-created one may lag in the listing.
+        names = list(only)
+        gh_repos = {}
+        for name in names:
+            try:
+                gh_repos[name] = api.get_repo(org, name)
+            except RepoNotFound:
+                pass
+    else:
+        gh_repos = {r["name"]: r for r in api.list_org_repos(org)}
+        names = sorted(set(cfg.registry) | set(gh_repos))
     plans: List[RepoPlan] = []
     for name in names:
         entry, gh_repo = cfg.registry.get(name), gh_repos.get(name)

@@ -99,6 +99,43 @@ def test_apply_with_nothing_to_do(tmp_path):
     assert "nothing to do" in text
 
 
+def check_entry(tmp_path, registry, *args):
+    make_config(tmp_path, registry)
+    lines = []
+    code = main(["check-entry", *args, "--config-dir", str(tmp_path)], api=object(), out=lines.append, ask=None)
+    return code, "\n".join(lines)
+
+
+NEW_REPO = "repositories:\n  NewApi: {class: api-repository}\n  SoloApi: {class: api-repository, single_codeowner: true}\n"
+
+
+def test_check_entry_passes_for_matching_entry(tmp_path):
+    code, text = check_entry(tmp_path, NEW_REPO, "--repo", "NewApi", "--class", "api-repository",
+                             "--codeowners", "@alice @bob")
+    assert code == 0, text
+
+
+def test_check_entry_single_codeowner(tmp_path):
+    code, _ = check_entry(tmp_path, NEW_REPO, "--repo", "SoloApi", "--class", "api-repository", "--codeowners", "@alice")
+    assert code == 0
+    code, text = check_entry(tmp_path, NEW_REPO, "--repo", "NewApi", "--class", "api-repository", "--codeowners", "@alice")
+    assert code == 1
+    assert "single_codeowner" in text
+
+
+def test_check_entry_missing_entry(tmp_path):
+    code, text = check_entry(tmp_path, NEW_REPO, "--repo", "Other", "--class", "api-repository", "--codeowners", "@a @b")
+    assert code == 1
+    assert "no entry" in text
+
+
+def test_check_entry_wrong_class(tmp_path):
+    registry = "repositories:\n  NewApi: {class: non-api}\n"
+    code, text = check_entry(tmp_path, registry, "--repo", "NewApi", "--class", "api-repository", "--codeowners", "@a @b")
+    assert code == 1
+    assert "class" in text
+
+
 def test_export_writes_normalised_file(tmp_path):
     make_config(tmp_path, CLEAN_REGISTRY)
     api = FakeAPI.from_fixtures(["ConnectedNetworkType"])

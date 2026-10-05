@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from typing import Callable, List, Optional
 
+from .codeowners import is_single_codeowner
 from .config import DEFAULT_CONFIG_DIR, ConfigError, load_config
 from .github_api import GitHubAPI, GitHubError
 from .normalise import normalise
@@ -37,6 +38,12 @@ def build_parser() -> argparse.ArgumentParser:
     apply = sub.add_parser("apply", parents=[common], help="bring the named repositories to the declared state")
     apply.add_argument("--repos", type=_repo_list, required=True, help="comma-separated names (required)")
     apply.add_argument("--yes", action="store_true", help="do not ask for confirmation")
+
+    check = sub.add_parser("check-entry", parents=[common],
+                           help="check the registry entry of a repository about to be created")
+    check.add_argument("--repo", required=True)
+    check.add_argument("--class", dest="cls", required=True, help="expected class")
+    check.add_argument("--codeowners", required=True, help="space-separated initial codeowners")
 
     export = sub.add_parser("export", parents=[common], help="write a live ruleset as a declared file")
     export.add_argument("--repo", required=True)
@@ -85,6 +92,27 @@ def _apply(args, api, cfg, out, ask) -> int:
     return code
 
 
+def _check_entry(args, cfg, out) -> int:
+    entry = cfg.registry.get(args.repo)
+    if entry is None:
+        out(f"{args.repo}: no entry in repositories.yaml; add it by PR before creating the repository")
+        return 1
+    errors = []
+    if entry.cls != args.cls:
+        errors.append(f"class is '{entry.cls}', expected '{args.cls}'")
+    single = is_single_codeowner(f"* {args.codeowners}\n")
+    if single is not None and single != entry.single_codeowner:
+        errors.append(
+            f"single_codeowner is {str(entry.single_codeowner).lower()}, "
+            f"initial codeowners give {str(single).lower()}"
+        )
+    for error in errors:
+        out(f"{args.repo}: {error}")
+    if not errors:
+        out(f"{args.repo}: registry entry ok (class {entry.cls})")
+    return 1 if errors else 0
+
+
 def _export(args, api, cfg, out) -> int:
     matches = [r for r in api.list_rulesets(args.org, args.repo) if r["name"] == args.ruleset]
     if len(matches) != 1:
@@ -102,6 +130,8 @@ def main(argv: Optional[List[str]] = None, api=None, out: Callable[[str], None] 
     args = build_parser().parse_args(argv)
     try:
         cfg = load_config(args.config_dir) if args.command != "export" else None
+        if args.command == "check-entry":
+            return _check_entry(args, cfg, out)
         api = api or GitHubAPI()
         if args.command == "plan":
             return _plan(args, api, cfg, out)
