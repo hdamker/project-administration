@@ -1,0 +1,312 @@
+# Repository registry: one entry per organisation repository, keyed by name.
+#
+# class: api-repository | non-api | unmanaged (see repository-classes.yaml)
+# single_codeowner: true when the default branch's CODEOWNERS `*` line names one user;
+#   `plan` cross-checks the flag against CODEOWNERS.
+# archived: true for archived repositories (rulesets are skipped).
+# A GitHub repository without an entry is reported as unregistered.
+
+repositories:
+  .github:
+    class: unmanaged
+
+  APIBacklog:
+    class: non-api
+
+  ApplicationEndpointDiscovery:
+    class: api-repository
+
+  ApplicationEndpointRegistration:
+    class: api-repository
+
+  ApplicationProfiles:
+    class: api-repository
+
+  BlockchainPublicAddress:
+    class: api-repository
+
+  CallForwardingSignal:
+    class: api-repository
+
+  camara-landscape:
+    class: unmanaged
+
+  camaraproject.github.io:
+    class: unmanaged
+
+  CapabilitiesAndRuntimeRestrictions:
+    class: api-repository
+
+  CarrierBillingCheckOut:
+    class: api-repository
+
+  ClickToDial:
+    class: api-repository
+
+  Commonalities:
+    class: non-api
+
+  CommonalitiesTest:
+    class: api-repository
+
+  ConnectedNetworkType:
+    class: api-repository
+
+  ConnectivityInsights:
+    class: api-repository
+
+  ConnectivityQualityManagement:
+    class: non-api
+
+  ConsentInfo:
+    class: api-repository
+
+  ConsentManagement:
+    class: api-repository
+
+  CustomerInsights:
+    class: api-repository
+
+  DedicatedNetworks:
+    class: api-repository
+
+  DeviceAuthenticity:
+    class: api-repository
+
+  DeviceDataVolume:
+    class: api-repository
+
+  DeviceIdentifier:
+    class: api-repository
+
+  DeviceLocation:
+    class: api-repository
+
+  DeviceMediaStreamingRate:
+    class: api-repository
+
+  DeviceReachabilityStatus:
+    class: api-repository
+
+  DeviceRoamingStatus:
+    class: api-repository
+
+  DeviceStatus:
+    class: api-repository
+
+  DeviceSwap:
+    class: api-repository
+
+  DeviceVisitLocation:
+    class: api-repository
+
+  EasyCLA:
+    class: unmanaged
+
+  EdgeApplicationManagement:
+    class: api-repository
+
+  EdgeCloud:
+    class: non-api
+
+  EnergyFootprintNotification:
+    class: api-repository
+    single_codeowner: true
+
+  EnergyFootprintNotification_PI:
+    class: non-api
+    single_codeowner: true
+
+  eSimRemoteManagement:
+    class: api-repository
+
+  Governance:
+    class: non-api
+
+  HighThroughputElasticNetworks:
+    class: api-repository
+    single_codeowner: true
+
+  HomeDevicesQoD:
+    class: api-repository
+    archived: true
+
+  IdentityAndConsentManagement:
+    class: non-api
+
+  InHomeDeviceManagement:
+    class: api-repository
+
+  IoTDeviceManagement:
+    class: api-repository
+
+  IoTNetworkOptimization:
+    class: api-repository
+
+  IoTNetworkOptimization_PI:
+    class: non-api
+    single_codeowner: true
+
+  IoTSIMFraudPrevention:
+    class: api-repository
+
+  KnowYourCustomer:
+    class: api-repository
+
+  KnowYourCustomerAgeVerification:
+    class: api-repository
+
+  KnowYourCustomerFill-in:
+    class: api-repository
+
+  KnowYourCustomerMatch:
+    class: api-repository
+
+  Marketing:
+    class: non-api
+
+  MCPEnablement_PI1:
+    class: non-api
+
+  ModelAsAService:
+    class: api-repository
+    single_codeowner: true
+
+  MostFrequentLocation:
+    class: api-repository
+
+  MultiPointVPN:
+    class: api-repository
+
+  NetworkAccessManagement:
+    class: api-repository
+
+  NetworkInsights:
+    class: api-repository
+
+  NetworkServiceAreas:
+    class: api-repository
+
+  NetworkSliceBooking:
+    class: api-repository
+
+  NumberRecycling:
+    class: api-repository
+
+  NumberVerification:
+    class: api-repository
+
+  OptimalEdgeDiscovery:
+    class: api-repository
+
+  OTPValidation:
+    class: api-repository
+
+  PopulationDensityData:
+    class: api-repository
+
+  PredictiveConnectivityData:
+    class: api-repository
+
+  project-administration:
+    class: non-api
+
+  QoSBooking:
+    class: api-repository
+
+  QoSProfiles:
+    class: api-repository
+
+  QualityOnDemand:
+    class: api-repository
+
+  QualityOnDemand_PI1:
+    class: non-api
+
+  QualityOnDemand_PI2:
+    class: non-api
+
+  QualityOnDemand_PI3:
+    class: non-api
+    single_codeowner: true
+
+  RainfallIntensity:
+    class: api-repository
+    single_codeowner: true
+
+  RegionDeviceCount:
+    class: api-repository
+
+  ReleaseManagement:
+    class: non-api
+
+  ReleaseTest:
+    class: api-repository
+    single_codeowner: true
+
+  SessionInsights:
+    class: api-repository
+
+  ShortMessageService:
+    class: api-repository
+    archived: true
+
+  SimpleEdgeDiscovery:
+    class: api-repository
+
+  SimSwap:
+    class: api-repository
+
+  SiteToCloudVPN:
+    class: api-repository
+    archived: true
+
+  SponsoredData:
+    class: api-repository
+    single_codeowner: true
+
+  SubscriptionStatus:
+    class: api-repository
+
+  Template_API_Repository:
+    class: api-repository
+
+  Template_PI_Repository:
+    class: non-api
+
+  Tenure:
+    class: api-repository
+
+  test-repo-w-linting:
+    class: unmanaged
+
+  test-repo-wo-linting:
+    class: unmanaged
+
+  TestRepo:
+    class: unmanaged
+    archived: true
+
+  tooling:
+    class: non-api
+
+  TrafficInfluence:
+    class: api-repository
+
+  VerifiedCaller:
+    class: api-repository
+
+  VoiceNotification:
+    class: api-repository
+    single_codeowner: true
+
+  VoiceVerificationCode:
+    class: api-repository
+    single_codeowner: true
+
+  WebRTC:
+    class: api-repository
+
+  WorkingGroups:
+    class: non-api
+    archived: true
