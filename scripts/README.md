@@ -36,13 +36,3 @@ Configurable exceptions: `SKIP_REPOS` for repositories with non-standard structu
 ```bash
 ./check-team-repo-compliance.sh [--org camaraproject] [--verbose]
 ```
-
-### apply-release-rulesets.sh
-
-Creates or updates the repository ruleset required by the release automation workflow. Protects `release-snapshot/**` branches so that only the `camara-release-automation` GitHub App can create, push, and delete them, while humans must use PRs with required approvals.
-
-**Note:** This script modifies repository settings. Requires a Fine-grained PAT with Repository Administration write access.
-
-```bash
-./apply-release-rulesets.sh --repos "ReleaseTest,QualityOnDemand" [--org camaraproject] [--dry-run]
-```

@@ -1,0 +1,68 @@
+# =========================================================================================
+# CAMARA Project - Repository Configuration Plan
+#
+# Compares the declared repository configuration (config/) with the live state of every
+# repository in the organisation and fails when they differ. Read-only: nothing is
+# changed. Apply a plan from the command line, see workflows/repository-config/README.md.
+#
+# AUTHENTICATION:
+# - GitHub App camara-repository-config, token minted with create-github-app-token.
+#   Environment repository-config: variable REPO_CONFIG_APP_CLIENT_ID,
+#   secret REPO_CONFIG_APP_PRIVATE_KEY. The environment only admits the main branch.
+#
+# DOCUMENTATION:
+# https://github.com/camaraproject/project-administration/blob/main/workflows/repository-config/README.md
+# =========================================================================================
+
+name: Repository Configuration Plan
+
+on:
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+    inputs:
+      repos:
+        description: 'Comma-separated repository names to plan. Empty = all registry entries.'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    environment: repository-config
+    steps:
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.REPO_CONFIG_APP_CLIENT_ID }}
+          private-key: ${{ secrets.REPO_CONFIG_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+
+      - name: Install dependencies
+        run: pip install PyYAML requests
+
+      - name: Plan
+        working-directory: workflows/repository-config
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPOS: ${{ inputs.repos }}
+        run: |
+          args=()
+          if [ -n "$REPOS" ]; then
+            args+=(--repos "$REPOS")
+          fi
+          python -m scripts.cli plan "${args[@]}" --markdown "$GITHUB_STEP_SUMMARY"
