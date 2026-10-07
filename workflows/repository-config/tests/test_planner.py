@@ -145,6 +145,16 @@ def test_unregistered_and_missing_repos_are_drift(tmp_path):
     assert not plans["Known"].drift
 
 
+def test_named_repos_are_looked_up_directly(tmp_path):
+    """A just-created repository may be missing from the organisation listing."""
+    cfg = make_config(tmp_path, "repositories:\n  ReleaseManagement: {ruleset_class: non-api}\n")
+    api = FakeAPI.from_fixtures(["ReleaseManagement"])
+    api.list_org_repos = lambda org: []
+    plan = plan_all(api, cfg, ORG, only=["ReleaseManagement"])[0]
+    assert plan.findings == []
+    assert ("create", "Only_Codeowner_Can_Merge") in kinds(plan)
+
+
 def test_plan_after_apply_is_clean(tmp_path):
     cfg = make_config(tmp_path, "repositories:\n  EdgeCloud: {ruleset_class: non-api}\n")
     api = FakeAPI.from_fixtures(["EdgeCloud"])
