@@ -44,7 +44,7 @@ on:
         description: 'Optional: URL of the subproject wiki page'
         required: false
       mailinglist_name:
-        description: 'Mailing list name in the form "sp-xxx"'
+        description: 'Mailing list name in the form "sp-xxx" or "wg-xxx"'
         required: true
       initial_codeowners:
         description: 'Space-separated GitHub usernames (with @) for initial CODEOWNERS'
@@ -90,8 +90,8 @@ jobs:
           
           # Validate mailing list format
           MAILINGLIST="${{ github.event.inputs.mailinglist_name }}"
-          if [[ ! "$MAILINGLIST" =~ ^sp-[a-z0-9-]+$ ]]; then
-            echo "::error::Mailing list must follow format 'sp-xxx' (lowercase letters, numbers, and hyphens only)"
+          if [[ ! "$MAILINGLIST" =~ ^(sp|wg)-[a-z0-9-]+$ ]]; then
+            echo "::error::Mailing list must follow format 'sp-xxx' or 'wg-xxx' (lowercase letters, numbers, and hyphens only)"
             exit 1
           fi
           
