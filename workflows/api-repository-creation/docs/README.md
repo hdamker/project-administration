@@ -88,7 +88,7 @@ Before running this workflow, ensure you have:
 | `repo_wiki_page` | Yes | URL of the repository wiki page | `https://lf-camaraproject.atlassian.net/wiki/x/SADHB` |
 | `subproject_name` | No | Subproject/working group name | `QualityOnDemand` |
 | `subproject_wiki_page` | No | URL of the subproject wiki page | `https://lf-camaraproject.atlassian.net/wiki/x/XCPe` |
-| `mailinglist_name` | Yes | Mailing list name in the form "sp-xxx" | `sp-qod` |
+| `mailinglist_name` | Yes | Mailing list name in the form "sp-xxx" (Sub Project) or "wg-xxx" (Working Group) | `sp-qod` |
 | `initial_codeowners` | Yes | GitHub usernames with `@` prefix | `@alice @bob @charlie` |
 | `team_prefix` | No | Repository name in kebab-case for team creation | `qos-booking` |
 | `dry_run` | No | Validate inputs without creating repository | `true/false` |
@@ -120,7 +120,7 @@ dry_run: false  # Default - creates the repository immediately
 
 **Before any repository creation**, the workflow validates:
 - **Repository name format**: Letters, numbers, dots, hyphens, underscores only
-- **Mailing list format**: Must follow `sp-xxx` pattern (lowercase)
+- **Mailing list format**: Must follow `sp-xxx` or `wg-xxx` pattern (lowercase)
 - **Codeowners format**: Must use `@username` format
 - **URL formats**: Wiki pages must be valid HTTP/HTTPS URLs
 - **Team prefix format**: Lowercase letters, numbers, hyphens only (if provided)
