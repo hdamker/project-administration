@@ -20,6 +20,10 @@ UPDATE = "update"
 REMOVE = "remove"
 UNMANAGED_RULESET = "unmanaged"
 REMOVE_CLASSIC = "remove-classic-protection"
+# A classic rule that does not apply to the default branch (e.g. ``*release*``)
+UNMANAGED_CLASSIC = "unmanaged-classic"
+# Listed in the plan, never changed, not drift
+UNMANAGED_KINDS = (UNMANAGED_RULESET, UNMANAGED_CLASSIC)
 
 
 @dataclass
@@ -29,6 +33,8 @@ class Action:
     ruleset_id: Optional[int] = None
     diff: str = ""
     reason: str = ""
+    pattern: str = ""
+    classic_rule_id: str = ""
 
 
 @dataclass
@@ -44,7 +50,7 @@ class RepoPlan:
 
     @property
     def drift(self) -> bool:
-        return bool(self.findings) or any(a.kind != UNMANAGED_RULESET for a in self.actions)
+        return bool(self.findings) or any(a.kind not in UNMANAGED_KINDS for a in self.actions)
 
 
 def ruleset_diff(declared: Dict[str, Any], live: Dict[str, Any]) -> str:
@@ -109,9 +115,19 @@ def plan_repo(api, cfg: Config, org: str, entry: RepoEntry, gh_repo: Dict[str, A
                 unmanaged.append(Action(UNMANAGED_RULESET, ruleset, summary["id"]))
 
     plan.actions = writes + removes + unmanaged
-    if api.get_classic_protection(org, name, plan.default_branch) is not None:
-        plan.actions.append(Action(REMOVE_CLASSIC, reason=f"classic protection on {plan.default_branch}"))
+    for rule in api.list_classic_rules(org, name, plan.default_branch):
+        if plan.default_branch in rule["matching_refs"]:
+            plan.actions.append(Action(REMOVE_CLASSIC, pattern=rule["pattern"], classic_rule_id=rule["id"],
+                                       reason=f"classic rule '{rule['pattern']}' on {plan.default_branch}"))
+        else:
+            plan.actions.append(Action(UNMANAGED_CLASSIC, pattern=rule["pattern"], classic_rule_id=rule["id"],
+                                       reason=f"classic rule '{rule['pattern']}'"))
     return plan
+
+
+def _default_branch_classic_rules(api, org: str, plan: RepoPlan) -> List[Dict[str, Any]]:
+    return [r for r in api.list_classic_rules(org, plan.repo, plan.default_branch)
+            if plan.default_branch in r["matching_refs"]]
 
 
 def _check_single_codeowner(api, org: str, entry: RepoEntry, plan: RepoPlan) -> None:
@@ -171,11 +187,17 @@ def apply_plan(api, cfg: Config, org: str, plan: RepoPlan, log=lambda message: N
         if action.kind == REMOVE:
             api.delete_ruleset(org, name, action.ruleset_id)
             log(f"remove {action.ruleset}")
-    for action in plan.actions:
-        if action.kind == REMOVE_CLASSIC:
-            _require_main_rulesets_active(api, cfg, org, plan)
-            api.delete_classic_protection(org, name, plan.default_branch)
-            log(f"remove classic protection on {plan.default_branch}")
+    classic = [a for a in plan.actions if a.kind == REMOVE_CLASSIC]
+    if classic:
+        _require_main_rulesets_active(api, cfg, org, plan)
+        for action in classic:
+            api.delete_classic_rule(action.classic_rule_id)
+            log(f"remove classic rule '{action.pattern}' on {plan.default_branch}")
+        remaining = _default_branch_classic_rules(api, org, plan)
+        if remaining:
+            raise GitHubError(
+                f"{name}: classic protection still present: {', '.join(r['pattern'] for r in remaining)}"
+            )
 
 
 def _require_main_rulesets_active(api, cfg: Config, org: str, plan: RepoPlan) -> None:

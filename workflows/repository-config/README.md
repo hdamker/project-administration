@@ -43,7 +43,7 @@ Per repository, rulesets are matched by name:
 | declared for another ruleset class, or retired | `remove` |
 | any other name | `unmanaged`, listed and left alone |
 
-Classic branch protection on the default branch is reported as `remove-classic-protection`. `apply` removes it only after the declared `main` rulesets are confirmed `active` on that repository.
+Classic branch protection rules are read with GraphQL (`branchProtectionRules`), because a pattern rule such as `main*` cannot be removed through the REST branch-protection endpoint. A rule that applies to the default branch is reported as `remove-classic-protection`; `apply` deletes it only after the declared `main` rulesets are confirmed `active` on that repository, and fails if it is still present afterwards. Any other classic rule (for example `*release*` on legacy release branches) is listed as `unmanaged-classic` and left alone.
 
 Comparison drops `id`, `source`, `source_type`, `node_id`, `_links`, `created_at`, `updated_at` and `current_user_can_bypass`, sorts `rules` and `bypass_actors`, and compares everything else exactly, `enforcement` included.
 

@@ -194,44 +194,29 @@
       }
     }
   ],
-  "protection": {
-    "url": "https://api.github.com/repos/camaraproject/EdgeCloud/branches/main/protection",
-    "required_pull_request_reviews": {
-      "url": "https://api.github.com/repos/camaraproject/EdgeCloud/branches/main/protection/required_pull_request_reviews",
-      "dismiss_stale_reviews": true,
-      "require_code_owner_reviews": true,
-      "require_last_push_approval": false,
-      "required_approving_review_count": 1
+  "codeowners": "# This file provides an overview of code owners in this repository.\n\n# Each line is a file pattern followed by one or more owners.\n# The last matching pattern has the most precedence.\n# For more details, read the following article on GitHub: https://help.github.com/articles/about-codeowners/.\n\n# These are the default owners for the whole content of this repository. The default owners are automatically added as reviewers when you open a pull request, unless different owners are specified in the file.\n\n* @gunjald @kevsy @FabrizioMoggio @seralogar @gainsley @JoseMConde @maheshc01\n\n# Owners of the CODEOWNER and Maintainer.md files are the admins of CAMARA (to allow them to keep the teams within the CAMARA organization in sync in case of changes)\n/CODEOWNERS @camaraproject/admins\n/MAINTAINERS.MD @camaraproject/admins\n\n# The following lines ensure that the release-management_reviewers team will automatically added as reviewers\n# if a pull requests is changing the CHANGELOG file (aka \"release PR\") and that such PRs can only be merged with an approval from a team member.\n/CHANGELOG.MD @camaraproject/release-management_reviewers\n/CHANGELOG.md @camaraproject/release-management_reviewers\n",
+  "classic_rules": [
+    {
+      "id": "BPR_kwDOHNiXdc4B3wPw",
+      "pattern": "main*",
+      "matchingRefs": {
+        "nodes": [
+          {
+            "name": "main"
+          }
+        ]
+      }
     },
-    "required_signatures": {
-      "url": "https://api.github.com/repos/camaraproject/EdgeCloud/branches/main/protection/required_signatures",
-      "enabled": false
-    },
-    "enforce_admins": {
-      "url": "https://api.github.com/repos/camaraproject/EdgeCloud/branches/main/protection/enforce_admins",
-      "enabled": false
-    },
-    "required_linear_history": {
-      "enabled": false
-    },
-    "allow_force_pushes": {
-      "enabled": false
-    },
-    "allow_deletions": {
-      "enabled": false
-    },
-    "block_creations": {
-      "enabled": false
-    },
-    "required_conversation_resolution": {
-      "enabled": false
-    },
-    "lock_branch": {
-      "enabled": false
-    },
-    "allow_fork_syncing": {
-      "enabled": false
+    {
+      "id": "BPR_kwDOHNiXdc4CMfHs",
+      "pattern": "*release*",
+      "matchingRefs": {
+        "nodes": [
+          {
+            "name": "release-0.8.1"
+          }
+        ]
+      }
     }
-  },
-  "codeowners": "# This file provides an overview of code owners in this repository.\n\n# Each line is a file pattern followed by one or more owners.\n# The last matching pattern has the most precedence.\n# For more details, read the following article on GitHub: https://help.github.com/articles/about-codeowners/.\n\n# These are the default owners for the whole content of this repository. The default owners are automatically added as reviewers when you open a pull request, unless different owners are specified in the file.\n\n* @gunjald @kevsy @FabrizioMoggio @seralogar @gainsley @JoseMConde @maheshc01\n\n# Owners of the CODEOWNER and Maintainer.md files are the admins of CAMARA (to allow them to keep the teams within the CAMARA organization in sync in case of changes)\n/CODEOWNERS @camaraproject/admins\n/MAINTAINERS.MD @camaraproject/admins\n\n# The following lines ensure that the release-management_reviewers team will automatically added as reviewers\n# if a pull requests is changing the CHANGELOG file (aka \"release PR\") and that such PRs can only be merged with an approval from a team member.\n/CHANGELOG.MD @camaraproject/release-management_reviewers\n/CHANGELOG.md @camaraproject/release-management_reviewers\n"
+  ]
 }

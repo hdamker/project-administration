@@ -25,8 +25,35 @@ def test_classic_protection_kept_unless_main_rulesets_are_active(tmp_path):
     plan = plan_all(api, cfg, ORG, only=["ReleaseManagement"])[0]
     with pytest.raises(GitHubError, match="not active: Only_Codeowner_Can_Merge"):
         apply_plan(api, cfg, ORG, plan)
-    assert ("delete-classic", "ReleaseManagement", "main") not in api.calls
-    assert api.state["ReleaseManagement"]["protection"] is not None
+    assert ("delete-classic", "ReleaseManagement", "main*") not in api.calls
+    assert api.state["ReleaseManagement"]["classic_rules"]
+
+
+def test_classic_rule_removed_by_id_and_rechecked(tmp_path):
+    cfg = make_config(tmp_path, "repositories:\n  ReleaseManagement: {ruleset_class: non-api}\n")
+    api = FakeAPI.from_fixtures(["ReleaseManagement"])
+    plan = plan_all(api, cfg, ORG, only=["ReleaseManagement"])[0]
+    apply_plan(api, cfg, ORG, plan)
+    assert ("delete-classic", "ReleaseManagement", "main*") in api.calls
+    assert api.state["ReleaseManagement"]["classic_rules"] == []
+
+
+def test_classic_rule_still_present_after_delete_is_an_error(tmp_path):
+    cfg = make_config(tmp_path, "repositories:\n  ReleaseManagement: {ruleset_class: non-api}\n")
+    api = FakeAPI.from_fixtures(["ReleaseManagement"])
+    api.ineffective_classic_delete = True
+    plan = plan_all(api, cfg, ORG, only=["ReleaseManagement"])[0]
+    with pytest.raises(GitHubError, match="still present: main\\*"):
+        apply_plan(api, cfg, ORG, plan)
+
+
+def test_unmanaged_classic_rule_is_left_alone(tmp_path):
+    cfg = make_config(tmp_path, "repositories:\n  EdgeCloud: {ruleset_class: non-api}\n")
+    api = FakeAPI.from_fixtures(["EdgeCloud"])
+    plan = plan_all(api, cfg, ORG, only=["EdgeCloud"])[0]
+    apply_plan(api, cfg, ORG, plan)
+    assert [r["pattern"] for r in api.state["EdgeCloud"]["classic_rules"]] == ["*release*"]
+    assert not plan_all(api, cfg, ORG, only=["EdgeCloud"])[0].drift
 
 
 def test_apply_uses_the_declared_payload(tmp_path):

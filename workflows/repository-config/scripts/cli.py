@@ -13,7 +13,7 @@ from .codeowners import is_single_codeowner
 from .config import DEFAULT_CONFIG_DIR, ConfigError, load_config
 from .github_api import GitHubAPI, GitHubError
 from .normalise import normalise
-from .planner import UNMANAGED_RULESET, apply_plan, plan_all
+from .planner import UNMANAGED_KINDS, apply_plan, plan_all
 from .report import format_markdown, format_plan, format_repo
 
 DEFAULT_ORG = "camaraproject"
@@ -74,7 +74,7 @@ def _apply(args, api, cfg, out, ask) -> int:
             out(format_repo(plan))
             code = 1
             continue
-        if not any(a.kind != UNMANAGED_RULESET for a in plan.actions):
+        if not any(a.kind not in UNMANAGED_KINDS for a in plan.actions):
             if plan.findings:
                 out(format_repo(plan))
             out(f"{repo}: nothing to do")

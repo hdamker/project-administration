@@ -19,11 +19,13 @@ class FakeAPI:
             self.state[name] = {
                 "repo": {"name": name, "archived": False, "default_branch": "main"},
                 "rulesets": [],
-                "protection": None,
+                "classic_rules": [],
                 "codeowners": "* @a @b\n",
             }
         self.calls = []
         self._next_id = 9_000_000
+        # Simulates a delete that reports success but leaves the rule in place.
+        self.ineffective_classic_delete = False
 
     @classmethod
     def from_fixtures(cls, names, extra_repos=()):
@@ -54,8 +56,16 @@ class FakeAPI:
                 return copy.deepcopy(r)
         raise RepoNotFound(f"ruleset {ruleset_id}")
 
-    def get_classic_protection(self, org, repo, branch):
-        return copy.deepcopy(self._repo(repo)["protection"])
+    def list_classic_rules(self, org, repo, branch):
+        # Like GitHub's matchingRefs(query: branch): only refs whose name contains the branch name.
+        return [
+            {
+                "id": rule["id"],
+                "pattern": rule["pattern"],
+                "matching_refs": [n["name"] for n in rule["matchingRefs"]["nodes"] if branch in n["name"]],
+            }
+            for rule in self._repo(repo)["classic_rules"]
+        ]
 
     def get_codeowners(self, org, repo, ref):
         return self._repo(repo)["codeowners"]
@@ -82,6 +92,12 @@ class FakeAPI:
         self.calls.append(("delete", repo, name))
         self._repo(repo)["rulesets"] = [r for r in rulesets if r["id"] != ruleset_id]
 
-    def delete_classic_protection(self, org, repo, branch):
-        self.calls.append(("delete-classic", repo, branch))
-        self._repo(repo)["protection"] = None
+    def delete_classic_rule(self, rule_id):
+        for name, data in self.state.items():
+            for rule in data["classic_rules"]:
+                if rule["id"] == rule_id:
+                    self.calls.append(("delete-classic", name, rule["pattern"]))
+                    if not self.ineffective_classic_delete:
+                        data["classic_rules"] = [r for r in data["classic_rules"] if r["id"] != rule_id]
+                    return
+        raise RepoNotFound(f"classic rule {rule_id}")

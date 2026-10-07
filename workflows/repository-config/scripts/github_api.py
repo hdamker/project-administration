@@ -17,6 +17,24 @@ RETRY_BACKOFF_SECONDS = (1, 2, 4)
 # GitHub's own lookup order for CODEOWNERS.
 CODEOWNERS_PATHS = (".github/CODEOWNERS", "CODEOWNERS", "docs/CODEOWNERS")
 
+# matchingRefs is filtered by the branch name; the planner checks for an exact match.
+CLASSIC_RULES_QUERY = """
+query($owner: String!, $name: String!, $branch: String!) {
+  repository(owner: $owner, name: $name) {
+    branchProtectionRules(first: 100) {
+      pageInfo { hasNextPage }
+      nodes { id pattern matchingRefs(first: 100, query: $branch) { nodes { name } } }
+    }
+  }
+}
+"""
+
+DELETE_CLASSIC_RULE_MUTATION = """
+mutation($id: ID!) {
+  deleteBranchProtectionRule(input: {branchProtectionRuleId: $id}) { clientMutationId }
+}
+"""
+
 
 class GitHubError(Exception):
     """An API call failed."""
@@ -122,15 +140,28 @@ class GitHubAPI:
             )
         return body
 
-    def get_classic_protection(self, org: str, repo: str, branch: str) -> Optional[Dict[str, Any]]:
-        """Classic branch protection; None when the branch has none.
+    def _graphql(self, query: str, variables: Dict[str, Any], what: str) -> Dict[str, Any]:
+        resp = self._check(self._request("POST", "/graphql", json={"query": query, "variables": variables}), what)
+        body = resp.json()
+        if body.get("errors"):
+            raise GitHubError(f"{what}: " + "; ".join(e.get("message", "") for e in body["errors"]))
+        return body["data"]
 
-        "Branch not protected" is told apart from a missing repo by its message.
+    def list_classic_rules(self, org: str, repo: str, branch: str) -> List[Dict[str, Any]]:
+        """Classic branch protection rules, with the refs among ``branch`` matches they apply to.
+
+        Read via GraphQL: a pattern rule such as ``main*`` is reported by the REST
+        branch-protection endpoint but cannot be deleted through it.
         """
-        resp = self._request("GET", f"/repos/{org}/{repo}/branches/{branch}/protection")
-        if resp.status_code == 404 and self._message(resp) == "Branch not protected":
-            return None
-        return self._check(resp, f"get protection of {repo}@{branch}").json()
+        data = self._graphql(CLASSIC_RULES_QUERY, {"owner": org, "name": repo, "branch": branch},
+                             f"list classic rules of {repo}")
+        rules = data["repository"]["branchProtectionRules"]
+        if rules["pageInfo"]["hasNextPage"]:
+            raise GitHubError(f"{repo}: more than 100 classic branch protection rules")
+        return [
+            {"id": n["id"], "pattern": n["pattern"], "matching_refs": [r["name"] for r in n["matchingRefs"]["nodes"]]}
+            for n in rules["nodes"]
+        ]
 
     def get_codeowners(self, org: str, repo: str, ref: str) -> Optional[str]:
         for path in CODEOWNERS_PATHS:
@@ -155,6 +186,5 @@ class GitHubAPI:
         resp = self._request("DELETE", f"/repos/{org}/{repo}/rulesets/{ruleset_id}")
         self._check(resp, f"delete ruleset {ruleset_id} of {repo}")
 
-    def delete_classic_protection(self, org: str, repo: str, branch: str) -> None:
-        resp = self._request("DELETE", f"/repos/{org}/{repo}/branches/{branch}/protection")
-        self._check(resp, f"delete protection of {repo}@{branch}")
+    def delete_classic_rule(self, rule_id: str) -> None:
+        self._graphql(DELETE_CLASSIC_RULE_MUTATION, {"id": rule_id}, f"delete classic rule {rule_id}")
