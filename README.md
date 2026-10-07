@@ -84,13 +84,20 @@ Automates setup of new API repositories from [Template_API_Repository](https://g
 * **Workflow**: `admin-api-repository-creation.yml`
 * **Requirements**: Environment `repository-creation` with `GH_REPO_CREATE_TOKEN`
 
+### Repository Configuration
+
+Declares repository rulesets and `main` branch protection once and reports drift per repository.
+
+* **Location**: [workflows/repository-config/](workflows/repository-config/)
+* **Declarations**: [config/repositories.yaml](config/repositories.yaml), [config/ruleset-classes.yaml](config/ruleset-classes.yaml), [config/rulesets/](config/rulesets/)
+* **Documentation**: [workflows/repository-config/README.md](workflows/repository-config/README.md)
+* **Workflows**: `repository-config-plan.yml` (weekly plan), `repository-config-tests.yml`
+
 ### Admin Scripts
 
 Scripts for administrative tasks that complement campaigns.
 
 * **Location**: [scripts/](scripts/)
-* **Scripts**:
-  * `apply-release-rulesets.sh` - Applies release automation rulesets to API repositories (companion to the onboarding campaign)
 
 ### Legacy Reporting (to be replaced)
 
@@ -116,15 +123,18 @@ project-administration/
 │   └── release-plan-rollout/    # Release plan file generation
 ├── config/                      # Shared configuration files
 │   ├── api-landscape.yaml       # API portfolio metadata
-│   └── meta-release-mappings.yaml
+│   ├── meta-release-mappings.yaml
+│   ├── repositories.yaml        # Repository registry
+│   ├── ruleset-classes.yaml     # Rulesets per ruleset class
+│   └── rulesets/                # Declared rulesets (JSON)
 ├── data/                        # Release Collector outputs (master data)
 │   └── releases-master.yaml     # Master release metadata
 ├── reports/                     # Release Collector outputs (JSON reports)
 ├── scripts/                     # Admin scripts
-│   └── apply-release-rulesets.sh
 └── workflows/
     ├── api-repository-creation/ # Repository creation system
     │   └── docs/README.md
+    ├── repository-config/       # Rulesets and branch protection: plan, apply
     └── release-collector/       # Release tracking system
         ├── docs/                # Documentation
         ├── schemas/             # YAML schemas

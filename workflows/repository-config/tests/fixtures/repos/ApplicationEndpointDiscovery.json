@@ -1,0 +1,327 @@
+{
+  "repo": {
+    "name": "ApplicationEndpointDiscovery",
+    "archived": false,
+    "default_branch": "main"
+  },
+  "rulesets": [
+    {
+      "id": 5942964,
+      "name": "Codeowner_review_required",
+      "target": "branch",
+      "source_type": "Repository",
+      "source": "camaraproject/ApplicationEndpointDiscovery",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/heads/main*"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "non_fast_forward"
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 1,
+            "dismiss_stale_reviews_on_push": true,
+            "required_reviewers": [],
+            "require_code_owner_review": true,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          }
+        }
+      ],
+      "node_id": "RRS_lACqUmVwb3NpdG9yec47hvP6zgBarrQ",
+      "created_at": "2025-06-09T07:36:07.276+02:00",
+      "updated_at": "2025-06-09T07:38:47.015+02:00",
+      "bypass_actors": [
+        {
+          "actor_id": null,
+          "actor_type": "OrganizationAdmin",
+          "bypass_mode": "always"
+        }
+      ],
+      "current_user_can_bypass": "always",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/camaraproject/ApplicationEndpointDiscovery/rulesets/5942964"
+        },
+        "html": {
+          "href": "https://github.com/camaraproject/ApplicationEndpointDiscovery/rules/5942964"
+        }
+      }
+    },
+    {
+      "id": 5942965,
+      "name": "Only_Codeowner_Can_Merge",
+      "target": "branch",
+      "source_type": "Repository",
+      "source": "camaraproject/ApplicationEndpointDiscovery",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/heads/main*"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "non_fast_forward"
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": true,
+            "required_reviewers": [],
+            "require_code_owner_review": true,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          }
+        }
+      ],
+      "node_id": "RRS_lACqUmVwb3NpdG9yec47hvP6zgBarrU",
+      "created_at": "2025-06-09T07:36:07.860+02:00",
+      "updated_at": "2025-06-09T07:36:07.860+02:00",
+      "bypass_actors": [
+        {
+          "actor_id": null,
+          "actor_type": "OrganizationAdmin",
+          "bypass_mode": "always"
+        }
+      ],
+      "current_user_can_bypass": "always",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/camaraproject/ApplicationEndpointDiscovery/rulesets/5942965"
+        },
+        "html": {
+          "href": "https://github.com/camaraproject/ApplicationEndpointDiscovery/rules/5942965"
+        }
+      }
+    },
+    {
+      "id": 13476009,
+      "name": "pre-release-pointer-protection",
+      "target": "branch",
+      "source_type": "Repository",
+      "source": "camaraproject/ApplicationEndpointDiscovery",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/heads/pre-release/**"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "creation"
+        },
+        {
+          "type": "update"
+        },
+        {
+          "type": "non_fast_forward"
+        }
+      ],
+      "node_id": "RRS_lACqUmVwb3NpdG9yec47hvP6zgDNoKk",
+      "created_at": "2026-03-03T23:39:08.215+01:00",
+      "updated_at": "2026-03-03T23:39:08.323+01:00",
+      "bypass_actors": [
+        {
+          "actor_id": null,
+          "actor_type": "OrganizationAdmin",
+          "bypass_mode": "always"
+        },
+        {
+          "actor_id": 2865881,
+          "actor_type": "Integration",
+          "bypass_mode": "always"
+        }
+      ],
+      "current_user_can_bypass": "always",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/camaraproject/ApplicationEndpointDiscovery/rulesets/13476009"
+        },
+        "html": {
+          "href": "https://github.com/camaraproject/ApplicationEndpointDiscovery/rules/13476009"
+        }
+      }
+    },
+    {
+      "id": 13476008,
+      "name": "release-pointer-protection",
+      "target": "branch",
+      "source_type": "Repository",
+      "source": "camaraproject/ApplicationEndpointDiscovery",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/heads/release/**"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "creation"
+        },
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "update"
+        },
+        {
+          "type": "non_fast_forward"
+        }
+      ],
+      "node_id": "RRS_lACqUmVwb3NpdG9yec47hvP6zgDNoKg",
+      "created_at": "2026-03-03T23:39:07.219+01:00",
+      "updated_at": "2026-03-03T23:39:07.311+01:00",
+      "bypass_actors": [
+        {
+          "actor_id": null,
+          "actor_type": "OrganizationAdmin",
+          "bypass_mode": "always"
+        },
+        {
+          "actor_id": 2865881,
+          "actor_type": "Integration",
+          "bypass_mode": "always"
+        }
+      ],
+      "current_user_can_bypass": "always",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/camaraproject/ApplicationEndpointDiscovery/rulesets/13476008"
+        },
+        "html": {
+          "href": "https://github.com/camaraproject/ApplicationEndpointDiscovery/rules/13476008"
+        }
+      }
+    },
+    {
+      "id": 13048142,
+      "name": "release-snapshot-protection",
+      "target": "branch",
+      "source_type": "Repository",
+      "source": "camaraproject/ApplicationEndpointDiscovery",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/heads/release-snapshot/**"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "non_fast_forward"
+        },
+        {
+          "type": "creation"
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 2,
+            "dismiss_stale_reviews_on_push": true,
+            "required_reviewers": [
+              {
+                "minimum_approvals": 1,
+                "file_patterns": [
+                  "*"
+                ],
+                "reviewer": {
+                  "id": 13109132,
+                  "type": "Team"
+                }
+              }
+            ],
+            "require_code_owner_review": true,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          }
+        }
+      ],
+      "node_id": "RRS_lACqUmVwb3NpdG9yec47hvP6zgDHGU4",
+      "created_at": "2026-02-20T18:04:22.116+01:00",
+      "updated_at": "2026-02-23T20:18:20.810+01:00",
+      "bypass_actors": [
+        {
+          "actor_id": null,
+          "actor_type": "OrganizationAdmin",
+          "bypass_mode": "always"
+        },
+        {
+          "actor_id": 2865881,
+          "actor_type": "Integration",
+          "bypass_mode": "always"
+        }
+      ],
+      "current_user_can_bypass": "always",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/camaraproject/ApplicationEndpointDiscovery/rulesets/13048142"
+        },
+        "html": {
+          "href": "https://github.com/camaraproject/ApplicationEndpointDiscovery/rules/13048142"
+        }
+      }
+    }
+  ],
+  "protection": null,
+  "codeowners": "# This file provides an overview of code owners in this repository.\n\n# Each line is a file pattern followed by one or more owners.\n# The last matching pattern has the most precedence.\n# For more details, read the following article on GitHub: https://help.github.com/articles/about-codeowners/.\n\n# These are the default owners for the whole content of this repository. The default owners are automatically added as reviewers when you open a pull request, unless different owners are specified in the file.\n# Replace the following line with \"* @codeowner1 @codeowner2 @codeowner3\" with the individual codeowner user names (the CODEOWNER file is the source of truth for the sub project codeowner team)\n* @gunjald @Kevsy @FabrizioMoggio @seralogar @gainsley @JoseMConde @maheshc01\n\n# Owners of the CODEOWNER and Maintainer.md files are the admins of CAMARA (to allow them to keep the teams within the CAMARA organization in sync in case of changes)\n/CODEOWNERS @camaraproject/admins\n/MAINTAINERS.MD @camaraproject/admins\n\n# The following lines ensure that the release-management_reviewers team will automatically added as reviewers\n# if a pull requests is changing the CHANGELOG file (aka \"release PR\") and that such PRs can only be merged with an approval from a team member.\n/CHANGELOG.MD @camaraproject/release-management_reviewers\n/CHANGELOG.md @camaraproject/release-management_reviewers\n"
+}

@@ -1,0 +1,317 @@
+{
+  "repo": {
+    "name": "ReleaseTest",
+    "archived": false,
+    "default_branch": "main"
+  },
+  "rulesets": [
+    {
+      "id": 12989592,
+      "name": "code-owner-review-required-or-sole-codeowner",
+      "target": "branch",
+      "source_type": "Repository",
+      "source": "camaraproject/ReleaseTest",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/heads/main*"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "non_fast_forward"
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": true,
+            "required_reviewers": [],
+            "require_code_owner_review": true,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          }
+        }
+      ],
+      "node_id": "RRS_lACqUmVwb3NpdG9yec5FPCNEzgDGNJg",
+      "created_at": "2026-02-19T10:06:12.474+01:00",
+      "updated_at": "2026-02-19T10:06:12.521+01:00",
+      "bypass_actors": [
+        {
+          "actor_id": null,
+          "actor_type": "OrganizationAdmin",
+          "bypass_mode": "always"
+        }
+      ],
+      "current_user_can_bypass": "always",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/camaraproject/ReleaseTest/rulesets/12989592"
+        },
+        "html": {
+          "href": "https://github.com/camaraproject/ReleaseTest/rules/12989592"
+        }
+      }
+    },
+    {
+      "id": 13372663,
+      "name": "pre-release-pointer-protection",
+      "target": "branch",
+      "source_type": "Repository",
+      "source": "camaraproject/ReleaseTest",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/heads/pre-release/**"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "creation"
+        },
+        {
+          "type": "update"
+        },
+        {
+          "type": "non_fast_forward"
+        }
+      ],
+      "node_id": "RRS_lACqUmVwb3NpdG9yec5FPCNEzgDMDPc",
+      "created_at": "2026-03-01T14:12:33.683+01:00",
+      "updated_at": "2026-03-01T14:12:33.810+01:00",
+      "bypass_actors": [
+        {
+          "actor_id": null,
+          "actor_type": "OrganizationAdmin",
+          "bypass_mode": "always"
+        },
+        {
+          "actor_id": 2865881,
+          "actor_type": "Integration",
+          "bypass_mode": "always"
+        }
+      ],
+      "current_user_can_bypass": "always",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/camaraproject/ReleaseTest/rulesets/13372663"
+        },
+        "html": {
+          "href": "https://github.com/camaraproject/ReleaseTest/rules/13372663"
+        }
+      }
+    },
+    {
+      "id": 13372662,
+      "name": "release-pointer-protection",
+      "target": "branch",
+      "source_type": "Repository",
+      "source": "camaraproject/ReleaseTest",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/heads/release/**"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "creation"
+        },
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "update"
+        },
+        {
+          "type": "non_fast_forward"
+        }
+      ],
+      "node_id": "RRS_lACqUmVwb3NpdG9yec5FPCNEzgDMDPY",
+      "created_at": "2026-03-01T14:12:32.651+01:00",
+      "updated_at": "2026-03-01T14:12:32.750+01:00",
+      "bypass_actors": [
+        {
+          "actor_id": null,
+          "actor_type": "OrganizationAdmin",
+          "bypass_mode": "always"
+        },
+        {
+          "actor_id": 2865881,
+          "actor_type": "Integration",
+          "bypass_mode": "always"
+        }
+      ],
+      "current_user_can_bypass": "always",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/camaraproject/ReleaseTest/rulesets/13372662"
+        },
+        "html": {
+          "href": "https://github.com/camaraproject/ReleaseTest/rules/13372662"
+        }
+      }
+    },
+    {
+      "id": 12989594,
+      "name": "release-snapshot-protection",
+      "target": "branch",
+      "source_type": "Repository",
+      "source": "camaraproject/ReleaseTest",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/heads/release-snapshot/**"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "non_fast_forward"
+        },
+        {
+          "type": "creation"
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 2,
+            "dismiss_stale_reviews_on_push": true,
+            "required_reviewers": [
+              {
+                "minimum_approvals": 1,
+                "file_patterns": [
+                  "*"
+                ],
+                "reviewer": {
+                  "id": 13109132,
+                  "type": "Team"
+                }
+              }
+            ],
+            "require_code_owner_review": true,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          }
+        }
+      ],
+      "node_id": "RRS_lACqUmVwb3NpdG9yec5FPCNEzgDGNJo",
+      "created_at": "2026-02-19T10:06:13.319+01:00",
+      "updated_at": "2026-03-01T14:15:31.542+01:00",
+      "bypass_actors": [
+        {
+          "actor_id": null,
+          "actor_type": "OrganizationAdmin",
+          "bypass_mode": "always"
+        },
+        {
+          "actor_id": 2865881,
+          "actor_type": "Integration",
+          "bypass_mode": "always"
+        }
+      ],
+      "current_user_can_bypass": "always",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/camaraproject/ReleaseTest/rulesets/12989594"
+        },
+        "html": {
+          "href": "https://github.com/camaraproject/ReleaseTest/rules/12989594"
+        }
+      }
+    },
+    {
+      "id": 23336380,
+      "name": "release-tag-protection",
+      "target": "tag",
+      "source_type": "Repository",
+      "source": "camaraproject/ReleaseTest",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/tags/r*"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "creation"
+        },
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "update"
+        },
+        {
+          "type": "non_fast_forward"
+        }
+      ],
+      "node_id": "RRS_lACqUmVwb3NpdG9yec5FPCNEzgFkFbw",
+      "created_at": "2026-09-14T19:04:53.033+02:00",
+      "updated_at": "2026-09-14T19:04:53.125+02:00",
+      "bypass_actors": [
+        {
+          "actor_id": null,
+          "actor_type": "OrganizationAdmin",
+          "bypass_mode": "always"
+        },
+        {
+          "actor_id": 2865881,
+          "actor_type": "Integration",
+          "bypass_mode": "always"
+        }
+      ],
+      "current_user_can_bypass": "always",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/camaraproject/ReleaseTest/rulesets/23336380"
+        },
+        "html": {
+          "href": "https://github.com/camaraproject/ReleaseTest/rules/23336380"
+        }
+      }
+    }
+  ],
+  "protection": null,
+  "codeowners": "# This file provides an overview of code owners in this repository.\n\n# Each line is a file pattern followed by one or more owners.\n# The last matching pattern has the most precedence.\n# For more details, read the following article on GitHub: https://help.github.com/articles/about-codeowners/.\n\n# These are the default owners for the whole content of this repository. The default owners are automatically added as reviewers when you open a pull request, unless different owners are specified in the file.\n# Replace the following line with \"* @codeowner1 @codeowner2 @codeowner3\" with the individual codeowner user names (the CODEOWNER file is the source of truth for the sub project codeowner team)\n* @hdamker-bot\n\n# Owners of the CODEOWNER and Maintainer.md files are the admins of CAMARA (to allow them to keep the teams within the CAMARA organization in sync in case of changes)\n/CODEOWNERS @camaraproject/admins\n/MAINTAINERS.MD @camaraproject/admins\n\n# The following lines ensure that the release-management_reviewers team will automatically added as reviewers\n# if a pull requests is changing the CHANGELOG file (aka \"release PR\") and that such PRs can only be merged with an approval from a team member.\n/CHANGELOG.MD @camaraproject/release-management_reviewers\n/CHANGELOG.md @camaraproject/release-management_reviewers\n"
+}

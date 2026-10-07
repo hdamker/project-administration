@@ -1,0 +1,312 @@
+# Repository registry: one entry per organisation repository, keyed by name.
+#
+# ruleset_class: api-repository | non-api | unmanaged (see ruleset-classes.yaml)
+# single_codeowner: true when the default branch's CODEOWNERS `*` line names one user;
+#   `plan` cross-checks the flag against CODEOWNERS.
+# archived: true for archived repositories (rulesets are skipped).
+# A GitHub repository without an entry is reported as unregistered.
+
+repositories:
+  .github:
+    ruleset_class: unmanaged
+
+  APIBacklog:
+    ruleset_class: non-api
+
+  ApplicationEndpointDiscovery:
+    ruleset_class: api-repository
+
+  ApplicationEndpointRegistration:
+    ruleset_class: api-repository
+
+  ApplicationProfiles:
+    ruleset_class: api-repository
+
+  BlockchainPublicAddress:
+    ruleset_class: api-repository
+
+  CallForwardingSignal:
+    ruleset_class: api-repository
+
+  camara-landscape:
+    ruleset_class: unmanaged
+
+  camaraproject.github.io:
+    ruleset_class: unmanaged
+
+  CapabilitiesAndRuntimeRestrictions:
+    ruleset_class: api-repository
+
+  CarrierBillingCheckOut:
+    ruleset_class: api-repository
+
+  ClickToDial:
+    ruleset_class: api-repository
+
+  Commonalities:
+    ruleset_class: non-api
+
+  CommonalitiesTest:
+    ruleset_class: api-repository
+
+  ConnectedNetworkType:
+    ruleset_class: api-repository
+
+  ConnectivityInsights:
+    ruleset_class: api-repository
+
+  ConnectivityQualityManagement:
+    ruleset_class: non-api
+
+  ConsentInfo:
+    ruleset_class: api-repository
+
+  ConsentManagement:
+    ruleset_class: api-repository
+
+  CustomerInsights:
+    ruleset_class: api-repository
+
+  DedicatedNetworks:
+    ruleset_class: api-repository
+
+  DeviceAuthenticity:
+    ruleset_class: api-repository
+
+  DeviceDataVolume:
+    ruleset_class: api-repository
+
+  DeviceIdentifier:
+    ruleset_class: api-repository
+
+  DeviceLocation:
+    ruleset_class: api-repository
+
+  DeviceMediaStreamingRate:
+    ruleset_class: api-repository
+
+  DeviceReachabilityStatus:
+    ruleset_class: api-repository
+
+  DeviceRoamingStatus:
+    ruleset_class: api-repository
+
+  DeviceStatus:
+    ruleset_class: api-repository
+
+  DeviceSwap:
+    ruleset_class: api-repository
+
+  DeviceVisitLocation:
+    ruleset_class: api-repository
+
+  EasyCLA:
+    ruleset_class: unmanaged
+
+  EdgeApplicationManagement:
+    ruleset_class: api-repository
+
+  EdgeCloud:
+    ruleset_class: non-api
+
+  EnergyFootprintNotification:
+    ruleset_class: api-repository
+    single_codeowner: true
+
+  EnergyFootprintNotification_PI:
+    ruleset_class: non-api
+    single_codeowner: true
+
+  eSimRemoteManagement:
+    ruleset_class: api-repository
+
+  Governance:
+    ruleset_class: non-api
+
+  HighThroughputElasticNetworks:
+    ruleset_class: api-repository
+    single_codeowner: true
+
+  HomeDevicesQoD:
+    ruleset_class: api-repository
+    archived: true
+
+  IdentityAndConsentManagement:
+    ruleset_class: non-api
+
+  InHomeDeviceManagement:
+    ruleset_class: api-repository
+
+  IoTDeviceManagement:
+    ruleset_class: api-repository
+
+  IoTNetworkOptimization:
+    ruleset_class: api-repository
+
+  IoTNetworkOptimization_PI:
+    ruleset_class: non-api
+    single_codeowner: true
+
+  IoTSIMFraudPrevention:
+    ruleset_class: api-repository
+
+  KnowYourCustomer:
+    ruleset_class: api-repository
+
+  KnowYourCustomerAgeVerification:
+    ruleset_class: api-repository
+
+  KnowYourCustomerFill-in:
+    ruleset_class: api-repository
+
+  KnowYourCustomerMatch:
+    ruleset_class: api-repository
+
+  Marketing:
+    ruleset_class: non-api
+
+  MCPEnablement_PI1:
+    ruleset_class: non-api
+
+  ModelAsAService:
+    ruleset_class: api-repository
+    single_codeowner: true
+
+  MostFrequentLocation:
+    ruleset_class: api-repository
+
+  MultiPointVPN:
+    ruleset_class: api-repository
+
+  NetworkAccessManagement:
+    ruleset_class: api-repository
+
+  NetworkInsights:
+    ruleset_class: api-repository
+
+  NetworkServiceAreas:
+    ruleset_class: api-repository
+
+  NetworkSliceBooking:
+    ruleset_class: api-repository
+
+  NumberRecycling:
+    ruleset_class: api-repository
+
+  NumberVerification:
+    ruleset_class: api-repository
+
+  OptimalEdgeDiscovery:
+    ruleset_class: api-repository
+
+  OTPValidation:
+    ruleset_class: api-repository
+
+  PopulationDensityData:
+    ruleset_class: api-repository
+
+  PredictiveConnectivityData:
+    ruleset_class: api-repository
+
+  project-administration:
+    ruleset_class: non-api
+
+  QoSBooking:
+    ruleset_class: api-repository
+
+  QoSProfiles:
+    ruleset_class: api-repository
+
+  QualityOnDemand:
+    ruleset_class: api-repository
+
+  QualityOnDemand_PI1:
+    ruleset_class: non-api
+
+  QualityOnDemand_PI2:
+    ruleset_class: non-api
+
+  QualityOnDemand_PI3:
+    ruleset_class: non-api
+    single_codeowner: true
+
+  RainfallIntensity:
+    ruleset_class: api-repository
+    single_codeowner: true
+
+  RegionDeviceCount:
+    ruleset_class: api-repository
+
+  ReleaseManagement:
+    ruleset_class: non-api
+
+  ReleaseTest:
+    ruleset_class: api-repository
+    single_codeowner: true
+
+  SessionInsights:
+    ruleset_class: api-repository
+
+  ShortMessageService:
+    ruleset_class: api-repository
+    archived: true
+
+  SimpleEdgeDiscovery:
+    ruleset_class: api-repository
+
+  SimSwap:
+    ruleset_class: api-repository
+
+  SiteToCloudVPN:
+    ruleset_class: api-repository
+    archived: true
+
+  SponsoredData:
+    ruleset_class: api-repository
+    single_codeowner: true
+
+  SubscriptionStatus:
+    ruleset_class: api-repository
+
+  Template_API_Repository:
+    ruleset_class: api-repository
+
+  Template_PI_Repository:
+    ruleset_class: non-api
+
+  Tenure:
+    ruleset_class: api-repository
+
+  test-repo-w-linting:
+    ruleset_class: unmanaged
+
+  test-repo-wo-linting:
+    ruleset_class: unmanaged
+
+  TestRepo:
+    ruleset_class: unmanaged
+    archived: true
+
+  tooling:
+    ruleset_class: non-api
+
+  TrafficInfluence:
+    ruleset_class: api-repository
+
+  VerifiedCaller:
+    ruleset_class: api-repository
+
+  VoiceNotification:
+    ruleset_class: api-repository
+    single_codeowner: true
+
+  VoiceVerificationCode:
+    ruleset_class: api-repository
+    single_codeowner: true
+
+  WebRTC:
+    ruleset_class: api-repository
+
+  WorkingGroups:
+    ruleset_class: non-api
+    archived: true

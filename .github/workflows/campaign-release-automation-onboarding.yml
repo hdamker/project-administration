@@ -19,7 +19,7 @@
 #   Requires org-level variable RELEASE_APP_CLIENT_ID and secret RELEASE_APP_PRIVATE_KEY
 #
 # NOTE: Repository rulesets require admin-level access and are applied separately
-# via the apply-release-rulesets.sh script.
+# with the repository-config tool, see workflows/repository-config/README.md.
 #
 # DOCUMENTATION:
 # See release_automation/docs/repository-setup.md in camaraproject/tooling

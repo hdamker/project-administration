@@ -1,0 +1,37 @@
+# =========================================================================================
+# CAMARA Project - Repository Configuration Tests
+#
+# Runs the unit tests of workflows/repository-config and loads the declared configuration
+# in config/ so that an inconsistent change fails before it is merged.
+# =========================================================================================
+
+name: Repository Configuration Tests
+
+on:
+  pull_request:
+    paths:
+      - 'workflows/repository-config/**'
+      - 'config/**'
+      - '.github/workflows/repository-config-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+
+      - name: Install dependencies
+        run: pip install PyYAML requests pytest
+
+      - name: Run tests
+        run: python -m pytest workflows/repository-config/tests

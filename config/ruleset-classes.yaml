@@ -1,0 +1,38 @@
+# Ruleset classes: which declared rulesets a repository carries.
+#
+# Ruleset bodies live in config/rulesets/<name>.json; the ruleset_class
+# of each repository is set in config/repositories.yaml. The tool is
+# workflows/repository-config/.
+
+ruleset_classes:
+  # Automated releases: release rulesets, tag protection and main protection.
+  api-repository:
+    rulesets:
+      - release-snapshot-protection
+      - release-pointer-protection
+      - pre-release-pointer-protection
+      - release-tag-protection
+      - Only_Codeowner_Can_Merge
+      - Codeowner_review_required
+
+  # Manual releases: main protection only.
+  non-api:
+    rulesets:
+      - Only_Codeowner_Can_Merge
+      - Codeowner_review_required
+
+# `main` protection. Classic branch protection on the default branch is removed
+# only once these rulesets are active on the repository.
+main_rulesets:
+  - Only_Codeowner_Can_Merge
+  - Codeowner_review_required
+
+# Absent (not disabled) on a repository with `single_codeowner: true`.
+single_codeowner_excludes:
+  - Codeowner_review_required
+
+# Removed wherever found, in every ruleset class.
+retired:
+  - code-owner-review-required-or-sole-codeowner
+  - release-review-protection
+  - release-snapshot-pr-rules
