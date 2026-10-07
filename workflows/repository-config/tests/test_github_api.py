@@ -76,23 +76,57 @@ def test_list_rulesets_follows_pagination():
     assert [r["id"] for r in gh.list_rulesets("o", "r")] == [1, 2]
 
 
-def test_classic_protection_absent_is_none():
-    resp = FakeResponse(404, {"message": "Branch not protected"})
-    gh, _ = api({("GET", "/repos/o/r/branches/main/protection"): resp})
-    assert gh.get_classic_protection("o", "r", "main") is None
+def graphql_rules(nodes, has_next=False):
+    return FakeResponse(200, {"data": {"repository": {"branchProtectionRules": {
+        "pageInfo": {"hasNextPage": has_next}, "nodes": nodes}}}})
 
 
-def test_classic_protection_on_missing_repo_is_an_error():
-    resp = FakeResponse(404, {"message": "Not Found"})
-    gh, _ = api({("GET", "/repos/o/r/branches/main/protection"): resp})
-    with pytest.raises(RepoNotFound):
-        gh.get_classic_protection("o", "r", "main")
+def test_classic_rules_are_read_via_graphql():
+    nodes = [
+        {"id": "BPR_1", "pattern": "main*", "matchingRefs": {"nodes": [{"name": "main"}]}},
+        {"id": "BPR_2", "pattern": "*release*", "matchingRefs": {"nodes": []}},
+    ]
+    gh, session = api({("POST", "/graphql"): graphql_rules(nodes)})
+    assert gh.list_classic_rules("o", "r", "main") == [
+        {"id": "BPR_1", "pattern": "main*", "matching_refs": ["main"]},
+        {"id": "BPR_2", "pattern": "*release*", "matching_refs": []},
+    ]
+    variables = session.calls[0][2]["json"]["variables"]
+    assert variables == {"owner": "o", "name": "r", "branch": "main"}
 
 
-def test_classic_protection_present():
-    body = {"required_pull_request_reviews": {"required_approving_review_count": 1}}
-    gh, _ = api({("GET", "/repos/o/r/branches/main/protection"): FakeResponse(200, body)})
-    assert gh.get_classic_protection("o", "r", "main") == body
+def test_no_classic_rules():
+    gh, _ = api({("POST", "/graphql"): graphql_rules([])})
+    assert gh.list_classic_rules("o", "r", "main") == []
+
+
+def test_classic_rules_missing_repo_is_an_error():
+    body = {"data": {"repository": None}, "errors": [{"type": "NOT_FOUND", "message": "Could not resolve"}]}
+    gh, _ = api({("POST", "/graphql"): FakeResponse(200, body)})
+    with pytest.raises(GitHubError, match="Could not resolve"):
+        gh.list_classic_rules("o", "r", "main")
+
+
+def test_more_than_one_page_of_classic_rules_is_an_error():
+    gh, _ = api({("POST", "/graphql"): graphql_rules([], has_next=True)})
+    with pytest.raises(GitHubError, match="more than"):
+        gh.list_classic_rules("o", "r", "main")
+
+
+def test_delete_classic_rule_uses_the_mutation():
+    body = {"data": {"deleteBranchProtectionRule": {"clientMutationId": None}}}
+    gh, session = api({("POST", "/graphql"): FakeResponse(200, body)})
+    gh.delete_classic_rule("BPR_1")
+    request = session.calls[0][2]["json"]
+    assert "deleteBranchProtectionRule" in request["query"]
+    assert request["variables"] == {"id": "BPR_1"}
+
+
+def test_delete_classic_rule_graphql_error():
+    body = {"data": None, "errors": [{"message": "Must have admin rights"}]}
+    gh, _ = api({("POST", "/graphql"): FakeResponse(200, body)})
+    with pytest.raises(GitHubError, match="Must have admin rights"):
+        gh.delete_classic_rule("BPR_1")
 
 
 def test_codeowners_search_order_and_decoding():
@@ -139,16 +173,14 @@ def test_create_ruleset_posts_payload():
     assert session.calls[0][2]["json"] == payload
 
 
-def test_update_and_delete_ruleset_and_classic():
+def test_update_and_delete_ruleset():
     gh, session = api({
         ("PUT", "/repos/o/r/rulesets/3"): FakeResponse(200, {}),
         ("DELETE", "/repos/o/r/rulesets/3"): FakeResponse(204),
-        ("DELETE", "/repos/o/r/branches/main/protection"): FakeResponse(204),
     })
     gh.update_ruleset("o", "r", 3, {"name": "x"})
     gh.delete_ruleset("o", "r", 3)
-    gh.delete_classic_protection("o", "r", "main")
-    assert [c[0] for c in session.calls] == ["PUT", "DELETE", "DELETE"]
+    assert [c[0] for c in session.calls] == ["PUT", "DELETE"]
 
 
 def test_error_status_raises_with_message():

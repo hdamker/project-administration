@@ -2,7 +2,7 @@
 
 from typing import List
 
-from .planner import UNMANAGED_RULESET, RepoPlan
+from .planner import UNMANAGED_KINDS, UNMANAGED_RULESET, RepoPlan
 
 
 def _plain_action(action) -> str:
@@ -46,7 +46,7 @@ def format_plan(plans: List[RepoPlan], verbose: bool = False) -> str:
     """All repositories with something to show, then the summary line."""
     blocks = [
         format_repo(p) for p in plans
-        if verbose or p.error or p.drift or any(a.kind == UNMANAGED_RULESET for a in p.actions)
+        if verbose or p.error or p.drift or any(a.kind in UNMANAGED_KINDS for a in p.actions)
     ]
     return "\n\n".join(blocks + [summary_line(plans)])
 
@@ -62,7 +62,7 @@ def format_markdown(plans: List[RepoPlan]) -> str:
         for finding in plan.findings:
             out.append(f"- **drift:** {finding}")
         for action in plan.actions:
-            if action.kind == UNMANAGED_RULESET:
+            if action.kind in UNMANAGED_KINDS:
                 continue
             out.append(f"- `{_plain_action(action)}`")
             if action.diff:

@@ -77,7 +77,26 @@ def test_other_class_rulesets_are_removed_and_main_rulesets_created(tmp_path):
         assert one(plan, "remove", name)
     assert one(plan, "create", "Only_Codeowner_Can_Merge")
     assert one(plan, "create", "Codeowner_review_required")
-    assert one(plan, "remove-classic-protection", None)
+    classic = one(plan, "remove-classic-protection", None)
+    assert (classic.pattern, classic.classic_rule_id) == ("main*", "BPR_kwDOHNiXdc4B3wPw")
+
+
+def test_classic_rule_not_matching_the_default_branch_is_unmanaged(tmp_path):
+    plan = plan_one(tmp_path, "EdgeCloud", "repositories:\n  EdgeCloud: {ruleset_class: non-api}\n")
+    release = one(plan, "unmanaged-classic", None)
+    assert release.pattern == "*release*"
+
+
+def test_unmanaged_classic_rule_is_not_drift(tmp_path):
+    cfg = make_config(tmp_path, "repositories:\n  ApplicationEndpointDiscovery: {ruleset_class: api-repository}\n")
+    api = FakeAPI.from_fixtures(["ApplicationEndpointDiscovery"])
+    api.state["ApplicationEndpointDiscovery"]["classic_rules"] = [
+        {"id": "BPR_x", "pattern": "*release*", "matchingRefs": {"nodes": [{"name": "release-0.1.0"}]}},
+    ]
+    plan = plan_all(api, cfg, ORG, only=["ApplicationEndpointDiscovery"])[0]
+    assert kinds(plan) == [("create", "release-tag-protection"), ("unmanaged-classic", None)]
+    plan.actions = [a for a in plan.actions if a.kind == "unmanaged-classic"]
+    assert not plan.drift
 
 
 def test_unmanaged_names_are_listed_and_untouched(tmp_path):
@@ -95,6 +114,7 @@ def test_classic_only_repo(tmp_path):
         ("create", "Only_Codeowner_Can_Merge"),
         ("create", "release-tag-protection"),
         ("remove-classic-protection", None),
+        ("unmanaged-classic", None),
     ]
 
 
