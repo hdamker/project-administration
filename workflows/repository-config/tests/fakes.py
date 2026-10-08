@@ -56,16 +56,8 @@ class FakeAPI:
                 return copy.deepcopy(r)
         raise RepoNotFound(f"ruleset {ruleset_id}")
 
-    def list_classic_rules(self, org, repo, branch):
-        # Like GitHub's matchingRefs(query: branch): only refs whose name contains the branch name.
-        return [
-            {
-                "id": rule["id"],
-                "pattern": rule["pattern"],
-                "matching_refs": [n["name"] for n in rule["matchingRefs"]["nodes"] if branch in n["name"]],
-            }
-            for rule in self._repo(repo)["classic_rules"]
-        ]
+    def list_classic_rules(self, org, repo):
+        return [{"id": r["id"], "pattern": r["pattern"]} for r in self._repo(repo)["classic_rules"]]
 
     def get_codeowners(self, org, repo, ref):
         return self._repo(repo)["codeowners"]

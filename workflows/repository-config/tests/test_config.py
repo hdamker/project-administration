@@ -17,7 +17,6 @@ def write_config(tmp_path, classes=None, repositories=None, rulesets=None):
         ruleset_classes:
           api-repository:
             rulesets: [a]
-        main_rulesets: [a]
         single_codeowner_excludes: []
         retired: [old]
     """))
@@ -67,7 +66,6 @@ def test_class_references_missing_ruleset_file(tmp_path):
             ruleset_classes:
               api-repository:
                 rulesets: [missing]
-            main_rulesets: []
             single_codeowner_excludes: []
             retired: []
         """))
@@ -84,7 +82,6 @@ def test_declared_ruleset_cannot_be_retired(tmp_path):
             ruleset_classes:
               api-repository:
                 rulesets: [a]
-            main_rulesets: []
             single_codeowner_excludes: []
             retired: [a]
         """))
@@ -102,3 +99,39 @@ def test_shipped_config_loads():
     cfg = load_config(DEFAULT_CONFIG_DIR)
     assert "release-tag-protection" in cfg.ruleset_classes["api-repository"]
     assert "release-tag-protection" not in cfg.ruleset_classes["non-api"]
+
+
+FLAGGED = """
+    ruleset_classes:
+      api-repository:
+        rulesets: [a]
+    flag_rulesets:
+      legacy_releases: [legacy]
+    single_codeowner_excludes: []
+    retired: []
+"""
+
+
+def test_flag_ruleset_added_when_flag_is_set(tmp_path):
+    body = lambda n: {"name": n, "rules": [], "bypass_actors": []}
+    cfg = load_config(write_config(tmp_path, classes=FLAGGED, rulesets={"a": body("a"), "legacy": body("legacy")},
+                                   repositories="""
+        repositories:
+          Old: {ruleset_class: api-repository, legacy_releases: true}
+          New: {ruleset_class: api-repository}
+    """))
+    assert cfg.registry["Old"].legacy_releases is True
+    assert cfg.desired_rulesets(cfg.registry["Old"]) == ["a", "legacy"]
+    assert cfg.desired_rulesets(cfg.registry["New"]) == ["a"]
+
+
+def test_flag_ruleset_needs_a_file(tmp_path):
+    with pytest.raises(ConfigError, match="flag legacy_releases: ruleset 'legacy' has no file"):
+        load_config(write_config(tmp_path, classes=FLAGGED))
+
+
+def test_unknown_flag(tmp_path):
+    classes = FLAGGED.replace("legacy_releases:", "other_flag:")
+    body = lambda n: {"name": n, "rules": [], "bypass_actors": []}
+    with pytest.raises(ConfigError, match="unknown flag 'other_flag'"):
+        load_config(write_config(tmp_path, classes=classes, rulesets={"a": body("a"), "legacy": body("legacy")}))

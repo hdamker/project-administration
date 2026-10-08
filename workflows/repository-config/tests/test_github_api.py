@@ -82,35 +82,28 @@ def graphql_rules(nodes, has_next=False):
 
 
 def test_classic_rules_are_read_via_graphql():
-    nodes = [
-        {"id": "BPR_1", "pattern": "main*", "matchingRefs": {"nodes": [{"name": "main"}]}},
-        {"id": "BPR_2", "pattern": "*release*", "matchingRefs": {"nodes": []}},
-    ]
+    nodes = [{"id": "BPR_1", "pattern": "main*"}, {"id": "BPR_2", "pattern": "*release*"}]
     gh, session = api({("POST", "/graphql"): graphql_rules(nodes)})
-    assert gh.list_classic_rules("o", "r", "main") == [
-        {"id": "BPR_1", "pattern": "main*", "matching_refs": ["main"]},
-        {"id": "BPR_2", "pattern": "*release*", "matching_refs": []},
-    ]
-    variables = session.calls[0][2]["json"]["variables"]
-    assert variables == {"owner": "o", "name": "r", "branch": "main"}
+    assert gh.list_classic_rules("o", "r") == nodes
+    assert session.calls[0][2]["json"]["variables"] == {"owner": "o", "name": "r"}
 
 
 def test_no_classic_rules():
     gh, _ = api({("POST", "/graphql"): graphql_rules([])})
-    assert gh.list_classic_rules("o", "r", "main") == []
+    assert gh.list_classic_rules("o", "r") == []
 
 
 def test_classic_rules_missing_repo_is_an_error():
     body = {"data": {"repository": None}, "errors": [{"type": "NOT_FOUND", "message": "Could not resolve"}]}
     gh, _ = api({("POST", "/graphql"): FakeResponse(200, body)})
     with pytest.raises(GitHubError, match="Could not resolve"):
-        gh.list_classic_rules("o", "r", "main")
+        gh.list_classic_rules("o", "r")
 
 
 def test_more_than_one_page_of_classic_rules_is_an_error():
     gh, _ = api({("POST", "/graphql"): graphql_rules([], has_next=True)})
     with pytest.raises(GitHubError, match="more than"):
-        gh.list_classic_rules("o", "r", "main")
+        gh.list_classic_rules("o", "r")
 
 
 def test_delete_classic_rule_uses_the_mutation():
@@ -157,6 +150,31 @@ def test_transient_error_is_retried():
     gh, session = api(routes)
     assert gh.get_repo("o", "r") == {"name": "r"}
     assert len(session.calls) == 2
+
+
+def test_writes_are_not_retried():
+    """A retried write can repeat one that already succeeded behind the 5xx."""
+    gh, session = api({
+        ("POST", "/repos/o/r/rulesets"): [FakeResponse(502, {}), FakeResponse(201, {"id": 9})],
+        ("DELETE", "/repos/o/r/rulesets/3"): [FakeResponse(503, {}), FakeResponse(204)],
+    })
+    with pytest.raises(GitHubError, match="HTTP 502"):
+        gh.create_ruleset("o", "r", {"name": "x"})
+    with pytest.raises(GitHubError, match="HTTP 503"):
+        gh.delete_ruleset("o", "r", 3)
+    assert len(session.calls) == 2
+
+
+def test_graphql_query_is_retried_but_mutation_is_not():
+    nodes = graphql_rules([]).json()
+    gh, session = api({("POST", "/graphql"): [FakeResponse(503, {}), FakeResponse(200, nodes)]})
+    assert gh.list_classic_rules("o", "r") == []
+    assert len(session.calls) == 2
+
+    gh, session = api({("POST", "/graphql"): [FakeResponse(502, {}), FakeResponse(200, {"data": {}})]})
+    with pytest.raises(GitHubError, match="HTTP 502"):
+        gh.delete_classic_rule("BPR_1")
+    assert len(session.calls) == 1
 
 
 def test_rate_limit_raises():

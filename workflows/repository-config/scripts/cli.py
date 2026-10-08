@@ -125,7 +125,12 @@ def _export(args, api, cfg, out) -> int:
     return 0
 
 
-def main(argv: Optional[List[str]] = None, api=None, out: Callable[[str], None] = print,
+def _print(message: str) -> None:
+    # Flushed, so a long `apply` shows progress when its output is redirected.
+    print(message, flush=True)
+
+
+def main(argv: Optional[List[str]] = None, api=None, out: Callable[[str], None] = _print,
          ask: Optional[Callable[[str], str]] = input) -> int:
     args = build_parser().parse_args(argv)
     try:

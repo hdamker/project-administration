@@ -15,10 +15,10 @@ def test_apply_orders_writes_then_removes_then_classic(tmp_path):
     plan = plan_all(api, cfg, ORG, only=["EdgeCloud"])[0]
     apply_plan(api, cfg, ORG, plan)
     ops = [c[0] for c in api.calls]
-    assert ops == ["create", "create", "delete", "delete", "delete", "delete-classic"]
+    assert ops == ["create", "create", "delete", "delete", "delete", "delete-classic", "delete-classic"]
 
 
-def test_classic_protection_kept_unless_main_rulesets_are_active(tmp_path):
+def test_classic_protection_kept_unless_declared_rulesets_are_active(tmp_path):
     cfg = make_config(tmp_path, "repositories:\n  ReleaseManagement: {ruleset_class: non-api}\n")
     cfg.rulesets["Only_Codeowner_Can_Merge"]["enforcement"] = "disabled"
     api = FakeAPI.from_fixtures(["ReleaseManagement"])
@@ -47,13 +47,24 @@ def test_classic_rule_still_present_after_delete_is_an_error(tmp_path):
         apply_plan(api, cfg, ORG, plan)
 
 
-def test_unmanaged_classic_rule_is_left_alone(tmp_path):
-    cfg = make_config(tmp_path, "repositories:\n  EdgeCloud: {ruleset_class: non-api}\n")
+def test_legacy_release_rule_replaced_by_the_legacy_ruleset(tmp_path):
+    cfg = make_config(tmp_path, "repositories:\n  EdgeCloud: {ruleset_class: non-api, legacy_releases: true}\n")
     api = FakeAPI.from_fixtures(["EdgeCloud"])
     plan = plan_all(api, cfg, ORG, only=["EdgeCloud"])[0]
     apply_plan(api, cfg, ORG, plan)
-    assert [r["pattern"] for r in api.state["EdgeCloud"]["classic_rules"]] == ["*release*"]
+    assert api.state["EdgeCloud"]["classic_rules"] == []
+    assert "legacy-release-protection" in {r["name"] for r in api.state["EdgeCloud"]["rulesets"]}
     assert not plan_all(api, cfg, ORG, only=["EdgeCloud"])[0].drift
+
+
+def test_legacy_release_rule_kept_unless_the_legacy_ruleset_is_active(tmp_path):
+    cfg = make_config(tmp_path, "repositories:\n  EdgeCloud: {ruleset_class: non-api, legacy_releases: true}\n")
+    cfg.rulesets["legacy-release-protection"]["enforcement"] = "evaluate"
+    api = FakeAPI.from_fixtures(["EdgeCloud"])
+    plan = plan_all(api, cfg, ORG, only=["EdgeCloud"])[0]
+    with pytest.raises(GitHubError, match="not active: legacy-release-protection"):
+        apply_plan(api, cfg, ORG, plan)
+    assert len(api.state["EdgeCloud"]["classic_rules"]) == 2
 
 
 def test_apply_uses_the_declared_payload(tmp_path):

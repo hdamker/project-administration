@@ -1,8 +1,8 @@
 """Plan and apply the declared rulesets and classic branch protection.
 
 ``plan_*`` only reads. ``apply_plan`` runs a plan: create/update first, then
-remove, classic protection last and only once the declared ``main`` rulesets
-are confirmed active.
+remove, classic branch protection rules last and only once all declared
+rulesets of the repository are confirmed active.
 """
 
 import difflib
@@ -20,10 +20,8 @@ UPDATE = "update"
 REMOVE = "remove"
 UNMANAGED_RULESET = "unmanaged"
 REMOVE_CLASSIC = "remove-classic-protection"
-# A classic rule that does not apply to the default branch (e.g. ``*release*``)
-UNMANAGED_CLASSIC = "unmanaged-classic"
 # Listed in the plan, never changed, not drift
-UNMANAGED_KINDS = (UNMANAGED_RULESET, UNMANAGED_CLASSIC)
+UNMANAGED_KINDS = (UNMANAGED_RULESET,)
 
 
 @dataclass
@@ -81,8 +79,7 @@ def plan_repo(api, cfg: Config, org: str, entry: RepoEntry, gh_repo: Dict[str, A
     _check_single_codeowner(api, org, entry, plan)
 
     desired = cfg.desired_rulesets(entry)
-    declared_names = {n for names in cfg.ruleset_classes.values() for n in names}
-    removable = (declared_names - set(desired)) | set(cfg.retired)
+    removable = (cfg.declared_names() - set(desired)) | set(cfg.retired)
 
     live_by_name: Dict[str, List[Dict[str, Any]]] = {}
     for summary in api.list_rulesets(org, name):
@@ -115,19 +112,12 @@ def plan_repo(api, cfg: Config, org: str, entry: RepoEntry, gh_repo: Dict[str, A
                 unmanaged.append(Action(UNMANAGED_RULESET, ruleset, summary["id"]))
 
     plan.actions = writes + removes + unmanaged
-    for rule in api.list_classic_rules(org, name, plan.default_branch):
-        if plan.default_branch in rule["matching_refs"]:
-            plan.actions.append(Action(REMOVE_CLASSIC, pattern=rule["pattern"], classic_rule_id=rule["id"],
-                                       reason=f"classic rule '{rule['pattern']}' on {plan.default_branch}"))
-        else:
-            plan.actions.append(Action(UNMANAGED_CLASSIC, pattern=rule["pattern"], classic_rule_id=rule["id"],
-                                       reason=f"classic rule '{rule['pattern']}'"))
+    # Rulesets replace classic protection entirely: the default branch by the
+    # `main` rulesets, legacy release branches by the legacy_releases flag.
+    for rule in api.list_classic_rules(org, name):
+        plan.actions.append(Action(REMOVE_CLASSIC, pattern=rule["pattern"], classic_rule_id=rule["id"],
+                                   reason=f"classic rule '{rule['pattern']}'"))
     return plan
-
-
-def _default_branch_classic_rules(api, org: str, plan: RepoPlan) -> List[Dict[str, Any]]:
-    return [r for r in api.list_classic_rules(org, plan.repo, plan.default_branch)
-            if plan.default_branch in r["matching_refs"]]
 
 
 def _check_single_codeowner(api, org: str, entry: RepoEntry, plan: RepoPlan) -> None:
@@ -189,19 +179,19 @@ def apply_plan(api, cfg: Config, org: str, plan: RepoPlan, log=lambda message: N
             log(f"remove {action.ruleset}")
     classic = [a for a in plan.actions if a.kind == REMOVE_CLASSIC]
     if classic:
-        _require_main_rulesets_active(api, cfg, org, plan)
+        _require_declared_rulesets_active(api, cfg, org, plan)
         for action in classic:
             api.delete_classic_rule(action.classic_rule_id)
-            log(f"remove classic rule '{action.pattern}' on {plan.default_branch}")
-        remaining = _default_branch_classic_rules(api, org, plan)
+            log(f"remove classic rule '{action.pattern}'")
+        remaining = api.list_classic_rules(org, name)
         if remaining:
             raise GitHubError(
                 f"{name}: classic protection still present: {', '.join(r['pattern'] for r in remaining)}"
             )
 
 
-def _require_main_rulesets_active(api, cfg: Config, org: str, plan: RepoPlan) -> None:
-    required = [n for n in cfg.main_rulesets if n in cfg.desired_rulesets(plan.entry)]
+def _require_declared_rulesets_active(api, cfg: Config, org: str, plan: RepoPlan) -> None:
+    required = cfg.desired_rulesets(plan.entry)
     live = {r["name"]: r["enforcement"] for r in api.list_rulesets(org, plan.repo)}
     missing = [n for n in required if live.get(n) != "active"]
     if missing:
