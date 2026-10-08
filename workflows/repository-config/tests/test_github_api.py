@@ -159,6 +159,31 @@ def test_transient_error_is_retried():
     assert len(session.calls) == 2
 
 
+def test_writes_are_not_retried():
+    """A retried write can repeat one that already succeeded behind the 5xx."""
+    gh, session = api({
+        ("POST", "/repos/o/r/rulesets"): [FakeResponse(502, {}), FakeResponse(201, {"id": 9})],
+        ("DELETE", "/repos/o/r/rulesets/3"): [FakeResponse(503, {}), FakeResponse(204)],
+    })
+    with pytest.raises(GitHubError, match="HTTP 502"):
+        gh.create_ruleset("o", "r", {"name": "x"})
+    with pytest.raises(GitHubError, match="HTTP 503"):
+        gh.delete_ruleset("o", "r", 3)
+    assert len(session.calls) == 2
+
+
+def test_graphql_query_is_retried_but_mutation_is_not():
+    nodes = graphql_rules([]).json()
+    gh, session = api({("POST", "/graphql"): [FakeResponse(503, {}), FakeResponse(200, nodes)]})
+    assert gh.list_classic_rules("o", "r", "main") == []
+    assert len(session.calls) == 2
+
+    gh, session = api({("POST", "/graphql"): [FakeResponse(502, {}), FakeResponse(200, {"data": {}})]})
+    with pytest.raises(GitHubError, match="HTTP 502"):
+        gh.delete_classic_rule("BPR_1")
+    assert len(session.calls) == 1
+
+
 def test_rate_limit_raises():
     resp = FakeResponse(403, {"message": "API rate limit exceeded"}, {"X-RateLimit-Remaining": "0"})
     gh, _ = api({("GET", "/repos/o/r"): resp})

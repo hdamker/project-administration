@@ -71,18 +71,26 @@ class GitHubAPI:
 
     # -- transport ---------------------------------------------------------
 
-    def _request(self, method: str, path: str, **kwargs):
+    def _request(self, method: str, path: str, retry: Optional[bool] = None, **kwargs):
+        """Send a request; reads are retried on transient errors, writes are not.
+
+        A write that failed with a 5xx may still have been carried out, so
+        repeating it can fail or act twice; the caller re-plans instead.
+        """
+        if retry is None:
+            retry = method == "GET"
+        retries = len(RETRY_BACKOFF_SECONDS) if retry else 0
         url = path if path.startswith("http") else f"{API}{path}"
-        for attempt in range(len(RETRY_BACKOFF_SECONDS) + 1):
+        for attempt in range(retries + 1):
             self.api_calls += 1
             try:
                 resp = self.session.request(method, url, timeout=30, **kwargs)
             except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
-                if attempt < len(RETRY_BACKOFF_SECONDS):
+                if attempt < retries:
                     self._sleep(RETRY_BACKOFF_SECONDS[attempt])
                     continue
                 raise
-            if resp.status_code in RETRY_STATUS_CODES and attempt < len(RETRY_BACKOFF_SECONDS):
+            if resp.status_code in RETRY_STATUS_CODES and attempt < retries:
                 self._sleep(RETRY_BACKOFF_SECONDS[attempt])
                 continue
             return resp
@@ -140,8 +148,9 @@ class GitHubAPI:
             )
         return body
 
-    def _graphql(self, query: str, variables: Dict[str, Any], what: str) -> Dict[str, Any]:
-        resp = self._check(self._request("POST", "/graphql", json={"query": query, "variables": variables}), what)
+    def _graphql(self, query: str, variables: Dict[str, Any], what: str, mutation: bool = False) -> Dict[str, Any]:
+        resp = self._request("POST", "/graphql", retry=not mutation, json={"query": query, "variables": variables})
+        resp = self._check(resp, what)
         body = resp.json()
         if body.get("errors"):
             raise GitHubError(f"{what}: " + "; ".join(e.get("message", "") for e in body["errors"]))
@@ -187,4 +196,4 @@ class GitHubAPI:
         self._check(resp, f"delete ruleset {ruleset_id} of {repo}")
 
     def delete_classic_rule(self, rule_id: str) -> None:
-        self._graphql(DELETE_CLASSIC_RULE_MUTATION, {"id": rule_id}, f"delete classic rule {rule_id}")
+        self._graphql(DELETE_CLASSIC_RULE_MUTATION, {"id": rule_id}, f"delete classic rule {rule_id}", mutation=True)
