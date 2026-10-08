@@ -14,6 +14,9 @@ DEFAULT_CONFIG_DIR = Path(__file__).resolve().parents[3] / "config"
 
 UNMANAGED = "unmanaged"
 
+# Registry flags that add rulesets (see flag_rulesets in ruleset-classes.yaml)
+FLAGS = ("legacy_releases",)
+
 
 class ConfigError(Exception):
     """The declared configuration is inconsistent."""
@@ -25,23 +28,31 @@ class RepoEntry:
     ruleset_class: str
     single_codeowner: bool = False
     archived: bool = False
+    legacy_releases: bool = False
 
 
 @dataclass
 class Config:
     rulesets: Dict[str, Dict[str, Any]]
     ruleset_classes: Dict[str, List[str]]
-    main_rulesets: List[str]
+    flag_rulesets: Dict[str, List[str]]
     single_codeowner_excludes: List[str]
     retired: List[str]
     registry: Dict[str, RepoEntry] = field(default_factory=dict)
 
     def desired_rulesets(self, entry: RepoEntry) -> List[str]:
-        """Ruleset names the repository's ruleset class declares, minus its exclusions."""
+        """Ruleset names of the repository's ruleset class minus its exclusions, plus those of its flags."""
         names = self.ruleset_classes.get(entry.ruleset_class, [])
         if entry.single_codeowner:
             names = [n for n in names if n not in self.single_codeowner_excludes]
+        for flag, flagged in self.flag_rulesets.items():
+            if getattr(entry, flag):
+                names = names + [n for n in flagged if n not in names]
         return list(names)
+
+    def declared_names(self) -> set:
+        names = {n for group in self.ruleset_classes.values() for n in group}
+        return names | {n for group in self.flag_rulesets.values() for n in group}
 
 
 def _load_yaml(path: Path) -> Dict[str, Any]:
@@ -68,7 +79,7 @@ def load_config(config_dir: Path = DEFAULT_CONFIG_DIR) -> Config:
     cfg = Config(
         rulesets=rulesets,
         ruleset_classes=classes,
-        main_rulesets=list(raw.get("main_rulesets") or []),
+        flag_rulesets={flag: list(names) for flag, names in (raw.get("flag_rulesets") or {}).items()},
         single_codeowner_excludes=list(raw.get("single_codeowner_excludes") or []),
         retired=list(raw.get("retired") or []),
     )
@@ -77,8 +88,14 @@ def load_config(config_dir: Path = DEFAULT_CONFIG_DIR) -> Config:
         for name in names:
             if name not in rulesets:
                 raise ConfigError(f"ruleset_class {cls}: ruleset '{name}' has no file in rulesets/")
+    for flag, names in cfg.flag_rulesets.items():
+        if flag not in FLAGS:
+            raise ConfigError(f"unknown flag '{flag}' in flag_rulesets")
+        for name in names:
+            if name not in rulesets:
+                raise ConfigError(f"flag {flag}: ruleset '{name}' has no file in rulesets/")
     for name in cfg.retired:
-        if name in rulesets or any(name in names for names in classes.values()):
+        if name in rulesets or name in cfg.declared_names():
             raise ConfigError(f"'{name}' is both declared and retired")
 
     registry = (_load_yaml(config_dir / "repositories.yaml")).get("repositories") or {}
@@ -91,5 +108,6 @@ def load_config(config_dir: Path = DEFAULT_CONFIG_DIR) -> Config:
             ruleset_class=cls,
             single_codeowner=bool(spec.get("single_codeowner", False)),
             archived=bool(spec.get("archived", False)),
+            legacy_releases=bool(spec.get("legacy_releases", False)),
         )
     return cfg

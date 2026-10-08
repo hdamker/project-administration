@@ -21,11 +21,12 @@ ruleset_classes:
       - Only_Codeowner_Can_Merge
       - Codeowner_review_required
 
-# `main` protection. Classic branch protection on the default branch is removed
-# only once these rulesets are active on the repository.
-main_rulesets:
-  - Only_Codeowner_Can_Merge
-  - Codeowner_review_required
+# Added, whatever the ruleset class, on a repository whose registry entry sets
+# the flag. `legacy_releases`: release branches from before the release
+# automation (release-x.y.z, release-vx.y.z), kept unchanged.
+flag_rulesets:
+  legacy_releases:
+    - legacy-release-protection
 
 # Absent (not disabled) on a repository with `single_codeowner: true`.
 single_codeowner_excludes:

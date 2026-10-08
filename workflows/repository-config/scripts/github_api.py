@@ -17,13 +17,12 @@ RETRY_BACKOFF_SECONDS = (1, 2, 4)
 # GitHub's own lookup order for CODEOWNERS.
 CODEOWNERS_PATHS = (".github/CODEOWNERS", "CODEOWNERS", "docs/CODEOWNERS")
 
-# matchingRefs is filtered by the branch name; the planner checks for an exact match.
 CLASSIC_RULES_QUERY = """
-query($owner: String!, $name: String!, $branch: String!) {
+query($owner: String!, $name: String!) {
   repository(owner: $owner, name: $name) {
     branchProtectionRules(first: 100) {
       pageInfo { hasNextPage }
-      nodes { id pattern matchingRefs(first: 100, query: $branch) { nodes { name } } }
+      nodes { id pattern }
     }
   }
 }
@@ -156,21 +155,18 @@ class GitHubAPI:
             raise GitHubError(f"{what}: " + "; ".join(e.get("message", "") for e in body["errors"]))
         return body["data"]
 
-    def list_classic_rules(self, org: str, repo: str, branch: str) -> List[Dict[str, Any]]:
-        """Classic branch protection rules, with the refs among ``branch`` matches they apply to.
+    def list_classic_rules(self, org: str, repo: str) -> List[Dict[str, Any]]:
+        """Classic branch protection rules (id and pattern).
 
         Read via GraphQL: a pattern rule such as ``main*`` is reported by the REST
         branch-protection endpoint but cannot be deleted through it.
         """
-        data = self._graphql(CLASSIC_RULES_QUERY, {"owner": org, "name": repo, "branch": branch},
+        data = self._graphql(CLASSIC_RULES_QUERY, {"owner": org, "name": repo},
                              f"list classic rules of {repo}")
         rules = data["repository"]["branchProtectionRules"]
         if rules["pageInfo"]["hasNextPage"]:
             raise GitHubError(f"{repo}: more than 100 classic branch protection rules")
-        return [
-            {"id": n["id"], "pattern": n["pattern"], "matching_refs": [r["name"] for r in n["matchingRefs"]["nodes"]]}
-            for n in rules["nodes"]
-        ]
+        return [{"id": n["id"], "pattern": n["pattern"]} for n in rules["nodes"]]
 
     def get_codeowners(self, org: str, repo: str, ref: str) -> Optional[str]:
         for path in CODEOWNERS_PATHS:
