@@ -273,6 +273,9 @@ repositories:
     ruleset_class: api-repository
     legacy_releases: true
 
+  SimSwapTimeFrame:
+    ruleset_class: api-repository
+
   SiteToCloudVPN:
     ruleset_class: api-repository
     archived: true
