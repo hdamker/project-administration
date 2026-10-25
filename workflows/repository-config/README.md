@@ -14,9 +14,11 @@ All declarations live in [config/](../../config/):
 
 Ruleset classes:
 
-- `api-repository`: the release rulesets, `release-tag-protection` and the two `main` rulesets.
+- `api-repository`: the release rulesets, `release-tag-protection`, `maintenance-branch-protection` and the two `main` rulesets.
 - `non-api`: the two `main` rulesets.
 - `unmanaged`: not touched.
+
+`maintenance-branch-protection` covers `maintenance/**`, the maintenance branches of the release automation. Only the release automation App and organisation administrators can create them, and both bypass the whole ruleset. Everyone else changes them through a pull request with code owner review and cannot delete or force-push them.
 
 A repository with `legacy_releases: true` also carries `legacy-release-protection`, whatever its class: the release branches from before the release automation (`release-0*`, `release-v*`) cannot be created, updated or deleted, except by organisation administrators.
 

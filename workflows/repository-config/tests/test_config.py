@@ -99,6 +99,8 @@ def test_shipped_config_loads():
     cfg = load_config(DEFAULT_CONFIG_DIR)
     assert "release-tag-protection" in cfg.ruleset_classes["api-repository"]
     assert "release-tag-protection" not in cfg.ruleset_classes["non-api"]
+    assert "maintenance-branch-protection" in cfg.ruleset_classes["api-repository"]
+    assert "maintenance-branch-protection" not in cfg.ruleset_classes["non-api"]
 
 
 FLAGGED = """
