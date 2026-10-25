@@ -36,10 +36,10 @@ def plan_one(tmp_path, name, registry_yaml):
     return plan_all(api, cfg, ORG, only=[name])[0]
 
 
-def test_clean_repo_only_misses_tag_protection(tmp_path):
+def test_clean_repo_only_misses_tag_and_maintenance_protection(tmp_path):
     plan = plan_one(tmp_path, "ApplicationEndpointDiscovery",
                     "repositories:\n  ApplicationEndpointDiscovery: {ruleset_class: api-repository}\n")
-    assert kinds(plan) == [("create", "release-tag-protection")]
+    assert kinds(plan) == [("create", "maintenance-branch-protection"), ("create", "release-tag-protection")]
     assert plan.findings == []
     assert plan.drift
 
@@ -50,7 +50,11 @@ def test_stale_disabled_ruleset_is_an_update_with_diff(tmp_path):
     update = one(plan, "update", "Codeowner_review_required")
     assert '-  "enforcement": "disabled"' in update.diff
     assert '+  "enforcement": "active"' in update.diff
-    assert kinds(plan) == [("create", "release-tag-protection"), ("update", "Codeowner_review_required")]
+    assert kinds(plan) == [
+        ("create", "maintenance-branch-protection"),
+        ("create", "release-tag-protection"),
+        ("update", "Codeowner_review_required"),
+    ]
 
 
 def test_single_codeowner_repo_has_no_second_ruleset(tmp_path):
@@ -117,6 +121,7 @@ def test_classic_only_repo(tmp_path):
     assert kinds(plan) == [
         ("create", "Codeowner_review_required"),
         ("create", "Only_Codeowner_Can_Merge"),
+        ("create", "maintenance-branch-protection"),
         ("create", "release-tag-protection"),
         ("remove-classic-protection", None),
         ("remove-classic-protection", None),
